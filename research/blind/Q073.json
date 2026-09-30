@@ -1,0 +1,63 @@
+{
+  "question_id": "Q073",
+  "question_content_hash": "8dff6113c07a19f559e4f208dbae55799085f773993a6ee90d56d5d6cd6f7604",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Triển khai Lambda function (xóa rule của security group cho EC2 nghi nhiễm malware) dưới dạng custom action trong Security Hub.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Chọn và sắp xếp đúng THREE bước; mỗi bước dùng tối đa một lần.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Custom action phải được dùng cho đúng loại finding: finding về EC2 host bị nghi nhiễm malware.", "kind": "constraint"},
+    {"id": "R4", "text_vi": "Phạm vi: Organizations nhiều account, Security Hub nhận finding từ nhiều account và nhiều Region.", "kind": "scope"}
+  ],
+  "image_transcriptions": [
+    {"image": "images/Q073_image_01.png", "text": "Step 1: Select... / Step 2: Select... / Step 3: Select... ; mỗi dropdown có 5 mục: Create a custom action that uses the Lambda function in Security Hub. | Create and apply a filter set to the Amazon EventBridge rule in Security Hub. | Define a rule in Amazon EventBridge. | Select the custom action in Security Hub for EC2 host findings. | Select the custom action in Security Hub for security group findings.", "notes_vi": "Ảnh chỉ là 3 dropdown giống hệt danh sách bước trong stem; không có thông tin bổ sung."}
+  ],
+  "option_reviews": [
+    {"unit_id": "Q073:S1", "unit_type": "step", "verdict": "meets", "position": 1,
+     "reason_vi": "Bước đầu tiên là tạo custom action trong Security Hub (CreateActionTarget) để lấy custom action ARN; ARN này bắt buộc khi tạo rule EventBridge. Cách diễn đạt 'uses the Lambda function' hơi lỏng vì Lambda thực ra là target của rule EventBridge.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q073:S2", "unit_type": "step", "verdict": "does_not_meet", "position": null,
+     "reason_vi": "Không có bước 'filter set cho EventBridge rule trong Security Hub' trong quy trình custom action; rule EventBridge chỉ cần event type Custom Action và custom action ARN, được tạo trong console EventBridge chứ không phải trong Security Hub.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q073:S3", "unit_type": "step", "verdict": "meets", "position": 2,
+     "reason_vi": "Sau khi có custom action ARN, tạo rule trong EventBridge với event type 'Security Hub Findings - Custom Action', chỉ định ARN của custom action và chọn target là Lambda function.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q073:S4", "unit_type": "step", "verdict": "meets", "position": 3,
+     "reason_vi": "Khi đã có custom action và rule, analyst chọn finding (tối đa 20) rồi chọn custom action trong menu Actions; ở đây là finding về EC2 host nghi nhiễm malware, đúng đối tượng mà Lambda cần xử lý.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q073:S5", "unit_type": "step", "verdict": "does_not_meet", "position": null,
+     "reason_vi": "Kịch bản là cách ly EC2 host nghi nhiễm malware; finding về security group (vd cấu hình mở cổng) không xác định instance bị nhiễm, nên chọn custom action cho loại finding này không đúng mục đích.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref5"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q073:S1", "Q073:S3", "Q073:S4"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Security Hub CSPM mô tả rõ thứ tự: tạo custom action -> định nghĩa rule EventBridge dùng ARN của custom action -> chọn finding và chọn custom action.", "open_issues": ["Bước S1 ghi 'custom action that uses the Lambda function' là cách diễn đạt lỏng: Lambda gắn vào rule EventBridge, không gắn vào custom action.", "Với cross-Region aggregation, custom action phải tạo ở aggregation Region; event gửi tới EventBridge ở account đang xem finding (administrator), Lambda phải assume role vào member account."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref5"],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-custom-actions.html", "title": "Using custom actions to send findings and insight results to EventBridge", "section": "intro", "snapshot_id": "211b35d8ec8c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you first create the custom action in Security Hub CSPM. Then, you can define rules in EventBridge that apply to your custom actions.",
+     "supports": "Thứ tự: tạo custom action trước, sau đó định nghĩa rule EventBridge.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-configure.html", "title": "Creating a custom action", "section": "Console", "snapshot_id": "8d8dabeecd04", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Make a note of the Custom action ARN. You need to use the ARN when you create a rule to associate with this action in EventBridge.",
+     "supports": "Custom action ARN cần có trước khi tạo rule EventBridge; bản thân custom action chỉ có Name, Description, ID.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-define-rule.html", "title": "Defining a rule in EventBridge", "section": "To define a rule in EventBridge (EventBridge console)", "snapshot_id": "32af718b1a7f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To trigger a custom action in Amazon EventBridge, you must create a corresponding rule in EventBridge. The rule definition includes the Amazon Resource Name (ARN) of the custom action.",
+     "supports": "Bước 2: tạo rule EventBridge chứa ARN custom action; rule được tạo trong EventBridge console, chọn target khi rule match.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cloudwatch-events.html", "title": "Using EventBridge for automated response and remediation", "section": "intro", "snapshot_id": "cdbde537e644", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Invoking an AWS Lambda function",
+     "supports": "Lambda là target hợp lệ của rule EventBridge cho finding Security Hub.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-send.html", "title": "Selecting a custom action for findings and insight results", "section": "To send findings to EventBridge (console)", "snapshot_id": "f78c11362d88", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "After you create AWS Security Hub CSPM custom actions and Amazon EventBridge rules, you can send findings and insight results to EventBridge for automatic management and processing.",
+     "supports": "Bước cuối: chọn finding rồi chọn custom action, sau khi đã có custom action và rule.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "ambiguous", "location": "Q073:S1", "detail_vi": "'Create a custom action that uses the Lambda function' — custom action không tham chiếu Lambda; Lambda là target của rule EventBridge. Cách diễn đạt lỏng nhưng vẫn chỉ đúng bước tạo custom action."}
+  ],
+  "notes_vi": "Security Hub hiện được tài liệu gọi là Security Hub CSPM cho tính năng custom action; cơ chế không đổi."
+}

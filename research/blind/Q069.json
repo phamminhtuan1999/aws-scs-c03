@@ -1,0 +1,49 @@
+{
+  "question_id": "Q069",
+  "question_content_hash": "94f725a0797cd0501ed64a9e09cd9d2f4bfc66ab46baac401782489366453ce2",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:48:50Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Ứng dụng trong VPC của Account A cần ghi vào S3 bucket thuộc Account B; quyền IAM/bucket đã có sẵn.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Ứng dụng và bucket cùng Region.", "kind": "scope"},
+    {"id": "R3", "text_vi": "Không được gửi traffic qua public internet.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q069:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "S3 không nằm trong VPC của Account B, nên kết nối VPC-VPC bằng transit gateway không tạo đường riêng tới S3; gateway endpoint cũng không dùng được qua transit gateway. Ngoài ra tạo transit gateway ở cả hai account là thừa.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q069:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "VPN giữa hai VPC chỉ nối mạng hai VPC; S3 không nằm trong VPC Account B và tài nguyên phía bên kia VPN không dùng được gateway endpoint, nên không tạo đường riêng tới S3; lại tốn công vận hành appliance.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q069:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "VPC peering không hỗ trợ edge-to-edge routing: tài nguyên ở VPC này không dùng được gateway endpoint S3 của VPC kia; peering tự nó không cung cấp đường tới dịch vụ S3.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2", "ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q069:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Gateway VPC endpoint cho S3 trong VPC Account A (cùng Region với bucket) + route table cho phép truy cập S3 không cần internet gateway/NAT; endpoint policy mặc định Full access nên truy cập được bucket của account khác khi quyền đã có.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q069:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu gateway endpoint S3 nêu rõ truy cập S3 từ VPC không cần IGW/NAT, cùng Region, và endpoint không dùng được qua VPN/peering/transit gateway.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:48:50Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-s3.html", "title": "Gateway endpoints for Amazon S3 - Amazon VPC", "section": "Considerations", "snapshot_id": "3fc9d6a537ac", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Resources on the other side of a VPN connection, VPC peering connection, transit gateway, or Direct Connect connection in your VPC cannot use a gateway endpoint",
+     "supports": "Gateway endpoint chỉ phục vụ tài nguyên trong chính VPC; VPN/peering/TGW không giúp truy cập S3.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html", "title": "How VPC peering connections work", "section": "Edge to edge routing through a gateway or private connection", "snapshot_id": "2750a6f82396", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "resources in VPC B can't use the gateway endpoint to access Amazon S3",
+     "supports": "Peering không cho phép dùng gateway endpoint S3 của VPC kia.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-s3.html", "title": "Gateway endpoints for Amazon S3 - Amazon VPC", "section": "Gateway endpoints for Amazon S3 / Edit the VPC endpoint policy", "snapshot_id": "3fc9d6a537ac", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "With a gateway endpoint, you can access Amazon S3 from your VPC, without requiring an internet gateway or NAT device for your VPC",
+     "supports": "Gateway endpoint cung cấp đường riêng tới S3 không qua internet; policy mặc định full access nên bucket của account khác vẫn truy cập được.", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": "S3 là dịch vụ ngoài VPC: cần endpoint trong VPC nguồn, không phải kết nối VPC-VPC."
+}

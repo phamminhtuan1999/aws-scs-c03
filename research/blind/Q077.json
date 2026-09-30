@@ -1,0 +1,55 @@
+{
+  "question_id": "Q077",
+  "question_content_hash": "0f7a4328ff68d9f25c18c68f2f1a3e26a22ee7544f989035ec0db3ee1c4dfa87",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Hệ thống tự động (automated).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Ngăn việc tạo security group rule trong VPC cho phép traffic từ mọi IP (0.0.0.0/0) trên TCP port 22.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Bối cảnh: Organizations all features; Security Hub đã bật ở mọi member account và mọi Region; VPC ở eu-central-1 trong một member account.", "kind": "scope"},
+    {"id": "R4", "text_vi": "Chọn MỘT giải pháp.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q077:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "CloudTrail + metric filter + CloudWatch alarm + SNS chỉ gửi email thông báo khi rule được thêm; không ngăn chặn cũng không tự khắc phục, nên không đáp ứng yêu cầu tự động ngăn rule SSH mở.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": [], "evidence_kind": "inference"},
+    {"unit_id": "Q077:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Security Hub có control EC2.13 (change-triggered) phát hiện security group cho phép 0.0.0.0/0 hoặc ::/0 tới port 22; finding tự động gửi tới EventBridge, rule EventBridge gọi Lambda xóa rule vi phạm. Đây là tự động khắc phục (detect-and-remediate) chứ không chặn trước lệnh API.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q077:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "SCP chỉ lọc được theo condition key mà EC2 hỗ trợ; ec2:AuthorizeSecurityGroupIngress chỉ có các key như ec2:SecurityGroupID, ec2:Vpc, tag, Region — không có key cho CIDR nguồn hay port. Vì vậy SCP không thể phân biệt rule 0.0.0.0/0 port 22 với rule hợp lệ.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q077:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Network Firewall lọc traffic ở biên VPC, không kiểm soát việc tạo security group rule; chặn mọi traffic port 22 cũng vượt quá yêu cầu và vẫn để rule 0.0.0.0/0 được tạo.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref4"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q077:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "B là option duy nhất vừa tự động vừa xử lý đúng loại rule (0.0.0.0/0 port 22) dựa trên control EC2.13 và luồng Security Hub -> EventBridge -> Lambda. SCP (C) không khả thi vì EC2 không có condition key cho CIDR/port.", "open_issues": ["Đề dùng chữ 'prevent the creation'; B thực chất là phát hiện và xóa ngay sau khi tạo, không chặn lệnh API. Không option nào chặn trước được đúng rule này.", "EC2.13 cần AWS Config ghi nhận resource và standard chứa control (vd CIS 1.2/NIST/PCI) được bật."]},
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html", "title": "Security Hub CSPM controls for Amazon EC2", "section": "[EC2.13] Security groups should not allow ingress from 0.0.0.0/0 or ::/0 to port 22", "snapshot_id": "e917eba16c87", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "This control checks whether an Amazon EC2 security group allows ingress from 0.0.0.0/0 or ::/0 to port 22.",
+     "supports": "Security Hub có control sinh finding cho đúng loại rule SSH mở; schedule change triggered.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-integration-types.html", "title": "Security Hub CSPM event types in EventBridge", "section": "All findings (Security Hub Findings - Imported)", "snapshot_id": "05261238db18", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can define rules in EventBridge that automatically route findings to a remediation workflow, third-party tool, or other supported EventBridge target.",
+     "supports": "Finding Security Hub tự động tới EventBridge; rule có filter có thể gọi Lambda khắc phục.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_ec2.html", "title": "Actions, resources, and condition keys for Amazon EC2", "section": "AuthorizeSecurityGroupIngress", "snapshot_id": "e09ff3211f53", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Grants permission to add one or more inbound rules to a VPC security group.",
+     "supports": "Hành động này chỉ có các condition key ec2:SecurityGroupID, ec2:Vpc, ec2:Region, tag; danh sách condition key EC2 không có key cho CIDR/port của rule, nên SCP không lọc được theo 0.0.0.0/0:22.", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/network-firewall/latest/developerguide/what-is-aws-network-firewall.html", "title": "What is AWS Network Firewall?", "section": "intro", "snapshot_id": "6d99358b5862", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "With Network Firewall, you can filter traffic at the perimeter of your VPC.",
+     "supports": "Network Firewall lọc traffic, không kiểm soát cấu hình security group.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "ambiguous", "location": "Q077", "detail_vi": "Yêu cầu 'prevent the creation' không option nào đáp ứng theo nghĩa chặn trước: SCP không có condition key CIDR/port; B chỉ tự động xóa sau khi tạo. B là lựa chọn khả thi duy nhất."}
+  ],
+  "notes_vi": "Đã kiểm tra toàn bộ danh sách condition key EC2 trong Service Authorization Reference (snapshot e09ff3211f53): không có key cho CIDR, FromPort/ToPort hay IpProtocol."
+}

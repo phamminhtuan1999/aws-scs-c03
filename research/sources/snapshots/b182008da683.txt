@@ -1,0 +1,88 @@
+URL: https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-ad.html
+TITLE: Microsoft AD directory - AWS IAM Identity Center
+
+# Microsoft AD directory
+
+With AWS IAM Identity Center, you can connect a self-managed directory in Active Directory (AD) or a
+directory in AWS Managed Microsoft AD by using AWS Directory Service. This Microsoft AD directory defines the pool of
+identities that administrators can pull from when using the IAM Identity Center console to assign single
+sign-on access. After connecting your corporate directory to IAM Identity Center, you can then grant your AD
+users or groups access to AWS accounts, applications, or both.
+
+AWS Directory Service helps you to set up and run a standalone AWS Managed Microsoft AD directory hosted in the
+AWS Cloud. You can also use Directory Service to connect your AWS resources with an existing
+self-managed AD. To configure AWS Directory Service to work with your self-managed AD, you must first set up
+trust relationships to extend authentication to the cloud.
+
+IAM Identity Center uses the connection provided by Directory Service to perform pass-through authentication to the
+source AD instance. When you use AWS Managed Microsoft AD as your identity source, IAM Identity Center can work with users
+from AWS Managed Microsoft AD or from any domain connected through an AD trust. If you want to locate your
+users in four or more domains, users must use the DOMAIN\user syntax as their user
+name when performing sign-ins to IAM Identity Center.
+
+Notes
+
+- As a prerequisite step, make sure your AD Connector or directory in AWS Managed Microsoft AD in
+Directory Service resides within your AWS Organizations management account.
+
+- IAM Identity Center does not support SAMBA 4-based Simple AD as a connected directory.
+
+- IAM Identity Center cannot synchronize Foreign Security Principals (FSPs). If a group in AWS Managed Microsoft AD
+contains members from a trusted domain as FSPs, those members will not sync.
+
+For a demonstration on the process of using Active Directory as an identity source for
+IAM Identity Center, see the following YouTube video:
+
+## Considerations for using Active Directory
+
+If you want to use Active Directory as your identity source, your configuration must meet
+the following prerequisites:
+
+- If you are using AWS Managed Microsoft AD, you must enable IAM Identity Center in the same AWS Region where
+your AWS Managed Microsoft AD directory is set up. IAM Identity Center stores the assignment data in the same Region
+as the directory. To administer IAM Identity Center, you might need to switch to the Region where IAM Identity Center
+is configured. Also, note that the AWS access portal uses the same access URL as your
+directory.
+
+- Use an Active Directory residing in the management account:
+
+You must have an existing AD Connector or AWS Managed Microsoft AD directory set up in
+AWS Directory Service, and it must reside within your AWS Organizations management account. You can connect only
+one AD Connector directory or one directory in AWS Managed Microsoft AD at a time. If you need to
+support multiple domains or forests, use AWS Managed Microsoft AD. For more information, see:
+
+- Connect a directory in AWS Managed Microsoft AD to IAM Identity Center
+
+- Connect a self-managed directory in Active Directory to IAM Identity Center
+
+- Use an Active Directory residing in the delegated admin account:
+
+If you plan to enable IAM Identity Center delegated admin and use Active Directory as your IAM Identity Center
+identity source, you can use an existing AD Connector or AWS Managed Microsoft AD directory set up
+in AWS Directory residing in the delegated admin account.
+
+If you decide to change IAM Identity Center identity source from any other source to Active
+Directory, or change it from Active Directory to any other source, the directory must
+reside in (be owned by) the IAM Identity Center delegated administrator member account if one exists;
+otherwise, it must be in the management account.
+
+## Provisioning when users come from Active Directory
+
+IAM Identity Center uses the connection provided by the Directory Service to synchronize user, group, and membership
+information from your source directory in Active Directory to the IAM Identity Center identity store. No
+password information is synchronized to IAM Identity Center, because user authentication takes place
+directly from the source directory in Active Directory. This identity data is used by
+applications to facilitate in-app lookup, authorization, and collaboration scenarios without
+passing LDAP activity back to the source directory in Active Directory.
+
+For more information above provisioning, see User and group provisioning.
+
+Topics
+
+- Connect a directory in AWS Managed Microsoft AD to IAM Identity Center
+
+- Connect a self-managed directory in Active Directory to IAM Identity Center
+
+- Attribute mappings between IAM Identity Center and External Identity Providers directory
+
+- IAM Identity Center configurable AD sync

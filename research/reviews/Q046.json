@@ -1,0 +1,341 @@
+{
+  "question_id": "Q046",
+  "question_content_hash": "add7a0a883ab3e011f06722810c4978c313cb200cd38d937f59a292ef3337d3a",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:56:00Z",
+  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "5b39f547b45491da52629c7c3448639791fcf7ed1dccdc323a359855decd1c84",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Các account nằm trong AWS Organizations; CloudHSM cluster nằm ở central account.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Account mới của team phải dùng được HSM ở central account (client trong account mới kết nối được tới HSM).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q046:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Đúng cơ chế: HSM được truy cập qua ENI trong subnet của central account, nên dùng AWS RAM share subnet đó (VPC sharing) để account mới chạy client instance trong subnet, rồi thêm inbound rule cổng 2223-2225 từ private IP của client vào security group của cluster.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref5",
+        "ref6",
+        "ref7",
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q046:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM chỉ điều khiển CloudHSM management API; thao tác mã hóa trên HSM xác thực bằng HSM user (khác IAM user) qua kết nối mạng tới HSM. Role cross-account không tạo đường mạng tới HSM; tạo IAM user mới cũng trái best practice.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref6",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q046:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Credential STS/IAM Identity Center không cấp quyền thực hiện thao tác trên HSM; HSM yêu cầu HSM user credential và kết nối mạng từ client, nên cách này không giải quyết việc chia sẻ HSM.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q046:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS RAM chỉ hỗ trợ chia sẻ CloudHSM backup (cloudhsm:Backup), không hỗ trợ chia sẻ HSM/cluster theo ID; nên không thể share 'ID of the HSM' qua RAM.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q046:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "AWS Knowledge Center mô tả đúng từng bước của A; danh sách resource RAM cho thấy CloudHSM chỉ share được backup, loại D.",
+      "open_issues": [
+        "Nguồn trực tiếp cho quy trình là bài AWS re:Post Knowledge Center (chính thức của AWS, không phải user guide)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "source_answer": [
+    "Q046:A"
+  ],
+  "researched_answer": [
+    "Q046:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Nay có bằng chứng user guide trực tiếp: HSM được truy cập qua ENI trong subnet của cluster và client chỉ cần kết nối mạng tới ENI; VPC sharing (AWS RAM, ec2:Subnet) cho account khác trong organization tạo resource trong subnet chia sẻ; security group của cluster điều khiển kết nối; RAM chỉ share được CloudHSM Backup.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Blind = A, source key = A (khớp). Blind dựa chính vào bài re:Post Knowledge Center; lần này bổ sung bằng chứng user guide/tài liệu chính thức: (1) CloudHSM cluster architecture — HSM có ENI trong subnet của account sở hữu và client cài được trên bất kỳ máy nào 'as long as it can connect to the HSM ENIs'; (2) VPC user guide — sau khi share subnet, participant trong cùng organization tạo được resource trong subnet đó; (3) RAM shareable resources — ec2:Subnet chia sẻ được, còn CloudHSM chỉ có cloudhsm:Backup (loại D); (4) CloudHSM security group page — SG của cluster cho phép EC2 nói chuyện với HSM qua cổng 2223-2225; (5) AWS Security Blog — quyền truy cập cross-account vào CloudHSM được kiểm soát ở tầng mạng (peering/security group) và HSM user. B, C sai vì IAM/STS chỉ điều khiển management API, không tạo đường mạng hay HSM user. Giữ nguyên A với bằng chứng mạnh hơn.",
+  "explanation_vi": {
+    "why_correct": "Thao tác trên HSM đi qua ENI của HSM trong subnet của central account, nên cách chia sẻ là dùng AWS RAM share subnet đó (VPC sharing) để account mới chạy client instance trong subnet, rồi mở security group của cluster (cổng 2223-2225) cho private IP của client instance.",
+    "others": {
+      "Q046:B": "IAM role cross-account chỉ cho gọi CloudHSM management API; thao tác mã hóa cần kết nối mạng tới HSM và HSM user (khác IAM user), nên cách này không chia sẻ được HSM.",
+      "Q046:C": "Token STS qua IAM Identity Center không phải credential của HSM và không tạo đường mạng tới HSM, nên không thực hiện được thao tác trên HSM.",
+      "Q046:D": "AWS RAM không hỗ trợ share HSM hay cluster theo ID (với CloudHSM chỉ share được Backup), nên bước đầu của lựa chọn này không thực hiện được."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "hosted in a central AWS account",
+      "meaning_vi": "HSM/cluster nằm trong VPC của central account; account khác cần đường mạng tới ENI của HSM."
+    },
+    {
+      "phrase": "share the HSM",
+      "meaning_vi": "Chia sẻ HSM = chia sẻ subnet (VPC sharing qua AWS RAM) + security group, không phải share resource HSM."
+    },
+    {
+      "phrase": "AWS Organizations",
+      "meaning_vi": "VPC sharing qua AWS RAM chỉ áp dụng cho account trong cùng organization."
+    }
+  ],
+  "memory_tip_vi": "Nếu account khác cần dùng CloudHSM của central account -> nghĩ đến AWS RAM share subnet (VPC sharing) + mở security group cluster cổng 2223-2225 cho client; kiểm tra: RAM chỉ share được CloudHSM Backup, IAM/STS không cấp quyền thao tác trên HSM.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS CloudHSM",
+      "AWS Resource Access Manager",
+      "Amazon VPC",
+      "AWS Organizations"
+    ],
+    "reason_vi": "Chia sẻ HSM quản lý khóa giữa các account qua cấu hình mạng (VPC sharing, security group)."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://repost.aws/knowledge-center/cloudhsm-share-clusters",
+      "title": "How do I share CloudHSM clusters with other AWS accounts?",
+      "section": "Create a resource share with Account 1 and other accounts",
+      "snapshot_id": "c72b97f0dd2f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For Resources, select the Amazon Virtual Private Cloud (Amazon VPC) subnet ID for your CloudHSM.",
+      "supports": "Chia sẻ CloudHSM cross-account bằng AWS RAM chia sẻ subnet của cluster (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://repost.aws/knowledge-center/cloudhsm-share-clusters",
+      "title": "How do I share CloudHSM clusters with other AWS accounts?",
+      "section": "Configure the security group to allow the CloudHSM client to connect",
+      "snapshot_id": "c72b97f0dd2f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For Source, enter the private IP address of your client instance, and then choose Save.",
+      "supports": "Cấu hình security group của cluster cho phép private IP của client instance (vế thứ hai của A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources",
+      "section": "AWS CloudHSM",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Manage AWS CloudHSM Backups centrally, and share them with other AWS accounts or your organization.",
+      "supports": "Resource CloudHSM chia sẻ được qua RAM là Backup, không phải HSM/cluster (loại D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/manage-hsm-users.html",
+      "title": "HSM users in AWS CloudHSM",
+      "section": "Note",
+      "snapshot_id": "f53102891607",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "HSM users are distinct from IAM users.",
+      "supports": "IAM role/STS token không cấp quyền thao tác trên HSM (loại B, C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/cluster-architecture.html",
+      "title": "AWS CloudHSM cluster architecture",
+      "section": "intro",
+      "snapshot_id": "b1c80e75b331",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you create an HSM, AWS CloudHSM puts an elastic network interface (ENI) in the specified subnet in your AWS account.",
+      "supports": "HSM được truy cập qua ENI trong subnet của account sở hữu cluster — chia sẻ subnet là cách cho account khác tới được HSM (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/cluster-architecture.html",
+      "title": "AWS CloudHSM cluster architecture",
+      "section": "intro",
+      "snapshot_id": "b1c80e75b331",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can install the client on any compatible computer, as long as it can connect to the HSM ENIs.",
+      "supports": "Điều kiện để dùng HSM là kết nối mạng tới ENI của HSM (không phải IAM/STS) — hỗ trợ A, loại B/C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-sharing.html",
+      "title": "Share your VPC subnets with other accounts",
+      "section": "intro",
+      "snapshot_id": "97f7e5915d84",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "After a subnet is shared, the participants can view, create, modify, and delete their application resources in the subnets shared with them.",
+      "supports": "Account mới trong organization chạy được client instance trong subnet của cluster sau khi được share (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources",
+      "section": "Amazon VPC - Subnets (ec2:Subnet)",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Create and manage subnets centrally, and share them with AWS accounts within your organization.",
+      "supports": "Subnet là resource share được qua AWS RAM trong organization (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html",
+      "title": "Review the security group for your cluster in AWS CloudHSM",
+      "section": "intro",
+      "snapshot_id": "d224d981e62e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This SG allows your EC2 instances to use your VPC to talk to HSMs in your cluster.",
+      "supports": "Security group của cluster điều khiển client nào được kết nối tới HSM (vế thứ hai của A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://aws.amazon.com/blogs/security/how-to-deploy-cloudhsm-securely-share-keys-with-saas-provider/",
+      "title": "How to deploy CloudHSM to securely share your keys with your SaaS provider (AWS Security Blog)",
+      "section": "Option 1: VPC Peering - considerations",
+      "snapshot_id": "b861a947f501",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "At the network layer, you can remove connectivity by deleting the VPC peering or by modifying the CloudHSM security groups",
+      "supports": "Truy cập cross-account vào CloudHSM được kiểm soát ở tầng mạng (security group), không qua IAM role (loại B/C).",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q046:stem:0",
+      "detail_vi": "\"has learns\" nên là \"has teams\"."
+    },
+    {
+      "type": "typo",
+      "location": "Q046:D",
+      "detail_vi": "\"now dedicated account\" nên là \"new dedicated account\"."
+    }
+  ],
+  "notes_vi": "Chia sẻ CloudHSM cross-account = VPC sharing (RAM share subnet) + security group; RAM chỉ share được CloudHSM backup.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:56:00Z",
+      "change": "Blind verdict (scs-researcher): answer=A, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key A; bổ sung bằng chứng user guide (CloudHSM cluster architecture, security group, VPC sharing, RAM ec2:Subnet) thay cho phụ thuộc re:Post; confidence open issue về nguồn re:Post được giải quyết.",
+      "previous_answer": [
+        "Q046:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha 48fdf155ca→5b39f547b4; last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:51:17Z",
+      "previous_answer": [
+        "Q046:A"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:51:17Z"
+      }
+    }
+  }
+}

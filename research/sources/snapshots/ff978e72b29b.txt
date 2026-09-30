@@ -1,0 +1,241 @@
+URL: https://docs.aws.amazon.com/ebs/latest/userguide/policy-differences.html
+TITLE: Amazon Data Lifecycle Manager default policies vs custom policies - Amazon EBS
+
+# Amazon Data Lifecycle Manager default policies vs custom policies
+
+This section compares default policies and custom policies and highlights
+their similarities and differences.
+
+Topics
+
+- EBS snapshot policy comparison
+
+- EBS-backed AMI policy comparison
+
+## EBS snapshot policy comparison
+
+The following table highlights the differences between the default policy for
+EBS snapshots and custom EBS snapshot policies.
+
+Feature
+
+Default policy for EBS snapshots
+
+Custom EBS snapshot policy
+
+Managed backup resource
+
+EBS snapshot
+
+EBS snapshot
+
+Target resource types
+
+Volumes
+
+Volumes or instances
+
+Resource targeting
+
+Targets all volumes in the Region that do not have recent snapshots.
+You can specify exclusion parameters to exclude specific volumes.
+
+Targets only volumes or instances that have specific tags.
+
+Exclusion parameters
+
+Yes, can exclude boot volumes, specific volume types, and volumes with specific tags.
+
+Yes, can exclude boot volumes and volumes with specific tags when targeting instances.
+
+Support AWS Outposts
+
+No
+
+Yes
+
+Support multiple schedules
+
+No
+
+Yes, up to 4 schedules per policy
+
+Supported retention types
+
+Age-based retention only
+
+Age-based and count-based retention
+
+Snapshot creation frequency
+
+Every 1 to 7 days.
+
+Daily, weekly, monthly, yearly, or custom frequency using a cron expression.
+
+Snapshot retention
+
+2 to 14 days.
+
+Up to 1000 snapshots (count-based) or up to 100 years (age-based).
+
+Support application-consistent snapshots
+
+No
+
+Yes, using pre and post scripts
+
+Support snapshot archiving
+
+No
+
+Yes
+
+Support fast snapshot restore
+
+No
+
+Yes
+
+Support cross-Region copying
+
+Yes, with default settings 1
+
+Yes, with custom settings
+
+Support cross-account sharing
+
+No
+
+Yes
+
+Support extended deletion 2
+
+Yes
+
+No
+
+1 For default policies:
+
+- You can't copy tags to cross-Region copies.
+
+- Copies use the same retention period as the source snapshot.
+
+- Copies get the same encryption state as the source snapshot. If the destination
+Region is enabled for encryption by default, copies are always encrypted, even if
+the source snapshots are unencrypted. Copies are always encrypted with the default
+KMS key for the destination Region.
+
+2 For default and custom policies:
+
+- If a target instance or volume is deleted, Amazon Data Lifecycle Manager continues deleting snapshots
+up to, but not including, the last one based on the retention period. For default
+policies, you can extend deletion to include the last snapshot.
+
+- If a policy is deleted or enters the error or disabled state, Amazon Data Lifecycle Manager stops
+deleting snapshots. For default policies, you can extend deletion to continue
+deleting snapshots, including the last one.
+
+## EBS-backed AMI policy comparison
+
+The following table highlights the differences between the default policy for
+EBS-backed AMIs and custom EBS-backed AMI policies.
+
+Feature
+
+Default policy for EBS-backed AMIs
+
+Custom EBS-backed AMI policy
+
+Managed backup resource
+
+EBS-backed AMIs
+
+EBS-backed AMIs
+
+Target resource types
+
+Instances
+
+Instances
+
+Resource targeting
+
+Targets all instances in the Region that do not have recent AMIs.
+You can specify exclusion parameters to exclude specific instances.
+
+Targets only instances that have specific tags.
+
+Reboot instances before AMI creation
+
+No
+
+Yes
+
+Exclusion parameters
+
+Yes, can exclude instances with specific tags.
+
+No
+
+Support multiple schedules
+
+No
+
+Yes, up to 4 schedules per policy.
+
+AMI creation frequency
+
+Every 1 to 7 days.
+
+Daily, weekly, monthly, yearly, or custom frequency using a cron expression.
+
+Supported retention types
+
+Age-based retention only.
+
+Age-based and count-based retention.
+
+AMIs retention
+
+2 to 14 days.
+
+Up to 1000 AMIs (count-based) or up to 100 years (age-based).
+
+Support AMI deprecation
+
+No
+
+Yes
+
+Support cross-Region copying
+
+Yes, with default settings 1
+
+Yes, with custom settings
+
+Support extended deletion 2
+
+Yes
+
+No
+
+1For default policies:
+
+- You can't copy tags to cross-Region copies.
+
+- Copies use the same retention period as the source AMI.
+
+- Copies get the same encryption state as the source AMI. If the destination
+Region is enabled for encryption by default, copies are always encrypted, even
+if the source AMIs are unencrypted. Copies are always encrypted with the default
+KMS key for the destination Region.
+
+2 For default and custom policies:
+
+- If a targeted instance is terminated, Amazon Data Lifecycle Manager continues deregistering AMIs up to,
+but not including, the last one based on the retention period. For default policies,
+you can extend deregistration to include the last AMI.
+
+- If a policy is deleted or enters the error or disabled state, Amazon Data Lifecycle Manager stops
+deregistering AMIs. For default policies, you can extend deletion to continue
+deregistering AMIs, including the last one.

@@ -3,73 +3,241 @@
   "question_content_hash": "3d35fad56c549a7dc74902ae374887662b0143fccd86a1e9e9bd312a4227eebb",
   "stage": "blind",
   "research_version": "r1",
-  "researched_at": "2026-09-30T19:43:00Z",
-  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "researched_at": "2026-09-30T19:36:48Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
   "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
   "requirements": [
-    {"id": "R1", "text_vi": "Chặn việc EC2 bị xâm nhập tuồn dữ liệu sang S3 bucket nằm ngoài AWS Organization của công ty.", "kind": "constraint"},
-    {"id": "R2", "text_vi": "Job xử lý trên EC2 vẫn phải hoạt động (đọc/ghi các bucket cần thiết cùng account).", "kind": "constraint"},
-    {"id": "R3", "text_vi": "Bối cảnh: subnet private không có internet, truy cập S3 qua S3 gateway endpoint với default policy; instance role chỉ cho phép s3:GetObject/PutObject trên bucket cần thiết.", "kind": "scope"},
-    {"id": "R4", "text_vi": "Vì role đã giới hạn bucket, việc exfiltration nhiều khả năng dùng credential khác (của kẻ tấn công) đi qua endpoint — biện pháp phải chặn bất kể principal nào.", "kind": "condition"}
+    {
+      "id": "R1",
+      "text_vi": "Chặn việc EC2 bị xâm nhập tuồn dữ liệu sang S3 bucket nằm ngoài AWS Organization của công ty.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Job xử lý trên EC2 vẫn phải hoạt động (đọc/ghi các bucket cần thiết cùng account).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Bối cảnh: subnet private không có internet, truy cập S3 qua S3 gateway endpoint với default policy; instance role chỉ cho phép s3:GetObject/PutObject trên bucket cần thiết.",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Vì role đã giới hạn bucket, việc exfiltration nhiều khả năng dùng credential khác (của kẻ tấn công) đi qua endpoint — biện pháp phải chặn bất kể principal nào.",
+      "kind": "condition"
+    }
   ],
   "image_transcriptions": [],
   "option_reviews": [
-    {"unit_id": "Q017:A", "unit_type": "choice", "verdict": "meets",
-     "reason_vi": "Endpoint policy áp dụng cho mọi request đi qua gateway endpoint (đường duy nhất tới S3); aws:PrincipalOrgID chặn credential ngoài tổ chức, aws:ResourceOrgID chặn bucket ngoài tổ chức, trong khi role và bucket nội bộ vẫn được phép.",
-     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"], "evidence_kind": "direct"},
-    {"unit_id": "Q017:B", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "Role đã chỉ cho phép bucket cần thiết nên thêm aws:ResourceOrgID vào role không thay đổi gì; kẻ tấn công dùng credential khác (không phải instance role) sẽ không bị policy của role này ràng buộc.",
-     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref6"], "evidence_kind": "inference"},
-    {"unit_id": "Q017:C", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "Truy cập S3 qua gateway endpoint dùng HTTPS cổng 443 và network ACL phải cho phép lưu lượng tới S3; chặn outbound 443 sẽ làm hỏng job xử lý.",
-     "requirement_ids": ["R2"], "reference_ids": ["ref7"], "evidence_kind": "inference"},
-    {"unit_id": "Q017:D", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "SCP chỉ giới hạn IAM user/role của account thành viên; không ảnh hưởng credential từ account ngoài tổ chức mà kẻ tấn công có thể dùng qua endpoint, nên không chặn được exfiltration.",
-     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref8"], "evidence_kind": "direct"}
+    {
+      "unit_id": "Q017:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Endpoint policy áp dụng cho mọi request đi qua gateway endpoint (đường duy nhất tới S3); aws:PrincipalOrgID chặn credential ngoài tổ chức, aws:ResourceOrgID chặn bucket ngoài tổ chức, trong khi role và bucket nội bộ vẫn được phép.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q017:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Role đã chỉ cho phép bucket cần thiết nên thêm aws:ResourceOrgID vào role không thay đổi gì; kẻ tấn công dùng credential khác (không phải instance role) sẽ không bị policy của role này ràng buộc.",
+      "requirement_ids": [
+        "R1",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q017:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Truy cập S3 qua gateway endpoint dùng HTTPS cổng 443 và network ACL phải cho phép lưu lượng tới S3; chặn outbound 443 sẽ làm hỏng job xử lý.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q017:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SCP chỉ giới hạn IAM user/role của account thành viên; không ảnh hưởng credential từ account ngoài tổ chức mà kẻ tấn công có thể dùng qua endpoint, nên không chặn được exfiltration.",
+      "requirement_ids": [
+        "R1",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    }
   ],
   "independent_verdict": {
-    "answer": ["Q017:A"],
+    "answer": [
+      "Q017:A"
+    ],
     "proposed_status": "verified",
-    "confidence": {"level": "high",
+    "confidence": {
+      "level": "high",
       "reason_vi": "Whitepaper data perimeter chỉ rõ dùng VPC endpoint policy với aws:PrincipalOrgID và aws:ResourceOrgID để chỉ cho phép identity và resource tin cậy từ mạng của mình; SCP không áp dụng cho principal ngoài tổ chức.",
-      "open_issues": ["Nếu instance cần truy cập bucket do AWS sở hữu (vd repo phần mềm) qua endpoint thì cần ngoại lệ; đề không nêu nhu cầu này."]},
-    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref8"],
-    "recorded_at": "2026-09-30T19:43:00Z"
+      "open_issues": [
+        "Nếu instance cần truy cập bucket do AWS sở hữu (vd repo phần mềm) qua endpoint thì cần ngoại lệ; đề không nêu nhu cầu này."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T19:36:48Z"
   },
   "references": [
-    {"id": "ref1", "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html", "title": "Control access to VPC endpoints using endpoint policies", "section": "Introduction",
-     "snapshot_id": "59aa01b01e73", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "An endpoint policy is a resource-based policy that you attach to a VPC endpoint to control which AWS principals can use the endpoint to access an AWS service.",
-     "supports": "Endpoint policy kiểm soát mọi principal dùng endpoint, không chỉ instance role.", "kind": "direct"},
-    {"id": "ref2", "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html", "title": "Control access to VPC endpoints using endpoint policies", "section": "Default endpoint policy",
-     "snapshot_id": "59aa01b01e73", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "The default endpoint policy grants full access to the endpoint.",
-     "supports": "Default policy hiện tại cho phép mọi thứ đi qua endpoint — lỗ hổng cần siết lại.", "kind": "direct"},
-    {"id": "ref3", "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html", "title": "Perimeter implementation - Building A Data Perimeter on AWS", "section": "Only trusted identities",
-     "snapshot_id": "be939849d03f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "You'll use RCPs and VPC endpoint policies to constrain which principals are allowed access.",
-     "supports": "aws:PrincipalOrgID trong VPC endpoint policy chặn credential ngoài tổ chức dùng mạng của công ty.", "kind": "direct"},
-    {"id": "ref4", "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html", "title": "Perimeter implementation - Building A Data Perimeter on AWS", "section": "Only trusted resources",
-     "snapshot_id": "be939849d03f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "by specifying the aws:ResourceOrgID IAM policy condition in SCPs and VPC endpoint policies.",
-     "supports": "aws:ResourceOrgID trong endpoint policy chặn truy cập bucket ngoài tổ chức bất kể principal.", "kind": "direct"},
-    {"id": "ref5", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html", "title": "AWS global condition context keys", "section": "aws:ResourceOrgID",
-     "snapshot_id": "ee337fc62552", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "Use this key to compare the identifier of the organization in AWS Organizations to which the requested resource belongs with the identifier specified in the policy.",
-     "supports": "Ý nghĩa aws:ResourceOrgID: so sánh tổ chức sở hữu tài nguyên được truy cập.", "kind": "direct"},
-    {"id": "ref6", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic-cross-account.html", "title": "Cross-account policy evaluation logic", "section": "Introduction",
-     "snapshot_id": "a6ef60cac267", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "The principal's identity-based policy must allow the requested access to the resource in the trusting service.",
-     "supports": "Instance role vốn chỉ allow bucket cần thiết nên không thể ghi vào bucket ngoài; exfiltration phải dùng credential khác, vì vậy sửa role (B) không hiệu quả.", "kind": "inference"},
-    {"id": "ref7", "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-s3.html", "title": "Gateway endpoints for Amazon S3", "section": "Considerations",
-     "snapshot_id": "3fc9d6a537ac", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "The network ACL for the subnet for your instances that access Amazon S3 through a gateway endpoint must allow traffic to and from Amazon S3.",
-     "supports": "Chặn outbound 443 trong NACL sẽ cắt truy cập S3 (HTTPS) của job.", "kind": "inference"},
-    {"id": "ref8", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html", "title": "Service control policies (SCPs)", "section": "Testing effects of SCPs / considerations",
-     "snapshot_id": "0ace6350695a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "They also don't affect users or roles from accounts outside the organization.",
-     "supports": "SCP (D) không ràng buộc credential của account bên ngoài mà kẻ tấn công có thể dùng.", "kind": "direct"}
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html",
+      "title": "Control access to VPC endpoints using endpoint policies",
+      "section": "Introduction",
+      "snapshot_id": "59aa01b01e73",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An endpoint policy is a resource-based policy that you attach to a VPC endpoint to control which AWS principals can use the endpoint to access an AWS service.",
+      "supports": "Endpoint policy kiểm soát mọi principal dùng endpoint, không chỉ instance role.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html",
+      "title": "Control access to VPC endpoints using endpoint policies",
+      "section": "Default endpoint policy",
+      "snapshot_id": "59aa01b01e73",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The default endpoint policy grants full access to the endpoint.",
+      "supports": "Default policy hiện tại cho phép mọi thứ đi qua endpoint — lỗ hổng cần siết lại.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html",
+      "title": "Perimeter implementation - Building A Data Perimeter on AWS",
+      "section": "Only trusted identities",
+      "snapshot_id": "be939849d03f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You'll use RCPs and VPC endpoint policies to constrain which principals are allowed access.",
+      "supports": "aws:PrincipalOrgID trong VPC endpoint policy chặn credential ngoài tổ chức dùng mạng của công ty.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html",
+      "title": "Perimeter implementation - Building A Data Perimeter on AWS",
+      "section": "Only trusted resources",
+      "snapshot_id": "be939849d03f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "by specifying the aws:ResourceOrgID IAM policy condition in SCPs and VPC endpoint policies.",
+      "supports": "aws:ResourceOrgID trong endpoint policy chặn truy cập bucket ngoài tổ chức bất kể principal.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys",
+      "section": "aws:ResourceOrgID",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use this key to compare the identifier of the organization in AWS Organizations to which the requested resource belongs with the identifier specified in the policy.",
+      "supports": "Ý nghĩa aws:ResourceOrgID: so sánh tổ chức sở hữu tài nguyên được truy cập.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic-cross-account.html",
+      "title": "Cross-account policy evaluation logic",
+      "section": "Introduction",
+      "snapshot_id": "a6ef60cac267",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The principal's identity-based policy must allow the requested access to the resource in the trusting service.",
+      "supports": "Instance role vốn chỉ allow bucket cần thiết nên không thể ghi vào bucket ngoài; exfiltration phải dùng credential khác, vì vậy sửa role (B) không hiệu quả.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-s3.html",
+      "title": "Gateway endpoints for Amazon S3",
+      "section": "Considerations",
+      "snapshot_id": "3fc9d6a537ac",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The network ACL for the subnet for your instances that access Amazon S3 through a gateway endpoint must allow traffic to and from Amazon S3.",
+      "supports": "Chặn outbound 443 trong NACL sẽ cắt truy cập S3 (HTTPS) của job.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "Testing effects of SCPs / considerations",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "They also don't affect users or roles from accounts outside the organization.",
+      "supports": "SCP (D) không ràng buộc credential của account bên ngoài mà kẻ tấn công có thể dùng.",
+      "kind": "direct"
+    }
   ],
   "source_issues": [],
-  "notes_vi": "Mạng không có internet nên gateway endpoint là đường duy nhất tới S3; siết endpoint policy là kiểm soát network perimeter áp dụng cho mọi principal."
+  "notes_vi": "Mạng không có internet nên gateway endpoint là đường duy nhất tới S3; siết endpoint policy là kiểm soát network perimeter áp dụng cho mọi principal.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "reason": "Original values were estimated by the agent and lay in the future relative to the file write time; replaced by the file modification time (upper bound of the true time). Content unchanged.",
+    "fields": {
+      "researched_at": {
+        "original": "2026-09-30T19:43:00Z",
+        "corrected": "2026-09-30T19:36:48Z"
+      },
+      "independent_verdict.recorded_at": {
+        "original": "2026-09-30T19:43:00Z",
+        "corrected": "2026-09-30T19:36:48Z"
+      }
+    },
+    "file_mtime_before_correction": "2026-09-30T19:36:48Z"
+  }
 }

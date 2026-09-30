@@ -1,0 +1,62 @@
+{
+  "question_id": "Q076",
+  "question_content_hash": "9b2569e25e900bbc215eb3256293261584c1a875d23b96cfd91c95a0f723cc43",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Tự động phát hiện VÀ giảm thiểu (mitigate) tấn công DDoS tầng 7 theo thời gian thực.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Không cần thao tác thủ công (no manual effort).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Bối cảnh: CloudFront distribution có web ACL AWS WAF (hiện chỉ có managed rule IP reputation), origin trong VPC.", "kind": "scope"},
+    {"id": "R4", "text_vi": "Chọn MỘT giải pháp.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q076:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Bật Shield Advanced và tạo CloudWatch alarm chỉ cho khả năng phát hiện/cảnh báo; với tầng 7, Shield Advanced chỉ tự tạo rule giảm thiểu khi bật automatic application layer DDoS mitigation, nên option này thiếu phần mitigate tự động.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref2", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q076:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Proactive engagement chỉ là SRT liên hệ trực tiếp với bạn khi ứng dụng bị ảnh hưởng; đây là phản ứng có con người tham gia, không phải giảm thiểu tự động tầng 7.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q076:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Network Firewall lọc traffic ở biên VPC (sau CloudFront, chỉ thấy traffic từ edge), không có tính năng phát hiện DDoS tầng 7; tự viết Lambda sửa web ACL là giải pháp tự chế, không phải real-time được quản lý.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q076:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Đúng mô hình tài liệu: web ACL + rate-based rule làm lớp bảo vệ cơ bản, Shield Advanced bảo vệ CloudFront và bật automatic application layer DDoS mitigation để Shield tự tạo/triển khai rule WAF khi phát hiện tấn công.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q076:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "D là option duy nhất có cả phát hiện và giảm thiểu tự động tầng 7, đúng cấu hình tài liệu Shield Advanced khuyến nghị. Hạ xuống medium vì từ 26/3/2026 tính năng L7 Auto Mitigation được xem là legacy.", "open_issues": ["Từ 26/3/2026, Anti-DDoS Managed Rule Group (AMR) thay thế Layer 7 Auto Mitigation làm giải pháp mặc định; khách hàng Shield Advanced hiện hữu vẫn dùng được, khách hàng mới cần liên hệ AWS Support để dùng tính năng legacy. AMR không có trong các option.", "Automatic mitigation cần 24 giờ đến 30 ngày để lập baseline traffic."]},
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response.html", "title": "Automating application layer DDoS mitigation with Shield Advanced", "section": "intro", "snapshot_id": "c55dff4d8a90", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can configure Shield Advanced to respond automatically to mitigate application layer (layer 7) attacks against your protected application layer resources, by counting or blocking web requests that are part of the attack.",
+     "supports": "Automatic application layer DDoS mitigation tự động giảm thiểu tấn công tầng 7; bổ sung cho web ACL và rate-based rule.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-app-layer-protections.html", "title": "Protecting the application layer (layer 7) with AWS Shield Advanced and AWS WAF", "section": "intro", "snapshot_id": "ec4f3771a287", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you start by associating an AWS WAF web ACL with the resource and adding one or more rate-based rules to it. You can additionally enable automatic application layer DDoS mitigation",
+     "supports": "Cấu hình khuyến nghị: web ACL + rate-based rule + automatic application layer DDoS mitigation (khớp option D).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-bp.html", "title": "Best practices for using automatic application layer DDoS mitigation", "section": "General protections management", "snapshot_id": "f4acfec2688a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "only enable automatic mitigation on the CloudFront distribution",
+     "supports": "Automatic mitigation nên bật trên CloudFront distribution khi traffic đi qua CloudFront.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-srt-proactive-engagement.html", "title": "Setting up proactive engagement for the SRT to contact you directly", "section": "intro", "snapshot_id": "6ec2d8d8da99", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "With proactive engagement, the SRT contacts you directly when the availability or performance of your application is affected because of a possible",
+     "supports": "Proactive engagement = SRT liên hệ con người, không phải mitigation tự động.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/shield-metrics.html", "title": "AWS Shield Advanced metrics", "section": "intro", "snapshot_id": "6c22caa1246d", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "These metrics improve your ability to monitor your resources by making it possible to create and configure CloudWatch dashboards and alarms for them.",
+     "supports": "CloudWatch metric/alarm của Shield Advanced phục vụ giám sát và cảnh báo, không tự giảm thiểu.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/network-firewall/latest/developerguide/what-is-aws-network-firewall.html", "title": "What is AWS Network Firewall?", "section": "intro", "snapshot_id": "6d99358b5862", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "With Network Firewall, you can filter traffic at the perimeter of your VPC.",
+     "supports": "Network Firewall hoạt động ở biên VPC, không phải ở CloudFront edge nơi tấn công L7 được xử lý.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q076:C", "detail_vi": "'in the VPCreate security policies' — thiếu dấu chấm và khoảng trắng giữa 'VPC' và 'Create'."},
+    {"type": "outdated", "location": "Q076:D", "detail_vi": "Từ 26/3/2026, Layer 7 Auto Mitigation của Shield Advanced là legacy, Anti-DDoS AMR là giải pháp mặc định; khách hàng mới cần liên hệ AWS Support để dùng L7AM. Khái niệm option D vẫn đúng."}
+  ],
+  "notes_vi": "Rate-based rule chặn IP vượt ngưỡng trong cửa sổ 5 phút; automatic mitigation của Shield dùng baseline lịch sử để tạo rule tùy chỉnh."
+}

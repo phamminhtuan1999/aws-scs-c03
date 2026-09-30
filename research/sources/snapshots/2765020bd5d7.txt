@@ -1,0 +1,402 @@
+URL: https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html
+TITLE: Encrypt - AWS Key Management Service
+
+# Encrypt
+
+Encrypts plaintext of up to 4,096 bytes using a KMS key. You can use a symmetric or
+asymmetric KMS key with a KeyUsage of ENCRYPT_DECRYPT.
+
+You can use this operation to encrypt small amounts of arbitrary data, such as a personal
+identifier or database password, or other sensitive information. You don't need to use the
+Encrypt operation to encrypt a data key. The GenerateDataKey
+and GenerateDataKeyPair operations return a plaintext data key and an
+encrypted copy of that data key.
+
+If you use a symmetric encryption KMS key, you can use an encryption context to add
+additional security to your encryption operation. If you specify an
+EncryptionContext when encrypting data, you must specify the same encryption
+context (a case-sensitive exact match) when decrypting the data. Otherwise, the request to
+decrypt fails with an InvalidCiphertextException. For more information, see
+Encryption
+Context in the
+AWS Key Management Service Developer Guide.
+
+If you specify an asymmetric KMS key, you must also specify the encryption algorithm. The
+algorithm must be compatible with the KMS key spec.
+
+Important
+
+When you use an asymmetric KMS key to encrypt or reencrypt data, be sure to record the KMS key and encryption algorithm that you choose. You will be required to provide the same KMS key and encryption algorithm when you decrypt the data. If the KMS key and algorithm do not match the values used to encrypt the data, the decrypt operation fails.
+
+You are not required to supply the key ID and encryption algorithm when you decrypt with symmetric encryption KMS keys because AWS KMS stores this information in the ciphertext blob. AWS KMS cannot store metadata in ciphertext generated with asymmetric keys. The standard format for asymmetric key ciphertext does not include configurable fields.
+
+The maximum size of the data that you can encrypt varies with the type of KMS key and the
+encryption algorithm that you choose.
+
+- Symmetric encryption KMS keys
+
+- SYMMETRIC_DEFAULT: 4096 bytes
+
+- RSA_2048
+
+- RSAES_OAEP_SHA_1: 214 bytes
+
+- RSAES_OAEP_SHA_256: 190 bytes
+
+- RSA_3072
+
+- RSAES_OAEP_SHA_1: 342 bytes
+
+- RSAES_OAEP_SHA_256: 318 bytes
+
+- RSA_4096
+
+- RSAES_OAEP_SHA_1: 470 bytes
+
+- RSAES_OAEP_SHA_256: 446 bytes
+
+- SM2PKE: 1024 bytes (China Regions only)
+
+The KMS key that you use for this operation must be in a compatible key state. For
+details, see Key states of AWS KMS keys in the
+AWS Key Management Service Developer Guide.
+
+Cross-account use: Yes. To perform this operation with a KMS key in a different AWS account, specify
+the key ARN or alias ARN in the value of the KeyId parameter.
+
+Required permissions: kms:Encrypt (key policy)
+
+Related operations:
+
+- Decrypt
+
+- GenerateDataKey
+
+- GenerateDataKeyPair
+
+Eventual consistency: The AWS KMS API follows an eventual consistency model.
+For more information, see AWS KMS eventual consistency.
+
+## Request Syntax
+
+{
+"DryRun": boolean,
+"EncryptionAlgorithm": "string",
+"EncryptionContext": {
+"string" : "string"
+},
+"GrantTokens": [ "string" ],
+"KeyId": "string",
+"Plaintext": blob
+}
+
+## Request Parameters
+
+For information about the parameters that are common to all actions, see Common Parameters.
+
+The request accepts the following data in JSON format.
+
+Note
+
+In the following list, the required parameters are described first.
+
+KeyId
+
+Identifies the KMS key to use in the encryption operation. The KMS key must have a
+KeyUsage of ENCRYPT_DECRYPT. To find the KeyUsage of
+a KMS key, use the DescribeKey operation.
+
+To specify a KMS key, use its key ID, key ARN, alias name, or alias ARN. When using an alias name, prefix it with "alias/". To specify a KMS key in a different AWS account, you must use the key ARN or alias ARN.
+
+For example:
+
+- Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
+
+- Key ARN: arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+
+- Alias name: alias/ExampleAlias
+
+- Alias ARN: arn:aws:kms:us-east-2:111122223333:alias/ExampleAlias
+
+To get the key ID and key ARN for a KMS key, use ListKeys or DescribeKey. To get the alias name and alias ARN, use ListAliases.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 2048.
+
+Required: Yes
+
+Plaintext
+
+Data to be encrypted.
+
+Type: Base64-encoded binary data object
+
+Length Constraints: Minimum length of 1. Maximum length of 4096.
+
+Required: Yes
+
+DryRun
+
+Checks if your request will succeed. DryRun is an optional parameter.
+
+To learn more about how to use this parameter, see Testing your permissions in the
+AWS Key Management Service Developer Guide.
+
+Type: Boolean
+
+Required: No
+
+EncryptionAlgorithm
+
+Specifies the encryption algorithm that AWS KMS will use to encrypt the plaintext message.
+The algorithm must be compatible with the KMS key that you specify.
+
+This parameter is required only for asymmetric KMS keys. The default value,
+SYMMETRIC_DEFAULT, is the algorithm used for symmetric encryption KMS keys. If
+you are using an asymmetric KMS key, we recommend RSAES_OAEP_SHA_256.
+
+The SM2PKE algorithm is only available in China Regions.
+
+Type: String
+
+Valid Values: SYMMETRIC_DEFAULT | RSAES_OAEP_SHA_1 | RSAES_OAEP_SHA_256 | SM2PKE
+
+Required: No
+
+EncryptionContext
+
+Specifies the encryption context that will be used to encrypt the data.
+An encryption context is valid only for cryptographic operations with a symmetric encryption KMS key. The standard asymmetric encryption algorithms and HMAC algorithms that AWS KMS uses do not support an encryption context.
+
+Important
+
+Do not include confidential or sensitive information in this field. This field may be displayed in plaintext in CloudTrail logs and other output.
+
+An encryption context is a collection of non-secret key-value pairs that represent additional authenticated data.
+When you use an encryption context to encrypt data, you must specify the same (an exact case-sensitive match) encryption context to decrypt the data. An encryption context is supported
+only on operations with symmetric encryption KMS keys. On operations with symmetric encryption KMS keys, an encryption context is optional, but it is strongly recommended.
+
+For more information, see
+Encryption context in the
+AWS Key Management Service Developer Guide.
+
+Type: String to string map
+
+Required: No
+
+GrantTokens
+
+A list of grant tokens.
+
+Use a grant token when your permission to call this operation comes from a new grant that has not yet achieved eventual consistency. For more information, see Grant token and Using a grant token in the
+
+AWS Key Management Service Developer Guide.
+
+Type: Array of strings
+
+Array Members: Minimum number of 0 items. Maximum number of 10 items.
+
+Length Constraints: Minimum length of 1. Maximum length of 8192.
+
+Required: No
+
+## Response Syntax
+
+{
+"CiphertextBlob": blob,
+"EncryptionAlgorithm": "string",
+"KeyId": "string"
+}
+
+## Response Elements
+
+If the action is successful, the service sends back an HTTP 200 response.
+
+The following data is returned in JSON format by the service.
+
+CiphertextBlob
+
+The encrypted plaintext. When you use the HTTP API or the AWS CLI, the value is Base64-encoded. Otherwise, it is not Base64-encoded.
+
+Type: Base64-encoded binary data object
+
+Length Constraints: Minimum length of 1. Maximum length of 6144.
+
+EncryptionAlgorithm
+
+The encryption algorithm that was used to encrypt the plaintext.
+
+Type: String
+
+Valid Values: SYMMETRIC_DEFAULT | RSAES_OAEP_SHA_1 | RSAES_OAEP_SHA_256 | SM2PKE
+
+KeyId
+
+The Amazon Resource Name (key ARN) of the KMS key that was used to encrypt the plaintext.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 2048.
+
+## Errors
+
+For information about the errors that are common to all actions, see Common Error Types.
+
+DependencyTimeoutException
+
+The system timed out while trying to fulfill the request. You can retry the
+request.
+
+HTTP Status Code: 500
+
+DisabledException
+
+The request was rejected because the specified KMS key is not enabled.
+
+HTTP Status Code: 400
+
+DryRunOperationException
+
+The request was rejected because the DryRun parameter was specified.
+
+HTTP Status Code: 400
+
+InvalidGrantTokenException
+
+The request was rejected because the specified grant token is not valid.
+
+HTTP Status Code: 400
+
+InvalidKeyUsageException
+
+The request was rejected for one of the following reasons:
+
+- The KeyUsage value of the KMS key is incompatible with the API
+operation.
+
+- The encryption algorithm or signing algorithm specified for the operation is
+incompatible with the type of key material in the KMS key (KeySpec).
+
+For encrypting, decrypting, re-encrypting, and generating data keys, the
+KeyUsage must be ENCRYPT_DECRYPT. For signing and verifying
+messages, the KeyUsage must be SIGN_VERIFY. For generating and
+verifying message authentication codes (MACs), the KeyUsage must be
+GENERATE_VERIFY_MAC. For deriving key agreement secrets, the
+KeyUsage must be KEY_AGREEMENT. To find the KeyUsage
+of a KMS key, use the DescribeKey operation.
+
+To find the encryption or signing algorithms supported for a particular KMS key, use the
+DescribeKey operation.
+
+HTTP Status Code: 400
+
+KeyUnavailableException
+
+The request was rejected because the specified KMS key was not available. You can retry
+the request.
+
+HTTP Status Code: 500
+
+KMSInternalException
+
+The request was rejected because an internal exception occurred. The request can be
+retried.
+
+HTTP Status Code: 500
+
+KMSInvalidStateException
+
+The request was rejected because the state of the specified resource is not valid for this
+request.
+
+This exceptions means one of the following:
+
+- The key state of the KMS key is not compatible with the operation.
+
+To find the key state, use the DescribeKey operation. For more
+information about which key states are compatible with each AWS KMS operation, see
+Key states of AWS KMS keys in the
+
+AWS Key Management Service Developer Guide
+.
+
+- For cryptographic operations on KMS keys in custom key stores, this exception
+represents a general failure with many possible causes. To identify the cause, see the
+error message that accompanies the exception.
+
+HTTP Status Code: 400
+
+NotFoundException
+
+The request was rejected because the specified entity or resource could not be
+found.
+
+HTTP Status Code: 400
+
+## Examples
+
+The following examples are formatted for
+legibility.
+
+### Example Request
+
+This example illustrates one usage of Encrypt.
+
+POST / HTTP/1.1
+Host: kms.us-west-2.amazonaws.com
+Content-Length: 107
+X-Amz-Target: TrentService.Encrypt
+X-Amz-Date: 20160517T203825Z
+Content-Type: application/x-amz-json-1.1
+Authorization: AWS4-HMAC-SHA256\
+Credential=AKIAI44QH8DHBEXAMPLE/20160517/us-west-2/kms/aws4_request,\
+SignedHeaders=content-type;host;x-amz-date;x-amz-target,\
+Signature=67ccaa73c1af7fe83973ce8139104d55f3bdcebee323d2f2e65996d99015ace2
+
+{
+"Plaintext": "VGhpcyBpcyBEYXkgMSBmb3IgdGhlIEludGVybmV0Cg==",
+"KeyId": "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
+
+### Example Response
+
+This example illustrates one usage of Encrypt.
+
+HTTP/1.1 200 OK
+Server: Server
+Date: Tue, 17 May 2016 20:38:30 GMT
+Content-Type: application/x-amz-json-1.1
+Content-Length: 379
+Connection: keep-alive
+x-amzn-RequestId: 50a0c603-1c6f-11e6-bb9e-3fadde80ce75
+
+{
+"CiphertextBlob": "CiDPoCH188S65r5Cy7pAhIFJMXDlU7mewhSlYUpuQIVBrhKmAQEBAgB4z6Ah9fPEuua+Qsu6QISBSTFw5VO5nsIUpWFKbkCFQa4AAAB9MHsGCSqGSIb3DQEHBqBuMGwCAQAwZwYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAxLc9b6QThC9jB/ZjYCARCAOt8la8qXLO5wB3JH2NlwWWzWRU2RKqpO9A/0psE5UWwkK6CnwoeC3Zj9Q0A66apZkbRglFfY1lTY+Tc=",
+"KeyId": "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+"EncryptionAlgorithm": "SYMMETRIC_DEFAULT"
+}
+
+## See Also
+
+For more information about using this API in one of the language-specific AWS SDKs, see the following:
+
+- AWS Command Line Interface V2
+
+- AWS SDK for .NET V4
+
+- AWS SDK for C++
+
+- AWS SDK for Go v2
+
+- AWS SDK for Java V2
+
+- AWS SDK for JavaScript V3
+
+- AWS SDK for Kotlin
+
+- AWS SDK for PHP V3
+
+- AWS SDK for Python (Boto3)
+
+- AWS SDK for Ruby V3

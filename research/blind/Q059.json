@@ -1,0 +1,56 @@
+{
+  "question_id": "Q059",
+  "question_content_hash": "2039816366d1851759ac7ce012bb31e930d2aaf66ac58a2eb3a6ebf42696a215",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:10Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Dùng Secrets Manager lưu secret ở CẢ us-east-1 và us-west-1.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Secret phải được mã hóa bằng AWS KMS.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Giảm thiểu độ trễ và vẫn hoạt động khi chỉ một Region khả dụng.", "kind": "optimization"},
+    {"id": "R4", "text_vi": "Công ty chưa có tài nguyên multi-Region (không có multi-Region KMS key); secret đã tạo ở us-east-1.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q059:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Replicate secret sang us-west-1 và mã hóa replica bằng key trong Region đó (mặc định aws/secretsmanager) cho truy cập cục bộ, độ trễ thấp, và mỗi Region độc lập nếu Region kia sự cố.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q059:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Gọi endpoint us-east-1 từ us-west-1 nghĩa là không có secret ở us-west-1, tăng độ trễ cross-Region và không hoạt động khi us-east-1 không khả dụng.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4", "ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q059:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Dùng customer managed key không thay đổi vấn đề: tài nguyên us-west-1 vẫn phụ thuộc endpoint us-east-1, không lưu secret ở us-west-1 và không chịu được sự cố us-east-1.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4", "ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q059:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "KMS key dùng cho replica phải nằm trong Region của replica; customer managed key single-Region ở us-east-1 không dùng được cho replica ở us-west-1 (và không thể chuyển thành multi-Region key).",
+     "requirement_ids": ["R2", "R3", "R4"], "reference_ids": ["ref2", "ref5"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q059:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Secrets Manager doc: replication phục vụ truy cập Regional/độ trễ thấp, key cho replica phải ở Region replica, mặc định aws/secretsmanager; B/C phụ thuộc us-east-1, D dùng key sai Region.", "open_issues": ["Cụm 'new AWS managed KMS key in us-west-1' của A: aws/secretsmanager ở us-west-1 do dịch vụ tự tạo/dùng, không phải kỹ sư tạo thủ công; không ảnh hưởng kết luận."]},
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:49:10Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/replicate-secrets.html", "title": "Replicate AWS Secrets Manager secrets across Regions", "section": "Replicate AWS Secrets Manager secrets across Regions", "snapshot_id": "e46f72c3fcb3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can replicate your secrets in multiple AWS Regions to support applications spread across those Regions to meet Regional access and low latency requirements.",
+     "supports": "Replication đáp ứng yêu cầu truy cập Regional và độ trễ thấp (A).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/replicate-secrets.html", "title": "Replicate AWS Secrets Manager secrets across Regions", "section": "To replicate a secret to other Regions (console)", "snapshot_id": "e46f72c3fcb3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "For Encryption key, choose a KMS key to encrypt the secret with. The key must be in the replica Region.",
+     "supports": "Key của replica phải ở Region replica (A đúng, D sai).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_ReplicaRegionType.html", "title": "ReplicaRegionType - AWS Secrets Manager API Reference", "section": "KmsKeyId", "snapshot_id": "c1a07c6b5d53", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If you don't include this field, Secrets Manager uses aws/secretsmanager.",
+     "supports": "Replica mặc định mã hóa bằng AWS managed key aws/secretsmanager của Region replica (A).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/replicate-secrets.html", "title": "Replicate AWS Secrets Manager secrets across Regions", "section": "Replicate AWS Secrets Manager secrets across Regions", "snapshot_id": "e46f72c3fcb3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "It is possible to use a secret across multiple Regions without replicating it by calling the Secrets Manager endpoint in the Region where the secret is stored.",
+     "supports": "B/C khả thi về kỹ thuật nhưng phụ thuộc Region lưu secret (không đạt độ trễ/khả dụng khi mất us-east-1).", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/multi-region-keys-overview.html", "title": "Multi-Region keys in AWS KMS", "section": "Multi-Region keys", "snapshot_id": "70a42a4bd5cf", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You cannot convert an existing single-Region key to a multi-Region key.",
+     "supports": "Key single-Region ở us-east-1 không thể biến thành multi-Region để dùng ở us-west-1 (D).", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": ""
+}

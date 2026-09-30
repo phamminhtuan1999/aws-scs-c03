@@ -1,0 +1,156 @@
+URL: https://docs.aws.amazon.com/servicecatalog/latest/adminguide/productmgmt-cloudresource.html
+TITLE: Creating Products - AWS Service Catalog
+
+# Creating Products
+
+You create products from the Products page in the AWS Service Catalog administrator console.
+
+Note
+
+Creating Terraform products require additional configuration, including a Terraform
+provisioning engine and launch role. For more information, review
+Getting started with a Terraform product.
+
+To create a new AWS Service Catalog product
+
+- Navigate to the Products list page.
+
+- Choose Create product, and the choose Create product.
+
+- Product details – Enables you to choose the type of product
+you want to create. AWS Service Catalog supports CloudFormation, Terraform Cloud, and External (supports Terraform Community Edition) product types.
+Product details also contains the metadata that appears when
+you search for and view products in a list or detail page. Enter the following:
+
+- Product name – The name of the product.
+
+- Product description – The description shows in the
+product listing to help you choose the correct product.
+
+- Owner – The person or organization that publishes
+this product. The owner could be the name of your IT organization, or
+administrator.
+
+- Distributor (optional) – The name of the
+application's publisher. This field allows you to sort the products list to make it
+easier to find products.
+
+- Version details enables you to add your template file
+and build your product. Enter the following:
+
+- Choose method – There are four ways to add a template
+file.
+
+- Use a local template file - Upload an CloudFormation template
+or a Terraform tar.gz configuration file from a local drive.
+
+- Use an Amazon S3 URL - Specify a URL that points to an
+CloudFormation template or a Terraform tar.gz configuration file stored in Amazon S3.
+If you specify an Amazon S3 URL, it
+must begin with https://.
+
+- Use an external repository - Specify your GitHub,
+GitHub Enterprise, or Bitbucket code repository. AWS Service Catalog allows you to sync products to
+template files. For Terraform products, the template file format is required to be
+a single file archived in Tar and compressed in Gzip.
+
+- Use an existing CloudFormation stack - Enter
+the ARN for an existing CloudFormation stack. This method does not support Terraform Cloud
+or External products.
+
+- Version name (optional) – The name of the product
+version (e.g., "v1", "v2beta"). No spaces are allowed.
+
+- Description (optional) – A description of the product
+version, including how this version differs from the other versions.
+
+- Guidance – Managed in the versions tab on a Product details page. When a product version is created—during
+the create product workflow—guidance for that version is set to default. To learn more
+about guidance, see Managing Versions.
+
+- Support details identifies the organization within your
+company, and provides a point of contact for support. Enter the following:
+
+- Email contact (optional) – The email address for
+reporting issues with the product.
+
+- Support link (optional) – An URL to a site where users
+can find support information or file tickets. The URL must begin with
+http:// or https://. Administrators are responsible for maintaining the accuracy
+and access of support information.
+
+- Support description (optional) – A description of
+how you should use the Email contact and Support link.
+
+- Manage tags (optional) – In addition to using tags to
+categorize your resources, you can also use them to authenticate your permissions to create
+this resource.
+
+- Create product – When you have completed the form,
+select Create product. After a few seconds, the product
+appears on the Products list page. You might need to
+refresh your browser to see the product.
+
+You can also use CodePipeline to create and configure a pipeline to deploy your product
+template to AWS Service Catalog and deliver changes you have made in your source repository. For
+more information, see Tutorial: Create a Pipeline That Deploys to AWS Service Catalog.
+
+You can define parameter properties in your CloudFormation or Terraform template and enforce those rules during
+provisioning. These properties can define the minimum and maximum length, minimum and maximum
+values, allowed values, and a regular expression for the value. AWS Service Catalog issues a warning during
+provisioning if the value provided does not adhere to the parameter property. To learn more
+about parameter properties, see Parameters in the CloudFormation User Guide.
+
+## Troubleshooting
+
+You must have permission
+to retrieve objects
+from Amazon S3 buckets.
+Otherwise,
+you might encounter the following error
+when launching or updating a product.
+
+Error: failed to process product version s3 access denied exception
+
+If you encounter this message,
+ensure have permission
+to retrieve objects
+from the following buckets:
+
+- The bucket
+where the provisioning artifact template is stored.
+
+- The bucket
+that begins
+with "cf-templates-*"
+and
+where AWS Service Catalog stores the provisioning artifact template.
+
+- The internal bucket
+that begins
+with "sc-*"
+and
+where AWS Service Catalog stores metadata.
+You won't be able
+to see this bucket
+from your account.
+
+The following example policy
+shows the minimum permissions
+that are required
+to retrieve objects
+from the previously mentioned buckets.
+
+{
+"Sid": "VisualEditor1",
+"Effect": "Allow",
+"Action": "s3:GetObject*",
+"Resource": [
+"arn:aws:s3:::YOUR_TEMPLATE_BUCKET",
+"arn:aws:s3:::YOUR_TEMPLATE_BUCKET/*",
+"arn:aws:s3:::cf-templates-*",
+"arn:aws:s3:::cf-templates-*/*",
+"arn:aws:s3:::sc-*",
+"arn:aws:s3:::sc-*/*"
+]
+}

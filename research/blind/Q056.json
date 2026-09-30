@@ -1,0 +1,59 @@
+{
+  "question_id": "Q056",
+  "question_content_hash": "54fc7060418ca1fb5ed8a95bb80f4320453481825340123c2d0b4afe941fdbf6",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:10Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Chặn mọi traffic vào/ra instance mục tiêu, bao gồm cả phiên SSH đang tồn tại (tracked connection) vẫn còn hoạt động.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Vẫn cho phép traffic từ forensics team (port 22 qua security group).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Mỗi instance có security group riêng; một subnet chứa nhiều instance, nên không được ảnh hưởng các instance khác.", "kind": "scope"},
+    {"id": "R4", "text_vi": "Hiện tượng: xóa rule SG không cắt phiên SSH đang mở, ping mới thì bị chặn (connection tracking).", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q056:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Thêm rule inbound và outbound 0.0.0.0/0 mọi port làm luồng TCP trở thành untracked; luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa, nên xóa ngay hai rule đó sẽ cắt phiên SSH cũ, chỉ còn rule port 22 cho forensics và không ảnh hưởng instance khác.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q056:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Xóa rule port 22 không cắt kết nối SSH đang được track (giống hiện tượng đã quan sát); ngoài ra khi SG không còn outbound, SSM Agent không ra được HTTPS 443 tới endpoint để dùng Session Manager.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref6"], "evidence_kind": "direct"},
+    {"unit_id": "Q056:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "NACL stateless cắt được kết nối đang tồn tại, nhưng deny all 0.0.0.0/0 sẽ chặn cả forensics team và áp dụng cho mọi instance trong subnet (subnet có nhiều instance).",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q056:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Firewall host-level chặn toàn bộ inbound/outbound cũng chặn forensics team (và chính kết nối SSM), đồng thời chạy lệnh thay đổi trên máy có thể đã bị compromise, attacker có quyền trên OS có thể gỡ rule.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref6"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q056:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "Tài liệu EC2 nêu trực tiếp: rule mở 0.0.0.0/0 hai chiều làm luồng untracked và luồng untracked bị ngắt ngay khi rule bị xóa; B/C/D đều vi phạm rõ ràng một ràng buộc. Việc một kết nối đang tracked chuyển sang untracked khi thêm rule là suy luận, tài liệu không nói nguyên văn.", "open_issues": ["Không tìm thấy câu nguyên văn trong tài liệu AWS khẳng định kết nối đã tracked sẽ chuyển thành untracked ngay khi thêm rule 0.0.0.0/0 hai chiều.", "Trong khoảnh khắc rule 0.0.0.0/0 tồn tại, instance mở cho mọi nguồn (rủi ro ngắn)."]},
+    "reference_ids": ["ref1", "ref2", "ref4"],
+    "recorded_at": "2026-09-30T19:49:10Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html", "title": "Amazon EC2 security group connection tracking", "section": "Security group connection tracking", "snapshot_id": "6dd3de8df183", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "When you change a security group rule, its tracked connections are not immediately interrupted. The security group continues to allow packets until existing connections time out.",
+     "supports": "Giải thích vì sao SSH vẫn còn sau khi xóa rule (tracked); B không cắt được phiên SSH hiện có.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html", "title": "Amazon EC2 security group connection tracking", "section": "Untracked connections", "snapshot_id": "6dd3de8df183", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "An untracked flow of traffic is immediately interrupted if the rule that enables the flow is removed or modified.",
+     "supports": "Cơ chế của A: luồng untracked bị ngắt ngay khi rule bị xóa.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html", "title": "Amazon EC2 security group connection tracking", "section": "Untracked connections", "snapshot_id": "6dd3de8df183", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If a security group rule permits TCP or UDP flows for all traffic (0.0.0.0/0 or ::/0) and there is a corresponding rule in the other direction that permits all response traffic",
+     "supports": "Điều kiện để luồng không bị track: rule 0.0.0.0/0 hai chiều mọi port (đúng các rule A thêm vào).", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf", "title": "AWS Security Incident Response Guide (PDF)", "section": "Containment - Destination containment (Network ACLs)", "snapshot_id": null, "read_via": "WebFetch", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "applying an NACL will affect every resource on the subnet, not only the resources that are being accessed without authorization.",
+     "supports": "C ảnh hưởng mọi instance trong subnet.", "kind": "direct"},
+    {"id": "ref5", "url": "https://aws.amazon.com/blogs/security/automate-amazon-ec2-instance-isolation-by-using-tags/", "title": "Automate Amazon EC2 instance isolation by using tags (AWS Security Blog)", "section": "Solution overview note", "snapshot_id": "4d461d406cb8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": "2024-07-22T13:47:16-07:00",
+     "quote": "if you have a narrower inbound rule that initially allows the SSH connection, the existing connection will not be broken by changing the group.",
+     "supports": "Bối cảnh (blog): SG hẹp -> kết nối SSH tracked không bị cắt khi đổi SG.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html", "title": "Complete Session Manager prerequisites - AWS Systems Manager", "section": "Connectivity to endpoints", "snapshot_id": "4fa0689b36b3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The managed nodes you connect to must also allow HTTPS (port 443) outbound traffic to the following endpoints:",
+     "supports": "Session Manager cần outbound 443; SG đã xóa rule/ firewall chặn outbound sẽ làm hỏng truy cập (B, D).", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Kỹ thuật ở A dựa trên hành vi untracked connection của security group; tài liệu nói trực tiếp điều kiện untracked và việc ngắt ngay khi xóa rule."
+}

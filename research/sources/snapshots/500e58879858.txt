@@ -1,0 +1,486 @@
+URL: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html
+TITLE: Elastic network interfaces - Amazon Elastic Compute Cloud
+
+# Elastic network interfaces
+
+An elastic network interface is a logical networking component in a VPC that
+represents a virtual network card. You can create and configure network interfaces and attach them
+to instances that you launch in the same Availability Zone. The attributes of a network interface
+follow it as it's attached or detached from an instance and reattached to another instance. When
+you move a network interface from one instance to another, network traffic is redirected from the
+original instance to the new instance.
+
+Note that this AWS resource is referred to as a network interface in the
+AWS Management Console and the Amazon EC2 API. Therefore, we use "network interface" in this documentation instead of
+"elastic network interface". The term "network interface" in this documentation always means
+"elastic network interface".
+
+Network interface attributes
+
+A network interface can include the following attributes:
+
+- A primary private IPv4 address from the IPv4 address range of your subnet
+
+- A primary IPv6 address from the IPv6 address range of your subnet
+
+- Secondary private IPv4 addresses from the IPv4 address range of your subnet
+
+- One Elastic IP address (IPv4) for each private IPv4 address
+
+- One public IPv4 address
+
+- Secondary IPv6 addresses
+
+- Security groups
+
+- A MAC address
+
+- A source/destination check flag
+
+- A description
+
+Monitoring traffic
+
+You can enable a VPC flow log on your network interface to capture information
+about the traffic going to and from a network interface. After you've created a
+flow log, you can view and retrieve its data in Amazon CloudWatch Logs. For more information, see
+VPC Flow Logs in the
+Amazon VPC User Guide.
+
+Contents
+
+- Network interface concepts
+
+- Network cards
+
+- Maximum IP addresses per network interface
+
+- Create a network interface for your EC2 instance
+
+- Network interface attachments for your EC2 instance
+
+- Manage the IP addresses for your network interface
+
+- Modify network interface attributes
+
+- Multiple network interfaces for your Amazon EC2 instances
+
+- Requester-managed network interfaces
+
+- Prefix delegation for Amazon EC2 network interfaces
+
+- Delete a network interface
+
+## Network interface concepts
+
+The following are important concepts to understand as you get started using
+network interfaces.
+
+Primary network interface
+
+Each instance has a default network interface, called the primary
+network interface. You can't detach a primary network interface from
+an instance.
+
+Secondary network interfaces
+
+You can create and attach secondary network interfaces to your instance. The
+maximum number of network interfaces varies by instance type. For more information,
+see Maximum IP addresses per network interface.
+
+IPv4 addresses for network interfaces
+
+When you launch an EC2 instance into an IPv4-only or dual stack subnet, the instance
+receives a primary private IP address from the IPv4 address range of the subnet. You
+can also specify additional private IPv4 addresses, known as secondary private IPv4
+addresses. Unlike primary private IP addresses, secondary private IP addresses can be
+reassigned from one instance to another.
+
+Public IPv4 addresses for network interfaces
+
+All subnets have a modifiable attribute that determines whether network
+interfaces created in that subnet (and therefore instances launched into that
+subnet) are assigned a public IPv4 address. For more information, see Subnet settings
+in the Amazon VPC User Guide. When you launch an instance, the IP address
+is assigned to the primary network interface. If you specify an existing network interface
+as the primary network interface when you launch an instance, the public IPv4 address
+is determined by this network interface.
+
+When you create a network interface, it inherits the public IPv4 addressing attribute
+from the subnet. If you later modify the public IPv4 addressing attribute of the subnet,
+the network interface keeps the setting that was in effect when it was created.
+
+We release the public IP address when the instance is stopped, hibernated, or terminated.
+We assign a new public IP address when you start your stopped or hibernated instance,
+unless it has a secondary network interface or a secondary private IPv4 address that is
+associated with an Elastic IP address.
+
+IPv6 addresses for network interfaces
+
+If you associate IPv6 CIDR blocks with your VPC and subnet, you can assign IPv6
+addresses from the subnet range to a network interface. Each IPv6 address can be
+assigned to one network interface.
+
+All subnets have a modifiable attribute that determines whether network interfaces
+created in that subnet (and therefore instances launched into that subnet) are
+automatically assigned an IPv6 address from the range of the subnet. When you launch
+an instance, the IPv6 address is assigned to the primary network interface.
+
+Elastic IP addresses for network interfaces
+
+You can associate an Elastic IP address with one of the private IPv4 addresses
+for the network interface. You can associate one Elastic IP address with each
+private IPv4 address. If you disassociate an Elastic IP address from a network interface,
+you can release it or associate it with a different instance.
+
+Termination behavior
+
+You can set the termination behavior for a network interface that's attached to an
+instance. You can specify whether the network interface should be automatically
+deleted when you terminate the instance to which it's attached.
+
+Source/destination checking
+
+You can enable or disable source/destination checks, which ensure that the
+instance is either the source or the destination of any traffic that it receives.
+Source/destination checks are enabled by default. You must disable source/destination
+checks if the instance runs services such as network address
+translation, routing, or firewalls.
+
+Requester-managed network interfaces
+
+These network interfaces are created and managed by AWS services to enable you to use
+some resources and services. You can't manage these network interfaces yourself. For more
+information, see Requester-managed network interfaces.
+
+Prefix delegation
+
+A prefix is a reserved private IPv4 or IPv6 CIDR range that you
+allocate for automatic or manual assignment to network interfaces that are
+associated with an instance. By using Delegated Prefixes, you can launch services
+faster by assigning a range of IP addresses as a single prefix.
+
+Managed network interfaces
+
+A managed network interface is managed by a service
+provider, such as Amazon EKS Auto Mode. You can’t directly modify the settings of
+a managed network interface. Managed network interface are identified by a
+true value in the Managed
+field. For more information, see Amazon EC2 managed instances.
+
+## Network cards
+
+Most instance types support one network card. Instance types that support multiple
+network cards provide higher network performance, including bandwidth capabilities
+above 100 Gbps and improved packet rate performance. When you attach a network
+interface to an instance that supports multiple network cards, you can select the
+network card for the network interface. The primary network interface must be
+assigned to network card index 0.
+
+EFA and EFA-only network interfaces count as a network interface. You can assign
+only one EFA or EFA-only network interface per network card. The primary network
+interface can't be an EFA-only network interface.
+
+The following instance types support multiple network cards. For information about
+the number of network interfaces that an instance type supports, see
+Maximum IP addresses per network interface.
+
+Instance type
+
+Number of network cards
+
+c6in.32xlarge
+
+2
+
+c6in.metal
+
+2
+
+c8gb.48xlarge
+
+2
+
+c8gb.metal-48xl
+
+2
+
+c8gn.48xlarge
+
+2
+
+c8gn.metal-48xl
+
+2
+
+c8in.96xlarge
+
+2
+
+c8in.metal-96xl
+
+2
+
+c8ib.96xlarge
+
+2
+
+c8ib.metal-96xl
+
+2
+
+dl1.24xlarge
+
+4
+
+g6e.24xlarge
+
+2
+
+g6e.48xlarge
+
+4
+
+g7.48xlarge
+
+2
+
+g7e.24xlarge
+
+2
+
+g7e.48xlarge
+
+4
+
+hpc6id.32xlarge
+
+2
+
+hpc7a.12xlarge
+
+2
+
+hpc7a.24xlarge
+
+2
+
+hpc7a.48xlarge
+
+2
+
+hpc7a.96xlarge
+
+2
+
+hpc8a.96xlarge
+
+2
+
+i7ie.48xlarge
+
+2
+
+i7ie.metal-48xl
+
+2
+
+i8ge.48xlarge
+
+2
+
+i8ge.metal-48xl
+
+2
+
+m6idn.32xlarge
+
+2
+
+m6idn.metal
+
+2
+
+m6in.32xlarge
+
+2
+
+m6in.metal
+
+2
+
+m8gb.48xlarge
+
+2
+
+m8gb.metal-48xl
+
+2
+
+m8gn.48xlarge
+
+2
+
+m8gn.metal-48xl
+
+2
+
+m8in.96xlarge
+
+2
+
+m8in.metal-96xl
+
+2
+
+m8idn.96xlarge
+
+2
+
+m8idn.metal-96xl
+
+2
+
+m8ib.96xlarge
+
+2
+
+m8ib.metal-96xl
+
+2
+
+m8idb.96xlarge
+
+2
+
+m8idb.metal-96xl
+
+2
+
+p4d.24xlarge
+
+4
+
+p4de.24xlarge
+
+4
+
+p5.48xlarge
+
+32
+
+p5e.48xlarge
+
+32
+
+p5en.48xlarge
+
+16
+
+p6-b200.48xlarge
+
+8
+
+p6-b300.48xlarge
+
+17
+
+p6e-gb200.36xlarge
+
+17
+
+r8gb.48xlarge
+
+2
+
+r8gb.metal-48xl
+
+2
+
+r8gn.48xlarge
+
+2
+
+r8gn.metal-48xl
+
+2
+
+r8in.96xlarge
+
+2
+
+r8in.metal-96xl
+
+2
+
+r8idn.96xlarge
+
+2
+
+r8idn.metal-96xl
+
+2
+
+r8ib.96xlarge
+
+2
+
+r8ib.metal-96xl
+
+2
+
+r8idb.96xlarge
+
+2
+
+r8idb.metal-96xl
+
+2
+
+r6idn.32xlarge
+
+2
+
+r6idn.metal
+
+2
+
+r6in.32xlarge
+
+2
+
+r6in.metal
+
+2
+
+trn1.32xlarge
+
+8
+
+trn1n.32xlarge
+
+16
+
+trn2.48xlarge
+
+16
+
+trn2u.48xlarge
+
+16
+
+u7in-16tb.224xlarge
+
+2
+
+u7in-24tb.224xlarge
+
+2
+
+u7in-32tb.224xlarge
+
+2
+
+u7inh-32tb.480xlarge
+
+2

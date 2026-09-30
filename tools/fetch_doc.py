@@ -74,9 +74,12 @@ def fetch(url, refresh=False):
         if url in (meta['url'], meta['final_url']) and not refresh and (SNAP / f'{sid}.txt').exists():
             return sid, meta, (SNAP / f'{sid}.txt').read_text(encoding='utf-8')
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept-Language': 'en-US,en'})
-    with urllib.request.urlopen(req, timeout=40) as r:
+    with urllib.request.urlopen(req, timeout=60) as r:
         raw = r.read()
         final = r.geturl()
+        ctype = r.headers.get('Content-Type', '')
+    if 'pdf' in ctype.lower() or raw[:5] == b'%PDF-':
+        return save_pdf(url, final, raw)
     doc = LH.fromstring(raw)
     title = (doc.xpath('string(//title)') or '').strip()
     updated = None
@@ -97,6 +100,30 @@ def fetch(url, refresh=False):
     meta = {'url': url, 'final_url': final, 'title': title, 'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
             'page_last_updated': updated, 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'chars': len(text),
             'read_via': 'tools/fetch_doc.py'}
+    (SNAP / f'{sid}.meta.json').write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding='utf-8')
+    return sid, meta, (SNAP / f'{sid}.txt').read_text(encoding='utf-8')
+
+
+def save_pdf(url, final, raw):
+    from io import BytesIO
+    from pypdf import PdfReader
+    reader = PdfReader(BytesIO(raw))
+    pages = [(pg.extract_text() or '') for pg in reader.pages]
+    text = '
+
+'.join(f'[page {i}]
+{t}' for i, t in enumerate(pages, 1))
+    title = (reader.metadata.title if reader.metadata and reader.metadata.title else final.rsplit('/', 1)[-1])
+    sid = hashlib.sha256(final.encode()).hexdigest()[:12]
+    SNAP.mkdir(parents=True, exist_ok=True)
+    (SNAP / f'{sid}.txt').write_text(f'URL: {final}
+TITLE: {title}
+
+{text}
+', encoding='utf-8')
+    meta = {'url': url, 'final_url': final, 'title': title, 'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+            'page_last_updated': None, 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'chars': len(text),
+            'read_via': 'tools/fetch_doc.py (pdf)', 'pages': len(pages)}
     (SNAP / f'{sid}.meta.json').write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding='utf-8')
     return sid, meta, (SNAP / f'{sid}.txt').read_text(encoding='utf-8')
 

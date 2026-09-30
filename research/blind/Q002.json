@@ -3,76 +3,265 @@
   "question_content_hash": "c3413b9d9e6e8440f2890c7cf5a9a0db9f2f2371af7e7acf11accca642ee3d13",
   "stage": "blind",
   "research_version": "r1",
-  "researched_at": "2026-09-30T19:36:00Z",
-  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "researched_at": "2026-09-30T19:31:10Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
   "blind_attestation": "Only research/blind_set, research/schema, tools/fetch_doc.py, tools/validate_research.py, research/sources and AWS documentation pages were used; no answer key, vote, dump site or other research record was accessed.",
   "requirements": [
-    {"id": "R1", "text_vi": "Xác thực người dùng BÊN NGOÀI (external users/khách hàng) cho web application.", "kind": "constraint"},
-    {"id": "R2", "text_vi": "Xác thực áp dụng thống nhất cho nhiều microservice chạy trên Amazon ECS.", "kind": "scope"},
-    {"id": "R3", "text_vi": "Dùng credentials/token tạm thời (có thời hạn).", "kind": "constraint"},
-    {"id": "R4", "text_vi": "Giảm tối đa công sức quản lý cơ sở dữ liệu người dùng (không tự vận hành user store).", "kind": "optimization"},
-    {"id": "R5", "text_vi": "Chọn và sắp xếp đúng 3 bước, mỗi bước dùng tối đa một lần.", "kind": "condition"}
+    {
+      "id": "R1",
+      "text_vi": "Xác thực người dùng BÊN NGOÀI (external users/khách hàng) cho web application.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Xác thực áp dụng thống nhất cho nhiều microservice chạy trên Amazon ECS.",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Dùng credentials/token tạm thời (có thời hạn).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Giảm tối đa công sức quản lý cơ sở dữ liệu người dùng (không tự vận hành user store).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Chọn và sắp xếp đúng 3 bước, mỗi bước dùng tối đa một lần.",
+      "kind": "condition"
+    }
   ],
   "image_transcriptions": [
-    {"image": "images/Q002_image_01.png", "text": "Step 1: / Step 2: / Step 3: — mỗi ô là dropdown gồm 6 lựa chọn giống nhau: Configure Amazon Cognito user pools for user authentication. | Set up an IAM role for each microservice. Grant each role appropriate permissions. | Implement an Amazon API Gateway HTTP API with AWS Lambda authorizers to validate tokens before forwarding requests to microservices. | Create an Amazon DynamoDB table to store user credentials for each microservice. | Create an Amazon Cognito application client to interact with the web application. | Set up AWS IAM Identity Center to give users access to the microservices.", "notes_vi": "Ảnh chỉ là giao diện 3 ô dropdown; nội dung khớp văn bản các bước trong stem."}
+    {
+      "image": "images/Q002_image_01.png",
+      "text": "Step 1: / Step 2: / Step 3: — mỗi ô là dropdown gồm 6 lựa chọn giống nhau: Configure Amazon Cognito user pools for user authentication. | Set up an IAM role for each microservice. Grant each role appropriate permissions. | Implement an Amazon API Gateway HTTP API with AWS Lambda authorizers to validate tokens before forwarding requests to microservices. | Create an Amazon DynamoDB table to store user credentials for each microservice. | Create an Amazon Cognito application client to interact with the web application. | Set up AWS IAM Identity Center to give users access to the microservices.",
+      "notes_vi": "Ảnh chỉ là giao diện 3 ô dropdown; nội dung khớp văn bản các bước trong stem."
+    }
   ],
   "option_reviews": [
-    {"unit_id": "Q002:S1", "unit_type": "step", "verdict": "meets",
-     "reason_vi": "Cognito user pool là user directory được quản lý cho xác thực web/mobile app, loại bỏ việc tự quản lý DB người dùng; phải tạo trước vì app client nằm trong user pool.",
-     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref1"], "evidence_kind": "direct", "position": 1},
-    {"unit_id": "Q002:S2", "unit_type": "step", "verdict": "meets_but_suboptimal",
-     "reason_vi": "Task IAM role cho từng microservice là thực hành tốt để service gọi AWS API bằng credentials tạm thời, nhưng nó phục vụ quyền của service chứ không xác thực người dùng bên ngoài; với 3 ô thì kém liên quan hơn bước xác thực token tại API Gateway.",
-     "requirement_ids": ["R1", "R2", "R5"], "reference_ids": ["ref5"], "evidence_kind": "inference", "position": null},
-    {"unit_id": "Q002:S3", "unit_type": "step", "verdict": "meets",
-     "reason_vi": "API Gateway HTTP API gọi Lambda authorizer để quyết định cho phép request, tạo một điểm kiểm tra token tập trung trước khi chuyển tới các microservice (JWT authorizer native cũng làm được nhưng không có trong danh sách).",
-     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref3", "ref4"], "evidence_kind": "direct", "position": 3},
-    {"unit_id": "Q002:S4", "unit_type": "step", "verdict": "does_not_meet",
-     "reason_vi": "Tự lưu credentials người dùng trong DynamoDB nghĩa là tự quản lý user database, trái yêu cầu giảm quản lý và không cung cấp token tạm thời.",
-     "requirement_ids": ["R3", "R4"], "reference_ids": ["ref1"], "evidence_kind": "inference", "position": null},
-    {"unit_id": "Q002:S5", "unit_type": "step", "verdict": "meets",
-     "reason_vi": "App client là cấu hình trong user pool để web app đăng nhập và nhận token (ID/access/refresh) có thời hạn cấu hình được; thực hiện sau khi có user pool.",
-     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2"], "evidence_kind": "direct", "position": 2},
-    {"unit_id": "Q002:S6", "unit_type": "step", "verdict": "does_not_meet",
-     "reason_vi": "IAM Identity Center dành cho workforce users truy cập AWS account và ứng dụng, không phải giải pháp xác thực khách hàng bên ngoài cho web app tự xây.",
-     "requirement_ids": ["R1"], "reference_ids": ["ref6"], "evidence_kind": "direct", "position": null}
+    {
+      "unit_id": "Q002:S1",
+      "unit_type": "step",
+      "verdict": "meets",
+      "reason_vi": "Cognito user pool là user directory được quản lý cho xác thực web/mobile app, loại bỏ việc tự quản lý DB người dùng; phải tạo trước vì app client nằm trong user pool.",
+      "requirement_ids": [
+        "R1",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct",
+      "position": 1
+    },
+    {
+      "unit_id": "Q002:S2",
+      "unit_type": "step",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Task IAM role cho từng microservice là thực hành tốt để service gọi AWS API bằng credentials tạm thời, nhưng nó phục vụ quyền của service chứ không xác thực người dùng bên ngoài; với 3 ô thì kém liên quan hơn bước xác thực token tại API Gateway.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference",
+      "position": null
+    },
+    {
+      "unit_id": "Q002:S3",
+      "unit_type": "step",
+      "verdict": "meets",
+      "reason_vi": "API Gateway HTTP API gọi Lambda authorizer để quyết định cho phép request, tạo một điểm kiểm tra token tập trung trước khi chuyển tới các microservice (JWT authorizer native cũng làm được nhưng không có trong danh sách).",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct",
+      "position": 3
+    },
+    {
+      "unit_id": "Q002:S4",
+      "unit_type": "step",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tự lưu credentials người dùng trong DynamoDB nghĩa là tự quản lý user database, trái yêu cầu giảm quản lý và không cung cấp token tạm thời.",
+      "requirement_ids": [
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference",
+      "position": null
+    },
+    {
+      "unit_id": "Q002:S5",
+      "unit_type": "step",
+      "verdict": "meets",
+      "reason_vi": "App client là cấu hình trong user pool để web app đăng nhập và nhận token (ID/access/refresh) có thời hạn cấu hình được; thực hiện sau khi có user pool.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "position": 2
+    },
+    {
+      "unit_id": "Q002:S6",
+      "unit_type": "step",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM Identity Center dành cho workforce users truy cập AWS account và ứng dụng, không phải giải pháp xác thực khách hàng bên ngoài cho web app tự xây.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct",
+      "position": null
+    }
   ],
   "independent_verdict": {
-    "answer": ["Q002:S1", "Q002:S5", "Q002:S3"],
+    "answer": [
+      "Q002:S1",
+      "Q002:S5",
+      "Q002:S3"
+    ],
     "proposed_status": "verified",
-    "confidence": {"level": "medium",
+    "confidence": {
+      "level": "medium",
       "reason_vi": "Tài liệu API Gateway có ví dụ chính xác mô hình user pool (issuer) + app client (audience) + HTTP API authorizer; DynamoDB và IAM Identity Center bị loại rõ. Rủi ro còn lại: một số người có thể chọn bước IAM role per microservice thay cho API Gateway.",
-      "open_issues": ["S2 (IAM role cho mỗi microservice) hợp lý về bảo mật nhưng không phải bước xác thực người dùng; nếu đề muốn nhấn 'temporary credentials' theo nghĩa AWS credentials thì có thể tranh luận.", "Lambda authorizer không phải cách ít công sức nhất cho Cognito JWT (JWT authorizer native), nhưng JWT authorizer không có trong danh sách."]},
-    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref6"],
-    "recorded_at": "2026-09-30T19:36:00Z"
+      "open_issues": [
+        "S2 (IAM role cho mỗi microservice) hợp lý về bảo mật nhưng không phải bước xác thực người dùng; nếu đề muốn nhấn 'temporary credentials' theo nghĩa AWS credentials thì có thể tranh luận.",
+        "Lambda authorizer không phải cách ít công sức nhất cho Cognito JWT (JWT authorizer native), nhưng JWT authorizer không có trong danh sách."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:31:10Z"
   },
   "references": [
-    {"id": "ref1", "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html", "title": "Amazon Cognito user pools", "section": "intro",
-     "snapshot_id": "53af6ed28166", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "An Amazon Cognito user pool is a user directory for web and mobile app authentication and authorization.",
-     "supports": "User pool là user directory được quản lý cho xác thực web app, thay thế việc tự quản lý DB người dùng.", "kind": "direct"},
-    {"id": "ref2", "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html", "title": "Application-specific settings with app clients", "section": "intro / Refresh token",
-     "snapshot_id": "824fcca3b645", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "A user pool app client is a configuration within a user pool that interacts with one mobile or web application that authenticates with Amazon Cognito.",
-     "supports": "App client nằm trong user pool (nên tạo sau user pool) và đại diện cho web application.", "kind": "direct"},
-    {"id": "ref3", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html", "title": "Control access to HTTP APIs with AWS Lambda authorizers", "section": "intro",
-     "snapshot_id": "1b383afb20c0", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "You use a Lambda authorizer to use a Lambda function to control access to your HTTP API.",
-     "supports": "HTTP API hỗ trợ Lambda authorizer để kiểm soát truy cập trước khi request tới backend.", "kind": "direct"},
-    {"id": "ref4", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html", "title": "Control access to HTTP APIs with JWT authorizers in API Gateway", "section": "Example CloudFormation template",
-     "snapshot_id": "c40718ab503b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "This template includes an Amazon Cognito user pool as the issuer for the JWT authorizer and an Amazon Cognito app client as the audience for the authorizer.",
-     "supports": "Mô hình chuẩn: user pool + app client + HTTP API authorizer kiểm tra token trước khi vào backend.", "kind": "direct"},
-    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html", "title": "Amazon ECS task IAM role", "section": "intro",
-     "snapshot_id": "e73fabc49549", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "This role allows your application code (running in the container) to use other AWS services.",
-     "supports": "IAM role cho microservice cấp quyền cho code gọi AWS service, không xác thực người dùng cuối.", "kind": "direct"},
-    {"id": "ref6", "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html", "title": "What is IAM Identity Center?", "section": "intro",
-     "snapshot_id": "1b0f37773563", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "AWS IAM Identity Center is the AWS solution for connecting your workforce users to AWS managed applications",
-     "supports": "IAM Identity Center hướng tới workforce users, không phải người dùng bên ngoài của web app.", "kind": "direct"}
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools.html",
+      "title": "Amazon Cognito user pools",
+      "section": "intro",
+      "snapshot_id": "53af6ed28166",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An Amazon Cognito user pool is a user directory for web and mobile app authentication and authorization.",
+      "supports": "User pool là user directory được quản lý cho xác thực web app, thay thế việc tự quản lý DB người dùng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html",
+      "title": "Application-specific settings with app clients",
+      "section": "intro / Refresh token",
+      "snapshot_id": "824fcca3b645",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A user pool app client is a configuration within a user pool that interacts with one mobile or web application that authenticates with Amazon Cognito.",
+      "supports": "App client nằm trong user pool (nên tạo sau user pool) và đại diện cho web application.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html",
+      "title": "Control access to HTTP APIs with AWS Lambda authorizers",
+      "section": "intro",
+      "snapshot_id": "1b383afb20c0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You use a Lambda authorizer to use a Lambda function to control access to your HTTP API.",
+      "supports": "HTTP API hỗ trợ Lambda authorizer để kiểm soát truy cập trước khi request tới backend.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html",
+      "title": "Control access to HTTP APIs with JWT authorizers in API Gateway",
+      "section": "Example CloudFormation template",
+      "snapshot_id": "c40718ab503b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This template includes an Amazon Cognito user pool as the issuer for the JWT authorizer and an Amazon Cognito app client as the audience for the authorizer.",
+      "supports": "Mô hình chuẩn: user pool + app client + HTTP API authorizer kiểm tra token trước khi vào backend.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html",
+      "title": "Amazon ECS task IAM role",
+      "section": "intro",
+      "snapshot_id": "e73fabc49549",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This role allows your application code (running in the container) to use other AWS services.",
+      "supports": "IAM role cho microservice cấp quyền cho code gọi AWS service, không xác thực người dùng cuối.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html",
+      "title": "What is IAM Identity Center?",
+      "section": "intro",
+      "snapshot_id": "1b0f37773563",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS IAM Identity Center is the AWS solution for connecting your workforce users to AWS managed applications",
+      "supports": "IAM Identity Center hướng tới workforce users, không phải người dùng bên ngoài của web app.",
+      "kind": "direct"
+    }
   ],
   "source_issues": [
-    {"type": "layout", "location": "Q002:stem:0", "detail_vi": "Đề ghi 'HOTSPOT' nhưng thực chất là dạng chọn và sắp xếp 3 bước."}
+    {
+      "type": "layout",
+      "location": "Q002:stem:0",
+      "detail_vi": "Đề ghi 'HOTSPOT' nhưng thực chất là dạng chọn và sắp xếp 3 bước."
+    }
   ],
-  "notes_vi": "Thứ tự: tạo user pool -> tạo app client trong user pool -> API Gateway HTTP API + authorizer kiểm tra token trước khi chuyển tới microservice trên ECS."
+  "notes_vi": "Thứ tự: tạo user pool -> tạo app client trong user pool -> API Gateway HTTP API + authorizer kiểm tra token trước khi chuyển tới microservice trên ECS.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "reason": "Original values were estimated by the agent and lay in the future relative to the file write time; replaced by the file modification time (upper bound of the true time). Content unchanged.",
+    "fields": {
+      "researched_at": {
+        "original": "2026-09-30T19:36:00Z",
+        "corrected": "2026-09-30T19:31:10Z"
+      },
+      "independent_verdict.recorded_at": {
+        "original": "2026-09-30T19:36:00Z",
+        "corrected": "2026-09-30T19:31:10Z"
+      }
+    },
+    "file_mtime_before_correction": "2026-09-30T19:31:10Z"
+  }
 }

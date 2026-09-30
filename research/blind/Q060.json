@@ -1,0 +1,53 @@
+{
+  "question_id": "Q060",
+  "question_content_hash": "ecd552bd8417ba18761e99cff3a4193a220ce1b8bd91d06bfe28b268613c462c",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:10Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Điều tra một IAM role cụ thể sau các finding bất thường của GuardDuty.", "kind": "scope"},
+    {"id": "R2", "text_vi": "Tạo báo cáo điều tra gồm hành vi bất thường (anomalous behavior) và indicators of compromise.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q060:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Amazon Detective Investigation điều tra IAM user/IAM role bằng indicators of compromise và tạo report tóm tắt hành vi bất thường/độc hại cùng khuyến nghị.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q060:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Audit Manager tạo assessment theo framework tuân thủ để thu thập bằng chứng kiểm toán control, không phân tích hành vi bất thường hay IoC của một IAM role (và hiện không nhận khách hàng mới).",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q060:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng cho EC2, ECR image và Lambda; không có assessment cho IAM role và không báo cáo IoC hành vi.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q060:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Inspector không quét IAM role (chỉ EC2, container image ECR, Lambda) và kết quả là finding lỗ hổng/phơi nhiễm mạng, không phải điều tra hành vi.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref4"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q060:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Detective nói rõ Detective Investigation dành cho IAM users/roles, dùng IoC và tạo report hành vi bất thường; Inspector/Audit Manager có phạm vi khác.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2"],
+    "recorded_at": "2026-09-30T19:49:10Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/detective/latest/userguide/investigations-about.html", "title": "Detective Investigation - Amazon Detective", "section": "Detective Investigation", "snapshot_id": "de4deb70efe2", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can use Amazon Detective Investigation to investigate IAM users and IAM roles using indicators of compromise",
+     "supports": "Detective điều tra IAM role bằng IoC (A).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/detective/latest/userguide/investigations-report-understand.html", "title": "Understanding a Detective Investigations report - Amazon Detective", "section": "Understanding a Detective Investigations report", "snapshot_id": "10646a026b35", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "A Detective Investigations report lists a summary of the uncommon behavior or malicious activity that indicates compromise.",
+     "supports": "Report của Detective chứa hành vi bất thường và IoC (A).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/audit-manager/latest/userguide/what-is.html", "title": "What is AWS Audit Manager?", "section": "What is AWS Audit Manager?", "snapshot_id": "091562b00ef6", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS Audit Manager helps you continually audit your AWS usage to simplify how you manage risk and compliance with regulations and industry standards.",
+     "supports": "Audit Manager phục vụ kiểm toán tuân thủ, không điều tra IoC (B).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html", "title": "What is Amazon Inspector?", "section": "What is Amazon Inspector?", "snapshot_id": "6ead4370c770", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon Inspector discovers and scans Amazon EC2 instances, container images in Amazon ECR, and Lambda functions.",
+     "supports": "Inspector không quét IAM role (C, D).", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q060:B", "detail_vi": "Thiếu dấu chấm: 'Specify the IAM role Run an assessment report.'"}
+  ],
+  "notes_vi": "AWS Audit Manager hiện không còn mở cho khách hàng mới (theo trang What is AWS Audit Manager), không ảnh hưởng đáp án."
+}

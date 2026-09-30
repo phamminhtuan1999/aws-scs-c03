@@ -1,0 +1,261 @@
+{
+  "question_id": "Q043",
+  "question_content_hash": "42ea37ee8e4154dbd9cfd74d8818be9495c52765c50c38b107fa21a7ae4f4373",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:40:03Z",
+  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "3cefe94288563d30310ebda11416b87ddda6ca9ed928d2a0ed44d91c79b8e304",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Trail hiện có được tạo bằng AWS CLI trong một Region (mặc định create-trail tạo single-Region trail).",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Log từ các Region mới phải được gửi về cùng S3 bucket.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "LEAST operational overhead.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q043:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Một trail chỉ là single-Region hoặc áp dụng cho tất cả Region đã bật; không có tùy chọn chọn một danh sách Region. Muốn làm theo kiểu từng Region phải tạo nhiều single-Region trail, không tự bao phủ Region thêm sau này, overhead cao.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q043:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "S3 Event Notifications chỉ báo sự kiện xảy ra trong bucket (object tạo/xóa...), không thu thập API activity của các Region, nên không sửa được việc CloudTrail không ghi log các Region mới.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q043:C",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Một multi-Region trail mới sẽ gửi log mọi Region về bucket, nhưng phải cấu hình lại trail mới và trail cũ vẫn chạy song song ở home Region, tạo bản sao management events (bản sao bổ sung tính phí) hoặc phải xóa trail cũ; nhiều việc hơn so với sửa trail cũ.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q043:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "update-trail --is-multi-region-trail chuyển trail hiện có thành multi-Region; CloudTrail gửi log mọi Region đã bật về cùng S3 bucket, tự thêm cả Region opt-in bật sau này. Chỉ một lệnh, giữ nguyên bucket/cấu hình.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q043:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu CloudTrail mô tả rõ việc chuyển single-Region trail thành multi-Region trail bằng update-trail và multi-Region trail gửi log mọi Region về một bucket.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:40:03Z"
+  },
+  "source_answer": [
+    "Q043:D"
+  ],
+  "researched_answer": [
+    "Q043:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu CloudTrail nêu trực tiếp: create-trail mặc định tạo single-Region trail, và update-trail --is-multi-region-trail chuyển trail hiện có thành multi-Region, gửi log mọi Region đã bật về cùng S3 bucket.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Blind = D, source key = D (khớp). Đã kiểm tra lại đối thủ mạnh nhất là C: trail multi-Region mới cũng gửi log mọi Region, nhưng phải cấu hình lại từ đầu (bucket, bucket policy...) và trail cũ vẫn ghi management events ở home Region, tạo bản sao tính phí hoặc phải xóa thêm; D chỉ là một lệnh update-trail trên trail hiện có nên ít overhead hơn. A không khả thi như mô tả vì một trail chỉ có hai phạm vi (một Region hoặc tất cả Region), B không liên quan việc thu thập log. Không tìm thấy bằng chứng bác bỏ D; giữ nguyên.",
+  "explanation_vi": {
+    "why_correct": "Trail tạo bằng AWS CLI mặc định chỉ ghi log ở Region tạo ra nó; chạy update-trail --is-multi-region-trail sẽ biến chính trail đó thành multi-Region và CloudTrail gửi log của mọi Region đã bật về cùng S3 bucket — một thay đổi duy nhất, overhead thấp nhất.",
+    "others": {
+      "Q043:A": "Một trail không thể chọn một danh sách Region tùy ý (chỉ một Region hoặc tất cả), và Region thêm sau này vẫn không được ghi log.",
+      "Q043:B": "S3 Event Notifications chỉ báo sự kiện object trong bucket, không thu thập API activity của các Region nên không sửa được việc thiếu log.",
+      "Q043:C": "Trail multi-Region mới cũng chạy được nhưng phải cấu hình lại và trail cũ tạo bản sao management events (tính phí) hoặc phải xóa — nhiều việc hơn sửa trail cũ."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "by using the AWS CLI",
+      "meaning_vi": "create-trail qua CLI mặc định tạo single-Region trail — nguyên nhân của sự cố."
+    },
+    {
+      "phrase": "multiple Regions",
+      "meaning_vi": "Cần trail áp dụng cho tất cả Region (multi-Region trail)."
+    },
+    {
+      "phrase": "LEAST amount of operational overhead",
+      "meaning_vi": "Ưu tiên sửa cấu hình có sẵn thay vì tạo tài nguyên mới."
+    }
+  ],
+  "memory_tip_vi": "Nếu CloudTrail thiếu log từ Region mới -> nghĩ đến chuyển trail hiện có thành multi-Region (update-trail --is-multi-region-trail); kiểm tra xem đề đòi ít overhead (sửa trail cũ) hay cần tách trail riêng.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS CloudTrail",
+      "Amazon S3"
+    ],
+    "reason_vi": "Cấu hình logging CloudTrail đầy đủ mọi Region để phục vụ giám sát và kiểm toán."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-a-trail-by-using-the-aws-cli-update-trail.html",
+      "title": "Using the update-trail command to update a trail",
+      "section": "Converting a single-Region trail to a multi-Region trail",
+      "snapshot_id": "ec276bd18eb3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To change an existing single-Region trail to a multi-Region trail, use the --is-multi-region-trail option.",
+      "supports": "Có thể sửa trực tiếp trail hiện có thành multi-Region (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-multi-region-trails.html",
+      "title": "Understanding multi-Region trails and opt-in Regions",
+      "section": "What happens when you create a multi-Region trail?",
+      "snapshot_id": "54ff5cb734cb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudTrail delivers log files for account activity from all enabled AWS Regions to the single Amazon S3 bucket that you specify",
+      "supports": "Trail chỉ có hai phạm vi (một Region hoặc tất cả Region đã bật); multi-Region trail gửi log mọi Region về một bucket.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-a-trail-by-using-the-aws-cli-create-trail.html",
+      "title": "Using the create-trail command to create a trail",
+      "section": "Creating a multi-Region trail",
+      "snapshot_id": "5b1570a23f62",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, the create-trail command creates a trail that logs events only in the AWS Region where the trail was created.",
+      "supports": "Giải thích nguyên nhân: trail tạo bằng CLI mặc định là single-Region; tạo trail mới (C) là thêm một trail riêng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://aws.amazon.com/cloudtrail/pricing/",
+      "title": "AWS CloudTrail pricing",
+      "section": "Paid Tier Trails",
+      "snapshot_id": "35f9dcd9e6f8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can deliver additional copies of management events, and all other event types including data and network activity events using trails.",
+      "supports": "Hai trail cùng ghi management events tạo bản sao bổ sung thuộc tier trả phí (bất lợi của C nếu giữ trail cũ).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html",
+      "title": "Amazon S3 Event Notifications",
+      "section": "intro",
+      "snapshot_id": "337622415351",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use the Amazon S3 Event Notifications feature to receive notifications when certain events happen in your S3 bucket.",
+      "supports": "S3 notifications chỉ liên quan sự kiện trong bucket, không thu thập API activity các Region (B).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Trail tạo bằng CLI mặc định là single-Region; cách ít việc nhất là update-trail --is-multi-region-trail.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:40:03Z",
+      "change": "Blind verdict (scs-researcher): answer=D, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key D; kiểm tra lại C (trail mới) — hoạt động nhưng nhiều overhead hơn; giữ nguyên các option review.",
+      "previous_answer": [
+        "Q043:D"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:51:17Z",
+      "previous_answer": [
+        "Q043:D"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:51:17Z"
+      }
+    }
+  }
+}

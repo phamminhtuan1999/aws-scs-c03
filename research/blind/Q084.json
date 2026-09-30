@@ -1,0 +1,43 @@
+{
+  "question_id": "Q084",
+  "question_content_hash": "6b8f019c505e2d2e0e9985312298c427cafb60df5eee8993aa3fc2f235f880f7",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:01Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages (docs.aws.amazon.com / aws.amazon.com) were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Dùng KMS asymmetric key cho ứng dụng code signing (bối cảnh).", "kind": "scope"},
+    {"id": "R2", "text_vi": "Thu thập evidence về việc tạo (creation), nguồn gốc (origin) và sử dụng (use) của KMS key.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Evidence phải bất biến (immutable) để phục vụ compliance.", "kind": "constraint"},
+    {"id": "R4", "text_vi": "Auditor nội bộ phải truy cập được evidence.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q084:A", "unit_type": "choice", "verdict": "meets", "reason_vi": "CloudTrail ghi mọi thao tác KMS (CreateKey có trường origin, và các thao tác mã hóa/ký); log file validation phát hiện sửa/xóa, S3 Object Lock (WORM) ngăn ghi đè/xóa; auditor được cấp quyền đọc bucket. Hạn chế: trail không lọc được management event theo eventName hay key ARN, nên bước 'filter theo CreateKey/ARN' không làm được đúng nghĩa đen; trail sẽ ghi toàn bộ KMS management events (tập lớn hơn, vẫn chứa evidence cần).", "requirement_ids": ["R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5", "ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q084:B", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Log do ứng dụng tự ghi chỉ phản ánh thao tác của ứng dụng, không chứng minh việc tạo/origin của key hay mọi lần dùng key; CloudWatch Logs log group và bản export gửi đi không có cơ chế bất biến như nêu.", "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q084:C", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Bảng DynamoDB có thể bị sửa/xóa item nên không phải evidence bất biến; ngoài ra key được tạo trước khi pipeline lọc theo ARN của key tồn tại nên dễ thiếu sự kiện CreateKey.", "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q084:D", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Metric, dashboard và alarm chỉ theo dõi mức sử dụng, không lưu evidence chi tiết về tạo/origin của key; subscription filter chỉ chuyển tiếp log sang đích khác, không đảm bảo tính bất biến.", "requirement_ids": ["R2", "R3"], "reference_ids": ["ref7"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q084:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "Chỉ A tạo evidence bất biến và có thể kiểm chứng (CloudTrail + log file validation + S3 Object Lock) bao phủ CreateKey (có origin) và mọi thao tác dùng key; B, C, D đều thiếu tính bất biến hoặc thiếu evidence tạo key. Độ tin cậy medium vì chi tiết cấu hình event selector trong A không đúng với khả năng thực tế của trail.", "open_issues": ["Với trail, advanced event selector cho management events chỉ hỗ trợ eventCategory, eventSource, readOnly; eventName chỉ dùng cho event data store; resources.ARN chỉ dùng cho data events. KMS chỉ cho phép loại trừ toàn bộ KMS events, không lọc từng event. Vì vậy bước lọc theo CreateKey và theo key ARN trong A không khả thi đúng nghĩa đen."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:54:01Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/logging-using-cloudtrail.html", "title": "Logging AWS KMS API calls with AWS CloudTrail", "section": "Logging AWS KMS API calls with AWS CloudTrail", "snapshot_id": "2d9621c96ab8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "operations that manage KMS keys, such as CreateKey and PutKeyPolicy, and cryptographic operations, such as GenerateDataKey and Decrypt.", "supports": "CloudTrail ghi cả việc tạo key và việc dùng key (cryptographic operations).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/ct-createkey.html", "title": "CreateKey (CloudTrail log example)", "section": "CreateKey", "snapshot_id": "116f0ec29db7", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "\"origin\": \"EXTERNAL\",", "supports": "Sự kiện CreateKey trong CloudTrail có trường origin của key (evidence về nguồn gốc).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-intro.html", "title": "Validating CloudTrail log file integrity", "section": "Validating CloudTrail log file integrity", "snapshot_id": "eee83c3856f8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "This makes it computationally infeasible to modify, delete or forge CloudTrail log files without detection.", "supports": "Log file validation giúp chứng minh tính toàn vẹn của evidence.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html", "title": "Locking objects with Object Lock", "section": "Locking objects with Object Lock", "snapshot_id": "b105a845c1ae", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Object Lock uses a write-once-read-many (WORM) model to store objects.", "supports": "S3 Object Lock làm cho log file bất biến (WORM).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html", "title": "Security OU – Log Archive account (AWS SRA)", "section": "Amazon S3 as central log store", "snapshot_id": "1e825365cf67", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Two options help you protect or verify the integrity of CloudTrail log objects that are stored in Amazon S3.", "supports": "AWS SRA dùng log file validation và S3 Object Lock để bảo vệ CloudTrail log.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedFieldSelector.html", "title": "AdvancedFieldSelector - AWS CloudTrail API Reference", "section": "Contents", "snapshot_id": "b5b4b6f05cfb", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "For CloudTrail management events, supported fields include eventCategory (required), eventSource, and readOnly.", "supports": "Trail không lọc management events (gồm KMS) theo eventName/ARN -> bước lọc trong A không khả thi đúng nghĩa đen.", "kind": "direct"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html", "title": "Real-time processing of log data with subscriptions", "section": "Real-time processing of log data with subscriptions", "snapshot_id": "da1d95832008", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "You can use subscriptions to get access to a real-time feed of log events from CloudWatch Logs", "supports": "Subscription filter chỉ chuyển tiếp log, không tạo lưu trữ bất biến.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "data", "location": "Q084:A", "detail_vi": "Phương án A mô tả event selector lọc riêng CreateKey và lọc theo key ARN; với trail, KMS là management events và chỉ lọc được theo eventCategory/eventSource/readOnly (KMS chỉ có thể loại trừ toàn bộ), nên chi tiết này không chính xác về kỹ thuật."},
+    {"type": "typo", "location": "Q084:B", "detail_vi": "Thiếu dấu chấm: 'Configure an automated export of the log group Send the export to the auditors.'"}
+  ],
+  "notes_vi": "A là phương án duy nhất có evidence bất biến và kiểm chứng được; cần hiểu rằng trail sẽ ghi toàn bộ KMS management events thay vì lọc theo ARN."
+}

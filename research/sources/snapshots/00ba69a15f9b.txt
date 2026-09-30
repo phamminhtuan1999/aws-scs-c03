@@ -1,0 +1,516 @@
+URL: https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateGrant.html
+TITLE: CreateGrant - AWS Key Management Service
+
+# CreateGrant
+
+Adds a grant to a KMS key.
+
+A grant is a policy instrument that allows AWS principals to use
+KMS keys in cryptographic operations. It also can allow them to view a KMS key (DescribeKey) and create and manage grants. When authorizing access to a KMS key,
+grants are considered along with key policies and IAM policies. Grants are often used for
+temporary permissions because you can create one, use its permissions, and delete it without
+changing your key policies or IAM policies.
+
+You can create a grant for an AWS principal (IAM user, IAM role, or AWS account) by
+specifying the GranteePrincipal parameter. You can also create a grant for an
+AWS service principal by specifying the GranteeServicePrincipal
+parameter.
+
+For detailed information about grants, including grant terminology, see Grants in AWS KMS in the
+
+AWS Key Management Service Developer Guide
+. For examples of creating grants in several
+programming languages, see Use CreateGrant with an AWS SDK or CLI.
+
+The CreateGrant operation returns a GrantToken and a
+GrantId.
+
+- When you create, retire, or revoke a grant, there might be a brief delay, usually less than five minutes, until the grant is available throughout AWS KMS. This state is known as eventual consistency. Once the grant has achieved eventual consistency, the grantee
+principal can use the permissions in the grant without identifying the grant.
+
+However, to use the permissions in the grant immediately, use the
+GrantToken that CreateGrant returns. For details, see Using a grant
+token in the
+
+AWS Key Management Service Developer Guide
+.
+
+- The CreateGrant operation also returns a GrantId. You can
+use the GrantId and a key identifier to identify the grant in the RetireGrant and RevokeGrant operations. To find the grant
+ID, use the ListGrants or ListRetirableGrants
+operations.
+
+The KMS key that you use for this operation must be in a compatible key state. For
+details, see Key states of AWS KMS keys in the
+AWS Key Management Service Developer Guide.
+
+Cross-account use: Yes. To perform this operation on a KMS key in a different AWS account, specify the key
+ARN in the value of the KeyId parameter.
+
+Required permissions: kms:CreateGrant (key policy)
+
+Related operations:
+
+- ListGrants
+
+- ListRetirableGrants
+
+- RetireGrant
+
+- RevokeGrant
+
+Eventual consistency: The AWS KMS API follows an eventual consistency model.
+For more information, see AWS KMS eventual consistency.
+
+## Request Syntax
+
+{
+"Constraints": {
+"EncryptionContextEquals": {
+"string" : "string"
+},
+"EncryptionContextSubset": {
+"string" : "string"
+},
+"SourceArn": "string"
+},
+"DryRun": boolean,
+"GranteePrincipal": "string",
+"GranteeServicePrincipal": "string",
+"GrantTokens": [ "string" ],
+"KeyId": "string",
+"Name": "string",
+"Operations": [ "string" ],
+"RetiringPrincipal": "string",
+"RetiringServicePrincipal": "string"
+}
+
+## Request Parameters
+
+For information about the parameters that are common to all actions, see Common Parameters.
+
+The request accepts the following data in JSON format.
+
+Note
+
+In the following list, the required parameters are described first.
+
+KeyId
+
+Identifies the KMS key for the grant. The grant gives principals permission to use this
+KMS key.
+
+Specify the key ID or key ARN of the KMS key. To specify a KMS key in a
+different AWS account, you must use the key ARN.
+
+For example:
+
+- Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
+
+- Key ARN: arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+
+To get the key ID and key ARN for a KMS key, use ListKeys or DescribeKey.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 2048.
+
+Required: Yes
+
+Operations
+
+A list of operations that the grant permits.
+
+This list must include only operations that are permitted in a grant. Also, the operation
+must be supported on the KMS key. For example, you cannot create a grant for a symmetric
+encryption KMS key that allows the Sign operation, or a grant for an
+asymmetric KMS key that allows the GenerateDataKey operation. If you try,
+AWS KMS returns a ValidationError exception. For details, see Grant
+operations in the
+AWS Key Management Service Developer Guide.
+
+Type: Array of strings
+
+Valid Values: Decrypt | Encrypt | GenerateDataKey | GenerateDataKeyWithoutPlaintext | ReEncryptFrom | ReEncryptTo | Sign | Verify | GetPublicKey | CreateGrant | RetireGrant | DescribeKey | GenerateDataKeyPair | GenerateDataKeyPairWithoutPlaintext | GenerateMac | VerifyMac | DeriveSharedSecret
+
+Required: Yes
+
+Constraints
+
+Specifies a grant constraint.
+
+Important
+
+Do not include confidential or sensitive information in this field. This field may be displayed in plaintext in CloudTrail logs and other output.
+
+AWS KMS supports the following grant constraints.
+
+- EncryptionContextEquals and EncryptionContextSubset — These
+encryption context grant constraints allow the permissions in the grant only when the
+encryption context in the request matches (EncryptionContextEquals) or
+includes (EncryptionContextSubset) the encryption context specified in the
+constraint.
+
+Encryption context grant constraints are supported only on grant operations that
+include an EncryptionContext parameter, such as cryptographic operations on
+symmetric encryption KMS keys. You cannot use an encryption context grant constraint for
+cryptographic operations with asymmetric KMS keys or HMAC KMS keys. Operations with these
+keys don't support an encryption context. Grants with encryption context grant constraints
+can include the DescribeKey and RetireGrant operations,
+but the constraint doesn't apply to these operations. If a grant with an encryption context
+grant constraint includes the CreateGrant operation, the constraint requires
+that any grants created with the CreateGrant permission have an equally strict
+or stricter encryption context constraint.
+
+Each constraint value can include up to 8 encryption context pairs. The encryption
+context value in each constraint cannot exceed 384 characters. For more information about
+encryption context, see Encryption context in the
+
+AWS Key Management Service Developer Guide
+.
+
+- SourceArn — This grant constraint allows the permissions in the grant only when the
+request is made on behalf of a specific AWS resource, identified by its Amazon Resource Name (ARN). This is effectively
+the same as having the aws:SourceArn global condition key in the grant. The SourceArn constraint is supported on grants
+for all types of KMS keys and can also be applied to the DescribeKey operation when
+specified in the request. However, it does not apply to RetireGrant operation.
+
+For information about grant constraints, see Using grant
+constraints in the
+AWS Key Management Service Developer Guide.
+
+Type: GrantConstraints object
+
+Required: No
+
+DryRun
+
+Checks if your request will succeed. DryRun is an optional parameter.
+
+To learn more about how to use this parameter, see Testing your permissions in the
+AWS Key Management Service Developer Guide.
+
+Type: Boolean
+
+Required: No
+
+GranteePrincipal
+
+The identity that gets the permissions specified in the grant.
+
+To specify the grantee principal, use the Amazon Resource Name (ARN) of an AWS
+principal. Valid principals include AWS accounts, IAM users, IAM roles,
+federated users, and assumed role users. For help with the ARN syntax for a principal, see
+IAM ARNs in the
+
+AWS Identity and Access Management User Guide
+.
+
+You must specify either GranteePrincipal or
+GranteeServicePrincipal, but not both.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 256.
+
+Pattern: ^[\w+=,.@:/-]+$
+
+Required: No
+
+GranteeServicePrincipal
+
+The AWS
+service
+principal that gets the permissions specified in the grant.
+
+When you specify a GranteeServicePrincipal, you must also specify a
+SourceArn grant constraint. In addition, you must specify either a
+RetiringPrincipal or a RetiringServicePrincipal.
+
+You must specify either GranteePrincipal or
+GranteeServicePrincipal, but not both.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 128.
+
+Pattern: ^([A-Za-z0-9\-]+)\.([A-Za-z0-9\-]+)(\.[A-Za-z0-9\-]+)+$
+
+Required: No
+
+GrantTokens
+
+A list of grant tokens.
+
+Use a grant token when your permission to call this operation comes from a new grant that has not yet achieved eventual consistency. For more information, see Grant token and Using a grant token in the
+
+AWS Key Management Service Developer Guide.
+
+Type: Array of strings
+
+Array Members: Minimum number of 0 items. Maximum number of 10 items.
+
+Length Constraints: Minimum length of 1. Maximum length of 8192.
+
+Required: No
+
+Name
+
+A friendly name for the grant. Use this value to prevent the unintended creation of
+duplicate grants when retrying this request.
+
+Important
+
+Do not include confidential or sensitive information in this field. This field may be displayed in plaintext in CloudTrail logs and other output.
+
+When this value is absent, all CreateGrant requests result in a new grant
+with a unique GrantId even if all the supplied parameters are identical. This can
+result in unintended duplicates when you retry the CreateGrant request.
+
+When this value is present, you can retry a CreateGrant request with
+identical parameters; if the grant already exists, the original GrantId is
+returned without creating a new grant. Note that the returned grant token is unique with every
+CreateGrant request, even when a duplicate GrantId is returned.
+All grant tokens for the same grant ID can be used interchangeably.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 256.
+
+Pattern: ^[a-zA-Z0-9:/_-]+$
+
+Required: No
+
+RetiringPrincipal
+
+The principal that has permission to use the RetireGrant operation to
+retire the grant.
+
+To specify the principal, use the Amazon Resource Name (ARN) of an
+AWS principal. Valid principals include AWS accounts, IAM users, IAM roles,
+federated users, and assumed role users. For help with the ARN syntax for a principal, see
+IAM ARNs in the
+
+AWS Identity and Access Management User Guide
+.
+
+The grant determines the retiring principal. Other principals might have permission to
+retire the grant or revoke the grant. For details, see RevokeGrant and
+Retiring and revoking
+grants in the
+AWS Key Management Service Developer Guide.
+
+You can specify either RetiringPrincipal or
+RetiringServicePrincipal, but not both.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 256.
+
+Pattern: ^[\w+=,.@:/-]+$
+
+Required: No
+
+RetiringServicePrincipal
+
+The AWS
+service
+principal that has permission to use the RetireGrant
+operation to retire the grant.
+
+You can specify either RetiringPrincipal or
+RetiringServicePrincipal, but not both.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 128.
+
+Pattern: ^([A-Za-z0-9\-]+)\.([A-Za-z0-9\-]+)(\.[A-Za-z0-9\-]+)+$
+
+Required: No
+
+## Response Syntax
+
+{
+"GrantId": "string",
+"GrantToken": "string"
+}
+
+## Response Elements
+
+If the action is successful, the service sends back an HTTP 200 response.
+
+The following data is returned in JSON format by the service.
+
+GrantId
+
+The unique identifier for the grant.
+
+You can use the GrantId in a ListGrants, RetireGrant, or RevokeGrant operation.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 128.
+
+GrantToken
+
+The grant token.
+
+Use a grant token when your permission to call this operation comes from a new grant that has not yet achieved eventual consistency. For more information, see Grant token and Using a grant token in the
+
+AWS Key Management Service Developer Guide.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 8192.
+
+## Errors
+
+For information about the errors that are common to all actions, see Common Error Types.
+
+DependencyTimeoutException
+
+The system timed out while trying to fulfill the request. You can retry the
+request.
+
+HTTP Status Code: 500
+
+DisabledException
+
+The request was rejected because the specified KMS key is not enabled.
+
+HTTP Status Code: 400
+
+DryRunOperationException
+
+The request was rejected because the DryRun parameter was specified.
+
+HTTP Status Code: 400
+
+InvalidArnException
+
+The request was rejected because a specified ARN, or an ARN in a key policy, is not
+valid.
+
+HTTP Status Code: 400
+
+InvalidGrantTokenException
+
+The request was rejected because the specified grant token is not valid.
+
+HTTP Status Code: 400
+
+KMSInternalException
+
+The request was rejected because an internal exception occurred. The request can be
+retried.
+
+HTTP Status Code: 500
+
+KMSInvalidStateException
+
+The request was rejected because the state of the specified resource is not valid for this
+request.
+
+This exceptions means one of the following:
+
+- The key state of the KMS key is not compatible with the operation.
+
+To find the key state, use the DescribeKey operation. For more
+information about which key states are compatible with each AWS KMS operation, see
+Key states of AWS KMS keys in the
+
+AWS Key Management Service Developer Guide
+.
+
+- For cryptographic operations on KMS keys in custom key stores, this exception
+represents a general failure with many possible causes. To identify the cause, see the
+error message that accompanies the exception.
+
+HTTP Status Code: 400
+
+LimitExceededException
+
+The request was rejected because a length constraint or quota was exceeded. For more
+information, see Quotas in
+the
+AWS Key Management Service Developer Guide.
+
+HTTP Status Code: 400
+
+NotFoundException
+
+The request was rejected because the specified entity or resource could not be
+found.
+
+HTTP Status Code: 400
+
+## Examples
+
+The following examples are formatted for
+legibility.
+
+### Example Request
+
+This example illustrates one usage of CreateGrant.
+
+POST / HTTP/1.1
+Host: kms.us-east-2.amazonaws.com
+Content-Length: 176
+X-Amz-Target: TrentService.CreateGrant
+X-Amz-Date: 20161031T202851Z
+Content-Type: application/x-amz-json-1.1
+Authorization: AWS4-HMAC-SHA256\
+Credential=AKIAI44QH8DHBEXAMPLE/20161031/us-east-2/kms/aws4_request,\
+SignedHeaders=content-type;host;x-amz-date;x-amz-target,\
+Signature=84a2b3b8eb50b9bf34ba844cd5e59649fb315a16b447357ae49bf8b87774c8f7
+
+{
+"Operations": [
+"Encrypt",
+"Decrypt"
+],
+"GranteePrincipal": "arn:aws:iam::111122223333:role/ExampleRole",
+"KeyId": "arn:aws:kms:us-east-2:444455556666:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+}
+
+### Example Response
+
+This example illustrates one usage of CreateGrant.
+
+HTTP/1.1 200 OK
+Server: Server
+Date: Mon, 31 Oct 2016 20:28:51 GMT
+Content-Type: application/x-amz-json-1.1
+Content-Length: 585
+Connection: keep-alive
+x-amzn-RequestId: a2d8d452identity center-9fa8-11e6-b30c-dbb8ea4d97c5
+
+{
+"GrantId": "0c237476b39f8bc44e45212e08498fbe3151305030726c0590dd8d3e9f3d6a60",
+"GrantToken": "AQpAM2RhZTk1MGMyNTk2ZmZmMzEyYWVhOWViN2I1MWM4Mzc0MWFiYjc0ZDE1ODkyNGFlNTIzODZhMzgyZjBlNGY3NiKIAgEBAgB4Pa6VDCWW__MSrqnre1HIN0Grt00ViSSuUjhqOC8OT3YAAADfMIHcBgkqhkiG9w0BBwaggc4wgcsCAQAwgcUGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMmqLyBTAegIn9XlK5AgEQgIGXZQjkBcl1dykDdqZBUQ6L1OfUivQy7JVYO2-ZJP7m6f1g8GzV47HX5phdtONAP7K_HQIflcgpkoCqd_fUnE114mSmiagWkbQ5sqAVV3ov-VeqgrvMe5ZFEWLMSluvBAqdjHEdMIkHMlhlj4ENZbzBfo9Wxk8b8SnwP4kc4gGivedzFXo-dwN8fxjjq_ZZ9JFOj2ijIbj5FyogDCN0drOfi8RORSEuCEmPvjFRMFAwcmwFkN2NPp89amA"
+}
+
+## See Also
+
+For more information about using this API in one of the language-specific AWS SDKs, see the following:
+
+- AWS Command Line Interface V2
+
+- AWS SDK for .NET V4
+
+- AWS SDK for C++
+
+- AWS SDK for Go v2
+
+- AWS SDK for Java V2
+
+- AWS SDK for JavaScript V3
+
+- AWS SDK for Kotlin
+
+- AWS SDK for PHP V3
+
+- AWS SDK for Python (Boto3)
+
+- AWS SDK for Ruby V3

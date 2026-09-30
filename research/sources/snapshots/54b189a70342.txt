@@ -1,0 +1,169 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html
+TITLE: Logging options for Amazon S3 - Amazon Simple Storage Service
+
+# Logging options for Amazon S3
+
+You can record the actions that are taken by users, roles, or AWS services on Amazon S3
+resources and maintain log records for auditing and compliance purposes. To do this, you can
+use server-access logging, AWS CloudTrail logging, or a combination of both. We recommend that you
+use CloudTrail for logging bucket-level and object-level actions for your Amazon S3 resources. For more
+information about each option, see the following sections:
+
+- Logging requests with server access logging
+
+- Logging Amazon S3 API calls using AWS CloudTrail
+
+Amazon S3 offers two delivery paths for server access logs: direct delivery to an Amazon S3 general
+purpose bucket and delivery to Amazon CloudWatch Logs. Some capabilities in the following table apply to
+server access logs only through the Amazon CloudWatch Logs delivery path, as noted.
+
+The following table lists the key properties of CloudTrail logs and Amazon S3 server-access logs. To
+make sure that CloudTrail meets your security requirements, review the table and notes.
+
+Log properties
+
+AWS CloudTrail
+
+Amazon S3 server logs
+
+Can be forwarded to other systems (Amazon CloudWatch Logs, Amazon CloudWatch Events)
+
+Yes
+
+Yes
+
+Deliver logs to more than one destination (for example, send the same
+logs to two different buckets)
+
+Yes
+
+Yes3
+
+Turn on logs for a subset of objects (prefix)
+
+Yes
+
+No
+
+Cross-account log delivery (target and source bucket owned by
+different accounts)
+
+Yes
+
+Yes3
+
+Integrity validation of log file by using digital signature or
+hashing
+
+Yes
+
+No
+
+Default or choice of encryption for log files
+
+Yes
+
+Yes3
+
+Object operations (by using Amazon S3 APIs)
+
+Yes
+
+Yes
+
+Bucket operations (by using Amazon S3 APIs)
+
+Yes
+
+Yes
+
+Searchable UI for logs
+
+Yes
+
+Yes3
+
+Fields for Object Lock parameters, Amazon S3 Select properties for log
+records
+
+Yes
+
+No
+
+Fields for Object Size, Total Time,
+Turn-Around Time, and HTTP Referer for log
+records
+
+Yes
+
+Yes
+
+Lifecycle transitions, expirations, restores
+
+No
+
+Yes
+
+Logging of keys in a batch delete operation
+
+Yes
+
+Yes
+
+Authentication failures1
+
+No
+
+Yes
+
+Accounts where logs get delivered
+
+Bucket owner2, and requester
+
+Bucket owner, and other accounts with Amazon CloudWatch Logs delivery
+
+Performance and Cost
+
+AWS CloudTrail
+
+Amazon S3 Server Logs
+
+Price
+
+Management events (first delivery) are free; data events incur a fee,
+in addition to storage of logs
+
+No cost for Amazon S3 bucket delivery in addition to storage of logs;
+CloudWatch vended logs rates for Amazon CloudWatch Logs delivery3.
+
+Speed of log delivery
+
+Data events every 5 minutes; management events every 15 minutes
+
+Within a few hours
+
+Log format
+
+JSON
+
+Space-delimited text records for delivery to an Amazon S3 bucket.
+Structured JSON for delivery to Amazon CloudWatch Logs3.
+
+Notes
+
+- CloudTrail does not deliver logs for requests that fail authentication (in which the provided credentials are not valid) or that fail due to redirection (error code 301 Moved Permanently). However, it does include logs for requests in which authorization fails (AccessDenied) and requests that are made by anonymous users.
+
+- The S3 bucket owner receives CloudTrail logs when the account does not have full
+access to the object in the request. For more information, see Amazon S3 object-level actions in cross-account scenarios.
+
+- In addition to direct delivery to an Amazon S3 bucket, you can deliver Amazon S3 server
+access logs to Amazon CloudWatch Logs. With this delivery path, you gain additional
+capabilities, including forwarding to other destinations, delivery to multiple
+destinations, cross-account and cross-Region aggregation, AWS KMS encryption, and
+interactive querying with CloudWatch Logs Insights. You can also deliver these logs
+to Amazon S3 Tables in Apache Iceberg format for SQL analytics. For more information, see
+Logging requests with server access logging.
+
+- S3 does not support delivery of CloudTrail logs or server access logs to the requester
+or the bucket owner for VPC endpoint requests when the VPC endpoint policy denies
+them or for requests that fail before the VPC policy is evaluated.

@@ -1,0 +1,58 @@
+{
+  "question_id": "Q078",
+  "question_content_hash": "77259286480a26cc11ff63d42b1ad8dc9e293fc4e65c1e65a8c5449cf7910490",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Nhanh chóng hạn chế lượng lớn request có thể độc hại từ hàng trăm IP thuộc hai quốc gia.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Không được ngăn người dùng hợp lệ (ứng dụng phục vụ người dùng toàn cầu) truy cập.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Bối cảnh: web ACL AWS WAF gắn với ALB phía trước EC2.", "kind": "scope"},
+    {"id": "R4", "text_vi": "Chọn MỘT giải pháp.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q078:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Rate-based rule đếm request theo nhóm (mặc định theo IP) và chỉ giới hạn khi tốc độ vượt ngưỡng; người dùng hợp lệ dưới ngưỡng không bị ảnh hưởng, triển khai nhanh trên web ACL sẵn có.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q078:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Geo match rule block toàn bộ traffic từ hai quốc gia sẽ chặn cả người dùng hợp lệ ở hai quốc gia đó, trong khi ứng dụng phục vụ người dùng toàn cầu.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q078:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Security group không có khái niệm geographical match: nguồn chỉ là IP/CIDR, prefix list hoặc security group; và security group chỉ có allow rule, không có deny/block.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q078:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Security group chỉ hỗ trợ allow rule, không thể thêm deny rule cho các IP; ngoài ra quản lý hàng trăm IP thủ công cũng không nhanh.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q078:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "C và D bất khả thi theo tài liệu security group (không có deny, không có geo); B chặn cả người dùng hợp lệ; A là cơ chế rate limiting đúng mục đích.", "open_issues": ["Tốt hơn nữa có thể kết hợp rate-based rule với scope-down geo match cho hai quốc gia, nhưng option A (rate-based cho mọi request) vẫn đáp ứng yêu cầu."]},
+    "reference_ids": ["ref1", "ref2", "ref4"],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based.html", "title": "Using rate-based rule statements in AWS WAF", "section": "intro", "snapshot_id": "e8438a338e5c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "A rate-based rule counts incoming requests and rate limits requests when they are coming at too fast a rate.",
+     "supports": "Rate-based rule chỉ hạn chế nguồn gửi quá nhanh, không chặn người dùng bình thường.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-app-layer-rbr.html", "title": "Protecting the application layer with AWS WAF rate-based rules and Shield Advanced", "section": "intro", "snapshot_id": "be809a97dccc", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS WAF blocks requests from any IP address that exceeds the rule's threshold until the request rate drops down to an acceptable level.",
+     "supports": "Mặc định rate-based rule chặn theo từng IP vượt ngưỡng, phù hợp với tấn công từ hàng trăm IP.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-geo-match.html", "title": "Geographic match rule statement", "section": "How to use the geo match statement", "snapshot_id": "2fc6209f0e3f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Use geographic or geo match statements to manage web requests based on country and region of origin.",
+     "supports": "Geo match áp dụng cho toàn bộ request theo quốc gia, không phân biệt người dùng hợp lệ.", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html", "title": "Security group rules", "section": "Security group rule basics", "snapshot_id": "5594f61a25d6", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can specify allow rules, but not deny rules.",
+     "supports": "Security group không có deny rule (loại D và phần 'block' của C).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html", "title": "Security group rules", "section": "Components of a security group rule", "snapshot_id": "5594f61a25d6", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The source (inbound rules) or destination (outbound rules) for the traffic to allow.",
+     "supports": "Nguồn của rule security group là IP/CIDR, prefix list hoặc security group; không có geo match.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q078:C", "detail_vi": "Thiếu dấu chấm cuối câu."}
+  ],
+  "notes_vi": ""
+}

@@ -1,0 +1,60 @@
+{
+  "question_id": "Q074",
+  "question_content_hash": "88ac688061ea40c43bf345cb45d8d28c317a2b7273817947865873d0c37c12aa",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Phân tích traffic AWS WAF (web request logs) để xác định có tấn công tầng ứng dụng hay không.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Luồng log phải khả thi: WAF phải gửi log tới đích được hỗ trợ và công cụ phải truy vấn được log đó.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Chọn MỘT giải pháp đáp ứng yêu cầu.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q074:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS WAF không gửi web ACL traffic log tới CloudTrail trail; đích log được hỗ trợ chỉ là CloudWatch Logs, S3, Firehose. CloudTrail chỉ ghi API call quản trị WAF, nên toàn bộ chuỗi phía sau không có dữ liệu traffic.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q074:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Gửi log WAF tới S3 là hợp lệ, nhưng 'OpenSearch table với partition projection' không phải tính năng được tài liệu hóa: partition projection là tính năng của Athena (table properties trong AWS Glue). OpenSearch direct query S3 dùng Spark table tạo từ Query Workbench, không phải cơ chế nêu trong option.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref4", "ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q074:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "WAF gửi log trực tiếp tới S3; Athena có hướng dẫn chính thức tạo table cho WAF S3 logs dùng partition projection và các query mẫu để phân tích traffic/tấn công.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q074:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Giống A, bước đầu 'gửi log WAF tới CloudTrail trail' không tồn tại; CloudTrail chỉ ghi API call, không ghi web request mà web ACL kiểm tra, nên Firehose/S3/Athena phía sau không có dữ liệu traffic.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q074:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu WAF liệt kê rõ 3 đích log (CloudWatch Logs, S3, Firehose) và tài liệu Athena có trang riêng tạo table WAF S3 logs với partition projection.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/logging.html", "title": "Logging AWS WAF protection pack (web ACL) traffic", "section": "intro", "snapshot_id": "c42e33246e4d", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can send protection pack (web ACL) logs to an Amazon CloudWatch Logs log group, an Amazon Simple Storage Service (Amazon S3) bucket, or an Amazon Data Firehose delivery stream.",
+     "supports": "Đích log WAF chỉ gồm CloudWatch Logs, S3, Firehose; không có CloudTrail.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/logging-using-cloudtrail.html", "title": "Logging API calls with AWS CloudTrail", "section": "intro", "snapshot_id": "7b4cc1f4c324", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "CloudTrail captures a subset of API calls for these services as events",
+     "supports": "CloudTrail chỉ ghi API call của WAF, không ghi traffic web request.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/athena/latest/ug/create-waf-table-partition-projection.html", "title": "Create a table for AWS WAF S3 logs in Athena using partition projection", "section": "intro", "snapshot_id": "d5c3762c05c1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you can reduce query runtime and automate partition management by using the Athena partition projection feature.",
+     "supports": "Athena hỗ trợ table WAF S3 logs với partition projection.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/athena/latest/ug/partition-projection.html", "title": "Use partition projection with Amazon Athena", "section": "intro", "snapshot_id": "b9d01847174b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "In partition projection, Athena calculates partition values and locations using the table properties that you configure directly on your table in AWS Glue.",
+     "supports": "Partition projection là cơ chế của Athena, không phải của OpenSearch.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/athena/latest/ug/waf-logs.html", "title": "Query AWS WAF logs", "section": "intro", "snapshot_id": "b834f54a9f06", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "This topic provides example CREATE TABLE statements for partition projection, manual partitioning, and one that does not uses any partitioning.",
+     "supports": "Athena là công cụ được tài liệu hóa để truy vấn WAF logs trong S3.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/direct-query-s3-overview.html", "title": "Directly querying Amazon S3 data in OpenSearch Service", "section": "Limitations", "snapshot_id": "e32397798241", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "OpenSearch Service direct queries with S3 only support Spark tables generated from Query Workbench.",
+     "supports": "OpenSearch direct query S3 dùng Spark table riêng, không có khái niệm 'OpenSearch table with partition projection'.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q074:B", "detail_vi": "Thiếu dấu chấm: 'Amazon S3 bucket Configure...' và cuối câu thiếu dấu chấm."}
+  ],
+  "notes_vi": "Firehose cũng là đích log hợp lệ của WAF (có thể đẩy tới OpenSearch), nhưng A/D đều bắt đầu bằng CloudTrail trail nên hỏng từ bước đầu."
+}

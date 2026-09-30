@@ -1,0 +1,343 @@
+URL: https://docs.aws.amazon.com/config/latest/APIReference/API_PutOrganizationConformancePack.html
+TITLE: PutOrganizationConformancePack - AWS Config
+
+# PutOrganizationConformancePack
+
+Deploys conformance packs across member accounts in an AWS Organization. For information on how many organization conformance packs and how many AWS Config rules you can have per account,
+see Service Limits in the
+AWS Config Developer Guide.
+
+Only a management account and a delegated administrator can call this API.
+When calling this API with a delegated administrator, you must ensure AWS Organizations
+ListDelegatedAdministrator permissions are added. An organization can have up to 3 delegated administrators.
+
+Important
+
+When you use PutOrganizationConformancePack to deploy conformance packs across
+member accounts, the operation can create AWS Config rules and remediation
+actions without requiring config:PutConfigRule or
+config:PutRemediationConfigurations permissions in member account
+IAM policies.
+
+This API uses the AWSServiceRoleForConfigConforms service-linked role in each
+member account to create conformance pack resources. This service-linked role
+includes the permissions to create AWS Config rules and remediation
+configurations, even if member account IAM policies explicitly deny these
+actions.
+
+This API enables organization service access for config-multiaccountsetup.amazonaws.com
+through the EnableAWSServiceAccess action and creates a
+service-linked role AWSServiceRoleForConfigMultiAccountSetup in the management or delegated administrator account of your organization.
+The service-linked role is created only when the role does not exist in the caller account.
+To use this API with delegated administrator, register a delegated administrator by calling AWS Organization
+register-delegate-admin for config-multiaccountsetup.amazonaws.com.
+
+Note
+
+Prerequisite: Ensure you call EnableAllFeatures API to enable all features in an organization.
+
+You must specify either the TemplateS3Uri or the TemplateBody parameter, but not both.
+If you provide both AWS Config uses the TemplateS3Uri parameter and ignores the TemplateBody parameter.
+
+AWS Config sets the state of a conformance pack to CREATE_IN_PROGRESS and UPDATE_IN_PROGRESS until the conformance pack is created or updated.
+You cannot update a conformance pack while it is in this state.
+
+## Request Syntax
+
+{
+"ConformancePackInputParameters": [
+{
+"ParameterName": "string",
+"ParameterValue": "string"
+}
+],
+"DeliveryS3Bucket": "string",
+"DeliveryS3KeyPrefix": "string",
+"ExcludedAccounts": [ "string" ],
+"OrganizationConformancePackName": "string",
+"Tags": [
+{
+"Key": "string",
+"Value": "string"
+}
+],
+"TemplateBody": "string",
+"TemplateS3Uri": "string"
+}
+
+## Request Parameters
+
+For information about the parameters that are common to all actions, see Common Parameters.
+
+The request accepts the following data in JSON format.
+
+ConformancePackInputParameters
+
+A list of ConformancePackInputParameter objects.
+
+Type: Array of ConformancePackInputParameter objects
+
+Array Members: Minimum number of 0 items. Maximum number of 60 items.
+
+Required: No
+
+DeliveryS3Bucket
+
+The name of the Amazon S3 bucket where AWS Config stores conformance pack templates.
+
+Note
+
+This field is optional. If used, it must be prefixed with awsconfigconforms.
+
+Type: String
+
+Length Constraints: Minimum length of 0. Maximum length of 63.
+
+Required: No
+
+DeliveryS3KeyPrefix
+
+The prefix for the Amazon S3 bucket.
+
+Note
+
+This field is optional.
+
+Type: String
+
+Length Constraints: Minimum length of 0. Maximum length of 1024.
+
+Required: No
+
+ExcludedAccounts
+
+A list of AWS accounts to be excluded from an organization conformance pack while deploying a conformance pack.
+
+Type: Array of strings
+
+Array Members: Minimum number of 0 items. Maximum number of 1000 items.
+
+Length Constraints: Fixed length of 12.
+
+Pattern: \d{12}
+
+Required: No
+
+OrganizationConformancePackName
+
+Name of the organization conformance pack you want to create.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 128.
+
+Pattern: [a-zA-Z][-a-zA-Z0-9]*
+
+Required: Yes
+
+Tags
+
+The tags for the organization conformance pack. Each tag consists of a key and an optional value, both of which you define.
+
+Type: Array of Tag objects
+
+Array Members: Minimum number of 0 items. Maximum number of 50 items.
+
+Required: No
+
+TemplateBody
+
+A string that contains the full conformance pack template body. Structure containing the template body
+with a minimum length of 1 byte and a maximum length of 51,200 bytes.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 51200.
+
+Required: No
+
+TemplateS3Uri
+
+Location of file containing the template body. The uri must point to the conformance pack template
+(max size: 300 KB).
+
+Note
+
+You must have access to read Amazon S3 bucket.
+In addition, in order to ensure a successful deployment, the template object must not be in an archived storage class if this parameter is passed.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 1024.
+
+Pattern: s3://.*
+
+Required: No
+
+## Response Syntax
+
+{
+"OrganizationConformancePackArn": "string"
+}
+
+## Response Elements
+
+If the action is successful, the service sends back an HTTP 200 response.
+
+The following data is returned in JSON format by the service.
+
+OrganizationConformancePackArn
+
+ARN of the organization conformance pack.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 256.
+
+## Errors
+
+For information about the errors that are common to all actions, see Common Error Types.
+
+InsufficientPermissionsException
+
+Indicates one of the following errors:
+
+- For PutConfigRule, the rule cannot be created because the IAM role assigned to AWS Config lacks permissions to perform the config:Put* action.
+
+- For PutConfigRule, the AWS Lambda function cannot be invoked. Check the function ARN, and check the function's permissions.
+
+- For PutOrganizationConfigRule, organization AWS Config rule cannot be created because you do not have permissions to call IAM GetRole action or create a service-linked role.
+
+- For PutConformancePack and PutOrganizationConformancePack, a conformance pack cannot be created because you do not have the following permissions:
+
+- You do not have permission to call IAM GetRole action or create a service-linked role.
+
+- You do not have permission to read Amazon S3 bucket or call SSM:GetDocument.
+
+- For PutServiceLinkedConfigurationRecorder, a service-linked configuration recorder cannot be created because you do not have the following permissions: IAM CreateServiceLinkedRole.
+
+- For PutConnector, a connector cannot be created because you do not have the following permissions: IAM CreateServiceLinkedRole.
+
+HTTP Status Code: 400
+
+MaxNumberOfOrganizationConformancePacksExceededException
+
+You have reached the limit of the number of organization conformance packs you can create in an account. For more information, see Service Limits in the
+AWS Config Developer Guide.
+
+HTTP Status Code: 400
+
+NoAvailableOrganizationException
+
+Organization is no longer available.
+
+HTTP Status Code: 400
+
+OrganizationAccessDeniedException
+
+For PutConfigurationAggregator API, you can see this exception for the following reasons:
+
+- No permission to call EnableAWSServiceAccess API
+
+- The configuration aggregator cannot be updated because your AWS Organization management account or the delegated administrator role changed.
+Delete this aggregator and create a new one with the current AWS Organization.
+
+- The configuration aggregator is associated with a previous AWS Organization and AWS Config cannot aggregate data with current AWS Organization.
+Delete this aggregator and create a new one with the current AWS Organization.
+
+- You are not a registered delegated administrator for AWS Config with permissions to call ListDelegatedAdministrators API.
+Ensure that the management account registers delagated administrator for AWS Config service principal name before the delegated administrator creates an aggregator.
+
+For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS Config throws an exception if APIs are called from member accounts. All APIs must be called from organization management account.
+
+HTTP Status Code: 400
+
+OrganizationAllFeaturesNotEnabledException
+
+AWS Config resource cannot be created because your organization does not have all features enabled.
+
+HTTP Status Code: 400
+
+OrganizationConformancePackTemplateValidationException
+
+You have specified a template that is not valid or supported.
+
+HTTP Status Code: 400
+
+ResourceInUseException
+
+You see this exception in the following cases:
+
+- For DeleteConfigRule, AWS Config is deleting this rule. Try your request again later.
+
+- For DeleteConfigRule, the rule is deleting your evaluation results. Try your request again later.
+
+- For DeleteConfigRule, a remediation action is associated with the rule and AWS Config cannot delete this rule. Delete the remediation action associated with the rule before deleting the rule and try your request again later.
+
+- For PutConfigOrganizationRule, organization AWS Config rule deletion is in progress. Try your request again later.
+
+- For DeleteOrganizationConfigRule, organization AWS Config rule creation is in progress. Try your request again later.
+
+- For PutConformancePack and PutOrganizationConformancePack, a conformance pack creation, update, and deletion is in progress. Try your request again later.
+
+- For DeleteConformancePack, a conformance pack creation, update, and deletion is in progress. Try your request again later.
+
+HTTP Status Code: 400
+
+ValidationException
+
+The requested operation is not valid. You will see this exception if there are missing required fields or if the input value fails the validation.
+
+For PutStoredQuery, one of the following errors:
+
+- There are missing required fields.
+
+- The input value fails the validation.
+
+- You are trying to create more than 300 queries.
+
+For DescribeConfigurationRecorders and DescribeConfigurationRecorderStatus, one of the following errors:
+
+- You have specified more than one configuration recorder.
+
+- You have provided a service principal for service-linked configuration recorder that is not valid.
+
+For AssociateResourceTypes and DisassociateResourceTypes, one of the following errors:
+
+- Your configuraiton recorder has a recording strategy that does not allow the association or disassociation of resource types.
+
+- One or more of the specified resource types are already associated or disassociated with the configuration recorder.
+
+- For service-linked configuration recorders, the configuration recorder does not record one or more of the specified resource types.
+
+For DeleteServiceLinkedConfigurationRecorder, one of the following errors:
+
+- You have provided both Arn and ServicePrincipal. Only one of Arn or ServicePrincipal can be specified.
+
+- You have provided a service principal for service-linked configuration recorder that is not valid.
+
+HTTP Status Code: 400
+
+## See Also
+
+For more information about using this API in one of the language-specific AWS SDKs, see the following:
+
+- AWS Command Line Interface V2
+
+- AWS SDK for .NET V4
+
+- AWS SDK for C++
+
+- AWS SDK for Go v2
+
+- AWS SDK for Java V2
+
+- AWS SDK for JavaScript V3
+
+- AWS SDK for Kotlin
+
+- AWS SDK for PHP V3
+
+- AWS SDK for Python (Boto3)
+
+- AWS SDK for Ruby V3

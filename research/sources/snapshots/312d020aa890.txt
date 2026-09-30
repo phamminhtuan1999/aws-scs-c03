@@ -1,0 +1,377 @@
+URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html
+TITLE: StackSets concepts - AWS CloudFormation
+
+# StackSets concepts
+
+The following terminology and concepts are central to your understanding and use of StackSets.
+
+Topics
+
+- Administrator and target accounts
+
+- CloudFormation StackSets
+
+- Permission models for StackSets
+
+- Stack instances
+
+- StackSet operations
+
+- StackSet operation options
+
+- Tags
+
+- StackSets status codes
+
+- Stack instance status codes
+
+## Administrator and target accounts
+
+An administrator account is the AWS account in which you create
+StackSets. For StackSets with service-managed permissions, the administrator account
+is either the organization's management account or a delegated administrator account. You can
+manage a StackSet by signing in to the AWS administrator account that created the StackSet.
+
+A target account is the account into which you create, update, or
+delete one or more stacks in your StackSet. Before you can use a StackSet to create stacks in a target
+account, set up a trust relationship between the administrator and target accounts.
+
+## CloudFormation StackSets
+
+A StackSet serves as a container for multiple stacks that are deployed
+across specified AWS accounts and Regions. Each stack is based on the same CloudFormation
+template, but you can customize individual stacks using parameters.
+
+After you've defined a StackSet, you can create, update, or delete stacks in the target
+accounts and AWS Regions you specify. When you create, update, or delete stacks, you can
+also specify operation preferences. For example, include the order of Regions you want to
+perform the operation, the failure tolerance threshold before stack operations stop, and the
+number of accounts performing stack operations concurrently.
+
+A StackSet is a regional resource. If you create a StackSet in one AWS Region, you can only see
+or change it when viewing that Region.
+
+## Permission models for StackSets
+
+You can create StackSets using either self-managed permissions or
+service-managed permissions.
+
+With self-managed permissions, you create the IAM roles required by
+StackSets to deploy across accounts and Regions. These roles are necessary to establish a
+trusted relationship between the account you're administering the StackSet from and the account
+you're deploying stack instances to. Using this permissions model, StackSets can deploy to
+any AWS account in which you have permissions to create an IAM role.
+
+With service-managed permissions, you can deploy stack instances to
+accounts managed by AWS Organizations. Using this permissions model, you don't have to create the
+necessary IAM roles; StackSets creates the IAM roles on your behalf. With this model,
+you can also turn on automatic deployments to accounts that you add to your organization in
+the future.
+
+AWS Organizations integrates with CloudFormation and helps you centrally manage and govern your
+environment as you scale and grow your AWS resources.
+
+- Management account – the account that you use to create the organization. For more
+information, see Terminology and
+concepts for AWS Organizations.
+
+- Delegated administrator – a compatible AWS service can register an AWS
+member account in the organization as an administrator for the organization's accounts in
+that service. For more information, see AWS services
+that you can use with AWS Organizations.
+
+For more information about creating and managing StackSets with service-managed
+permissions, see the following topics:
+
+- Activate trusted access for StackSets with AWS Organizations
+
+- Register a delegated administrator member account
+
+- Create CloudFormation StackSets with service-managed permissions
+
+## Stack instances
+
+A stack instance is a reference to a stack in a target account within
+a Region. A stack instance can exist without a stack. For example, if the stack couldn't be
+created for some reason, the stack instance shows the reason for stack creation failure. A
+stack instance associates with only one StackSet.
+
+The following figure shows the logical relationships between StackSets, stack
+operations, and stacks. When you update a StackSet, all associated stack
+instances update throughout all accounts and Regions.
+
+## StackSet operations
+
+You can perform the following operations on StackSets.
+
+Create StackSet
+
+Creating a new StackSet includes specifying a CloudFormation template that you want to use
+to create stacks, specifying the target accounts in which you want to create stacks, and
+identifying the AWS Regions in which you want to deploy stacks in your target
+accounts. A StackSet ensures consistent deployment of the same stack resources, with the
+same settings, to all specified target accounts within the Regions you choose.
+
+Update StackSet
+
+When you update a StackSet, you push changes out to stacks in your StackSet. You can update
+a StackSet in one of the following ways. Your template updates always affect all stacks; you
+can't selectively update the template for some stacks in the StackSet, but not
+others.
+
+- Change existing settings in the template or add new resources, such as updating
+parameter settings for a specific service, or adding new Amazon EC2 instances.
+
+- Replace the template with a different template.
+
+- Add stacks in existing or additional target accounts, across existing or
+additional Regions.
+
+Delete stacks
+
+When you delete stacks, you are removing a stack and all its associated resources
+from the target accounts you specify, within the Regions you specify. You can delete
+stacks in the following ways.
+
+- Delete stacks from some target accounts, while leaving other stacks in other
+target accounts running.
+
+- Delete stacks from some Regions, while leaving stacks in other Regions
+running.
+
+- Delete stacks from your StackSet, but save them so they continue to run
+independently of your StackSet by choosing the Retain Stacks
+option. You can then manage retained stacks outside of your StackSet in
+CloudFormation.
+
+- Delete all stacks in your StackSet, in preparation for deleting your entire
+StackSet.
+
+Delete StackSet
+
+You can delete your StackSet only when there are no stack instances in it.
+
+## StackSet operation options
+
+The options described in this section help to control the time and number of failures
+allowed to perform successful StackSet operations, and prevent you from losing stack
+resources.
+
+Maximum concurrent accounts
+
+This setting, available in create, update, and delete workflows, lets you specify
+the maximum number or percentage of target accounts in which an operation performs at
+one time. A lower number or percentage means that an operation performs in fewer target
+accounts at one time. Operations perform in one Region at a time, in the order specified
+in the Deployment order box. For example, if you are deploying
+stacks to 10 target accounts within two Regions, setting Maximum concurrent
+accounts to 50 and By percentage
+deploys stacks to five accounts in the first Region, then the second five accounts
+within the first Region, before moving on to the next Region and beginning deployment to
+the first five target accounts.
+
+When you choose By percentage, if the specified percentage
+doesn't represent a whole number of your specified accounts, CloudFormation rounds down. For
+example, if you are deploying stacks to 10 target accounts, and you set
+Maximum concurrent accounts to 25 and
+By percentage, CloudFormation rounds down from deploying 2.5 stacks
+concurrently (which would not be possible) to deploying two stacks concurrently.
+
+Note that this setting lets you specify the maximum for
+operations. For large deployments, under certain circumstances the actual number of
+accounts acted upon concurrently may be lower due to service throttling.
+
+Maximum concurrent accounts can depend on the value of
+Failure tolerance depending on your Concurrency
+Mode. If your Concurrency Mode is set to
+Strict Failure Tolerance then Maximum concurrent
+accounts can be at most one more than the Failure
+tolerance setting.
+
+Concurrency mode
+
+This setting, available in create, update, and delete workflows, lets you choose how
+the concurrency level behaves during StackSet operations. For more information, see Choose the Concurrency Mode for CloudFormation StackSets.
+
+Failure tolerance
+
+This setting, available in create, update, and delete workflows, lets you specify
+the maximum number or percentage of stack operation failures that can occur, per Region,
+beyond which CloudFormation stops an operation automatically. A lower number or percentage
+means that the operation performs on fewer stacks, but you are able to start
+troubleshooting failed operations faster. For example, if you are updating 10 stacks in
+10 target accounts within three Regions, setting Failure tolerance
+to 20 and By percentage means that a maximum
+of two stack updates in a Region can fail for the operation to continue. If a third
+stack in the same Region fails, CloudFormation stops the operation. If a stack can't update
+in the first Region, the update operation continues in that Region, and then moves on to
+the next Region. If two stacks can't update in the second Region, the failure tolerance
+reaches 20%; if a third stack in the Region fails, CloudFormation stops the update
+operation, and doesn't go on to subsequent Regions.
+
+When you choose By percentage, if the specified percentage
+doesn't represent a whole number of your stacks within each Region, CloudFormation rounds
+down. For example, if you are deploying stacks to 10 target accounts in three Regions,
+and you set Failure tolerance to 25 and
+By percentage, CloudFormation rounds down from a failure tolerance of
+2.5 stacks (which would not be possible) to a failure tolerance of two stacks per
+Region.
+
+Retain stacks
+
+This setting, available in delete stack workflows, lets you keep stacks and their
+resources running even after removing stacks from a StackSet. When you retain stacks, CloudFormation
+leaves stacks in individual accounts and Regions intact. Stacks disassociate from the
+StackSet, but saves the stack and its resources. After a delete stacks operation is
+complete, you manage retained stacks in CloudFormation, in the target account (not the
+administrator account) that created the stacks.
+
+Region concurrency
+
+This setting, available in create, update, and delete workflows, lets you choose how
+StackSets deploy into Regions.
+
+Sequential – Deploy StackSets operation into one
+Region at a time as specified by Region Deployment order box as
+long as a Region's deployment failures don't exceed a specified failure tolerance.
+Sequential deployment is the default selection.
+
+Parallel – Deploy StackSets operations into all
+specified Regions simultaneously as long as a Region's deployment failures don't exceed
+a specified failure tolerance.
+
+## Tags
+
+You can add tags during StackSet creation and update operations by specifying key and value
+pairs. Tags are useful for sorting and filtering StackSet resources for billing and cost
+allocation. For more information about how to use tags in AWS, see Organizing
+and tracking costs using AWS cost allocation tags in the AWS Billing and Cost Management User
+Guide. After you specify the key-value pair, choose + to
+save the tag. You can delete tags that you are no longer using by choosing the red
+X to the right of a tag.
+
+Tags that you apply to StackSets apply to all stacks, and to the resources that your
+stacks create. You can also add tags at the stack-only level in CloudFormation, but those tags
+might not show up in StackSets.
+
+Although StackSets doesn't add any system-defined tags, you shouldn't start the key
+names of any tags with the string aws:.
+
+## StackSets status codes
+
+CloudFormation StackSets generates status codes for StackSet operations.
+
+The following table describes status codes for StackSet operations.
+
+RUNNING
+
+The operation is currently in progress.
+
+SUCCEEDED
+
+The operation finished without exceeding the failure tolerance for the
+operation.
+
+FAILED
+
+The number of stacks on which the operation couldn't complete exceeded the
+user-defined failure tolerance. The failure tolerance value you've set for an operation
+applies for each Region during stack creation and update operations. If the number of
+failed stacks within a Region exceeds the failure tolerance, the status of the operation
+in the Region changes to FAILED. The status of the operation as a whole is
+also set to FAILED, and CloudFormation cancels the operation in any remaining
+Regions.
+
+QUEUED
+
+[Service-managed permissions] For automatic deployments that require a
+sequence of operations, the operation enters into a queue to perform. For
+example:
+
+- Moving an account from one organizational unit (OU), OU1, to
+another, OU2, triggers an automatic deployment. StackSets runs a
+delete operation to remove the stack instance from the target OU1
+account in the target Region and queues a create operation to add a stack instance
+to the target OU2 account in the target Region.
+
+- Adding an account AccountA to an OU triggers an automatic
+deployment. StackSets runs a create operation to add a stack instance to
+AccountA in the target Region. If you add another account
+AccountB to the OU while this create operation is running, StackSets
+queues a second create operation. When the first create operation is complete,
+StackSets runs the second create operation to add a stack instance to
+AccountB in the target Region.
+
+STOPPING
+
+The operation is in the process of stopping, at the user's request.
+
+STOPPED
+
+The operation has stopped, at the user's request.
+
+## Stack instance status codes
+
+CloudFormation StackSets generates status codes for stack instances.
+
+The following table describes status codes for stack instances within
+StackSets.
+
+CURRENT
+
+The stack is up to date with the StackSet.
+
+OUTDATED
+
+The stack isn't up to date with the StackSet for one of the following reasons.
+
+- A CreateStackSet or UpdateStackSet operation on the associated stack
+failed.
+
+- The stack was part of a CreateStackSet or UpdateStackSet operation that failed, or stopped before
+creating or updating the stack.
+
+INOPERABLE
+
+A DeleteStackInstances operation has failed and left the stack
+in an unstable state. Stacks in this state are excluded from further UpdateStackSet operations. You might need to perform a
+DeleteStackInstances operation, with
+RetainStacks set to true, to delete the stack instance, and
+then delete the stack manually.
+
+CANCELLED
+
+The operation in the specified account and Region has been canceled. This happens
+because a user has stopped the StackSet operation, or because the StackSet operations exceed the
+failure tolerance.
+
+FAILED
+
+The operation in the specified account and Region failed. If the StackSet operation
+fails in enough accounts within a Region, the failure tolerance for the StackSet operation
+as a whole might be exceeded.
+
+FAILED_IMPORT
+
+The import of the stack instance in the specified account and Region failed and left
+the stack in an unstable state. Once the issues causing the failure are fixed, the
+import operation can be retried. If enough StackSet operations fail in enough accounts
+within a Region, the failure tolerance for the StackSet operation as a whole might be
+exceeded.
+
+PENDING
+
+The operation in the specified account and Region has yet to start.
+
+RUNNING
+
+The operation in the specified account and Region is currently in progress.
+
+SKIPPED_SUSPENDED_ACCOUNT
+
+The operation in the specified account and Region has been skipped because the
+account was suspended at the time of the operation.
+
+SUCCEEDED
+
+The operation in the specified account and Region completed successfully.

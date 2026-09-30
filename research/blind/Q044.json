@@ -3,53 +3,187 @@
   "question_content_hash": "a8218fc8e8964ef53265ba61cf93c4674454abeae9659dabd4799d6e8bdc9e94",
   "stage": "blind",
   "research_version": "r1",
-  "researched_at": "2026-09-30T19:44:00Z",
-  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "researched_at": "2026-09-30T19:41:05Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
   "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
   "requirements": [
-    {"id": "R1", "text_vi": "Chỉ security team được quản trị (administer) các KMS customer managed key hiện có.", "kind": "constraint"},
-    {"id": "R2", "text_vi": "Tiến trình phần mềm của application team cần quyền sử dụng các key đó một cách tạm thời, thỉnh thoảng.", "kind": "constraint"},
-    {"id": "R3", "text_vi": "LEAST operational overhead.", "kind": "optimization"}
+    {
+      "id": "R1",
+      "text_vi": "Chỉ security team được quản trị (administer) các KMS customer managed key hiện có.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Tiến trình phần mềm của application team cần quyền sử dụng các key đó một cách tạm thời, thỉnh thoảng.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "LEAST operational overhead.",
+      "kind": "optimization"
+    }
   ],
   "image_transcriptions": [],
   "option_reviews": [
-    {"unit_id": "Q044:A", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "Key material của KMS key không bao giờ rời HSM của AWS KMS ở dạng không mã hóa, nên không thể export sang HSM on-premises; ngoài ra đưa key material cho team khác trái với nguyên tắc bảo mật.",
-     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3"], "evidence_kind": "direct"},
-    {"unit_id": "Q044:B", "unit_type": "choice", "verdict": "meets_but_suboptimal",
-     "reason_vi": "Sửa key policy để thêm principal có thể cấp quyền dùng key, nhưng mỗi lần cần/hết cần phải sửa rồi hoàn tác key policy của từng key, dễ sai và tốn công hơn grant.",
-     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
-    {"unit_id": "Q044:C", "unit_type": "choice", "verdict": "meets",
-     "reason_vi": "KMS grant được thiết kế cho quyền tạm thời: tạo grant cho principal của application team chỉ với các thao tác mã hóa cần thiết, rồi retire/revoke khi xong mà không phải sửa key policy hay IAM policy; security team vẫn giữ quyền quản trị.",
-     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
-    {"unit_id": "Q044:D", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "Tạo key mới không cấp quyền truy cập các key hiện có mà security team quản lý; đồng thời việc sinh key material on-premises và import lại mỗi lần cần là overhead lớn, bạn phải tự chịu trách nhiệm key material.",
-     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref4"], "evidence_kind": "inference"}
+    {
+      "unit_id": "Q044:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Key material của KMS key không bao giờ rời HSM của AWS KMS ở dạng không mã hóa, nên không thể export sang HSM on-premises; ngoài ra đưa key material cho team khác trái với nguyên tắc bảo mật.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q044:B",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Sửa key policy để thêm principal có thể cấp quyền dùng key, nhưng mỗi lần cần/hết cần phải sửa rồi hoàn tác key policy của từng key, dễ sai và tốn công hơn grant.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q044:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "KMS grant được thiết kế cho quyền tạm thời: tạo grant cho principal của application team chỉ với các thao tác mã hóa cần thiết, rồi retire/revoke khi xong mà không phải sửa key policy hay IAM policy; security team vẫn giữ quyền quản trị.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q044:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tạo key mới không cấp quyền truy cập các key hiện có mà security team quản lý; đồng thời việc sinh key material on-premises và import lại mỗi lần cần là overhead lớn, bạn phải tự chịu trách nhiệm key material.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    }
   ],
   "independent_verdict": {
-    "answer": ["Q044:C"],
+    "answer": [
+      "Q044:C"
+    ],
     "proposed_status": "verified",
-    "confidence": {"level": "high", "reason_vi": "Tài liệu KMS nêu rõ grants thường dùng cho quyền tạm thời, tạo và xóa mà không đổi key policy/IAM policy.", "open_issues": []},
-    "reference_ids": ["ref1", "ref2"],
-    "recorded_at": "2026-09-30T19:44:00Z"
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu KMS nêu rõ grants thường dùng cho quyền tạm thời, tạo và xóa mà không đổi key policy/IAM policy.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2"
+    ],
+    "recorded_at": "2026-09-30T19:41:05Z"
   },
   "references": [
-    {"id": "ref1", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/grants.html", "title": "Grants in AWS KMS", "section": "intro", "snapshot_id": "73b4978245c5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "Grants are often used for temporary permissions because you can create one, use its permissions, and delete it without changing your key policies or IAM policies.",
-     "supports": "Grant phù hợp cho quyền tạm thời, không cần sửa key policy (C tốt hơn B).", "kind": "direct"},
-    {"id": "ref2", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/grants.html", "title": "Grants in AWS KMS", "section": "About grants", "snapshot_id": "73b4978245c5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "Deleting a grant eliminates all permissions that the grant allowed. You do not have to figure out which policies to add or remove to undo the grant.",
-     "supports": "Thu hồi quyền đơn giản bằng revoke/retire grant.", "kind": "direct"},
-    {"id": "ref3", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/kms-cryptography.html", "title": "AWS KMS cryptography essentials", "section": "Envelope encryption / KMS keys", "snapshot_id": "1160b8f1dbf9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "never leave the AWS KMS FIPS 140-3 Security Level 3 validated hardware security modules unencrypted",
-     "supports": "Không thể export key material KMS ra HSM on-premises (A).", "kind": "direct"},
-    {"id": "ref4", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html", "title": "Importing key material for AWS KMS keys", "section": "intro", "snapshot_id": "1e3ebbced033", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "When you use imported key material, you remain responsible for the key material while allowing AWS KMS to use a copy of it.",
-     "supports": "Imported key material đòi hỏi tự quản lý key material, overhead cao (D).", "kind": "direct"}
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/grants.html",
+      "title": "Grants in AWS KMS",
+      "section": "intro",
+      "snapshot_id": "73b4978245c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Grants are often used for temporary permissions because you can create one, use its permissions, and delete it without changing your key policies or IAM policies.",
+      "supports": "Grant phù hợp cho quyền tạm thời, không cần sửa key policy (C tốt hơn B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/grants.html",
+      "title": "Grants in AWS KMS",
+      "section": "About grants",
+      "snapshot_id": "73b4978245c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Deleting a grant eliminates all permissions that the grant allowed. You do not have to figure out which policies to add or remove to undo the grant.",
+      "supports": "Thu hồi quyền đơn giản bằng revoke/retire grant.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/kms-cryptography.html",
+      "title": "AWS KMS cryptography essentials",
+      "section": "Envelope encryption / KMS keys",
+      "snapshot_id": "1160b8f1dbf9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "never leave the AWS KMS FIPS 140-3 Security Level 3 validated hardware security modules unencrypted",
+      "supports": "Không thể export key material KMS ra HSM on-premises (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html",
+      "title": "Importing key material for AWS KMS keys",
+      "section": "intro",
+      "snapshot_id": "1e3ebbced033",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you use imported key material, you remain responsible for the key material while allowing AWS KMS to use a copy of it.",
+      "supports": "Imported key material đòi hỏi tự quản lý key material, overhead cao (D).",
+      "kind": "direct"
+    }
   ],
   "source_issues": [
-    {"type": "typo", "location": "Q044:stem:0", "detail_vi": "\"security learn\" nên là \"security team\"."},
-    {"type": "typo", "location": "Q044:D", "detail_vi": "\"on promises\" nên là \"on premises\"."}
+    {
+      "type": "typo",
+      "location": "Q044:stem:0",
+      "detail_vi": "\"security learn\" nên là \"security team\"."
+    },
+    {
+      "type": "typo",
+      "location": "Q044:D",
+      "detail_vi": "\"on promises\" nên là \"on premises\"."
+    }
   ],
-  "notes_vi": "Quyền tạm thời trên KMS key -> nghĩ đến KMS grant."
+  "notes_vi": "Quyền tạm thời trên KMS key -> nghĩ đến KMS grant.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "reason": "Original values were estimated by the agent and lay in the future relative to the file write time; replaced by the file modification time (upper bound of the true time). Content unchanged.",
+    "fields": {
+      "researched_at": {
+        "original": "2026-09-30T19:44:00Z",
+        "corrected": "2026-09-30T19:41:05Z"
+      },
+      "independent_verdict.recorded_at": {
+        "original": "2026-09-30T19:44:00Z",
+        "corrected": "2026-09-30T19:41:05Z"
+      }
+    },
+    "file_mtime_before_correction": "2026-09-30T19:41:05Z"
+  }
 }

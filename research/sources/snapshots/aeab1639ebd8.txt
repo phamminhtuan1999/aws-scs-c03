@@ -1,0 +1,117 @@
+URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-manage-auto-deployment.html
+TITLE: Enable or disable automatic deployments for StackSets in AWS Organizations - AWS CloudFormation
+
+# Enable or disable automatic deployments for StackSets in AWS Organizations
+
+CloudFormation can automatically deploy additional stacks to new AWS Organizations accounts when
+they're added to your target organization or organizational units (OUs). You can enable
+automatic deployments and choose whether to delete or retain stacks and their associated
+resources when accounts are removed from target OUs. These settings can be modified
+anytime for StackSets that use service-managed permissions.
+
+## How automatic deployments work
+
+When automatic deployments are enabled, they're triggered when accounts are added
+to a target organization or OU, removed from a target organization or OU, or moved
+between target OUs.
+
+For example, consider StackSet1 that targets OU1 in the
+us-east-1 Region and StackSet2 that targets
+OU2 in the us-east-1 Region. OU1 contains
+AccountA.
+
+If you move AccountA from OU1 to OU2 with
+automatic deployments enabled, CloudFormation automatically runs a delete operation to
+remove the StackSet1 stack from AccountA and queues a
+create operation that adds the StackSet2 stack to
+AccountA.
+
+## Considerations
+
+The following are considerations when using automatic deployments:
+
+- The automatic deployments feature is enabled at the StackSet level. You can't
+adjust automatic deployments selectively for OUs, accounts, or
+Regions.
+
+- Overridden parameter values only apply to the accounts that are currently
+in the target OUs and their child OUs. Accounts added to the target OUs and
+their child OUs in the future will use the StackSet default values and not the
+overridden values.
+
+- Automatic deployments do not consider account level targeting filters. If
+you target specific accounts and enable automatic deployments, your StackSet
+will continue to deploy to any newly added accounts within the deployed
+organization. To prevent deployments to newly added accounts, disable
+automatic deployments.
+
+- Dependency management: Define up to 10 dependencies per StackSet, with up to
+100 dependencies per account. For example, if you have five StackSets
+with five dependencies each, you have 25 dependencies counting towards the
+100 dependency limit. You can request a limit increase through service quota console.
+Dependencies are removed when StackSets are deleted or Organizations are
+deactivated.
+
+- It is recommended to enable managed execution when using auto-deployments.
+Managed execution will allow auto-deployment operations in multiple target
+accounts to execute concurrently within a StackSet, increasing processing
+velocity, especially for larger Organizations.
+
+## Enable or disable automatic deployments (console)
+
+To enable or disable automatic deployments
+
+- Sign in to the AWS Management Console and open the CloudFormation console at
+https://console.aws.amazon.com/cloudformation.
+
+- On the navigation bar at the top of the screen, choose the AWS Region
+you created the StackSet in.
+
+- From the navigation pane, choose StackSets.
+
+- On the StackSets page, select the option next to the
+name of the StackSet to update.
+
+- Choose Edit automatic deployment from the
+Actions menu in the upper right corner.
+
+- From the dialog box that opens, do the following:
+
+- For Automatic deployment, choose
+Activated or
+Deactivated.
+
+- For Account removal behavior, choose
+Delete stacks or Retain
+stacks. Retained resources stay in their current
+state, but will no longer be part of the StackSet.
+
+- For StackSet dependencies, add dependent StackSet
+ARNs, staying within 10 dependencies maximum.
+
+- Choose Save.
+
+## Enable or disable automatic deployments (AWS CLI)
+
+To enable or disable automatic deployments
+
+- Use the update-stack-set command with the
+--auto-deployment option.
+
+The following command enables automatic deployments.
+
+aws cloudformation update-stack-set --stack-set-name my-stackset \
+--use-previous-template --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=true,DependsOn=ARN1,ARN2
+
+Alternatively, to disable automatic deployments, specify
+Enabled=false as the value for the
+--auto-deployment option, as in the following example.
+
+aws cloudformation update-stack-set --stack-set-name my-stackset \
+--use-previous-template --auto-deployment Enabled=false
+
+- Using the operation ID that was returned as part of the
+update-stack-set output, run describe-stack-set-operation to verify that
+your StackSet was updated successfully.
+
+aws cloudformation describe-stack-set-operation --operation-id operation_ID

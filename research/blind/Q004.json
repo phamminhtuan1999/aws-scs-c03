@@ -3,65 +3,219 @@
   "question_content_hash": "6d594704cdd27b2ea4724ec41edd380dbd29fa144b0966da95318977762fb3ba",
   "stage": "blind",
   "research_version": "r1",
-  "researched_at": "2026-09-30T19:48:00Z",
-  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "researched_at": "2026-09-30T19:33:35Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
   "blind_attestation": "Only research/blind_set, research/schema, tools/fetch_doc.py, tools/validate_research.py, research/sources and AWS documentation pages were used; no answer key, vote, dump site or other research record was accessed.",
   "requirements": [
-    {"id": "R1", "text_vi": "Mọi hoạt động AWS trong các account của OU chỉ được diễn ra ở Region eu-west-1.", "kind": "constraint"},
-    {"id": "R2", "text_vi": "Ngoại lệ: một số global service mong muốn vẫn được dùng (không bị chặn theo Region).", "kind": "condition"},
-    {"id": "R3", "text_vi": "Organization đang dùng SCP mặc định (FullAWSAccess) – SCP mới phải thực sự hạn chế khi đặt cạnh FullAWSAccess.", "kind": "condition"},
-    {"id": "R4", "text_vi": "Áp dụng cho cả account hiện có và account mới trong OU.", "kind": "scope"}
+    {
+      "id": "R1",
+      "text_vi": "Mọi hoạt động AWS trong các account của OU chỉ được diễn ra ở Region eu-west-1.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ngoại lệ: một số global service mong muốn vẫn được dùng (không bị chặn theo Region).",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Organization đang dùng SCP mặc định (FullAWSAccess) – SCP mới phải thực sự hạn chế khi đặt cạnh FullAWSAccess.",
+      "kind": "condition"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Áp dụng cho cả account hiện có và account mới trong OU.",
+      "kind": "scope"
+    }
   ],
   "image_transcriptions": [
-    {"image": "images/Q004_image_01.png", "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Deny\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}", "notes_vi": "Deny + NotAction + StringEquals eu-west-1."},
-    {"image": "images/Q004_image_02.png", "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}", "notes_vi": "Allow + Action + StringEquals eu-west-1 (Sid vẫn ghi DenyNonDefaultRegions)."},
-    {"image": "images/Q004_image_03.png", "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Deny\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringNotEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]", "notes_vi": "Deny + NotAction + StringNotEquals eu-west-1. Ảnh bị cắt: thiếu dấu '}' đóng cuối cùng (ảnh thấp hơn các ảnh khác)."},
-    {"image": "images/Q004_image_04.png", "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Allow\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringNotEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}", "notes_vi": "Allow + NotAction + StringNotEquals eu-west-1."}
+    {
+      "image": "images/Q004_image_01.png",
+      "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Deny\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}",
+      "notes_vi": "Deny + NotAction + StringEquals eu-west-1."
+    },
+    {
+      "image": "images/Q004_image_02.png",
+      "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}",
+      "notes_vi": "Allow + Action + StringEquals eu-west-1 (Sid vẫn ghi DenyNonDefaultRegions)."
+    },
+    {
+      "image": "images/Q004_image_03.png",
+      "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Deny\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringNotEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]",
+      "notes_vi": "Deny + NotAction + StringNotEquals eu-west-1. Ảnh bị cắt: thiếu dấu '}' đóng cuối cùng (ảnh thấp hơn các ảnh khác)."
+    },
+    {
+      "image": "images/Q004_image_04.png",
+      "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"DenyNonDefaultRegions\",\n            \"Effect\": \"Allow\",\n            \"NotAction\": [\n                <Desired Global Services> ],\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringNotEquals\": {\n                    \"aws:RequestedRegion\": [\n                        \"eu-west-1\"\n                    ]\n                }\n            }\n        }\n    ]\n}",
+      "notes_vi": "Allow + NotAction + StringNotEquals eu-west-1."
+    }
   ],
   "option_reviews": [
-    {"unit_id": "Q004:A", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "StringEquals eu-west-1 khiến Deny áp dụng CHÍNH cho eu-west-1 (trừ global services), tức là chặn Region được phép và để mở các Region khác – ngược yêu cầu.",
-     "requirement_ids": ["R1"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
-    {"unit_id": "Q004:B", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "SCP không cấp quyền và FullAWSAccess vẫn đang gắn cho phép mọi thứ; thêm một Allow không tạo giới hạn nào nên các Region khác vẫn dùng được.",
-     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2", "ref3"], "evidence_kind": "direct"},
-    {"unit_id": "Q004:C", "unit_type": "choice", "verdict": "meets",
-     "reason_vi": "Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion eu-west-1 đúng mẫu AWS: chặn mọi action ngoài eu-west-1 trừ global services. Deny gắn ở OU áp dụng cho mọi account trong OU, kể cả account mới.",
-     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"},
-    {"unit_id": "Q004:D", "unit_type": "choice", "verdict": "does_not_meet",
-     "reason_vi": "Là Allow (không phải Deny) nên khi FullAWSAccess vẫn gắn thì không hạn chế gì; nếu có tác dụng thì logic cũng ngược (chỉ cho phép ngoài eu-west-1).",
-     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2", "ref3"], "evidence_kind": "inference"}
+    {
+      "unit_id": "Q004:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "StringEquals eu-west-1 khiến Deny áp dụng CHÍNH cho eu-west-1 (trừ global services), tức là chặn Region được phép và để mở các Region khác – ngược yêu cầu.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q004:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SCP không cấp quyền và FullAWSAccess vẫn đang gắn cho phép mọi thứ; thêm một Allow không tạo giới hạn nào nên các Region khác vẫn dùng được.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q004:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion eu-west-1 đúng mẫu AWS: chặn mọi action ngoài eu-west-1 trừ global services. Deny gắn ở OU áp dụng cho mọi account trong OU, kể cả account mới.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q004:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Là Allow (không phải Deny) nên khi FullAWSAccess vẫn gắn thì không hạn chế gì; nếu có tác dụng thì logic cũng ngược (chỉ cho phép ngoài eu-west-1).",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    }
   ],
   "independent_verdict": {
-    "answer": ["Q004:C"],
+    "answer": [
+      "Q004:C"
+    ],
     "proposed_status": "verified",
-    "confidence": {"level": "high",
+    "confidence": {
+      "level": "high",
       "reason_vi": "Phương án C trùng khớp mẫu chính thức 'Denies access to AWS based on the requested Region' (Deny + NotAction + StringNotEquals aws:RequestedRegion); tài liệu SCP xác nhận Allow không cấp quyền và Deny ở OU áp dụng cho account bên dưới.",
-      "open_issues": ["Ảnh phương án C bị cắt mất dấu '}' cuối – lỗi trình bày, không ảnh hưởng logic."]},
-    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
-    "recorded_at": "2026-09-30T19:48:00Z"
+      "open_issues": [
+        "Ảnh phương án C bị cắt mất dấu '}' cuối – lỗi trình bày, không ảnh hưởng logic."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:33:35Z"
   },
   "references": [
-    {"id": "ref1", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_aws_deny-requested-region.html", "title": "AWS: Denies access to AWS based on the requested Region", "section": "intro + JSON example",
-     "snapshot_id": "540e3d8a6a8b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "denies access to any actions outside the Regions specified using the aws:RequestedRegion condition key, except for actions in the services specified using NotAction.",
-     "supports": "Mẫu chuẩn Deny + NotAction + StringNotEquals aws:RequestedRegion, trùng phương án C.", "kind": "direct"},
-    {"id": "ref2", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html", "title": "Service control policies (SCPs)", "section": "intro",
-     "snapshot_id": "0ace6350695a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "SCPs do not grant permissions to the IAM users and IAM roles in your organization. No permissions are granted by an SCP.",
-     "supports": "SCP Allow không cấp quyền; chỉ là guardrail – phương án Allow (B, D) không tạo hạn chế.", "kind": "direct"},
-    {"id": "ref3", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html", "title": "SCP evaluation", "section": "How SCPs work with Allow",
-     "snapshot_id": "d6b8114e42df", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "AWS Organizations attaches an AWS managed SCP named FullAWSAccess to every root, OU and account when it's created. This policy allows all services and actions.",
-     "supports": "Với SCP mặc định FullAWSAccess, thêm Allow khác không thu hẹp quyền; phải dùng Deny.", "kind": "direct"},
-    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html", "title": "SCP evaluation", "section": "How SCPs work with Deny",
-     "snapshot_id": "d6b8114e42df", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
-     "quote": "any SCP from the root through each OU in the direct path to the account (including the target account itself) can deny that permission.",
-     "supports": "Deny gắn ở OU áp dụng cho mọi account trên đường đi, gồm account hiện có và account mới được đưa vào OU.", "kind": "direct"}
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_aws_deny-requested-region.html",
+      "title": "AWS: Denies access to AWS based on the requested Region",
+      "section": "intro + JSON example",
+      "snapshot_id": "540e3d8a6a8b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "denies access to any actions outside the Regions specified using the aws:RequestedRegion condition key, except for actions in the services specified using NotAction.",
+      "supports": "Mẫu chuẩn Deny + NotAction + StringNotEquals aws:RequestedRegion, trùng phương án C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "intro",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs do not grant permissions to the IAM users and IAM roles in your organization. No permissions are granted by an SCP.",
+      "supports": "SCP Allow không cấp quyền; chỉ là guardrail – phương án Allow (B, D) không tạo hạn chế.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html",
+      "title": "SCP evaluation",
+      "section": "How SCPs work with Allow",
+      "snapshot_id": "d6b8114e42df",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Organizations attaches an AWS managed SCP named FullAWSAccess to every root, OU and account when it's created. This policy allows all services and actions.",
+      "supports": "Với SCP mặc định FullAWSAccess, thêm Allow khác không thu hẹp quyền; phải dùng Deny.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html",
+      "title": "SCP evaluation",
+      "section": "How SCPs work with Deny",
+      "snapshot_id": "d6b8114e42df",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "any SCP from the root through each OU in the direct path to the account (including the target account itself) can deny that permission.",
+      "supports": "Deny gắn ở OU áp dụng cho mọi account trên đường đi, gồm account hiện có và account mới được đưa vào OU.",
+      "kind": "direct"
+    }
   ],
   "source_issues": [
-    {"type": "layout", "location": "Q004:C", "detail_vi": "Ảnh phương án C bị cắt, thiếu dấu ngoặc '}' đóng cuối policy."},
-    {"type": "typo", "location": "Q004:B", "detail_vi": "Sid 'DenyNonDefaultRegions' dùng cho statement Allow ở B và D – chỉ là nhãn, gây nhầm."}
+    {
+      "type": "layout",
+      "location": "Q004:C",
+      "detail_vi": "Ảnh phương án C bị cắt, thiếu dấu ngoặc '}' đóng cuối policy."
+    },
+    {
+      "type": "typo",
+      "location": "Q004:B",
+      "detail_vi": "Sid 'DenyNonDefaultRegions' dùng cho statement Allow ở B và D – chỉ là nhãn, gây nhầm."
+    }
   ],
-  "notes_vi": "Mẹo: chặn theo Region trong SCP = Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion."
+  "notes_vi": "Mẹo: chặn theo Region trong SCP = Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "reason": "Original values were estimated by the agent and lay in the future relative to the file write time; replaced by the file modification time (upper bound of the true time). Content unchanged.",
+    "fields": {
+      "researched_at": {
+        "original": "2026-09-30T19:48:00Z",
+        "corrected": "2026-09-30T19:33:35Z"
+      },
+      "independent_verdict.recorded_at": {
+        "original": "2026-09-30T19:48:00Z",
+        "corrected": "2026-09-30T19:33:35Z"
+      }
+    },
+    "file_mtime_before_correction": "2026-09-30T19:33:35Z"
+  }
 }

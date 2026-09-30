@@ -1,0 +1,314 @@
+{
+  "question_id": "Q047",
+  "question_content_hash": "c5335209aa461892c7faa951f4c361b009486bdc3313242046efec2dccf25a1f",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:03:00Z",
+  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "0820eade03b1daa42e9df25f697655b67e9eaa81efc30b23b5d5de0ec753e17e",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "S3 bucket nằm ở nhiều Region và nhiều account trong AWS Organizations; đã dùng AWS Config rules để phát hiện bucket không tuân thủ.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Phải remediate (khắc phục) các bucket không tuân thủ ĐANG tồn tại.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phải remediate cả các bucket không tuân thủ được tạo trong tương lai (trong toàn organization, kể cả account/Region mới).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q047:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Aggregator cấp organization gom compliance của mọi account (kể cả account mới) và có thể gồm Region tương lai; Lambda được kích hoạt bởi event Config Rules Compliance Change để sửa/xóa bucket nên xử lý cả bucket hiện có lẫn bucket mới. Lưu ý: aggregator chỉ read-only, Lambda cần quyền cross-account để sửa bucket.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref6",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q047:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SCP chỉ giới hạn quyền tối đa cho request sau này, không khắc phục các bucket noncompliant đang tồn tại; aggregator chỉ để xem, không remediate.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q047:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Có remediation bằng Lambda nhưng aggregator chỉ gồm account/Region đang dùng, nên bucket tạo trong account hoặc Region mới của organization sẽ không được theo dõi và khắc phục.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref6",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q047:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không remediate bucket hiện có (SCP chỉ phòng ngừa) và aggregator giới hạn account/Region hiện tại.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q047:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "A là lựa chọn duy nhất vừa khắc phục bucket hiện có vừa phủ toàn organization; tuy nhiên cơ chế 'Lambda phản ứng với findings từ aggregator' không phải tính năng native (aggregator read-only, remediation native của Config dùng SSM Automation).",
+      "open_issues": [
+        "Aggregator không phát event/không có quyền mutating; Lambda phải nhận event Config compliance change và có role cross-account để sửa bucket."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:44:51Z"
+  },
+  "source_answer": [
+    "Q047:A"
+  ],
+  "researched_answer": [
+    "Q047:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "A là lựa chọn duy nhất vừa có cơ chế khắc phục (Lambda) cho bucket hiện có và bucket mới vừa phủ toàn organization. Tài liệu Config nêu trực tiếp có thể dùng EventBridge với event 'Config Rules Compliance Change' để 'take corrective action'; tuy nhiên aggregator chỉ là view read-only nên lựa chọn A mô tả kiến trúc hơi giản lược.",
+    "open_issues": [
+      "Aggregator không có quyền mutating; Lambda thực tế nhận event compliance change (EventBridge) từ từng account/Region hoặc được chuyển tiếp về account trung tâm, và cần role cross-account để sửa bucket.",
+      "Remediation native của AWS Config dùng SSM Automation; đề không đưa lựa chọn này."
+    ]
+  },
+  "reconciliation_vi": "Blind = A, source key = A (khớp). Đã tìm bằng chứng trực tiếp cho cơ chế 'Lambda responds to AWS Config findings': trang Monitoring AWS Config with Amazon EventBridge nói rule EventBridge có thể 'take corrective action' và dùng loại event 'Config Rules Compliance Change' khi rule đánh giá không tuân thủ — nên Lambda làm target là cơ chế được tài liệu hỗ trợ. Aggregator loại organization gom mọi account có bật Config (kể cả account mới) và có thể gồm Region tương lai; aggregator không mutating nên việc sửa do Lambda đảm nhận. Kiểm tra lại B/D: SCP chỉ phòng ngừa request mới, không sửa bucket noncompliant đang tồn tại nên không đáp ứng 'remediate existing'. C giới hạn account/Region hiện tại nên bỏ sót bucket tương lai ở account/Region mới. Giữ A, confidence medium vì mô tả kiến trúc trong A giản lược.",
+  "explanation_vi": {
+    "why_correct": "Aggregator cấp organization gom kết quả compliance của mọi account/Region (kể cả account mới), còn Lambda được kích hoạt bởi event Config Rules Compliance Change để xóa hoặc cấu hình lại bucket noncompliant — nên xử lý được cả bucket hiện có lẫn bucket tạo sau này.",
+    "others": {
+      "Q047:B": "SCP chỉ chặn request trong tương lai, không khắc phục được các bucket noncompliant đang tồn tại, còn aggregator chỉ để xem.",
+      "Q047:C": "Có Lambda khắc phục nhưng aggregator chỉ gồm account/Region hiện tại, nên bucket tạo trong account hoặc Region mới sẽ bị bỏ sót.",
+      "Q047:D": "Vừa không khắc phục bucket hiện có (SCP chỉ phòng ngừa) vừa chỉ phủ account/Region hiện tại."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "remediate the organization’s existing noncompliant S3 buckets",
+      "meaning_vi": "Phải sửa resource đang tồn tại -> cần cơ chế khắc phục (Lambda/SSM), SCP không làm được."
+    },
+    {
+      "phrase": "created in the future",
+      "meaning_vi": "Phải phủ cả account/Region mới -> aggregator cấp organization thay vì liệt kê account/Region hiện có."
+    },
+    {
+      "phrase": "several AWS Regions and several AWS accounts",
+      "meaning_vi": "Phạm vi multi-account multi-Region -> AWS Config aggregator."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề đòi 'remediate' cả resource hiện có lẫn tương lai trên toàn organization -> nghĩ đến Config rule + tự động khắc phục (EventBridge/Lambda hoặc SSM Automation) với phạm vi organization-wide; kiểm tra: SCP chỉ phòng ngừa, aggregator chỉ read-only.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "1 Detection",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Config",
+      "AWS Lambda",
+      "Amazon EventBridge",
+      "AWS Organizations",
+      "Amazon S3"
+    ],
+    "reason_vi": "Phát hiện và tự động khắc phục cấu hình S3 không tuân thủ trên nhiều account/Region."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/aggregate-data.html",
+      "title": "Multi-Account Multi-Region Data Aggregation for AWS Config",
+      "section": "Note",
+      "snapshot_id": "bbd1582c092e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Aggregators do not provide mutating access into a source account or region.",
+      "supports": "Aggregator chỉ để xem; việc khắc phục phải do thành phần khác (Lambda) thực hiện.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/aggregated-create.html",
+      "title": "Creating Aggregators for AWS Config",
+      "section": "Console steps",
+      "snapshot_id": "37798cf46cf4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Select Include future AWS Regions to aggregate data from all future AWS Regions where multi-account multi-region data aggregation is enabled.",
+      "supports": "Aggregator cấp organization có thể phủ mọi account và cả Region tương lai; aggregator giới hạn account/Region hiện tại thì không.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html",
+      "title": "Monitoring AWS Config with Amazon EventBridge",
+      "section": "intro",
+      "snapshot_id": "2f45acc62b58",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use Amazon EventBridge to detect and react to changes in the status of AWS Config events.",
+      "supports": "Có thể kích hoạt Lambda theo thay đổi compliance của Config để khắc phục.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/remediation.html",
+      "title": "Remediating Noncompliant Resources with AWS Config",
+      "section": "intro",
+      "snapshot_id": "327727d16367",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Config allows you to remediate noncompliant resources that are evaluated by AWS Config Rules.",
+      "supports": "Remediation là hành động sửa resource noncompliant đã được rule đánh giá (hiện có và mới).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_examples.html",
+      "title": "Service control policy examples",
+      "section": "Before using these examples",
+      "snapshot_id": "8379ec4a65ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Service control policies (SCPs) are meant to be used as coarse-grained guardrails, and they don't directly grant access.",
+      "supports": "SCP là guardrail phòng ngừa quyền, không sửa được bucket đang tồn tại (B, D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html",
+      "title": "Monitoring AWS Config with Amazon EventBridge",
+      "section": "intro",
+      "snapshot_id": "2f45acc62b58",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Depending on the type of event, you might want to send notifications, capture event information, take corrective action, initiate events, or take other actions.",
+      "supports": "EventBridge rule theo event của AWS Config có thể kích hoạt hành động khắc phục (Lambda target) — cơ chế của A và C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html",
+      "title": "Monitoring AWS Config with Amazon EventBridge",
+      "section": "Creating a rule for AWS Config",
+      "snapshot_id": "2f45acc62b58",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Choose Config Rules Compliance Change to get notifications when a compliance check to your rules fails.",
+      "supports": "Có loại event riêng cho kết quả noncompliant của Config rule để kích hoạt Lambda (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/aggregate-data.html",
+      "title": "Multi-Account Multi-Region Data Aggregation for AWS Config",
+      "section": "intro",
+      "snapshot_id": "bbd1582c092e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An organization in AWS Organizations and all the accounts in that organization which have AWS Config enabled.",
+      "supports": "Aggregator loại organization phủ mọi account trong organization (kể cả account mới), khác với liệt kê account hiện có (A vs C).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "'Remediate existing + future' -> cần cơ chế khắc phục (Lambda/SSM), SCP chỉ phòng ngừa; 'organization-wide' để phủ account mới.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:03:00Z",
+      "change": "Blind verdict (scs-researcher): answer=A, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key A; bổ sung bằng chứng trực tiếp cho cơ chế Lambda phản ứng findings (EventBridge 'Config Rules Compliance Change', 'take corrective action'); giữ confidence medium vì aggregator read-only.",
+      "previous_answer": [
+        "Q047:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha 3b26dede4b→0820eade03; last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:51:17Z",
+      "previous_answer": [
+        "Q047:A"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:51:17Z"
+      }
+    }
+  }
+}

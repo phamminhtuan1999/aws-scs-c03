@@ -1,0 +1,100 @@
+URL: https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-delete-key-material.html
+TITLE: Delete imported key material - AWS Key Management Service
+
+# Delete imported key material
+
+You can delete the imported key material from a KMS key at any time. Also, when imported
+key material with an expiration date expires, AWS KMS deletes the key material. In either case,
+when the key material is deleted, the key state of the
+KMS key changes to Pending import, and the KMS key can't be used in any
+cryptographic operations.
+
+Symmetric encryption keys can have multiple key materials associated with them. For these keys,
+KMS assigns a unique identifier to each key material. You can use the ListKeyRotations API to view these key
+material identifiers and corresponding key material state (see
+RotationsListEntry). A key material
+state of PENDING_ROTATION or PENDING_MULTI_REGION_IMPORT_AND_ROTATION indicates
+the key material is not permanently associated with the KMS key. Deletion or expiration of any permanently
+associated key material changes the key state to Pending import. You can delete a specific
+key material by specifying its identifier using the key-material-id parameter in the DeleteImportedKeyMaterial API.
+
+Considerations for multi-Region keys
+
+- When you delete the key material of a primary Region key that is in
+PENDING_ROTATION or PENDING_MULTI_REGION_IMPORT_AND_ROTATION
+state, you'll also be deleting the key materials for the replica Region keys.
+
+- If you delete the key material in a primary or replica Region key, only that specific key
+is affected and other related multi-region keys remain unchanged. Any primary or replica Region
+keys that have all their permanently associated key materials continue to be usable in
+cryptographic operations.
+
+Warning
+
+The key-material-id parameter is optional and if you do not specify it, AWS KMS
+will delete the current key material.
+
+Along with disabling the KMS key and withdrawing permissions, deleting key material can be
+used as a strategy to quickly, but temporarily, halt the use of the KMS key. In contrast,
+scheduling the deletion of a KMS key with imported key material also quickly halts the use of
+the KMS key. However, if the deletion is not canceled during the waiting period, the
+KMS key, associated key materials, and all key metadata are permanently deleted. For details,
+see Deleting KMS keys with imported key material.
+
+To delete key material, you can use the AWS KMS console or the DeleteImportedKeyMaterial API
+operation. AWS KMS records an entry in your AWS CloudTrail log when you delete imported key material and when AWS KMS deletes expired key material.
+
+How deleting key material
+affects AWS services
+
+When you delete any key material, the KMS key becomes unusable right away (subject
+to eventual consistency). However, resources encrypted with data
+keys protected by the KMS key are not affected until the KMS key is used
+again, such as to decrypt the data key. This issue affects AWS services, many of which
+use data keys to protect your resources. For details, see How unusable KMS keys affect data keys.
+
+You can use the AWS KMS console to delete key material.
+
+- Sign in to the AWS Management Console and open the AWS Key Management Service (AWS KMS) console at https://console.aws.amazon.com/kms.
+
+- To change the AWS Region, use the Region selector in the upper-right corner of the page.
+
+- In the navigation pane, choose Customer managed keys.
+
+- Do one of the following:
+
+- Select the check box for a KMS key with imported key material. Choose
+Key actions, Delete key material. For
+symmetric encryption keys that have multiple key materials associated with them,
+this will delete the current key material.
+
+- For symmetric encryption KMS keys with imported key material,
+choose the alias or key ID of a KMS key. Choose the Key material and
+rotations tab. The key material table will list all of the key
+materials associated with the key. Choose Delete key material
+from the Actions menu in the row corresponding to the key
+material you want to delete.
+
+- Confirm that you want to delete the key material and then choose Delete
+key material. The KMS key's status, which corresponds to its key state, changes to Pending import.
+If the deleted key material was in PENDING_ROTATION state, there is no
+change to the KMS key's status.
+
+To use the AWS KMS API to delete key material, send a
+DeleteImportedKeyMaterial request. The following example shows how to do this
+with the AWS CLI.
+
+Replace 1234abcd-12ab-34cd-56ef-1234567890ab with the key ID of
+the KMS key whose key material you want to delete. You can use the KMS key's key ID or
+ARN but you cannot use an alias for this operation. The following command deletes the
+current key material which may be the only key material associated with the key.
+
+$ aws kms delete-imported-key-material --key-id 1234abcd-12ab-34cd-56ef-1234567890ab
+
+To delete a specific key material, specify the key material identified using the
+key-material-id parameter. Replace
+123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0 with the identifier
+of the key material you want to delete.
+
+$ aws kms delete-imported-key-material --key-id 1234abcd-12ab-34cd-56ef-1234567890ab \
+--key-material-id 123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0

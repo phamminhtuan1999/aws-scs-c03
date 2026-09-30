@@ -1,0 +1,55 @@
+{
+  "question_id": "Q071",
+  "question_content_hash": "ef8e80b62f47c055d23f09b57d459454cf8e22428d6f723f365803a8298e568c",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:48:50Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Hệ thống on-premises cần truy cập định kỳ DynamoDB và S3 (API AWS).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Phải loại bỏ tất cả bastion host.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Mọi hệ thống phải xác thực bằng certificate-based authentication.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q071:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Direct Connect + VPN + VPC endpoint chỉ giải quyết đường mạng; certificate (nếu dùng) chỉ xác thực tunnel VPN, còn lời gọi API S3/DynamoDB vẫn cần AWS credentials mà phương án không cung cấp bằng certificate (trước đây dùng instance profile của bastion).",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q071:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "IAM Roles Anywhere cho workload ngoài AWS lấy temporary credentials của IAM role bằng X.509 certificate (trust anchor là CA của công ty hoặc AWS Private CA); không cần bastion và không cần long-term keys.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q071:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS Private CA chỉ phát hành certificate; bản thân certificate không được S3/DynamoDB chấp nhận làm xác thực API nếu không có cơ chế đổi sang IAM credentials (như Roles Anywhere). Phương án thiếu bước đó.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2", "ref1", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q071:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "IAM user dùng access key long-term để assume role; đây không phải certificate-based authentication và AWS khuyến nghị tránh long-term access keys.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q071:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "IAM Roles Anywhere là cơ chế AWS được tài liệu hóa để workload ngoài AWS xác thực bằng X.509 certificate và nhận temporary credentials; các lựa chọn khác thiếu phần xác thực API bằng certificate.", "open_issues": ["B giả định on-prem có đường mạng tới endpoint S3/DynamoDB (qua internet có TLS là chấp nhận được vì đề không cấm internet)."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:48:50Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html", "title": "What is AWS Identity and Access Management Roles Anywhere?", "section": "What is IAM Roles Anywhere?", "snapshot_id": "8a4f014895bd", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To use IAM Roles Anywhere, your workloads must use X.509 certificates issued by your certificate authority (CA).",
+     "supports": "Roles Anywhere cho workload ngoài AWS lấy temporary credentials bằng certificate.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/privateca/latest/userguide/PcaWelcome.html", "title": "What is AWS Private CA?", "section": "What is AWS Private CA?", "snapshot_id": "33a84db17d87", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Your private CAs can issue end-entity X.509 certificates useful in scenarios including:",
+     "supports": "Private CA chỉ phát hành certificate; cần dịch vụ khác (Roles Anywhere) để đổi thành quyền truy cập AWS.", "kind": "inference"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html", "title": "Manage access keys for IAM users", "section": "Manage access keys for IAM users", "snapshot_id": "1e9489a68f90", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Access keys are long-term credentials for an IAM user or the AWS account root user.",
+     "supports": "IAM user dùng access key, không phải certificate-based authentication.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-tunnel-authentication-options.html", "title": "AWS Site-to-Site VPN tunnel authentication options", "section": "AWS Site-to-Site VPN tunnel authentication options", "snapshot_id": "6e4c516db171", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can use pre-shared keys, or certificates to authenticate your Site-to-Site VPN tunnel endpoints.",
+     "supports": "Certificate của VPN chỉ xác thực tunnel endpoint, không xác thực lời gọi API của hệ thống.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv.html", "title": "AWS Signature Version 4 for API requests", "section": "AWS Signature Version 4 for API requests", "snapshot_id": "2c45e1b48f9a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "the SDK and CLI clients authenticate your requests by using the access keys that you provide",
+     "supports": "Lời gọi API AWS vẫn cần AWS credentials (access keys/temporary credentials) để ký.", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Workload ngoài AWS + certificate -> IAM Roles Anywhere (trust anchor, profile, role)."
+}

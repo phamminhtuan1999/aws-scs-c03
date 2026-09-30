@@ -90,6 +90,21 @@ def validate(stage, qid):
             errs.append(f'{w}: missing field {k}')
     if errs:
         return errs
+    # timestamps must be real: never later than the moment the file was written (+2 min tolerance)
+    import datetime as _dt, os as _os
+    fmt = _dt.datetime.fromtimestamp(_os.path.getmtime(path), _dt.timezone.utc)
+    ts_fields = [('researched_at', rec.get('researched_at')),
+                 ('independent_verdict.recorded_at', (rec.get('independent_verdict') or {}).get('recorded_at'))]
+    if stage == 'final':
+        ts_fields = [('last_reviewed_at', rec.get('last_reviewed_at'))]
+    for name, val in ts_fields:
+        try:
+            t = _dt.datetime.fromisoformat(str(val).replace('Z', '+00:00'))
+            if t.tzinfo is None: t = t.replace(tzinfo=_dt.timezone.utc)
+            if (t - fmt).total_seconds() > 120:
+                errs.append(f'{w}: {name}={val} is later than the file write time {fmt.isoformat()[:19]}Z — timestamps must be taken from the clock, never estimated')
+        except Exception:  # noqa
+            errs.append(f'{w}: {name} not a valid ISO timestamp')
     if rec['question_id'] != qid: errs.append(f'{w}: question_id mismatch')
     if rec['stage'] != stage: errs.append(f'{w}: stage should be {stage}')
     if rec['question_content_hash'] != q['content_hash']: errs.append(f'{w}: content hash mismatch')

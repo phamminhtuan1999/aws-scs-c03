@@ -1,0 +1,67 @@
+URL: https://docs.aws.amazon.com/fis/latest/userguide/multi-account.html
+TITLE: Working with multi-account experiments for AWS FIS - AWS Fault Injection Service
+
+# Working with multi-account experiments for AWS FIS
+
+You can create and manage multi-account experiment templates using the AWS FIS console or the command line.
+You create a multi-account experiment by specifying the account targeting experiment option as "multi-account", and adding target account configurations.
+After you create a multi-account experiment template, you can use it to run an experiment.
+
+With a multi-account experiment, you can set up and run real-world failure scenarios
+on an application that spans multiple AWS accounts within a Region. You run multi-account experiments
+from an orchestrator account that impacts resources in multiple target accounts.
+
+When you run a multi-account experiment, target accounts with affected resources will be notified via
+their AWS Health dashboards, providing awareness to users in the target accounts. With multi-account experiments, you can:
+
+- Run real world failure scenarios on applications that span multiple accounts with the central controls and guardrails that AWS FIS provides.
+
+- Control the effects of a multi-account experiment using IAM roles with fine-grained permissions and tags to define the scope of each target.
+
+- Centrally view the actions AWS FIS takes in each account from the AWS Management Console and through AWS FIS logs.
+
+- Monitor and audit API calls AWS FIS makes in each account with AWS CloudTrail.
+
+This section helps you get started with multi-account experiments.
+
+Topics
+
+- Concepts for multi-account experiments
+
+- Best practices for multi-account experiments
+
+- Prerequisites for multi-account experiments
+
+- Create a multi-account experiment template
+
+- Update a target account configuration
+
+- Delete a target account configuration
+
+## Concepts for multi-account experiments
+
+The following are the key concepts for multi-account experiments:
+
+- Orchestrator account ‐ The orchestrator account acts as a central account to configure and manage the experiment in the AWS FIS Console, as well as to centralize logging.
+The orchestrator account owns the AWS FIS experiment template and experiment.
+
+- Target accounts ‐ A target account is an individual AWS account with resources that can be affected by an AWS FIS multi-account experiment.
+
+- Target account configurations ‐ You define the target accounts that are part of an experiment by adding target account configurations to the experiment template.
+A target account configuration is an element of the experiment template that is required for multi-account experiments. You define one for
+each target account by setting an AWS account ID, IAM role, and an optional description.
+
+## Best practices for multi-account experiments
+
+The following are best practices to using multi-account experiments:
+
+- When you configure targets for multi-account experiments, we recommend targeting with consistent resource tags across all target accounts.
+An AWS FIS experiment will resolve resources with consistent tags in each target account. An action must resolve
+at least one target resource in any target account or will fail, except for experiments with emptyTargetResolutionMode set to skip. Action quotas apply per account.
+If you want to target resources by resource ARNs, the same single-account limit per action applies.
+
+- When you target resources in one or more availability zones using parameters or filters,
+you should specify an AZ ID, not an AZ name. The AZ ID is a unique and
+consistent identifier for an Availability Zone across accounts.
+To learn how to find the AZ ID for the availability zones in your account, see
+Availability Zone IDs for your AWS resources.

@@ -1,0 +1,40 @@
+{
+  "question_id": "Q083",
+  "question_content_hash": "1a7481c1e8d4c207641303e6f0236cb82719fa61e04a04fbaf54f4c214baa2ec",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:01Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages (docs.aws.amazon.com / aws.amazon.com) were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Ghi log chi tiết truy cập object trong S3 bucket (object-level).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Log phải có IAM identity thực hiện request và thời điểm truy cập.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Dữ liệu có cấu trúc (structured).", "kind": "constraint"},
+    {"id": "R4", "text_vi": "Có sẵn gần thời gian thực (near real time).", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q083:A", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Server access log gửi vào S3 bucket (như phương án mô tả) là text phân tách bằng dấu cách và giao 'within a few hours' -> không đạt structured và near real time. (Đường giao qua CloudWatch Logs cho JSON nhưng phương án chỉ định bucket S3.)", "requirement_ids": ["R3", "R4"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q083:B", "unit_type": "choice", "verdict": "meets", "reason_vi": "CloudTrail data events ghi thao tác cấp object của S3, định dạng JSON, giao mỗi 5 phút, record có userIdentity (IAM identity) và eventTime.", "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q083:C", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "AWS Config ghi và đánh giá cấu hình resource theo thời gian, không ghi log từng request truy cập object với identity người gọi.", "requirement_ids": ["R1", "R2"], "reference_ids": ["ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q083:D", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Macie phát hiện dữ liệu nhạy cảm và đánh giá bảo mật/quyền truy cập bucket, tạo finding; không phải dịch vụ ghi log truy cập object.", "requirement_ids": ["R1", "R2"], "reference_ids": ["ref7"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q083:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Bảng so sánh chính thức của S3 nêu CloudTrail: JSON, data events mỗi 5 phút; server access log vào S3: text phân tách dấu cách, trong vài giờ. AWS cũng khuyến nghị dùng CloudTrail cho object-level actions.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:54:01Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html", "title": "Logging options for Amazon S3", "section": "Performance and Cost - Speed of log delivery / Log format", "snapshot_id": "54b189a70342", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Data events every 5 minutes; management events every 15 minutes Within a few hours Log format JSON Space-delimited text records for delivery to an Amazon S3 bucket.", "supports": "CloudTrail data events: JSON, 5 phút; server access log vào S3: vài giờ, text phân tách dấu cách.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html", "title": "Logging options for Amazon S3", "section": "Logging options for Amazon S3", "snapshot_id": "54b189a70342", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "We recommend that you use CloudTrail for logging bucket-level and object-level actions for your Amazon S3 resources.", "supports": "AWS khuyến nghị CloudTrail cho object-level actions.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/cloudtrail-logging-s3-info.html", "title": "Amazon S3 CloudTrail events", "section": "Amazon S3 data events in CloudTrail", "snapshot_id": "3629ed4a70bb", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "By default, CloudTrail doesn't log data events.", "supports": "Phải bật data event logging để ghi thao tác object (đúng như phương án B).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html", "title": "CloudTrail record contents for management, data, and network activity events", "section": "userIdentity", "snapshot_id": "778dae6c182e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Information about the IAM identity that made a request.", "supports": "Record CloudTrail có IAM identity của người gọi.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html", "title": "CloudTrail record contents for management, data, and network activity events", "section": "eventTime", "snapshot_id": "778dae6c182e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "The date and time the request was completed, in coordinated universal time (UTC).", "supports": "Record CloudTrail có thời điểm request.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html", "title": "What Is AWS Config?", "section": "What Is AWS Config?", "snapshot_id": "19eb8056b939", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "AWS Config provides a detailed view of the configuration of AWS resources in your AWS account.", "supports": "Config tập trung vào cấu hình resource, không phải log truy cập object.", "kind": "inference"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html", "title": "What is Amazon Macie?", "section": "What is Amazon Macie?", "snapshot_id": "abdcfe897682", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Amazon Macie is a data security service that discovers sensitive data by using machine learning and pattern matching", "supports": "Macie là dịch vụ phát hiện dữ liệu nhạy cảm, không ghi log truy cập.", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Lưu ý thời điểm: S3 server access log nay có thể giao tới CloudWatch Logs dạng JSON, nhưng phương án A chỉ định lưu vào S3 bucket (text, trễ vài giờ)."
+}
