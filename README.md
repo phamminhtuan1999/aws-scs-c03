@@ -10,18 +10,20 @@ with no backend, no login, no LLM calls and no network requests other than loadi
 - Everything the app knows about answers comes from two separate layers: the immutable **source keys** copied from the supplied HTML,
   and the **research** (`research/question_reviews.json`), which is produced independently and versioned (see Research status below).
 
-## Research status (research_version r1, 2026-09-30)
+## Research status (research_version r3, 2026-09-30)
 
-All 143 questions and all 628 units (572 choices, 17 ordering steps, 39 matching rows/responses) have a blind record
-(`research/blind/`, written without access to any key) and a final record (`research/reviews/`), checked by
-`python tools/validate_research.py blind|final` (0 errors), plus an independent audit of 61 high-risk / sampled questions (`research/audit_log.md`).
+History: r1 (blind → reconcile → audit) → r2 (independent re-verification by a separate session, stricter literal policy)
+→ **r3** (main-agent adjudication on top of r2, approved by the user; `tools/apply_r3.py`, 7 records changed, each with a `history` entry).
+r3 policy: a source typo or a defect shared by every option is annotated in `source_issues` and does not by itself make a question ungradable.
+All 143 questions / 628 units have blind + final records; `python tools/validate_research.py blind|final` → 0 errors.
 
 | status | questions | graded "By research" |
 |---|---|---|
-| verified | 135 (Q056, Q107 differ from the source key) | yes |
-| ambiguous | 8 — Q005, Q008, Q024, Q077, Q087, Q118, Q122, Q133 | no |
-| disputed / outdated / unresolved / pending | 0 | — |
+| verified | 119 (none differs from the source key) | yes |
+| ambiguous | 21 — Q002, Q005, Q010, Q011, Q019, Q023, Q024, Q026, Q041, Q047, Q054, Q056, Q070, Q077, Q087, Q094, Q095, Q107, Q118, Q122, Q142 | no |
+| unresolved | 3 — Q008, Q062, Q084 | no |
 
+Comparison r1/r2/r3 and ExamTopics cross-check: `reports/r1_vs_r2_community.md`, `reports/r1_r3_summary.md`.
 Details: `research/discrepancies.md`, `research/progress.md` (method, limitations, incidents), `research/coverage.csv`.
 Verified ≠ "100 % certain": see confidence and open issues per question; no claim of being bias-free is made.
 

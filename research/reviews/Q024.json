@@ -2,9 +2,9 @@
   "question_id": "Q024",
   "question_content_hash": "bb2253ced9f06aa8b106429571c65419e40cbe102d591a3f0b5e58d56a4c5bf7",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -65,8 +65,8 @@
     {
       "unit_id": "Q024:C",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Đúng có điều kiện: counter phải chia sẻ across EC2 và enforce cửa sổ trượt/atomic.",
+      "verdict": "undetermined",
+      "reason_vi": "Chỉ đúng có điều kiện: bộ đếm phải dùng chung và atomic giữa các EC2 của ứng dụng stateless; lựa chọn C không nêu điều này.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -116,20 +116,21 @@
   "source_answer": [
     "Q024:A"
   ],
-  "researched_answer": [
-    "Q024:C"
-  ],
-  "comparison": "mismatch",
-  "status": "verified",
-  "differs_from_source": true,
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
+  "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
-    "open_issues": []
+    "level": "medium",
+    "reason_vi": "Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả.",
+    "open_issues": [
+      "Nếu coi con số 3 chỉ minh họa, A là đáp án ý đồ (khóa nguồn, cộng đồng ExamTopics chọn A).",
+      "Nếu cho phép bổ sung bộ đếm dùng chung (vd. DynamoDB atomic counter), C đúng nhưng tốn công nhất."
+    ]
   },
   "reconciliation_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
   "explanation_vi": {
-    "why_correct": "Thực thi bộ đếm theo IP trong ứng dụng bằng state dùng chung và cập nhật atomic để áp mức 3 lần trong cửa sổ trượt 5 phút. WAF rate-based rule hiện có minimum 10 và chỉ xấp xỉ, nên không thể cấu hình chính xác 3.",
+    "why_correct": "Chưa có kết luận chắc chắn: A (WAF rate-based rule) là cách ít công nhất theo ý đồ đề nhưng WAF chỉ cho ngưỡng tối thiểu 10 request, không đặt được 3. C chỉ đúng nếu bộ đếm dùng chung và cập nhật atomic giữa các EC2 — lựa chọn không nêu, trong khi đề nói ứng dụng stateless chạy trên nhiều instance.",
     "others": {
       "Q024:A": "Sai: WAF Limit nhỏ nhất hiện là 10, không phải 3.",
       "Q024:B": "Sai: alert/Lambda không phải synchronous read quota enforcement.",
@@ -150,7 +151,7 @@
       "meaning_vi": "Cửa sổ trượt 300 giây."
     }
   ],
-  "memory_tip_vi": "Nếu hạn mức nhỏ hơn WAF minimum hoặc cần chính xác, enforce bằng application counter dùng chung.",
+  "memory_tip_vi": "Nếu hạn mức nhỏ hơn ngưỡng tối thiểu của WAF (10) → WAF không đặt chính xác được; cần bộ đếm dùng chung ở ứng dụng.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -316,6 +317,14 @@
       ],
       "note_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: C verified(high) -> ambiguous — Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả.",
+      "previous_answer": [
+        "Q024:C"
+      ]
     }
   ],
   "independent_reverification": {
@@ -331,5 +340,21 @@
     "candidate_answers": null,
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "verified",
+      "answer": [
+        "Q024:C"
+      ],
+      "confidence": {
+        "level": "high",
+        "reason_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
+        "open_issues": []
+      }
+    },
+    "decision": "r3: C verified(high) -> ambiguous — Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả."
   }
 }

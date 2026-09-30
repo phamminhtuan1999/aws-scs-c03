@@ -2,9 +2,9 @@
   "question_id": "Q121",
   "question_content_hash": "d4401b9c13c184e088cc4ecf2762f398648a8d14e55165985315f0d16c016197",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T20:20:09+00:00",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,21 +38,22 @@
     {
       "unit_id": "Q121:A",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
+      "verdict": "does_not_meet",
+      "reason_vi": "validate-template chỉ kiểm tra template có phải JSON/YAML hợp lệ (tài liệu CloudFormation ghi rõ chỉ kiểm tra cú pháp, không kiểm tra giá trị thuộc tính resource), nên không phát hiện được resource vi phạm tiêu chuẩn bảo mật nội bộ.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref7"
+        "ref3",
+        "ref6"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q121:B",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
+      "verdict": "meets",
+      "reason_vi": "CloudFormation Guard là công cụ policy-as-code để viết rule cho từng cấu hình resource và validate template trước khi deploy (shift-left); lỗi vi phạm được trả về để pipeline publish lên SNS. Chạy tự động trong pipeline có sẵn nên không làm chậm developer và ít vận hành. ('cm-guard' là lỗi chính tả của cfn-guard.)",
       "requirement_ids": [
         "R1",
         "R2",
@@ -60,37 +61,43 @@
         "R4"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1",
+        "ref2",
+        "ref4",
+        "ref5",
+        "ref7",
+        "ref8",
+        "ref9"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q121:C",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Cũng dùng Guard để quét template nên về chức năng có thể phát hiện vi phạm, nhưng phải xây và vận hành thêm S3 event, SQS, fleet EC2 Auto Scaling và đổi quy trình (developer upload vào S3, EC2 tự deploy) - overhead cao hơn nhiều so với chạy Guard ngay trong pipeline hiện có.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1",
+        "ref5",
+        "ref9"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q121:D",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "D review thủ công standards mới làm chậm delivery.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Bắt mọi resource/cấu hình mới phải gửi security team review thủ công rồi mới thêm vào repository - tạo nút thắt làm giảm tốc độ delivery (vi phạm R2) và không có cơ chế thông báo tự động khi có resource không tuân thủ.",
       "requirement_ids": [
         "R1",
         "R2",
         "R4"
       ],
-      "reference_ids": [
-        "ref7"
-      ],
+      "reference_ids": [],
       "evidence_kind": "inference"
     }
   ],
@@ -118,23 +125,24 @@
   "source_answer": [
     "Q121:B"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
+  "researched_answer": [
+    "Q121:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+    "level": "medium",
+    "reason_vi": "Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard.",
     "open_issues": [
-      "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
+      "Nếu đọc nguyên văn, lệnh \"cm-guard\" không tồn tại (typo nguồn)."
     ]
   },
   "reconciliation_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
   "explanation_vi": {
-    "why_correct": "Chưa có đáp án chắc chắn: B là thiết kế dự định phù hợp nhưng ghi lệnh cm-guard không tồn tại; lệnh AWS công bố là cfn-guard validate.",
+    "why_correct": "B: chạy CloudFormation Guard (cfn-guard) với custom rules trong pipeline trước bước build và báo SNS khi phát hiện vi phạm — kiểm tra standards tự động, không làm chậm delivery. Nguồn gõ nhầm \"cm-guard\".",
     "others": {
       "Q121:A": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
-      "Q121:B": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
       "Q121:C": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
       "Q121:D": "D review thủ công standards mới làm chậm delivery."
     }
@@ -295,11 +303,6 @@
       "type": "typo",
       "location": "Q121:D",
       "detail_vi": "'com feted' là lỗi chính tả của 'completed'."
-    },
-    {
-      "type": "ambiguous",
-      "location": "Q121",
-      "detail_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
     }
   ],
   "notes_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
@@ -332,6 +335,12 @@
       "answer": null,
       "note_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: restore verified — Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard.",
+      "previous_answer": null
     }
   ],
   "independent_reverification": {
@@ -351,5 +360,21 @@
     ],
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "ambiguous",
+      "answer": null,
+      "confidence": {
+        "level": "high",
+        "reason_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+        "open_issues": [
+          "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
+        ]
+      }
+    },
+    "decision": "r3: restore verified — Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard."
   }
 }

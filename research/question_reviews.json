@@ -1,21 +1,23 @@
 {
-  "research_version": "r2-independent-verify",
-  "generated_at": "2026-09-30T21:53:00.543565+00:00",
+  "research_version": "r3",
+  "generated_at": "2026-09-30T23:07:26.242319+00:00",
   "status_rule": "Graded in \"By research\" mode only when status == verified (confidence high/medium). All other statuses are shown as \"no settled conclusion\".",
   "questions": {
     "Q001": {
-      "status": "ambiguous",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q001:C"
+      ],
       "source_answer": [
         "Q001:C"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
+        "reason_vi": "Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues).",
         "open_issues": [
-          "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
+          "Trong thực tế nên cấp quyền qua execution role (identity policy) hoặc principal là ARN execution role; không lựa chọn nào nêu điều này."
         ]
       },
       "option_reviews": [
@@ -23,64 +25,61 @@
           "unit_id": "Q001:A",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: ARN function không phải IAM principal hợp lệ.",
+          "reason_vi": "ARN của Lambda function không phải loại principal hợp lệ (chỉ account, IAM role/user, session, federated, service). Ngoài ra Resource vẫn là ARN bucket nên s3:GetObject vẫn không khớp object.",
           "requirement_ids": [
             "R1",
             "R3"
           ],
           "reference_ids": [
-            "Q001-r2-1",
-            "ref1",
-            "ref2"
+            "ref2",
+            "ref1"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q001:B",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: thêm action không sửa Resource object và principal.",
+          "reason_vi": "Mở rộng Action không sửa lỗi gốc: Resource vẫn là ARN bucket, trong khi các action object (GetObject*) yêu cầu ARN object dạng bucket/*. Còn thêm GetBucket* là quyền thừa, trái least privilege.",
           "requirement_ids": [
             "R1",
             "R3"
           ],
           "reference_ids": [
-            "Q001-r2-1",
             "ref1",
-            "ref2"
+            "ref7"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q001:C",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Chưa đủ: /* sửa ARN object nhưng principal/điều kiện vẫn không cấp quyền cho execution role.",
+          "verdict": "meets",
+          "reason_vi": "s3:GetObject là object operation nên Resource phải là ARN object có '/' sau tên bucket (arn:aws:s3:::DOC-EXAMPLE-BUCKET/*). Đây là lỗi rõ ràng duy nhất trong policy và chỉ phương án này sửa nó.",
           "requirement_ids": [
             "R1",
             "R2",
             "R3"
           ],
           "reference_ids": [
-            "Q001-r2-1",
             "ref1",
-            "ref2"
+            "ref6"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q001:D",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: đảo principal và resource không cấp quyền đọc S3.",
+          "reason_vi": "Bucket policy cấp quyền trên bucket và object S3; đặt Resource là ARN Lambda không cấp quyền đọc object. Principal s3.amazonaws.com là dịch vụ S3, không phải danh tính mà Lambda function dùng.",
           "requirement_ids": [
             "R1",
             "R3"
           ],
           "reference_ids": [
-            "Q001-r2-1",
+            "ref4",
             "ref1",
-            "ref2"
+            "ref5"
           ],
           "evidence_kind": "inference"
         }
@@ -191,11 +190,10 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "Không lựa chọn nào sửa đủ policy: GetObject cần ARN object, còn Lambda dùng execution role. C chỉ sửa Resource; principal và SourceArn vẫn không cấp quyền cho mã trong function.",
+        "why_correct": "C là thay đổi duy nhất sửa lỗi có tài liệu hỗ trợ: s3:GetObject thao tác trên object nên Resource phải là ARN object (bucket/*). Tiền đề của đề (principal lambda.amazonaws.com + SourceArn) không phản ánh việc function gọi S3 bằng execution role — lỗi này có ở mọi lựa chọn.",
         "others": {
           "Q001:A": "Sai: ARN function không phải IAM principal hợp lệ.",
           "Q001:B": "Sai: thêm action không sửa Resource object và principal.",
-          "Q001:C": "Chưa đủ: /* sửa ARN object nhưng principal/điều kiện vẫn không cấp quyền cho execution role.",
           "Q001:D": "Sai: đảo principal và resource không cấp quyền đọc S3."
         }
       },
@@ -233,7 +231,7 @@
           "detail_vi": "Chuỗi ARN có khoảng trắng thừa 'DOC-EXAMPLE- BUCKET/*' và dấu nháy kết thúc sai (''), ý định rõ là arn:aws:s3:::DOC-EXAMPLE-BUCKET/*."
         },
         {
-          "type": "ambiguous",
+          "type": "data",
           "location": "Q001",
           "detail_vi": "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
         }
@@ -278,7 +276,7 @@
         }
       ],
       "researched_at": "2026-09-30T19:29:15Z",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q001:C"
@@ -336,9 +334,15 @@
           "answer": null,
           "note_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues).",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q001_q036",
@@ -357,9 +361,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "ambiguous",
+          "answer": null,
+          "confidence": {
+            "level": "medium",
+            "reason_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
+            "open_issues": [
+              "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues)."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q002": {
       "status": "ambiguous",
@@ -769,6 +789,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -1047,6 +1068,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -1360,6 +1382,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -1822,6 +1845,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -2062,23 +2086,26 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
     },
     "Q007": {
-      "status": "ambiguous",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q007:B"
+      ],
       "source_answer": [
         "Q007:B"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+        "reason_vi": "Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues).",
         "open_issues": [
-          "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
+          "Để chặn cả thao tác object cần thêm arn:aws:s3:::DOC-EXAMPLE-BUCKET/* vào Resource; không lựa chọn nào có."
         ]
       },
       "option_reviews": [
@@ -2086,21 +2113,20 @@
           "unit_id": "Q007:A",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: Allow không deny Bob.",
+          "reason_vi": "Effect là Allow nên policy này cấp thêm quyền S3 cho Bob thay vì từ chối; ngược với yêu cầu deny.",
           "requirement_ids": [
             "R1"
           ],
           "reference_ids": [
-            "ref1",
-            "ref6"
+            "ref3"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q007:B",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
+          "verdict": "meets",
+          "reason_vi": "Dùng đúng định dạng ARN của AWS STS federated user session (arn:aws:sts::acct:federated-user/Bob) với Effect Deny; explicit deny trong resource-based policy ghi đè mọi allow, và chỉ tác động tới bucket này nên quyền khác của Bob không đổi.",
           "requirement_ids": [
             "R1",
             "R2",
@@ -2108,37 +2134,38 @@
           ],
           "reference_ids": [
             "ref1",
-            "ref6"
+            "ref3",
+            "ref4"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q007:C",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: IAM user/Bob khác STS federated-user/Bob.",
+          "reason_vi": "Principal arn:aws:iam::acct:user/Bob là IAM user principal, khác với federated user session principal (arn:aws:sts::...:federated-user/...); policy này nhắm sai loại principal nên không chắc chặn được phiên federated user Bob và có thể chặn nhầm một IAM user tên Bob.",
           "requirement_ids": [
             "R2"
           ],
           "reference_ids": [
             "ref1",
-            "ref6"
+            "ref2"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q007:D",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: assumed-role session là loại principal khác.",
+          "reason_vi": "assumed-role/Bob/role-session-name là role session principal của một role tên Bob với session name cố định, không phải federated user Bob (GetFederationToken); chỉ khớp đúng một phiên role đó.",
           "requirement_ids": [
             "R2"
           ],
           "reference_ids": [
             "ref1",
-            "ref6"
+            "ref5"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         }
       ],
       "references": [
@@ -2222,10 +2249,9 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "B xác định đúng STS federated-user/Bob và dùng explicit deny, nhưng bucket ARN không bao phủ GetObject/DeleteObject. Cần cả bucket ARN và bucket/* để chặn toàn bộ truy cập dữ liệu như đề yêu cầu.",
+        "why_correct": "B dùng explicit Deny với principal STS federated user (…:federated-user/Bob) — đúng loại danh tính của Bob; A là Allow, C là IAM user, D là role session. Mọi lựa chọn đều chỉ ghi ARN bucket (thiếu bucket/*), là lỗi chung của nguồn.",
         "others": {
           "Q007:A": "Sai: Allow không deny Bob.",
-          "Q007:B": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
           "Q007:C": "Sai: IAM user/Bob khác STS federated-user/Bob.",
           "Q007:D": "Sai: assumed-role session là loại principal khác."
         }
@@ -2264,7 +2290,7 @@
           "detail_vi": "Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ)."
         },
         {
-          "type": "ambiguous",
+          "type": "data",
           "location": "Q007",
           "detail_vi": "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
         }
@@ -2309,7 +2335,7 @@
         }
       ],
       "researched_at": "2026-09-30T19:33:20Z",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q007:B"
@@ -2365,9 +2391,15 @@
           "answer": null,
           "note_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues).",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q001_q036",
@@ -2386,9 +2418,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "ambiguous",
+          "answer": null,
+          "confidence": {
+            "level": "medium",
+            "reason_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+            "open_issues": [
+              "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues)."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q008": {
       "status": "unresolved",
@@ -2894,6 +2942,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": false,
       "source_key_ungradable_reason": "Rows P1 and P5 have identical prompt text but different source answers; a learner cannot distinguish them, so the key is not answerable as shown. Displayed for study, never scored (decision 2026-09-30).",
       "gradable_by_research": false
@@ -3186,6 +3235,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -3493,6 +3543,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -3809,6 +3860,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -4139,54 +4191,59 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
     },
     "Q013": {
-      "status": "ambiguous",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q013:A",
+        "Q013:E"
+      ],
       "source_answer": [
         "Q013:A",
         "Q013:E"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
+        "reason_vi": "Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án.",
         "open_issues": [
-          "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
+          "Nếu đọc E theo nghĩa đen, chuỗi biến policy không hợp lệ (typo nguồn)."
         ]
       },
       "option_reviews": [
         {
           "unit_id": "Q013:A",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Đúng khi policy xác thực cũng buộc client ID khớp thing.",
+          "verdict": "meets",
+          "reason_vi": "Dùng thing name làm client ID là điều kiện để policy dùng ${iot:Connection.Thing.ThingName} cho iot:Connect hoạt động; client ID khi đó bị ràng buộc với thing đã đăng ký và gắn với principal, không thể tự đặt tùy ý.",
           "requirement_ids": [
             "R1",
             "R3"
           ],
           "reference_ids": [
-            "ref1",
-            "ref5"
+            "ref3",
+            "ref4",
+            "ref5",
+            "ref9"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q013:B",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: Trojan có thể bỏ qua kiểm tra phía client.",
+          "reason_vi": "Kiểm tra client ID trong app hợp lệ không ngăn được Trojan vì app giả do kẻ tấn công kiểm soát, bỏ qua kiểm tra đó; AWS khuyến nghị kiểm soát client ID bằng policy iot:Connect phía server.",
           "requirement_ids": [
             "R1",
             "R2"
           ],
           "reference_ids": [
-            "ref1",
-            "ref5"
+            "ref8"
           ],
           "evidence_kind": "inference"
         },
@@ -4194,45 +4251,46 @@
           "unit_id": "Q013:C",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: AWSIoTWirelessDataAccess/principal client không phải iot:Connect resource policy phù hợp.",
+          "reason_vi": "AWSIoTWirelessDataAccess là IAM managed policy chỉ cho iotwireless:SendDataToWirelessDevice (IoT Wireless), không phải AWS IoT Core policy kiểm soát MQTT connect/subscribe; IoT Core policy cũng không có phần 'principal' như mô tả.",
           "requirement_ids": [
             "R1",
             "R3"
           ],
           "reference_ids": [
-            "ref1",
-            "ref5"
+            "ref6",
+            "ref7"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q013:D",
           "unit_type": "choice",
           "verdict": "does_not_meet",
-          "reason_vi": "Sai: ClientId tự tham chiếu vẫn cho client tự chọn resource.",
+          "reason_vi": "Resource client/${iot:ClientId} cho phép mọi client ID (kể cả '+') kết nối, nên không chặn được tấn công; tài liệu AWS nói rõ không khuyến nghị dùng ${iot:ClientId} với Connect.",
           "requirement_ids": [
             "R1"
           ],
           "reference_ids": [
             "ref1",
-            "ref5"
+            "ref2"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q013:E",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Đúng về ý định nếu sửa ${iot:Connection.Thing.ThingName} và ARN, với principal đã gắn thing.",
+          "verdict": "meets",
+          "reason_vi": "Policy iot:Connect với resource client/${iot:Connection.Thing.ThingName} buộc client ID phải là tên thing đã đăng ký, nên client ID chèn ký tự đặc biệt bị từ chối kết nối (đề có lỗi gõ ')' thay cho '}').",
           "requirement_ids": [
             "R1",
             "R2"
           ],
           "reference_ids": [
-            "ref1",
-            "ref5"
+            "ref3",
+            "ref4",
+            "ref8"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         }
       ],
       "references": [
@@ -4355,7 +4413,7 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "Dùng thing name làm client ID và policy server-side ràng buộc iot:Connect với ThingName của danh tính đã gắn thing. A/E là ý định đúng nhưng chuỗi biến của E phải sửa dấu đóng và dùng đầy đủ resource ARN.",
+        "why_correct": "A + E: ứng dụng dùng thing name làm client ID, và IoT policy chỉ cho iot:Connect với client/${iot:Connection.Thing.ThingName}, nên thiết bị giả mạo không kết nối được bằng client ID khác. Nguồn gõ \")\" thay \"}\" ở lựa chọn E.",
         "others": {
           "Q013:B": "Sai: Trojan có thể bỏ qua kiểm tra phía client.",
           "Q013:C": "Sai: AWSIoTWirelessDataAccess/principal client không phải iot:Connect resource policy phù hợp.",
@@ -4402,11 +4460,6 @@
           "type": "typo",
           "location": "Q013:E",
           "detail_vi": "Biến policy viết '${iot:Connection.Thing.ThingName)' dùng ')' thay '}'; nếu hiểu theo nghĩa đen thì biến không hợp lệ."
-        },
-        {
-          "type": "ambiguous",
-          "location": "Q013",
-          "detail_vi": "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
         }
       ],
       "requirements": [
@@ -4433,7 +4486,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:33:31Z",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q013:A",
@@ -4489,9 +4542,15 @@
           "answer": null,
           "note_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án.",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q001_q036",
@@ -4515,9 +4574,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "ambiguous",
+          "answer": null,
+          "confidence": {
+            "level": "medium",
+            "reason_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
+            "open_issues": [
+              "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q014": {
       "status": "verified",
@@ -4844,6 +4919,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -5165,6 +5241,7 @@
         "root_adjudication": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -5487,6 +5564,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -5825,6 +5903,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -6110,6 +6189,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -6525,6 +6605,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -6795,6 +6876,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -7053,6 +7135,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -7335,6 +7418,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -7620,24 +7704,26 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
     },
     "Q024": {
-      "status": "verified",
-      "researched_answer": [
-        "Q024:C"
-      ],
+      "status": "ambiguous",
+      "researched_answer": null,
       "source_answer": [
         "Q024:A"
       ],
-      "comparison": "mismatch",
-      "differs_from_source": true,
+      "comparison": "not_comparable",
+      "differs_from_source": false,
       "confidence": {
-        "level": "high",
-        "reason_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
-        "open_issues": []
+        "level": "medium",
+        "reason_vi": "Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả.",
+        "open_issues": [
+          "Nếu coi con số 3 chỉ minh họa, A là đáp án ý đồ (khóa nguồn, cộng đồng ExamTopics chọn A).",
+          "Nếu cho phép bổ sung bộ đếm dùng chung (vd. DynamoDB atomic counter), C đúng nhưng tốn công nhất."
+        ]
       },
       "option_reviews": [
         {
@@ -7675,8 +7761,8 @@
         {
           "unit_id": "Q024:C",
           "unit_type": "choice",
-          "verdict": "meets",
-          "reason_vi": "Đúng có điều kiện: counter phải chia sẻ across EC2 và enforce cửa sổ trượt/atomic.",
+          "verdict": "undetermined",
+          "reason_vi": "Chỉ đúng có điều kiện: bộ đếm phải dùng chung và atomic giữa các EC2 của ứng dụng stateless; lựa chọn C không nêu điều này.",
           "requirement_ids": [
             "R1",
             "R2",
@@ -7824,7 +7910,7 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "Thực thi bộ đếm theo IP trong ứng dụng bằng state dùng chung và cập nhật atomic để áp mức 3 lần trong cửa sổ trượt 5 phút. WAF rate-based rule hiện có minimum 10 và chỉ xấp xỉ, nên không thể cấu hình chính xác 3.",
+        "why_correct": "Chưa có kết luận chắc chắn: A (WAF rate-based rule) là cách ít công nhất theo ý đồ đề nhưng WAF chỉ cho ngưỡng tối thiểu 10 request, không đặt được 3. C chỉ đúng nếu bộ đếm dùng chung và cập nhật atomic giữa các EC2 — lựa chọn không nêu, trong khi đề nói ứng dụng stateless chạy trên nhiều instance.",
         "others": {
           "Q024:A": "Sai: WAF Limit nhỏ nhất hiện là 10, không phải 3.",
           "Q024:B": "Sai: alert/Lambda không phải synchronous read quota enforcement.",
@@ -7845,7 +7931,7 @@
           "meaning_vi": "Cửa sổ trượt 300 giây."
         }
       ],
-      "memory_tip_vi": "Nếu hạn mức nhỏ hơn WAF minimum hoặc cần chính xác, enforce bằng application counter dùng chung.",
+      "memory_tip_vi": "Nếu hạn mức nhỏ hơn ngưỡng tối thiểu của WAF (10) → WAF không đặt chính xác được; cần bộ đếm dùng chung ở ứng dụng.",
       "tags": {
         "domains": [
           "3 Infrastructure Security"
@@ -7884,7 +7970,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:35:22Z",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": null,
         "proposed_status": "ambiguous",
@@ -7931,9 +8017,17 @@
           ],
           "note_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: C verified(high) -> ambiguous — Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả.",
+          "previous_answer": [
+            "Q024:C"
+          ]
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q001_q036",
@@ -7948,9 +8042,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "verified",
+          "answer": [
+            "Q024:C"
+          ],
+          "confidence": {
+            "level": "high",
+            "reason_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
+            "open_issues": []
+          }
+        },
+        "decision": "r3: C verified(high) -> ambiguous — Không lựa chọn nào đáp ứng nguyên văn: A vướng ngưỡng tối thiểu 10 của WAF; C cần thành phần (state dùng chung) mà lựa chọn không mô tả."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": true
+      "gradable_by_research": false
     },
     "Q025": {
       "status": "verified",
@@ -8214,6 +8324,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -8567,6 +8678,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -8882,6 +8994,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -9204,6 +9317,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -9522,6 +9636,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -9866,6 +9981,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -10202,6 +10318,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -10563,6 +10680,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -10871,6 +10989,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -11174,6 +11293,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -11443,6 +11563,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -11733,6 +11854,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -12088,6 +12210,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -12362,6 +12485,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -12640,6 +12764,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -13012,6 +13137,7 @@
         "root_adjudication": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -13314,6 +13440,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -13658,6 +13785,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -13935,6 +14063,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -14225,64 +14354,62 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
     },
     "Q045": {
-      "status": "unresolved",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q045:C"
+      ],
       "source_answer": [
         "Q045:C"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
+        "reason_vi": "Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự).",
         "open_issues": [
-          "Lỗi IAM condition key trong A/C.",
-          "Tag policy không tự buộc tài nguyên untagged có tag.",
-          "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
+          "Tag policy enforcement chỉ áp dụng cho các loại tài nguyên/API được hỗ trợ; SCP với aws:RequestTag chỉ có tác dụng với API hỗ trợ tag-on-create."
         ]
       },
       "option_reviews": [
         {
           "unit_id": "Q045:A",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Config là hậu kiểm; aws:RequestTagCostCenter sai cú pháp và chưa chặn đổi tag.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Config Custom Policy rule (Guard) chỉ đánh giá/phát hiện, không ngăn chặn; SCP chỉ chặn lúc tạo resource, nên việc sửa tag CostCenter sang giá trị không duyệt sau khi tạo (TagResource/CreateTags) không bị chặn.",
           "requirement_ids": [
             "R4"
           ],
           "reference_ids": [
-            "ref2",
-            "Q045-r2-2",
-            "Q045-r2-3"
+            "ref4",
+            "ref5"
           ],
           "evidence_kind": "inference"
         },
         {
           "unit_id": "Q045:B",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "CloudTrail/EventBridge xử lý sau khi tài nguyên đã được tạo.",
+          "verdict": "does_not_meet",
+          "reason_vi": "EventBridge nhận event CloudTrail sau khi API call đã được ghi nhận, nên Lambda chỉ phản ứng sau khi resource đã được tạo, không thể chặn việc tạo; cũng không xử lý thay đổi tag sau này.",
           "requirement_ids": [
             "R2",
             "R4"
           ],
           "reference_ids": [
-            "ref2",
-            "Q045-r2-2",
-            "Q045-r2-3"
+            "ref6"
           ],
           "evidence_kind": "inference"
         },
         {
           "unit_id": "Q045:C",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Kiến trúc gần đúng nhưng aws:RequestTag.CostCenter là condition key không hợp lệ.",
+          "verdict": "meets",
+          "reason_vi": "Tag policy ở chế độ enforce chặn các thao tác tag không tuân thủ (giá trị ngoài danh sách) trên resource type được hỗ trợ; tag policy không bắt buộc có tag, nên SCP với điều kiện Null trên aws:RequestTag/CostCenter chặn tạo resource thiếu tag - đúng cách AWS khuyến nghị.",
           "requirement_ids": [
             "R1",
             "R2",
@@ -14290,25 +14417,24 @@
             "R4"
           ],
           "reference_ids": [
+            "ref1",
             "ref2",
-            "Q045-r2-2",
-            "Q045-r2-3"
+            "ref3"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q045:D",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "Lambda hậu kiểm không ngăn cập nhật tag và không chặn thiếu tag khi tạo.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Tag policy không được cấu hình enforce, và EventBridge + Lambda chỉ phản ứng sau sự kiện nên không 'block' được thay đổi; cũng không có gì bắt buộc resource phải có tag khi tạo.",
           "requirement_ids": [
             "R2",
             "R4"
           ],
           "reference_ids": [
-            "ref2",
-            "Q045-r2-2",
-            "Q045-r2-3"
+            "ref1",
+            "ref6"
           ],
           "evidence_kind": "inference"
         }
@@ -14418,11 +14544,10 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "C gần đúng về thiết kế tag policy cộng SCP, nhưng condition key được viết sai: phải là aws:RequestTag/CostCenter. Không có lựa chọn nguyên văn bảo đảm tất cả tài nguyên luôn có tag hợp lệ vì enforcement chỉ hỗ trợ một số loại tài nguyên và API tạo/tag cần guardrails phù hợp.",
+        "why_correct": "C: tag policy ở chế độ enforce chặn giá trị CostCenter không được duyệt; SCP deny khi request thiếu tag (điều kiện Null) chặn tạo tài nguyên không gắn tag. Nguồn viết sai condition key: đúng là aws:RequestTag/CostCenter.",
         "others": {
           "Q045:A": "Config là hậu kiểm; aws:RequestTagCostCenter sai cú pháp và chưa chặn đổi tag.",
           "Q045:B": "CloudTrail/EventBridge xử lý sau khi tài nguyên đã được tạo.",
-          "Q045:C": "Kiến trúc gần đúng nhưng aws:RequestTag.CostCenter là condition key không hợp lệ.",
           "Q045:D": "Lambda hậu kiểm không ngăn cập nhật tag và không chặn thiếu tag khi tạo."
         }
       },
@@ -14466,17 +14591,17 @@
           "detail_vi": "\"aws:RequestTag.CostCenter\" nên là \"aws:RequestTag/CostCenter\"."
         },
         {
-          "type": "ambiguous",
+          "type": "data",
           "location": "Q045",
           "detail_vi": "Lỗi IAM condition key trong A/C."
         },
         {
-          "type": "ambiguous",
+          "type": "data",
           "location": "Q045",
           "detail_vi": "Tag policy không tự buộc tài nguyên untagged có tag."
         },
         {
-          "type": "ambiguous",
+          "type": "data",
           "location": "Q045",
           "detail_vi": "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
         }
@@ -14505,7 +14630,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:50:00Z",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q045:C"
@@ -14563,9 +14688,15 @@
           "answer": null,
           "note_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự).",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q037_q072",
@@ -14582,9 +14713,27 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "unresolved",
+          "answer": null,
+          "confidence": {
+            "level": "medium",
+            "reason_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
+            "open_issues": [
+              "Lỗi IAM condition key trong A/C.",
+              "Tag policy không tự buộc tài nguyên untagged có tag.",
+              "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự)."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q046": {
       "status": "verified",
@@ -14967,6 +15116,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -15304,6 +15454,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -15720,6 +15871,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -16099,6 +16251,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -16419,6 +16572,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -16808,6 +16962,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -17107,6 +17262,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -17470,6 +17626,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -17825,6 +17982,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -18205,6 +18363,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -18623,6 +18782,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -18883,6 +19043,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -19175,6 +19336,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -19459,6 +19621,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -19716,6 +19879,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -20008,6 +20172,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -20370,6 +20535,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -20737,6 +20903,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -21029,6 +21196,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -21328,6 +21496,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -21703,6 +21872,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -22023,6 +22193,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -22394,6 +22565,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -22635,6 +22807,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -23006,6 +23179,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -23280,6 +23454,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -23605,6 +23780,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -23944,6 +24120,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -24233,6 +24410,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -24585,6 +24763,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -24929,6 +25108,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -25271,6 +25451,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -25577,6 +25758,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -26067,6 +26249,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -26403,6 +26586,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -26918,6 +27102,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -27512,6 +27697,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -27820,6 +28006,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -28180,6 +28367,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -28563,6 +28751,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -28837,6 +29026,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -29317,6 +29507,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -29629,6 +29820,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -29946,6 +30138,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -30261,6 +30454,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -30561,6 +30755,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -30867,6 +31062,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -31135,6 +31331,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -31509,6 +31706,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -31845,6 +32043,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -32186,6 +32385,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -32466,6 +32666,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -32762,6 +32963,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -33124,6 +33326,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -33433,6 +33636,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -33808,6 +34012,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -34193,6 +34398,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -34561,6 +34767,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -34941,6 +35148,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -35237,6 +35445,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -35541,6 +35750,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -36030,6 +36240,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -36290,6 +36501,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -36579,6 +36791,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -36901,6 +37114,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -37306,46 +37520,51 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
     },
     "Q112": {
-      "status": "ambiguous",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q112:B"
+      ],
       "source_answer": [
         "Q112:B"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+        "reason_vi": "Yêu cầu là phân tích CVE của container image; chỉ B phân tích scan report. C có bật scanning nhưng bước phân tích là SSM Inventory (liệt kê phần mềm trên host).",
         "open_issues": [
-          "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem."
+          "Phản biện của r2: C cũng bật ECR scanning nên scan vẫn chạy; r3 cho rằng C không mô tả việc phân tích kết quả scan nên không đáp ứng \"analyze … for CVEs\"."
         ]
       },
       "option_reviews": [
         {
           "unit_id": "Q112:A",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "A không thể đổi encryption repository hiện có theo cách mô tả.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Không thể bật KMS encryption trên repository ECR đã có (encryption đặt lúc tạo, đổi cần replacement). Inspector Agent/assessment CVE rules là Inspector Classic, quét host chứ không quét image trong ECR.",
           "requirement_ids": [
             "R1",
             "R2"
           ],
           "reference_ids": [
             "ref1",
-            "ref4"
+            "ref2",
+            "ref6",
+            "ref11"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q112:B",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
+          "verdict": "meets",
+          "reason_vi": "Tạo lại repository với KMS encryption và bật scanning (scan on push); sau khi push image, ECR tạo báo cáo CVE để phân tích.",
           "requirement_ids": [
             "R1",
             "R2",
@@ -37353,36 +37572,38 @@
           ],
           "reference_ids": [
             "ref1",
-            "ref4"
+            "ref4",
+            "ref5",
+            "ref11"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q112:C",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Phần tạo lại repo đúng, nhưng bước phân tích được nêu là chạy SSM inventory report trên container instance - chỉ thu metadata phần mềm của node, không phân tích CVE của image.",
           "requirement_ids": [
             "R2"
           ],
           "reference_ids": [
-            "ref1",
-            "ref4"
+            "ref8"
           ],
           "evidence_kind": "inference"
         },
         {
           "unit_id": "Q112:D",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Không bật KMS được trên repo hiện có; Trusted Advisor là công cụ khuyến nghị best practice, không quét container image theo CVE.",
           "requirement_ids": [
             "R1",
             "R2"
           ],
           "reference_ids": [
             "ref1",
-            "ref4"
+            "ref9",
+            "ref11"
           ],
           "evidence_kind": "inference"
         }
@@ -37533,11 +37754,10 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "Chưa có đáp án chắc chắn: B và C đều tạo repository với KMS và bật ECR scanning. C thêm SSM Inventory nhưng không làm mất khả năng quét CVE đã bật; đề không nêu tiêu chí loại phần việc thừa nên chưa có đáp án duy nhất.",
+        "why_correct": "B: ECR chỉ cho đặt encryption lúc tạo repository nên phải tạo lại với KMS; ECR image scanning tìm CVE và bước \"analyze the scan report\" đáp ứng yêu cầu phân tích CVE của image.",
         "others": {
           "Q112:A": "A không thể đổi encryption repository hiện có theo cách mô tả.",
-          "Q112:B": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
-          "Q112:C": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
+          "Q112:C": "C có bật ECR scanning nhưng bước phân tích lại là SSM Inventory report (liệt kê phần mềm trên host), không phân tích CVE của image như đề yêu cầu.",
           "Q112:D": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner."
         }
       },
@@ -37600,7 +37820,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T20:17:00+00:00",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q112:B"
@@ -37651,9 +37871,15 @@
           "answer": null,
           "note_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Yêu cầu là phân tích CVE của container image; chỉ B phân tích scan report. C có bật scanning nhưng bước phân tích là SSM Inventory (liệt kê phần mềm trên host).",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q109_q143",
@@ -37670,9 +37896,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "ambiguous",
+          "answer": null,
+          "confidence": {
+            "level": "medium",
+            "reason_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+            "open_issues": [
+              "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Yêu cầu là phân tích CVE của container image; chỉ B phân tích scan report. C có bật scanning nhưng bước phân tích là SSM Inventory (liệt kê phần mềm trên host)."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q113": {
       "status": "verified",
@@ -38022,6 +38264,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -38425,6 +38668,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -38726,6 +38970,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -39036,6 +39281,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -39412,6 +39658,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -39812,6 +40059,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -40162,6 +40410,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -40510,44 +40759,48 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
     },
     "Q121": {
-      "status": "ambiguous",
-      "researched_answer": null,
+      "status": "verified",
+      "researched_answer": [
+        "Q121:B"
+      ],
       "source_answer": [
         "Q121:B"
       ],
-      "comparison": "not_comparable",
+      "comparison": "match",
       "differs_from_source": false,
       "confidence": {
-        "level": "high",
-        "reason_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+        "level": "medium",
+        "reason_vi": "Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard.",
         "open_issues": [
-          "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
+          "Nếu đọc nguyên văn, lệnh \"cm-guard\" không tồn tại (typo nguồn)."
         ]
       },
       "option_reviews": [
         {
           "unit_id": "Q121:A",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
+          "verdict": "does_not_meet",
+          "reason_vi": "validate-template chỉ kiểm tra template có phải JSON/YAML hợp lệ (tài liệu CloudFormation ghi rõ chỉ kiểm tra cú pháp, không kiểm tra giá trị thuộc tính resource), nên không phát hiện được resource vi phạm tiêu chuẩn bảo mật nội bộ.",
           "requirement_ids": [
             "R1"
           ],
           "reference_ids": [
-            "ref7"
+            "ref3",
+            "ref6"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q121:B",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
+          "verdict": "meets",
+          "reason_vi": "CloudFormation Guard là công cụ policy-as-code để viết rule cho từng cấu hình resource và validate template trước khi deploy (shift-left); lỗi vi phạm được trả về để pipeline publish lên SNS. Chạy tự động trong pipeline có sẵn nên không làm chậm developer và ít vận hành. ('cm-guard' là lỗi chính tả của cfn-guard.)",
           "requirement_ids": [
             "R1",
             "R2",
@@ -40555,37 +40808,43 @@
             "R4"
           ],
           "reference_ids": [
-            "ref7"
+            "ref1",
+            "ref2",
+            "ref4",
+            "ref5",
+            "ref7",
+            "ref8",
+            "ref9"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q121:C",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
+          "verdict": "meets_but_suboptimal",
+          "reason_vi": "Cũng dùng Guard để quét template nên về chức năng có thể phát hiện vi phạm, nhưng phải xây và vận hành thêm S3 event, SQS, fleet EC2 Auto Scaling và đổi quy trình (developer upload vào S3, EC2 tự deploy) - overhead cao hơn nhiều so với chạy Guard ngay trong pipeline hiện có.",
           "requirement_ids": [
             "R1",
             "R4"
           ],
           "reference_ids": [
-            "ref7"
+            "ref1",
+            "ref5",
+            "ref9"
           ],
           "evidence_kind": "inference"
         },
         {
           "unit_id": "Q121:D",
           "unit_type": "choice",
-          "verdict": "undetermined",
-          "reason_vi": "D review thủ công standards mới làm chậm delivery.",
+          "verdict": "does_not_meet",
+          "reason_vi": "Bắt mọi resource/cấu hình mới phải gửi security team review thủ công rồi mới thêm vào repository - tạo nút thắt làm giảm tốc độ delivery (vi phạm R2) và không có cơ chế thông báo tự động khi có resource không tuân thủ.",
           "requirement_ids": [
             "R1",
             "R2",
             "R4"
           ],
-          "reference_ids": [
-            "ref7"
-          ],
+          "reference_ids": [],
           "evidence_kind": "inference"
         }
       ],
@@ -40709,10 +40968,9 @@
         }
       ],
       "explanation_vi": {
-        "why_correct": "Chưa có đáp án chắc chắn: B là thiết kế dự định phù hợp nhưng ghi lệnh cm-guard không tồn tại; lệnh AWS công bố là cfn-guard validate.",
+        "why_correct": "B: chạy CloudFormation Guard (cfn-guard) với custom rules trong pipeline trước bước build và báo SNS khi phát hiện vi phạm — kiểm tra standards tự động, không làm chậm delivery. Nguồn gõ nhầm \"cm-guard\".",
         "others": {
           "Q121:A": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
-          "Q121:B": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
           "Q121:C": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
           "Q121:D": "D review thủ công standards mới làm chậm delivery."
         }
@@ -40754,11 +41012,6 @@
           "type": "typo",
           "location": "Q121:D",
           "detail_vi": "'com feted' là lỗi chính tả của 'completed'."
-        },
-        {
-          "type": "ambiguous",
-          "location": "Q121",
-          "detail_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
         }
       ],
       "requirements": [
@@ -40785,7 +41038,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T20:20:09+00:00",
-      "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+      "last_reviewed_at": "2026-09-30T23:07:16+00:00",
       "independent_verdict": {
         "answer": [
           "Q121:B"
@@ -40837,9 +41090,15 @@
           "answer": null,
           "note_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
           "technical_change": true
+        },
+        {
+          "version": "r3",
+          "date": "2026-09-30T23:07:16+00:00",
+          "change": "r3: restore verified — Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard.",
+          "previous_answer": null
         }
       ],
-      "research_version": "r2-independent-verify",
+      "research_version": "r3",
       "independent_reverification": {
         "version": "r2-independent-verify",
         "group": "q109_q143",
@@ -40858,9 +41117,25 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": {
+        "date": "2026-09-30T23:07:16+00:00",
+        "by": "main agent (approved by user)",
+        "previous_r2": {
+          "status": "ambiguous",
+          "answer": null,
+          "confidence": {
+            "level": "high",
+            "reason_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+            "open_issues": [
+              "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified."
+            ]
+          }
+        },
+        "decision": "r3: restore verified — Cơ chế Guard trong CI/CD có tài liệu trực tiếp; \"cm-guard\" là lỗi gõ của lệnh cfn-guard."
+      },
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q122": {
       "status": "ambiguous",
@@ -41193,6 +41468,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -41505,6 +41781,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -41841,6 +42118,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -42208,6 +42486,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -42601,6 +42880,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -42965,6 +43245,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -43223,6 +43504,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -43531,6 +43813,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -43832,6 +44115,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -44142,6 +44426,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -44489,6 +44774,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -44825,6 +45111,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -45153,6 +45440,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -45455,6 +45743,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -45755,6 +46044,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -46108,6 +46398,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -46435,6 +46726,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -46760,6 +47052,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -47094,6 +47387,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -47397,6 +47691,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true
@@ -47736,6 +48031,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": false
@@ -48019,6 +48315,7 @@
         "root_adjudication": null,
         "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
       },
+      "r3_adjudication": null,
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
       "gradable_by_research": true

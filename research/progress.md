@@ -93,3 +93,9 @@ Selection: `research/audit_selection.json` (48 risk questions by rule: non-verif
 - Final status: verified 135 (graded by research; Q056 and Q107 differ from the source key), ambiguous 8 (Q005, Q008, Q024, Q077, Q087, Q118, Q122, Q133), disputed 0, outdated 0, unresolved 0, pending 0.
 - Research task: COMPLETE for r1. Web task: COMPLETE (tests 125/125 unit, 21/21 e2e on final data). Baseline hashes unchanged.
 - Remaining limitations: blindness enforced by instructions not sandbox; model may have seen public discussions of these questions; no live AWS experiments; per-agent effort setting not applied (model only); several "verified" at medium confidence with documented open issues.
+
+## CHECKPOINT r3 — 2026-09-30 (main agent, approved by user)
+- r2-independent-verify (separate session) committed as-is in 8b4ce30.
+- r3 = r2 + 7 adjudications (`tools/apply_r3.py`, history + `r3_adjudication` per record): restore verified Q001, Q007, Q013, Q045, Q121 (typo / defect shared by all options → annotated, not disqualifying; audited r1 option verdicts reused, all references unchanged); Q112 → verified B; Q024 C verified(high) → ambiguous.
+- Result: 119 verified / 21 ambiguous / 3 unresolved; 0 verified answers differ from the source key. validate_research final 0 errors; app synced (research_version r3); tests 125/125 unit, 21/21 e2e (one e2e test made data-driven instead of hard-coding Q001's r2 status).
+- ExamTopics cross-check: 88/143 threads read directly and mapping-verified (see reports/r1_vs_r2_community.md); 55 not reachable (Pro paywall / HTTP 429 / not indexed).

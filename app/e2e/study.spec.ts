@@ -46,11 +46,17 @@ test.describe('study', () => {
     await page.getByRole('button', { name: 'Check answer' }).click();
     await expect(page.locator('[data-feedback="Q001"]')).toBeVisible();
     await expect(page.getByText('Giải thích')).toBeVisible();
-    // The independent r2 pass found no complete literal answer for Q001.
-    // Its original C key remains visible without being called a verified answer.
-    await expect(page.locator('p.answer-line')).toContainText('Source key (not verified): C');
-    await expect(page.getByText('✓ Correct', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('✗ Incorrect', { exact: true })).toHaveCount(0);
+    // Expectation follows the served research: verified → graded against the research answer;
+    // otherwise the source key is shown as not verified and nothing is called right or wrong.
+    const reviews = await (await page.request.get('/data/question_reviews.json')).json();
+    if (reviews.questions.Q001.status === 'verified') {
+      await expect(page.locator('p.answer-line')).toContainText('Answer: C');
+      await expect(page.getByText('✗ Incorrect', { exact: true })).toBeVisible();
+    } else {
+      await expect(page.locator('p.answer-line')).toContainText('Source key (not verified): C');
+      await expect(page.getByText('✓ Correct', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('✗ Incorrect', { exact: true })).toHaveCount(0);
+    }
     await expect(page.locator('p.answer-line')).toContainText('You chose: A');
     await expect(page.getByRole('radio', { name: 'Choice A' })).toBeDisabled();
     await snap(page, 'desktop-study-02-after-check-real-research', { fullPage: true });

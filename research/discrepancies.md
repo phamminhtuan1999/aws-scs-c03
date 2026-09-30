@@ -1,34 +1,30 @@
-# Discrepancies & source issues (research_version r2-independent-verify)
+# Discrepancies & source issues (research_version r3)
 
-Generated 2026-09-30T21:53:01+00:00 by `tools/make_discrepancies.py` from `research/reviews/`, `research/blind/` and `data/keys/source_keys.json`.
+Generated 2026-09-30T23:07:26+00:00 by `tools/make_discrepancies.py` from `research/reviews/`, `research/blind/` and `data/keys/source_keys.json`.
 Source keys are never modified; this file only reports differences.
 
 ## Status counts
 
 | status | questions |
 |---|---|
-| ambiguous | 25 |
-| unresolved | 4 |
-| verified | 114 |
+| ambiguous | 21 |
+| unresolved | 3 |
+| verified | 119 |
 
 ## Source key vs research — every question that differs or cannot be compared
 
 | Q | type | source key | blind verdict | final research | status | confidence | graded by research? | reason (short) |
 |---|---|---|---|---|---|---|---|---|
-| Q001 | multiple_choice | C | C | — | ambiguous | medium | no | C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai. |
 | Q002 | ordering | S1 > S5 > S3 | S1 > S5 > S3 | — | ambiguous | medium | no | Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials. |
 | Q005 | ordering | S6 > S1 > S3 | S6 > S1 > S3 | — | ambiguous | medium | no | Không ép source tutorial thành chuỗi duy nhất; cả metadata và SCIM là bước hợp lệ, scope không xác định. |
-| Q007 | multiple_choice | B | B | — | ambiguous | medium | no | Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy. |
 | Q008 | matching | P1→R5, P2→R4, P3→R3, P4→R1, P5→R2 (ungradable) | — | — | unresolved | medium | no | Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation. |
 | Q010 | multiple_choice | B | B | — | ambiguous | medium | no | State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn. |
 | Q011 | multiple_choice | B | B | — | ambiguous | medium | no | Tách native shell khỏi SSH-over-SSM và ghi pricing chính thức có ngày hiệu lực hiện hành; không verified mọi literal yêu cầu. |
-| Q013 | multiple_response | A,E | A,E | — | ambiguous | medium | no | E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option. |
 | Q019 | multiple_choice | D | D | — | ambiguous | medium | no | Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user. |
 | Q023 | multiple_choice | A | A | — | ambiguous | medium | no | A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có. |
-| Q024 | multiple_choice | A | — | C | verified | high | yes | Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng. |
+| Q024 | multiple_choice | A | — | — | ambiguous | medium | no | Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng. |
 | Q026 | multiple_choice | D | D | — | ambiguous | medium | no | Không loại B chỉ vì inline policy: inline attach role là hợp lệ; task role không cô lập specific container; DBA plaintext vẫn cần hạn chế riêng. |
 | Q041 | multiple_choice | B | B | — | ambiguous | medium | no | Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A. |
-| Q045 | multiple_choice | C | C | — | unresolved | medium | no | Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag. |
 | Q047 | multiple_choice | A | A | — | ambiguous | medium | no | Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại. |
 | Q054 | multiple_response | A,D,F | A,D,F | — | ambiguous | medium | no | Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites. |
 | Q056 | multiple_choice | C | A | — | ambiguous | medium | no | Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG. |
@@ -40,9 +36,7 @@ Source keys are never modified; this file only reports differences.
 | Q094 | multiple_choice | B | B | — | ambiguous | high | no | Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ. |
 | Q095 | multiple_choice | C | C | — | ambiguous | high | no | Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified. |
 | Q107 | multiple_choice | B | A | — | ambiguous | medium | no | Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable. |
-| Q112 | multiple_choice | B | B | — | ambiguous | medium | no | Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem. |
 | Q118 | multiple_choice | D | D | — | ambiguous | high | no | Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs. |
-| Q121 | multiple_choice | B | B | — | ambiguous | high | no | Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified. |
 | Q122 | multiple_choice | A | A | — | ambiguous | high | no | Không thay NLB thành ALB trong đề để hợp thức hóa A. |
 | Q142 | multiple_choice | A | A | — | ambiguous | high | no | Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán. |
 
@@ -52,20 +46,15 @@ These preserved blind records are from r1. For the new independently persisted r
 
 | Q | blind answer / status | final answer / status | source key | AUDIT flag |
 |---|---|---|---|---|
-| Q001 | C / verified | — / ambiguous | C |  |
 | Q002 | S1 > S5 > S3 / verified | — / ambiguous | S1 > S5 > S3 |  |
 | Q005 | S6 > S1 > S3 / ambiguous | — / ambiguous | S6 > S1 > S3 |  |
-| Q007 | B / verified | — / ambiguous | B |  |
 | Q008 | — / ambiguous | — / unresolved | P1→R5, P2→R4, P3→R3, P4→R1, P5→R2 |  |
 | Q010 | B / verified | — / ambiguous | B |  |
 | Q011 | B / verified | — / ambiguous | B |  |
-| Q013 | A,E / verified | — / ambiguous | A,E |  |
 | Q019 | D / verified | — / ambiguous | D |  |
 | Q023 | A / verified | — / ambiguous | A |  |
-| Q024 | — / ambiguous | C / verified | A |  |
 | Q026 | D / verified | — / ambiguous | D |  |
 | Q041 | B / verified | — / ambiguous | B |  |
-| Q045 | C / verified | — / unresolved | C |  |
 | Q047 | A / verified | — / ambiguous | A |  |
 | Q054 | A,D,F / verified | — / ambiguous | A,D,F |  |
 | Q056 | A / verified | — / ambiguous | C |  |
@@ -77,22 +66,26 @@ These preserved blind records are from r1. For the new independently persisted r
 | Q094 | B / verified | — / ambiguous | B |  |
 | Q095 | C / verified | — / ambiguous | C |  |
 | Q107 | A / verified | — / ambiguous | B |  |
-| Q112 | B / verified | — / ambiguous | B |  |
 | Q118 | D / ambiguous | — / ambiguous | D |  |
-| Q121 | B / verified | — / ambiguous | B |  |
 | Q122 | A / ambiguous | — / ambiguous | A |  |
 | Q133 | A / verified | B / verified | B |  |
 | Q142 | A / verified | — / ambiguous | A |  |
 
 ## Medium/low confidence verified questions (graded, but with open issues)
 
+- **Q001** (medium): Trong thực tế nên cấp quyền qua execution role (identity policy) hoặc principal là ARN execution role; không lựa chọn nào nêu điều này.
+- **Q007** (medium): Để chặn cả thao tác object cần thêm arn:aws:s3:::DOC-EXAMPLE-BUCKET/* vào Resource; không lựa chọn nào có.
+- **Q013** (medium): Nếu đọc E theo nghĩa đen, chuỗi biến policy không hợp lệ (typo nguồn).
 - **Q015** (medium): 
 - **Q040** (medium): 
+- **Q045** (medium): Tag policy enforcement chỉ áp dụng cho các loại tài nguyên/API được hỗ trợ; SCP với aws:RequestTag chỉ có tác dụng với API hỗ trợ tag-on-create.
 - **Q048** (medium): 
 - **Q063** (medium): 
 - **Q082** (medium): 
 - **Q104** (medium): 
+- **Q112** (medium): Phản biện của r2: C cũng bật ECR scanning nên scan vẫn chạy; r3 cho rằng C không mô tả việc phân tích kết quả scan nên không đáp ứng "analyze … for CVEs".
 - **Q116** (medium): 
+- **Q121** (medium): Nếu đọc nguyên văn, lệnh "cm-guard" không tồn tại (typo nguồn).
 - **Q124** (medium): 
 - **Q125** (medium): 
 - **Q132** (medium): 
@@ -116,7 +109,7 @@ These preserved blind records are from r1. For the new independently persisted r
 ## All recorded source issues (typos, data, layout, ambiguity)
 
 - **Q001** [typo] `Q001:C`: Chuỗi ARN có khoảng trắng thừa 'DOC-EXAMPLE- BUCKET/*' và dấu nháy kết thúc sai (''), ý định rõ là arn:aws:s3:::DOC-EXAMPLE-BUCKET/*.
-- **Q001** [ambiguous] `Q001`: SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ.
+- **Q001** [data] `Q001`: SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ.
 - **Q002** [layout] `Q002:stem:0`: Đề ghi 'HOTSPOT' nhưng thực chất là dạng chọn và sắp xếp 3 bước.
 - **Q002** [ambiguous] `Q002`: Không xác định loại temporary credentials; Lambda authorizer hợp lệ nhưng native JWT authorizer có thể ít quản trị hơn.
 - **Q003** [typo] `Q003:B`: Ghi '-token-code' (một gạch) thay vì '--token-code'.
@@ -129,7 +122,7 @@ These preserved blind records are from r1. For the new independently persisted r
 - **Q006** [typo] `Q006:stem:0`: '(AWS KMS}' dùng sai dấu ngoặc đóng '}'.
 - **Q006** [data] `Q006`: SES và WorkMail đều có trong danh sách ViaService hiện hành.
 - **Q007** [layout] `Q007:D`: Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ).
-- **Q007** [ambiguous] `Q007`: Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access.
+- **Q007** [data] `Q007`: Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access.
 - **Q008** [typo] `Q008:R1`: 'Amazon EC2 distances' — đúng ra là 'Amazon EC2 instances'.
 - **Q008** [layout] `Q008:P4`: Trong đề, danh sách response nằm ở stem còn prompt là các dòng trong ảnh; vai trò 'strategy' và 'scenario' bị đảo so với câu hướng dẫn.
 - **Q008** [ambiguous] `Q008`: Đã xem ảnh và xác nhận hàng 1/hàng 5 trùng; distances là typo instances; không ép một full mapping.
@@ -144,7 +137,6 @@ These preserved blind records are from r1. For the new independently persisted r
 - **Q013** [typo] `Q013:stem:0`: 'lo subscribe la specific' là lỗi gõ của 'to subscribe to specific'.
 - **Q013** [typo] `Q013:A`: 'conned' là lỗi gõ của 'connect'.
 - **Q013** [typo] `Q013:E`: Biến policy viết '${iot:Connection.Thing.ThingName)' dùng ')' thay '}'; nếu hiểu theo nghĩa đen thì biến không hợp lệ.
-- **Q013** [ambiguous] `Q013`: E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ.
 - **Q014** [data] `Q014`: Không có cơ sở hiện hành cho khẳng định mọi thay đổi nhanh tự động bị gộp bởi Continuous recorder.
 - **Q015** [data] `Q015`: Không lựa chọn nào thỏa nếu mọi data keys bắt buộc sinh bằng custom-store key; phân biệt key type và API capability.
 - **Q018** [typo] `Q018:A`: 'Regional duster ARN' là lỗi gõ của 'Regional cluster ARN'.
@@ -185,9 +177,9 @@ These preserved blind records are from r1. For the new independently persisted r
 - **Q044** [typo] `Q044:D`: "on promises" nên là "on premises".
 - **Q045** [typo] `Q045:A`: "CloudFormatlon" nên là "CloudFormation"; "aws:RequestTagCostCenter" thiếu dấu "/" (aws:RequestTag/CostCenter).
 - **Q045** [typo] `Q045:C`: "aws:RequestTag.CostCenter" nên là "aws:RequestTag/CostCenter".
-- **Q045** [ambiguous] `Q045`: Lỗi IAM condition key trong A/C.
-- **Q045** [ambiguous] `Q045`: Tag policy không tự buộc tài nguyên untagged có tag.
-- **Q045** [ambiguous] `Q045`: Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete.
+- **Q045** [data] `Q045`: Lỗi IAM condition key trong A/C.
+- **Q045** [data] `Q045`: Tag policy không tự buộc tài nguyên untagged có tag.
+- **Q045** [data] `Q045`: Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete.
 - **Q046** [typo] `Q046:stem:0`: "has learns" nên là "has teams".
 - **Q046** [typo] `Q046:D`: "now dedicated account" nên là "new dedicated account".
 - **Q047** [ambiguous] `Q047`: A và C khác phạm vi tăng trưởng account/Region không được stem nêu rõ.
@@ -305,7 +297,6 @@ These preserved blind records are from r1. For the new independently persisted r
 - **Q120** [typo] `Q120:B`: 'Verity' thay vì 'Verify' (cũng xuất hiện ở C và E).
 - **Q121** [typo] `Q121:B`: 'cm-guard' là lỗi chính tả của lệnh 'cfn-guard'.
 - **Q121** [typo] `Q121:D`: 'com feted' là lỗi chính tả của 'completed'.
-- **Q121** [ambiguous] `Q121`: Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.
 - **Q122** [ambiguous] `Q122`: Không thay NLB thành ALB trong đề để hợp thức hóa A.
 - **Q124** [data] `Q124`: A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.
 - **Q125** [typo] `Q125:D`: 'EC2 instance Connect' viết thường chữ 'instance' (tên đúng: EC2 Instance Connect).

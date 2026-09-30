@@ -2,9 +2,9 @@
   "question_id": "Q007",
   "question_content_hash": "b240f9c584d7bc1890ca1e551b3f8e8a68c36d524424c828a1b9fae27e18f79a",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -55,21 +55,20 @@
       "unit_id": "Q007:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: Allow không deny Bob.",
+      "reason_vi": "Effect là Allow nên policy này cấp thêm quyền S3 cho Bob thay vì từ chối; ngược với yêu cầu deny.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref6"
+        "ref3"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q007:B",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
+      "verdict": "meets",
+      "reason_vi": "Dùng đúng định dạng ARN của AWS STS federated user session (arn:aws:sts::acct:federated-user/Bob) với Effect Deny; explicit deny trong resource-based policy ghi đè mọi allow, và chỉ tác động tới bucket này nên quyền khác của Bob không đổi.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -77,37 +76,38 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref6"
+        "ref3",
+        "ref4"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q007:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: IAM user/Bob khác STS federated-user/Bob.",
+      "reason_vi": "Principal arn:aws:iam::acct:user/Bob là IAM user principal, khác với federated user session principal (arn:aws:sts::...:federated-user/...); policy này nhắm sai loại principal nên không chắc chặn được phiên federated user Bob và có thể chặn nhầm một IAM user tên Bob.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref6"
+        "ref2"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q007:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: assumed-role session là loại principal khác.",
+      "reason_vi": "assumed-role/Bob/role-session-name là role session principal của một role tên Bob với session name cố định, không phải federated user Bob (GetFederationToken); chỉ khớp đúng một phiên role đó.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref6"
+        "ref5"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     }
   ],
   "independent_verdict": {
@@ -132,23 +132,24 @@
   "source_answer": [
     "Q007:B"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
+  "researched_answer": [
+    "Q007:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+    "reason_vi": "Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues).",
     "open_issues": [
-      "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
+      "Để chặn cả thao tác object cần thêm arn:aws:s3:::DOC-EXAMPLE-BUCKET/* vào Resource; không lựa chọn nào có."
     ]
   },
   "reconciliation_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
   "explanation_vi": {
-    "why_correct": "B xác định đúng STS federated-user/Bob và dùng explicit deny, nhưng bucket ARN không bao phủ GetObject/DeleteObject. Cần cả bucket ARN và bucket/* để chặn toàn bộ truy cập dữ liệu như đề yêu cầu.",
+    "why_correct": "B dùng explicit Deny với principal STS federated user (…:federated-user/Bob) — đúng loại danh tính của Bob; A là Allow, C là IAM user, D là role session. Mọi lựa chọn đều chỉ ghi ARN bucket (thiếu bucket/*), là lỗi chung của nguồn.",
     "others": {
       "Q007:A": "Sai: Allow không deny Bob.",
-      "Q007:B": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
       "Q007:C": "Sai: IAM user/Bob khác STS federated-user/Bob.",
       "Q007:D": "Sai: assumed-role session là loại principal khác."
     }
@@ -267,7 +268,7 @@
       "detail_vi": "Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ)."
     },
     {
-      "type": "ambiguous",
+      "type": "data",
       "location": "Q007",
       "detail_vi": "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
     }
@@ -308,6 +309,12 @@
       "answer": null,
       "note_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: restore verified — Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues).",
+      "previous_answer": null
     }
   ],
   "timestamp_correction": {
@@ -337,5 +344,21 @@
     ],
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "ambiguous",
+      "answer": null,
+      "confidence": {
+        "level": "medium",
+        "reason_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+        "open_issues": [
+          "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
+        ]
+      }
+    },
+    "decision": "r3: restore verified — Đáp án tốt nhất; thiếu ARN object bucket/* là lỗi chung của cả bốn policy (ghi ở source_issues)."
   }
 }

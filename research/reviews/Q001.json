@@ -2,9 +2,9 @@
   "question_id": "Q001",
   "question_content_hash": "f95f143239d6591b52f204492d548da6f6cd78a52b52f6ba4e9890ddf3a3debb",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T19:29:15Z",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -58,64 +58,61 @@
       "unit_id": "Q001:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: ARN function không phải IAM principal hợp lệ.",
+      "reason_vi": "ARN của Lambda function không phải loại principal hợp lệ (chỉ account, IAM role/user, session, federated, service). Ngoài ra Resource vẫn là ARN bucket nên s3:GetObject vẫn không khớp object.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "Q001-r2-1",
-        "ref1",
-        "ref2"
+        "ref2",
+        "ref1"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q001:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: thêm action không sửa Resource object và principal.",
+      "reason_vi": "Mở rộng Action không sửa lỗi gốc: Resource vẫn là ARN bucket, trong khi các action object (GetObject*) yêu cầu ARN object dạng bucket/*. Còn thêm GetBucket* là quyền thừa, trái least privilege.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "Q001-r2-1",
         "ref1",
-        "ref2"
+        "ref7"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q001:C",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Chưa đủ: /* sửa ARN object nhưng principal/điều kiện vẫn không cấp quyền cho execution role.",
+      "verdict": "meets",
+      "reason_vi": "s3:GetObject là object operation nên Resource phải là ARN object có '/' sau tên bucket (arn:aws:s3:::DOC-EXAMPLE-BUCKET/*). Đây là lỗi rõ ràng duy nhất trong policy và chỉ phương án này sửa nó.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "Q001-r2-1",
         "ref1",
-        "ref2"
+        "ref6"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q001:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: đảo principal và resource không cấp quyền đọc S3.",
+      "reason_vi": "Bucket policy cấp quyền trên bucket và object S3; đặt Resource là ARN Lambda không cấp quyền đọc object. Principal s3.amazonaws.com là dịch vụ S3, không phải danh tính mà Lambda function dùng.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "Q001-r2-1",
+        "ref4",
         "ref1",
-        "ref2"
+        "ref5"
       ],
       "evidence_kind": "inference"
     }
@@ -251,7 +248,7 @@
       "detail_vi": "Chuỗi ARN có khoảng trắng thừa 'DOC-EXAMPLE- BUCKET/*' và dấu nháy kết thúc sai (''), ý định rõ là arn:aws:s3:::DOC-EXAMPLE-BUCKET/*."
     },
     {
-      "type": "ambiguous",
+      "type": "data",
       "location": "Q001",
       "detail_vi": "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
     }
@@ -259,24 +256,25 @@
   "source_answer": [
     "Q001:C"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
+  "researched_answer": [
+    "Q001:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
+    "reason_vi": "Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues).",
     "open_issues": [
-      "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
+      "Trong thực tế nên cấp quyền qua execution role (identity policy) hoặc principal là ARN execution role; không lựa chọn nào nêu điều này."
     ]
   },
   "reconciliation_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
   "explanation_vi": {
-    "why_correct": "Không lựa chọn nào sửa đủ policy: GetObject cần ARN object, còn Lambda dùng execution role. C chỉ sửa Resource; principal và SourceArn vẫn không cấp quyền cho mã trong function.",
+    "why_correct": "C là thay đổi duy nhất sửa lỗi có tài liệu hỗ trợ: s3:GetObject thao tác trên object nên Resource phải là ARN object (bucket/*). Tiền đề của đề (principal lambda.amazonaws.com + SourceArn) không phản ánh việc function gọi S3 bằng execution role — lỗi này có ở mọi lựa chọn.",
     "others": {
       "Q001:A": "Sai: ARN function không phải IAM principal hợp lệ.",
       "Q001:B": "Sai: thêm action không sửa Resource object và principal.",
-      "Q001:C": "Chưa đủ: /* sửa ARN object nhưng principal/điều kiện vẫn không cấp quyền cho execution role.",
       "Q001:D": "Sai: đảo principal và resource không cấp quyền đọc S3."
     }
   },
@@ -344,6 +342,12 @@
       "answer": null,
       "note_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: restore verified — Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues).",
+      "previous_answer": null
     }
   ],
   "notes_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
@@ -374,5 +378,21 @@
     ],
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "ambiguous",
+      "answer": null,
+      "confidence": {
+        "level": "medium",
+        "reason_vi": "C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai.",
+        "open_issues": [
+          "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ."
+        ]
+      }
+    },
+    "decision": "r3: restore verified — Đáp án tốt nhất trong các lựa chọn; tiền đề policy của đề không thực tế và là lỗi chung của mọi lựa chọn (ghi ở source_issues)."
   }
 }

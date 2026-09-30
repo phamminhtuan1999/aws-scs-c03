@@ -2,9 +2,9 @@
   "question_id": "Q045",
   "question_content_hash": "876a2e2d010c7aa26dc187f89f0c69d419465c346b1e57fa494c5795ec6de055",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T19:50:00Z",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,39 +38,36 @@
     {
       "unit_id": "Q045:A",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Config là hậu kiểm; aws:RequestTagCostCenter sai cú pháp và chưa chặn đổi tag.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Config Custom Policy rule (Guard) chỉ đánh giá/phát hiện, không ngăn chặn; SCP chỉ chặn lúc tạo resource, nên việc sửa tag CostCenter sang giá trị không duyệt sau khi tạo (TagResource/CreateTags) không bị chặn.",
       "requirement_ids": [
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "Q045-r2-2",
-        "Q045-r2-3"
+        "ref4",
+        "ref5"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q045:B",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "CloudTrail/EventBridge xử lý sau khi tài nguyên đã được tạo.",
+      "verdict": "does_not_meet",
+      "reason_vi": "EventBridge nhận event CloudTrail sau khi API call đã được ghi nhận, nên Lambda chỉ phản ứng sau khi resource đã được tạo, không thể chặn việc tạo; cũng không xử lý thay đổi tag sau này.",
       "requirement_ids": [
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "Q045-r2-2",
-        "Q045-r2-3"
+        "ref6"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q045:C",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Kiến trúc gần đúng nhưng aws:RequestTag.CostCenter là condition key không hợp lệ.",
+      "verdict": "meets",
+      "reason_vi": "Tag policy ở chế độ enforce chặn các thao tác tag không tuân thủ (giá trị ngoài danh sách) trên resource type được hỗ trợ; tag policy không bắt buộc có tag, nên SCP với điều kiện Null trên aws:RequestTag/CostCenter chặn tạo resource thiếu tag - đúng cách AWS khuyến nghị.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -78,25 +75,24 @@
         "R4"
       ],
       "reference_ids": [
+        "ref1",
         "ref2",
-        "Q045-r2-2",
-        "Q045-r2-3"
+        "ref3"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q045:D",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Lambda hậu kiểm không ngăn cập nhật tag và không chặn thiếu tag khi tạo.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tag policy không được cấu hình enforce, và EventBridge + Lambda chỉ phản ứng sau sự kiện nên không 'block' được thay đổi; cũng không có gì bắt buộc resource phải có tag khi tạo.",
       "requirement_ids": [
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "Q045-r2-2",
-        "Q045-r2-3"
+        "ref1",
+        "ref6"
       ],
       "evidence_kind": "inference"
     }
@@ -123,26 +119,25 @@
   "source_answer": [
     "Q045:C"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "unresolved",
+  "researched_answer": [
+    "Q045:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
+    "reason_vi": "Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự).",
     "open_issues": [
-      "Lỗi IAM condition key trong A/C.",
-      "Tag policy không tự buộc tài nguyên untagged có tag.",
-      "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
+      "Tag policy enforcement chỉ áp dụng cho các loại tài nguyên/API được hỗ trợ; SCP với aws:RequestTag chỉ có tác dụng với API hỗ trợ tag-on-create."
     ]
   },
   "reconciliation_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
   "explanation_vi": {
-    "why_correct": "C gần đúng về thiết kế tag policy cộng SCP, nhưng condition key được viết sai: phải là aws:RequestTag/CostCenter. Không có lựa chọn nguyên văn bảo đảm tất cả tài nguyên luôn có tag hợp lệ vì enforcement chỉ hỗ trợ một số loại tài nguyên và API tạo/tag cần guardrails phù hợp.",
+    "why_correct": "C: tag policy ở chế độ enforce chặn giá trị CostCenter không được duyệt; SCP deny khi request thiếu tag (điều kiện Null) chặn tạo tài nguyên không gắn tag. Nguồn viết sai condition key: đúng là aws:RequestTag/CostCenter.",
     "others": {
       "Q045:A": "Config là hậu kiểm; aws:RequestTagCostCenter sai cú pháp và chưa chặn đổi tag.",
       "Q045:B": "CloudTrail/EventBridge xử lý sau khi tài nguyên đã được tạo.",
-      "Q045:C": "Kiến trúc gần đúng nhưng aws:RequestTag.CostCenter là condition key không hợp lệ.",
       "Q045:D": "Lambda hậu kiểm không ngăn cập nhật tag và không chặn thiếu tag khi tạo."
     }
   },
@@ -290,17 +285,17 @@
       "detail_vi": "\"aws:RequestTag.CostCenter\" nên là \"aws:RequestTag/CostCenter\"."
     },
     {
-      "type": "ambiguous",
+      "type": "data",
       "location": "Q045",
       "detail_vi": "Lỗi IAM condition key trong A/C."
     },
     {
-      "type": "ambiguous",
+      "type": "data",
       "location": "Q045",
       "detail_vi": "Tag policy không tự buộc tài nguyên untagged có tag."
     },
     {
-      "type": "ambiguous",
+      "type": "data",
       "location": "Q045",
       "detail_vi": "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
     }
@@ -343,6 +338,12 @@
       "answer": null,
       "note_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: restore verified — Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự).",
+      "previous_answer": null
     }
   ],
   "timestamp_correction": {
@@ -370,5 +371,23 @@
     "candidate_answers": null,
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "unresolved",
+      "answer": null,
+      "confidence": {
+        "level": "medium",
+        "reason_vi": "Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag.",
+        "open_issues": [
+          "Lỗi IAM condition key trong A/C.",
+          "Tag policy không tự buộc tài nguyên untagged có tag.",
+          "Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete."
+        ]
+      }
+    },
+    "decision": "r3: restore verified — Kiến trúc đúng và duy nhất có tính phòng ngừa; lỗi cú pháp condition key là typo nguồn (A cũng sai tương tự)."
   }
 }

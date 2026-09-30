@@ -2,9 +2,9 @@
   "question_id": "Q013",
   "question_content_hash": "cb25134779a4aa45f2c00bb0f65ccccd7606235155af379a9938b6039cbb5d4a",
   "stage": "final",
-  "research_version": "r2-independent-verify",
+  "research_version": "r3",
   "researched_at": "2026-09-30T19:33:31Z",
-  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
+  "last_reviewed_at": "2026-09-30T23:07:16+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -37,30 +37,31 @@
     {
       "unit_id": "Q013:A",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Đúng khi policy xác thực cũng buộc client ID khớp thing.",
+      "verdict": "meets",
+      "reason_vi": "Dùng thing name làm client ID là điều kiện để policy dùng ${iot:Connection.Thing.ThingName} cho iot:Connect hoạt động; client ID khi đó bị ràng buộc với thing đã đăng ký và gắn với principal, không thể tự đặt tùy ý.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref3",
+        "ref4",
+        "ref5",
+        "ref9"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q013:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: Trojan có thể bỏ qua kiểm tra phía client.",
+      "reason_vi": "Kiểm tra client ID trong app hợp lệ không ngăn được Trojan vì app giả do kẻ tấn công kiểm soát, bỏ qua kiểm tra đó; AWS khuyến nghị kiểm soát client ID bằng policy iot:Connect phía server.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref8"
       ],
       "evidence_kind": "inference"
     },
@@ -68,45 +69,46 @@
       "unit_id": "Q013:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: AWSIoTWirelessDataAccess/principal client không phải iot:Connect resource policy phù hợp.",
+      "reason_vi": "AWSIoTWirelessDataAccess là IAM managed policy chỉ cho iotwireless:SendDataToWirelessDevice (IoT Wireless), không phải AWS IoT Core policy kiểm soát MQTT connect/subscribe; IoT Core policy cũng không có phần 'principal' như mô tả.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref6",
+        "ref7"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q013:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sai: ClientId tự tham chiếu vẫn cho client tự chọn resource.",
+      "reason_vi": "Resource client/${iot:ClientId} cho phép mọi client ID (kể cả '+') kết nối, nên không chặn được tấn công; tài liệu AWS nói rõ không khuyến nghị dùng ${iot:ClientId} với Connect.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "ref2"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     },
     {
       "unit_id": "Q013:E",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Đúng về ý định nếu sửa ${iot:Connection.Thing.ThingName} và ARN, với principal đã gắn thing.",
+      "verdict": "meets",
+      "reason_vi": "Policy iot:Connect với resource client/${iot:Connection.Thing.ThingName} buộc client ID phải là tên thing đã đăng ký, nên client ID chèn ký tự đặc biệt bị từ chối kết nối (đề có lỗi gõ ')' thay cho '}').",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref3",
+        "ref4",
+        "ref8"
       ],
-      "evidence_kind": "inference"
+      "evidence_kind": "direct"
     }
   ],
   "independent_verdict": {
@@ -255,20 +257,23 @@
     "Q013:A",
     "Q013:E"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
+  "researched_answer": [
+    "Q013:A",
+    "Q013:E"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
+    "reason_vi": "Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án.",
     "open_issues": [
-      "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
+      "Nếu đọc E theo nghĩa đen, chuỗi biến policy không hợp lệ (typo nguồn)."
     ]
   },
   "reconciliation_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
   "explanation_vi": {
-    "why_correct": "Dùng thing name làm client ID và policy server-side ràng buộc iot:Connect với ThingName của danh tính đã gắn thing. A/E là ý định đúng nhưng chuỗi biến của E phải sửa dấu đóng và dùng đầy đủ resource ARN.",
+    "why_correct": "A + E: ứng dụng dùng thing name làm client ID, và IoT policy chỉ cho iot:Connect với client/${iot:Connection.Thing.ThingName}, nên thiết bị giả mạo không kết nối được bằng client ID khác. Nguồn gõ \")\" thay \"}\" ở lựa chọn E.",
     "others": {
       "Q013:B": "Sai: Trojan có thể bỏ qua kiểm tra phía client.",
       "Q013:C": "Sai: AWSIoTWirelessDataAccess/principal client không phải iot:Connect resource policy phù hợp.",
@@ -315,11 +320,6 @@
       "type": "typo",
       "location": "Q013:E",
       "detail_vi": "Biến policy viết '${iot:Connection.Thing.ThingName)' dùng ')' thay '}'; nếu hiểu theo nghĩa đen thì biến không hợp lệ."
-    },
-    {
-      "type": "ambiguous",
-      "location": "Q013",
-      "detail_vi": "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
     }
   ],
   "history": [
@@ -353,6 +353,12 @@
       "answer": null,
       "note_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
       "technical_change": true
+    },
+    {
+      "version": "r3",
+      "date": "2026-09-30T23:07:16+00:00",
+      "change": "r3: restore verified — Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án.",
+      "previous_answer": null
     }
   ],
   "notes_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
@@ -378,5 +384,21 @@
     ],
     "root_adjudication": null,
     "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  },
+  "r3_adjudication": {
+    "date": "2026-09-30T23:07:16+00:00",
+    "by": "main agent (approved by user)",
+    "previous_r2": {
+      "status": "ambiguous",
+      "answer": null,
+      "confidence": {
+        "level": "medium",
+        "reason_vi": "E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option.",
+        "open_issues": [
+          "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ."
+        ]
+      }
+    },
+    "decision": "r3: restore verified — Cơ chế có tài liệu trực tiếp; lỗi gõ \")\" thay \"}\" trong E là lỗi nguồn, không đổi ý nghĩa đáp án."
   }
 }
