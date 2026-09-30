@@ -137,15 +137,15 @@ export function Bank() {
               const snippet = blockText(q.stem).slice(0, 140);
               return (
                 <tr key={q.id}>
-                  <td>
+                  <td className="bank-id">
                     <a href={`#/bank/${q.id}`}>{q.id}</a>
                   </td>
-                  <td>{TYPE_LABEL[q.type]}</td>
+                  <td className="bank-type">{TYPE_LABEL[q.type]}</td>
                   <td className="snippet">{snippet}{blockText(q.stem).length > 140 ? '…' : ''}</td>
-                  <td>
+                  <td className="bank-status">
                     <StatusBadge status={data.reviews[q.id].status} />
                   </td>
-                  <td>
+                  <td className="bank-progress">
                     {a?.attempted ? (a.lastResult ? (isWrong(a.lastResult) ? 'wrong last time' : 'correct last time') : 'attempted') : 'not attempted'}
                     {marks.bookmarked.includes(q.id) ? ' · bookmarked' : ''}
                     {marks.flagged.includes(q.id) ? ' · flagged' : ''}
