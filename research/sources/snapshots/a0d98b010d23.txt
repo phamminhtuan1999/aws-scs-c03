@@ -1,0 +1,128 @@
+URL: https://docs.aws.amazon.com/controltower/latest/userguide/how-control-tower-works.html
+TITLE: How AWS Control Tower works - AWS Control Tower
+
+# How AWS Control Tower works
+
+This section describes at a high level how AWS Control Tower works. Your landing zone is a
+well-architected multi-account environment for all of your AWS resources. You can use this
+environment to enforce compliance regulations on all of your AWS accounts.
+
+## Structure of an AWS Control Tower Landing Zone
+
+The structure of a landing zone in AWS Control Tower is as follows:
+
+- Root – The parent that contains all
+other OUs in your landing zone.
+
+- Security OU – When you launch your
+landing zone, you can choose customized names for accounts in the Security OU,
+and you can bring existing AWS accounts into AWS Control Tower for service
+integrations.
+
+In AWS Control Tower landing zone version 3.3 and earlier, this OU contains the Log
+Archive and Audit accounts. These accounts are called shared accounts. In landing zone version 3.3 and
+earlier, you cannot add existing accounts for security and logging after
+initial launch.
+
+In AWS Control Tower landing zone version 4.0, AWS Control Tower no longer requires a Security
+OU, and you can define your own organizational structure.
+
+- Sandbox OU – The Sandbox OU is created
+when you launch your landing zone, if you enable it. This and other registered OUs
+contain the enrolled accounts that your users work with to perform their AWS
+workloads.
+
+- IAM Identity Center directory – By default, this directory houses
+your IAM Identity Center users. It defines the scope of permissions for each IAM Identity Center
+user. Optionally, you can choose to self-manage your identity and access control. For more information, see Working with AWS IAM Identity Center and AWS Control Tower.
+
+- IAM Identity Center users – These are the identities
+that your users can assume to perform their AWS workloads in your
+landing zone.
+
+## What happens when you set up a landing zone
+
+When you set up a landing zone, AWS Control Tower performs the following actions in your
+management account on your behalf:
+
+- When you create your landing zone through the console, AWS Control Tower creates two
+AWS Organizations organizational units (OUs). These are the Security OU and the optional
+Sandbox OU, contained within the organizational root structure. During setup,
+AWS Control Tower automatically selects the Security OU as the default OU for service
+integrations. This OU is known as the designated service integration OU. You
+can select a different OU during landing zone setup.
+
+AWS Control Tower requires all accounts configured for AWS service integrations to
+be under the same OU, nested directly under root. This requirement does not
+apply to the management account.
+
+When you create your landing zone through the API, you do not explicitly
+select an OU for service integrations. Service integration accounts must be
+under the same OU nested directly under root, and the OU that contains your
+service integration accounts is the designated service integration OU. For more
+information, see Getting
+started with AWS Control Tower APIs.
+
+- AWS Control Tower creates or enrolls accounts for any enabled service integrations
+(such as AWS Config, AWS CloudTrail, or AWS Backup) in the designated service integration
+OU.
+
+- Creates a cloud-native directory in IAM Identity Center, with preconfigured groups and
+single sign-on access, if you choose the default AWS Control Tower configuration, or it
+allows you to self-manage your identity provider.
+
+- Applies all mandatory, preventive controls to enforce policies.
+
+- Applies all mandatory, detective controls to detect configuration
+violations.
+
+- Preventive controls are not applied to the
+management account.
+
+- Except for the management account, controls are applied to the organization
+as a whole.
+
+Safely Managing Resources Within Your AWS Control Tower Landing Zone and Accounts
+
+- When you create your landing zone, a number of AWS resources are created. To use
+AWS Control Tower, you must not modify or delete these AWS Control Tower managed resources outside of
+the supported methods described in this guide. Deleting or modifying these resources
+will cause your landing zone to enter an unknown state. For details, see Guidance for creating and modifying AWS Control Tower resources
+
+- When you enable optional controls (those with strongly
+recommended or elective guidance), AWS Control Tower creates AWS resources
+that it manages in your accounts. Do not modify or delete resources created by
+AWS Control Tower. Doing so can result in the controls entering an unknown state.
+
+## How AWS Control Tower works with StackSets
+
+AWS Control Tower uses CloudFormation StackSets to set up resources in your accounts, by default. Each
+stack set has StackInstances that correspond to accounts, and to AWS Regions per
+account. AWS Control Tower deploys one stack set instance per account and Region.
+
+AWS Control Tower applies updates to certain accounts and AWS Regions selectively, based on
+CloudFormation parameters. When updates are applied to some stack instances, other stack
+instances may be left in Outdated status. This behavior is expected
+and normal.
+
+When a stack instance goes into Outdated status, it usually means
+that the stack corresponding to that stack instance is not aligned with the latest
+template in the stack set. The stack remains in the older template, so it might not
+include the latest resources or parameters. The stack is still completely usable.
+
+Here's a quick summary of what behavior to expect, based on CloudFormation
+parameters that are specified during an update:
+
+If the stack set update includes changes to the template (that is, if the
+TemplateBody or TemplateURL properties are specified), or
+if the Parameters property is specified, CloudFormation marks all stack
+instances with a status of Outdated prior to updating the stack
+instances in the specified accounts and AWS Regions. If the stack set update does not
+include changes to the template or parameters, CloudFormation updates the stack
+instances in the specified accounts and Regions, while leaving all other stack instances
+with their existing stack instance status. To update all of the stack instances
+associated with a stack set, do not specify the Accounts or
+Regions properties.
+
+For more information, see Update Your Stack
+Set in the CloudFormation User Guide.

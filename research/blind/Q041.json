@@ -1,0 +1,56 @@
+{
+  "question_id": "Q041",
+  "question_content_hash": "074e164538d4e47821d25a46bff005ea6fe538856a7956fedcb3ef66f89f4a5f",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Giám sát sự gia tăng chi phí (cost increases) trong tương lai để phát hiện hoạt động độc hại.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "EARLIEST detection: phát hiện sớm nhất.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q041:A", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Chạy Lambda mỗi giờ không làm dữ liệu sớm hơn: Data Exports chỉ refresh khi dữ liệu nguồn cập nhật (CUR 2.0 ít nhất một lần/ngày), nên độ trễ tương tự Cost Anomaly Detection nhưng phải tự viết logic phát hiện bất thường.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q041:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Cost Anomaly Detection chạy khoảng ba lần mỗi ngày bằng ML trên dữ liệu chi phí; individual alert qua SNS báo ngay khi phát hiện anomaly, có thể đặt ngưỡng phần trăm. Đây là cơ chế tự động, sớm nhất trong các lựa chọn.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q041:C", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Xem Cost Explorer thủ công mỗi ngày (dữ liệu refresh ít nhất mỗi 24 giờ) và so với tháng trước là chậm, phụ thuộc con người, phát hiện muộn hơn cảnh báo tự động.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q041:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "VPC Flow Logs chỉ ghi thông tin IP traffic của một VPC, không đo chi phí; không bao quát các nguồn chi phí khác và cần công cụ bên thứ ba, nên không phải giải pháp giám sát cost increase.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref6"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q041:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu nêu Cost Anomaly Detection chạy ~3 lần/ngày và individual alerts gửi ngay khi phát hiện; các phương án khác hoặc thủ công, hoặc không nhanh hơn về dữ liệu, hoặc không đo chi phí.", "open_issues": ["Mọi giải pháp dựa trên dữ liệu billing đều có độ trễ tới ~24 giờ; không có lựa chọn nào thời gian thực."]},
+    "reference_ids": ["ref1", "ref2", "ref4"],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/cost-management/latest/userguide/manage-ad.html", "title": "Detecting unusual spend with AWS Cost Anomaly Detection", "section": "Overview", "snapshot_id": "8022341b42c3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS Cost Anomaly Detection runs approximately three times a day in order to monitor for anomalies in your net unblended cost data",
+     "supports": "Tần suất phát hiện anomaly tự động.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html", "title": "Getting started with AWS Cost Anomaly Detection", "section": "Alert subscriptions", "snapshot_id": "f6fc5560a74f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "notifies you as soon as an anomaly is detected.",
+     "supports": "Individual alert (cần SNS topic) báo ngay khi phát hiện.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html", "title": "Getting started with AWS Cost Anomaly Detection", "section": "Threshold", "snapshot_id": "f6fc5560a74f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Percentage thresholds trigger alerts when an anomaly's total impact percentage exceeds your chosen threshold.",
+     "supports": "Hỗ trợ ngưỡng phần trăm so với chi phí dự kiến như mô tả ở B.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/cur/latest/userguide/dataexports-export-delivery.html", "title": "Understanding export delivery - AWS Data Exports", "section": "Export refreshing", "snapshot_id": "accc8169463c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Data Exports refreshes your exports each time the source data is updated. For CUR 2.0, this occurs at least once a day.",
+     "supports": "Polling hàng giờ không nhận dữ liệu sớm hơn tần suất refresh.", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/cost-management/latest/userguide/ce-what-is.html", "title": "Analyzing your costs and usage with AWS Cost Explorer", "section": "Overview", "snapshot_id": "4301113f9ffc", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Cost Explorer refreshes your cost data at least once every 24 hours.",
+     "supports": "Xem Cost Explorer hằng ngày thủ công không sớm hơn cảnh báo tự động.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html", "title": "Logging IP traffic using VPC Flow Logs", "section": "Overview", "snapshot_id": "6d828a2b0fc8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC.",
+     "supports": "Flow logs ghi traffic mạng, không phải dữ liệu chi phí.", "kind": "direct"}
+  ],
+  "source_issues": []
+}

@@ -1,0 +1,173 @@
+URL: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/alerting.html
+TITLE: Configuring alerts in Amazon OpenSearch Service - Amazon OpenSearch Service
+
+# Configuring alerts in Amazon OpenSearch Service
+
+Configure alerts in Amazon OpenSearch Service to get notified when data from one or more indexes meets
+certain conditions. For example, you might want to receive an email if your application logs
+more than five HTTP 503 errors in one hour, or you might want to page a developer if no new
+documents have been indexed in the last 20 minutes.
+
+Alerting requires OpenSearch or Elasticsearch 6.2 or later.
+
+Note
+
+This documentation provides a brief overview of alerting and highlights how alerting
+on an Amazon OpenSearch Service domain differs from alerting on an open source OpenSearch cluster. For
+full alerting documentation, including a comprehensive API reference, a list of
+available request fields for composite monitors, and descriptions of available trigger
+and actions variables, see Alerting in the OpenSearch documentation.
+
+Topics
+
+- Alerting permissions
+
+- Getting started with alerting
+
+- Notifications
+
+- Differences
+
+## Alerting permissions
+
+Alerting supports fine-grained access control. For details
+on mixing and matching permissions to fit your use case, see Alerting security in the OpenSearch documentation.
+
+In order to access the Alerting page within OpenSearch Dashboards, you
+must at least be mapped to the alerting_read_access predefined role, or be
+granted equivalent permissions. This role grants permissions to view alerts,
+destinations, and monitors, but not to acknowledge alerts or modify destinations or
+monitors.
+
+## Getting started with alerting
+
+To create an alert, you configure a monitor, which is a job that
+runs on a defined schedule and queries OpenSearch indexes. You also configure one or
+more triggers, which define the conditions that generate events.
+Finally, you configure actions, which is what happens after an
+alert is triggered.
+
+To get started with alerting
+
+- Choose Alerting from the OpenSearch Dashboards
+main menu and choose Create monitor.
+
+- Create a per-query, per-bucket, per-cluster metrics, or per-document monitor.
+For instructions, see Create a monitor.
+
+- For Triggers, create one or more triggers. For
+instructions, see Create triggers.
+
+- For Actions, set up a notification channel for the alert.
+Choose between Slack, Amazon Chime, a custom webhook, or Amazon SNS. As you might imagine,
+notifications require connectivity to the channel. For example, to notify a Slack channel or send a
+custom webhook to a third-party server, your OpenSearch Service domain needs appropriate network connectivity. The custom webhook must have a public IP
+address in order for an OpenSearch Service domain to send alerts to it.
+
+Tip
+
+After an action successfully sends a message, securing access to that
+message (for example, access to a Slack channel) is your responsibility. If
+your domain contains sensitive data, consider using triggers without actions
+and periodically checking Dashboards for alerts.
+
+## Notifications
+
+Alerting integrates with Notifications, which is a unified system for OpenSearch
+notifications. Notifications let you configure which communication service you want to
+use and see relevant statistics and troubleshooting information. For comprehensive
+documentation, see Notifications in the OpenSearch documentation.
+
+Your domain must be running OpenSearch version 2.3 or later to use
+notifications.
+
+Note
+
+OpenSearch notifications are separate from OpenSearch Service notifications, which provide
+details about service software updates, Auto-Tune enhancements, and other important
+domain-level information. OpenSearch notifications are plugin-specific.
+
+Notification channels replaced alerting destinations starting with OpenSearch
+version 2.0. Destinations were officially deprecated, and all alerting notification will
+be managed through channels going forward.
+
+When you upgrade your domains to version 2.3 or later (since OpenSearch Service support for 2.x
+starts with 2.3), your existing destinations are automatically migrated to notification
+channels. If a destination fails to migrate, the monitor will continue to use it until
+the monitor is migrated to a notification channel. For more inforation, see Questions about destinations in the OpenSearch documentation.
+
+To get started with notifications, sign in to OpenSearch Dashboards and choose
+Notifications, Channels, and
+Create channel.
+
+Amazon Simple Notification Service (Amazon SNS) is a supported channel type for notifications. In order to
+authenticate users, you either need to provide the user with full access to Amazon SNS, or
+let them assume an IAM role that has permissions to access Amazon SNS. For instructions,
+see Amazon SNS as a channel type.
+
+## Differences
+
+Compared to the open-source version of OpenSearch, alerting in Amazon OpenSearch Service has some
+notable differences.
+
+### Alerting settings
+
+OpenSearch Service lets you modify the following alerting settings:
+
+- plugins.scheduled_jobs.enabled
+
+- plugins.alerting.alert_history_enabled
+
+- plugins.alerting.alert_history_max_age
+
+- plugins.alerting.alert_history_max_docs
+
+- plugins.alerting.alert_history_retention_period
+
+- plugins.alerting.alert_history_rollover_period
+
+- plugins.alerting.filter_by_backend_roles
+
+All other settings use the default values which you can't change.
+
+To disable alerting, send the following request:
+
+PUT _cluster/settings
+{
+"persistent" : {
+"plugins.scheduled_jobs.enabled" : false
+}
+}
+
+The following request configures alerting to automatically delete history indexes
+after seven days, rather than the default 30 days:
+
+PUT _cluster/settings
+{
+"persistent": {
+"plugins.alerting.alert_history_retention_period": "7d"
+}
+}
+
+If you previously created monitors and want to stop the creation of daily alerting
+indexes, delete all alert history indexes:
+
+DELETE .plugins-alerting-alert-history-*
+
+To reduce shard count for history indexes, create an index template. The following
+request sets history indexes for alerting to one shard and one replica:
+
+PUT _index_template/template-name
+{
+"index_patterns": [".opendistro-alerting-alert-history-*"],
+"template": {
+"settings": {
+"number_of_shards": 1,
+"number_of_replicas": 1
+}
+}
+}
+
+Depending on your tolerance for data loss, you might even consider using zero
+replicas. For more information about creating and managing index templates, see
+Index templates in the OpenSearch documentation.

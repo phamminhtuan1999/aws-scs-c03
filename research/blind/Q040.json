@@ -1,0 +1,61 @@
+{
+  "question_id": "Q040",
+  "question_content_hash": "d1372d3d0d82f82a46e437dc533cdd93836ac007f68e330ce5a30cde2dbc6cec",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Hành động ngay lập tức để ngăn attacker tải thêm dữ liệu từ S3 bucket.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Attacker dùng temporary credentials lấy từ EC2 instance bị xâm nhập (role có s3:GetObject); lỗ hổng chỉ được vá sau 4 giờ, nên biện pháp phải giữ hiệu lực trong suốt khoảng đó.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Bucket rất lớn chứa PII; mục tiêu là chặn đọc, không phải phân loại dữ liệu.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q040:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Revoke active sessions chỉ deny các credential cấp trước thời điểm revoke; credential mới cấp sau đó không bị ảnh hưởng. EC2 tự động xoay vòng credential của instance profile, nên khi instance vẫn bị xâm nhập (chưa vá trong 4 giờ) attacker có thể lấy credential mới và tiếp tục tải — biện pháp không bền.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q040:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đổi security group chỉ chặn traffic mạng tới/từ instance (và không cắt kết nối đang được track); credential đã bị đánh cắp vẫn dùng được từ nơi khác để gọi S3 API.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q040:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Macie chỉ phát hiện dữ liệu nhạy cảm; S3 Object Lock chỉ ngăn xóa/ghi đè (WORM), không ngăn đọc/tải xuống. Quét hàng trăm TB cũng không phải hành động tức thời.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q040:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Bucket policy Deny đọc cho mọi principal là explicit deny, ghi đè mọi Allow bất kể attacker dùng credential cũ hay mới, có hiệu lực ngay và giữ nguyên đến khi dev team vá xong. Đổi lại ứng dụng hợp lệ cũng bị chặn tạm thời.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref5", "ref6"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q040:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "D là biện pháp duy nhất chặn đọc bất kể credential nào được dùng, phù hợp khi lỗ hổng còn mở 4 giờ. A có tác dụng tức thời nhưng không ngăn attacker lấy credential mới từ instance vẫn bị xâm nhập.", "open_issues": ["Nếu đề ngụ ý attacker chỉ giữ một bộ credential và không còn truy cập instance, A cũng chặn được mà ít gây gián đoạn hơn; đề không nói rõ.", "Không có trang AWS nào nêu trực tiếp hành vi revoke session với instance profile đang bị xâm nhập; kết luận về A là suy luận từ cơ chế xoay vòng credential."]},
+    "reference_ids": ["ref1", "ref2", "ref5", "ref6"],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html", "title": "Revoke IAM role temporary security credentials", "section": "Overview", "snapshot_id": "31ca098047ce", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If the user assumes the role after you revoked the permissions, then the deny policy does not apply to that user.",
+     "supports": "Revoke không chặn credential mới được cấp sau thời điểm revoke.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-metadata-security-credentials.html", "title": "Retrieve security credentials from instance metadata", "section": "Overview", "snapshot_id": "f263a1bbfe04", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "These security credentials are temporary and we rotate them automatically.",
+     "supports": "Instance bị xâm nhập sẽ tiếp tục nhận credential mới, attacker có thể lấy lại.", "kind": "inference"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/compromised-ec2.html", "title": "Remediating a potentially compromised Amazon EC2 instance", "section": "Isolate the potentially compromised Amazon EC2 instance", "snapshot_id": "0cb119da269e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The existing tracked connections won't be terminated as a result of changing security groups - only future traffic will be effectively blocked by the new security group.",
+     "supports": "Cô lập bằng SG chỉ tác động traffic mạng của instance, không vô hiệu hóa credential.", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html", "title": "Locking objects with Object Lock", "section": "Overview", "snapshot_id": "b105a845c1ae", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "S3 Object Lock can help prevent Amazon S3 objects from being deleted or overwritten for a fixed or variable amount of time, or indefinitely.",
+     "supports": "Object Lock không ngăn việc đọc/tải object.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic_policy-eval-denyallow.html", "title": "How AWS enforcement code logic evaluates requests to allow or deny access", "section": "Summary", "snapshot_id": "d9b46a184b6c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "An explicit deny overrides an explicit allow.",
+     "supports": "Deny trong bucket policy vô hiệu hóa quyền s3:GetObject của role bất kể credential nào.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/compromised-s3.html", "title": "Remediating a potentially compromised S3 bucket", "section": "Recommendations", "snapshot_id": "28009043bde3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS Access policies can be used to control how IAM users can access your resources or how your buckets can be accessed.",
+     "supports": "GuardDuty khuyến nghị dùng bucket policy để kiểm soát truy cập bucket khi bị xâm phạm.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q040:stem:0", "detail_vi": "Lỗi OCR: 'stares mare' = 'stores more', '(Pit)' = '(PII)'."},
+    {"type": "typo", "location": "Q040:stem:3", "detail_vi": "'moot' là lỗi của 'meet'."},
+    {"type": "typo", "location": "Q040:C", "detail_vi": "'Amazon Made' là lỗi của 'Amazon Macie'."}
+  ]
+}

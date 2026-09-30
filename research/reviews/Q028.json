@@ -1,0 +1,296 @@
+{
+  "question_id": "Q028",
+  "question_content_hash": "f3328138bd3cecae906e0f2ffb837f57f012b3e4c77ba31f5100ee815f1fa4b7",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "last_reviewed_at": "2026-09-30T19:55:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "555b93b3a3e011770878fba489b74c50b8615b70360c0a3f4d1f57dcf70cac16",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Kẻ tấn công đang dùng temporary credential (API keys) của EC2 instance role từ bên ngoài; cần deny truy cập của kẻ tấn công.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Hỏi bước ĐẦU TIÊN cần làm (ưu tiên hành động chặn ngay việc sử dụng credential bị lộ).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q028:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security group chỉ kiểm soát traffic mạng tới/từ instance; kẻ tấn công gọi AWS API bằng credential đã lộ từ nơi khác nên thay đổi security group không chặn được.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref2",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q028:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Systems Manager Inventory chỉ thu thập metadata của node; không vô hiệu hoá credential bị lộ.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q028:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Inspector là dịch vụ quét lỗ hổng phần mềm; chạy assessment CVE không chặn được việc kẻ tấn công đang dùng credential. (Agent/rules package kiểu Inspector Classic cũng là mô hình cũ.)",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q028:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Credential của instance profile là STS temporary credential của IAM role; 'Revoke active sessions' gắn policy AWSRevokeOlderSessions deny mọi quyền cho các session phát hành trước thời điểm thu hồi, vô hiệu hoá ngay credential kẻ tấn công đang giữ.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q028:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "GuardDuty mô tả finding là temporary credential của EC2 bị dùng từ host bên ngoài; tài liệu IAM nêu trực tiếp cách thu hồi ngay các session của role.",
+      "open_issues": [
+        "Tên finding trong đề là dạng cũ; hiện GuardDuty tách thành .InsideAWS và .OutsideAWS."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "source_answer": [
+    "Q028:D"
+  ],
+  "researched_answer": [
+    "Q028:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn D. Tài liệu GuardDuty mô tả finding là temporary credential tạo trên EC2 bị dùng từ bên ngoài; tài liệu IAM nêu trực tiếp 'Revoke active sessions' vô hiệu hoá ngay mọi credential của role phát hành trước thời điểm thu hồi.",
+    "open_issues": [
+      "Tên finding trong đề là dạng cũ; hiện GuardDuty tách thành .InsideAWS và .OutsideAWS (không đổi đáp án)."
+    ]
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại A (xoá security group mở 0.0.0.0/0): finding .OutsideAWS nêu credential tạo riêng cho EC2 đang bị dùng từ IP bên ngoài để gọi AWS API, nên security group của instance không liên quan tới các lời gọi API này; B/C chỉ thu thập inventory/quét lỗ hổng, không chặn truy cập. Tài liệu IAM xác nhận thu hồi session của role gắn AWSRevokeOlderSessions và deny ngay mọi credential phát hành trước đó. Giữ D, verified, high. Giữ source_issue outdated (tên finding) và ghi chú về cách diễn đạt D; bỏ source_issue encoding ở stem.",
+  "explanation_vi": {
+    "why_correct": "Credential bị lộ là STS temporary credential của IAM role gắn với instance profile; 'Revoke active sessions' trên IAM console gắn policy AWSRevokeOlderSessions deny mọi session phát hành trước thời điểm thu hồi, nên chặn ngay kẻ tấn công.",
+    "others": {
+      "Q028:A": "Kẻ tấn công gọi AWS API từ nơi khác bằng credential đã lộ, nên sửa security group của instance không chặn được.",
+      "Q028:B": "Cài SSM Agent và chạy Inventory chỉ thu thập metadata của instance, không vô hiệu hoá credential đang bị dùng.",
+      "Q028:C": "Amazon Inspector chỉ quét lỗ hổng phần mềm; chạy assessment CVE không chặn truy cập, và không phải bước đầu tiên khi credential đang bị lạm dụng."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "InstanceCredentialExfiltration",
+      "meaning_vi": "Temporary credential của EC2 instance role bị dùng từ bên ngoài."
+    },
+    {
+      "phrase": "deny access to the malicious actor",
+      "meaning_vi": "Vô hiệu hoá credential đã phát hành -> revoke active sessions của role."
+    },
+    {
+      "phrase": "first step",
+      "meaning_vi": "Ưu tiên containment (chặn credential) trước điều tra/quét."
+    }
+  ],
+  "memory_tip_vi": "Nếu GuardDuty báo credential của EC2 instance role bị dùng từ bên ngoài -> nghĩ đến revoke active sessions của IAM role (AWSRevokeOlderSessions); kiểm tra đề hỏi bước đầu tiên (containment) hay bước điều tra sau đó.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "4 Identity and Access Management",
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon GuardDuty",
+      "AWS IAM",
+      "AWS STS",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Phản ứng sự cố credential EC2 bị đánh cắp bằng thu hồi session của role."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-iam.html",
+      "title": "GuardDuty IAM finding types",
+      "section": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS",
+      "snapshot_id": "0ebec8350648",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "a host outside of AWS has attempted to run AWS API operations using temporary AWS credentials that were created on an EC2 instance",
+      "supports": "Finding là việc temporary credential của EC2 instance role bị dùng từ bên ngoài để gọi AWS API.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/compromised-creds.html",
+      "title": "Remediating potentially compromised AWS credentials",
+      "section": "keys beginning with ASIA",
+      "snapshot_id": "968ffb533040",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IAM roles will always use AWS STS credentials",
+      "supports": "Credential bị lộ là STS credential của role -> xử lý bằng thu hồi session của role.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html",
+      "title": "Revoke IAM role temporary security credentials",
+      "section": "intro",
+      "snapshot_id": "31ca098047ce",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can immediately revoke all permissions to the role's credentials issued before a certain point in time if you need to.",
+      "supports": "Thu hồi session của role vô hiệu hoá ngay credential đã phát hành, kể cả bản bị đánh cắp.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html",
+      "title": "Revoke IAM role temporary security credentials",
+      "section": "Revoking session permissions",
+      "snapshot_id": "31ca098047ce",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IAM then attaches a policy named AWSRevokeOlderSessions to the role.",
+      "supports": "Cơ chế thực hiện của thao tác Revoke active sessions trên IAM console.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+      "title": "Control traffic to your AWS resources using security groups",
+      "section": "intro",
+      "snapshot_id": "6761ddae28b8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A security group controls the traffic that is allowed to reach and leave the resources that it is associated with.",
+      "supports": "Security group chỉ kiểm soát traffic của resource, không kiểm soát AWS API call bằng credential bị lộ.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-inventory.html",
+      "title": "AWS Systems Manager Inventory",
+      "section": "intro",
+      "snapshot_id": "308be63b6e25",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use Inventory to collect metadata from your managed nodes.",
+      "supports": "Inventory chỉ thu thập metadata, không chặn truy cập.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html",
+      "title": "What is Amazon Inspector?",
+      "section": "intro",
+      "snapshot_id": "6ead4370c770",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Inspector is a vulnerability management service that automatically discovers workloads and continually scans them for software vulnerabilities and unintended network exposure.",
+      "supports": "Inspector quét lỗ hổng, không thu hồi credential.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-iam.html",
+      "title": "GuardDuty IAM finding types",
+      "section": "UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS",
+      "snapshot_id": "0ebec8350648",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Credentials that were created exclusively for an EC2 instance through an Instance launch role are being used from an external IP address.",
+      "supports": "Kẻ tấn công dùng credential của role từ IP bên ngoài để gọi API; security group của instance không liên quan (loại A).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "outdated",
+      "location": "Q028:stem:1",
+      "detail_vi": "Tên finding hiện tại là UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS (hoặc .InsideAWS); đề dùng tên cũ không có hậu tố. Không ảnh hưởng đáp án."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q028:D",
+      "detail_vi": "Thao tác thực tế là revoke session của IAM role gắn với instance profile (không phải của chính instance profile); cách diễn đạt hơi lỏng nhưng không đổi đáp án."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:08Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q028:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key D; status verified (high). Bỏ source_issue 'ký tự lỗi mã hoá �' của blind: đã kiểm tra code point là U+2019 (’), chỉ là lỗi hiển thị console cp1252, không phải lỗi dữ liệu nguồn (xem SOURCE_FACTS.md). Vị trí đã bỏ: Q028:stem:0. Thêm tham chiếu mới: ref8.",
+      "previous_answer": [
+        "Q028:D"
+      ]
+    }
+  ]
+}

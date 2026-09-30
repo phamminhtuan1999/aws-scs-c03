@@ -1,0 +1,41 @@
+{
+  "question_id": "Q080",
+  "question_content_hash": "13f713187e2e7b136aa3c2a2d197b8b0e5d1a0241cce63fbc4f144c6beaaa6a7",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:52:00Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages (docs.aws.amazon.com / aws.amazon.com) were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Cùng CloudFormation template thành công ở OU Development và Testing nhưng thất bại ở account thuộc OU Production với lỗi insufficient IAM permissions.", "kind": "condition"},
+    {"id": "R2", "text_vi": "Mỗi OU gắn SCP khác nhau; SCP là khác biệt được nêu rõ giữa các môi trường.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Hỏi bước ĐẦU TIÊN (FIRST) để troubleshoot: ưu tiên bước chẩn đoán thu thập bằng chứng, không thay đổi guardrail production.", "kind": "optimization"},
+    {"id": "R4", "text_vi": "Không làm suy yếu bảo mật môi trường Production (không gỡ/sửa SCP khi chưa xác định nguyên nhân).", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q080:A", "unit_type": "choice", "verdict": "meets", "reason_vi": "CloudTrail ghi các API call bị lỗi kèm errorCode/errorMessage; thông báo access denied cho biết loại policy gây deny (ví dụ 'explicit deny in a service control policy'), nên đây là bước chẩn đoán không xâm lấn, xác định đúng API bị chặn và nguyên nhân (SCP hay IAM policy).", "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q080:B", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Gỡ toàn bộ SCP khỏi OU Production loại bỏ guardrail tối đa quyền cho mọi account production; đây là thay đổi rủi ro, không phải bước chẩn đoán đầu tiên.", "requirement_ids": ["R3", "R4"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q080:C", "unit_type": "choice", "verdict": "meets_but_suboptimal", "reason_vi": "Kiểm tra quyền của role mà CloudFormation dùng là bước hợp lệ theo tài liệu troubleshoot CloudFormation, nhưng không phát hiện được giới hạn do SCP (SCP giới hạn quyền tối đa bất kể identity policy); với dữ kiện template chạy được ở OU khác và SCP khác nhau, bước này kém trực tiếp hơn việc xem lỗi cụ thể trong CloudTrail.", "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref5", "ref6", "ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q080:D", "unit_type": "choice", "verdict": "does_not_meet", "reason_vi": "Sao chép SCP của Testing sang Production là thay đổi guardrail production dựa trên phỏng đoán, có thể nới lỏng kiểm soát; không phải bước troubleshoot đầu tiên.", "requirement_ids": ["R3", "R4"], "reference_ids": ["ref4"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q080:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "B và D là thay đổi guardrail production, không phải bước chẩn đoán. Giữa A và C, dữ kiện đề (cùng template, SCP khác nhau theo OU) chỉ về SCP; chỉ CloudTrail/errorMessage mới cho thấy loại policy gây deny, còn kiểm tra role không phát hiện được SCP deny.", "open_issues": ["C cũng là bước troubleshoot hợp lệ theo tài liệu CloudFormation (Insufficient IAM permissions: review IAM policy); việc chọn A dựa trên suy luận về chữ FIRST và dữ kiện SCP, không có tài liệu AWS nào nêu thứ tự bước."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:52:00Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html", "title": "CloudTrail record contents for management, data, and network activity events", "section": "errorCode / errorMessage", "snapshot_id": "778dae6c182e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "If the request returns an error, the description of the error.", "supports": "CloudTrail ghi lỗi của API call thất bại (errorCode/errorMessage).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html", "title": "Troubleshoot access denied error messages", "section": "Access denied due to a service control policy – explicit denial", "snapshot_id": "6b7211d99fdd", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Check if the error message includes the type and Amazon Resource Name (ARN) of the policy responsible for denying access.", "supports": "Bước đầu troubleshoot access denied là đọc error message để biết loại policy (ví dụ SCP) gây deny.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html", "title": "Troubleshoot access denied error messages", "section": "Access denied due to a service control policy – implicit denial", "snapshot_id": "6b7211d99fdd", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "because no service control policy allows the codecommit:ListRepositories action", "supports": "Thông báo access denied phân biệt được nguyên nhân do SCP.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html", "title": "Service control policies (SCPs)", "section": "SCP effects on permissions", "snapshot_id": "0ace6350695a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "SCPs are access controls that specify the maximum available permissions for the IAM users and IAM roles in your organization.", "supports": "SCP giới hạn quyền tối đa của role kể cả khi identity policy đủ quyền; gỡ/sửa SCP là thay đổi guardrail.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html", "title": "Troubleshooting CloudFormation", "section": "Insufficient IAM permissions", "snapshot_id": "3fe6e047b0db", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "Review your IAM policy and verify that you have the necessary permissions before you work with CloudFormation stacks.", "supports": "Kiểm tra IAM policy là bước troubleshoot hợp lệ (hỗ trợ C là hợp lý nhưng chung chung).", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html", "title": "CloudFormation service role", "section": "CloudFormation service role", "snapshot_id": "c5d791d55991", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null, "quote": "If you specify a service role, CloudFormation uses that role's credentials.", "supports": "CloudFormation dùng credentials của service role (hoặc của user) để gọi API; role này vẫn chịu SCP của account member.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q080:stem:0", "detail_vi": "\"Production. Development, and Testing\" dùng dấu chấm thay vì dấu phẩy sau Production; không ảnh hưởng nghĩa."}
+  ],
+  "notes_vi": "Đề nhấn mạnh SCP khác nhau theo OU và cùng template chạy được ở Dev/Test -> nghi SCP; bước đầu là xem CloudTrail/error message để xác định API bị deny và loại policy gây deny, trước khi thay đổi bất kỳ SCP nào."
+}

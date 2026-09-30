@@ -1,0 +1,73 @@
+URL: https://docs.aws.amazon.com/controltower/latest/userguide/accounts.html
+TITLE: About AWS accounts in AWS Control Tower - AWS Control Tower
+
+# About AWS accounts in AWS Control Tower
+
+An AWS account is the container for all your owned resources. These resources include
+the AWS Identity and Access Management (IAM) identities accepted by the account, which determine who has access to
+that account. IAM identities can include users, groups, roles, and more. For more
+information about working with IAM, users, roles, and policies in AWS Control Tower, see Identity and access management in AWS Control Tower.
+
+Resources and account creation time
+
+When AWS Control Tower creates or enrolls an account, it deploys the minimum necessary resource
+configuration for the account. For example, it may include resources in the form of Account Factory
+templates and other resources in your landing zone, such as IAM
+roles, AWS CloudTrail trails, Service Catalog provisioned
+products, and IAM Identity Center users. AWS Control Tower also deploys resources, as required by the
+control configuration, for the organizational unit (OU) in which the new account is destined
+to become a member account.
+
+AWS Control Tower orchestrates the deployment of these resources on your behalf. It may require
+several minutes per resource to complete the deployment, so consider the total time before
+you create or enroll an account. For more information about managing resources in your
+accounts, see Guidance for creating and modifying AWS Control Tower resources.
+
+## What happens when AWS Control Tower creates an account
+
+New accounts in AWS Control Tower are created and then provisioned by an interaction among
+AWS Control Tower, AWS Organizations, and AWS Service Catalog. You can create accounts and enroll existing accounts from the AWS Control Tower console. For detailed steps to enroll an existing AWS account using
+the AWS Control Tower console, see Enroll an existing account from the AWS Control Tower console.
+
+Behind the scenes of account creation
+
+- You initiate the request, for example, from the AWS Control Tower Account Factory page,
+or directly from the AWS Service Catalog console, or by calling the Service Catalog
+ProvisionProduct API.
+
+- AWS Service Catalog calls AWS Control Tower.
+
+- AWS Control Tower begins a workflow, which as a first step calls the AWS Organizations
+CreateAccount API.
+
+- After AWS Organizations creates the account, AWS Control Tower completes the provisioning
+process by applying blueprints and controls.
+
+- Service Catalog continues to poll AWS Control Tower to check for completion of the provisioning
+process.
+
+- When the workflow in AWS Control Tower is complete, Service Catalog finalizes the account's state
+and informs you (the requester) of the result.
+
+## Considerations for bringing existing security or logging accounts
+
+Before accepting an AWS account as a security (default name: Config aggregator) or logging (default name: CloudTrail administrator) account, AWS Control Tower
+checks the account for resources that conflict with AWS Control Tower requirements. For
+example, you may have a logging bucket with the same name that AWS Control Tower requires.
+Also, AWS Control Tower validates that the account can provision resources; for example, by
+ensuring that AWS Security Token Service (AWS STS) is enabled, that the account is not suspended, and
+that AWS Control Tower has permission to provision resources within the account.
+
+AWS Control Tower does not remove any existing resources in the logging and security
+accounts that you provide. However, if you choose to enable it, the AWS Control Tower Region deny control prevents access to resources in denied
+Regions.
+
+Security for your accounts
+
+You can find guidance about best practices to protect the security of your
+AWS Control Tower management account and member accounts in the AWS Organizations
+documentation.
+
+- Best practices for the management account
+
+- Best practices for member accounts

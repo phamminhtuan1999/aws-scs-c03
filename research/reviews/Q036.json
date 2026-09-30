@@ -1,0 +1,247 @@
+{
+  "question_id": "Q036",
+  "question_content_hash": "9154ab2337faab147de458f36921887abf30f672285847034e5aa17f9982aa64",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "last_reviewed_at": "2026-09-30T19:55:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "85914fd7fe07beae01ff72da08c949db7ebd27b8d8fcf699e5eacb001d82250f",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Nhận diện dữ liệu nhạy cảm lưu trong một S3 bucket.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Báo cáo kết quả qua SNS topic đã có.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Công sức triển khai ít nhất (LEAST implementation effort).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q036:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS Config theo dõi cấu hình tài nguyên AWS, không quét nội dung object trong S3 để tìm dữ liệu nhạy cảm.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q036:B",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Lambda tự viết có thể quét theo pattern và gửi SNS, nhưng phải tự phát triển và bảo trì logic phát hiện, tốn công hơn dịch vụ managed.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q036:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Macie dùng managed data identifiers để phát hiện dữ liệu nhạy cảm trong S3 và tự động publish finding sang EventBridge; một rule EventBridge có thể gửi tới SNS topic.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q036:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty S3 Protection phát hiện mối đe dọa (exfiltration, phá hủy dữ liệu) từ CloudTrail data events, không phân loại nội dung nhạy cảm; CloudWatch alarm cũng không phải cách trực tiếp để phản ứng với từng finding.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q036:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Macie là dịch vụ managed chuyên phát hiện dữ liệu nhạy cảm trong S3 và tích hợp sẵn với EventBridge -> SNS; A và D không phát hiện dữ liệu nhạy cảm, B tốn công hơn.",
+      "open_issues": [
+        "Cần chạy sensitive data discovery job hoặc automated discovery trong Macie; phương án C ngầm hiểu điều này."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "source_answer": [
+    "Q036:C"
+  ],
+  "researched_answer": [
+    "Q036:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Macie dùng managed data identifiers phát hiện dữ liệu nhạy cảm trong S3, tự publish sensitive data findings sang EventBridge, và tài liệu Macie nêu ví dụ rule EventBridge gửi finding tới SNS topic. A, D không phát hiện dữ liệu nhạy cảm; B phải tự viết logic.",
+    "open_issues": [
+      "Cần chạy sensitive data discovery job hoặc bật automated sensitive data discovery trong Macie; phương án C ngầm hiểu điều này."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất B (Lambda quét theo pattern + SNS): B khả thi nhưng phải tự viết, kiểm thử và bảo trì logic nhận diện dữ liệu nhạy cảm, nhiều công hơn dịch vụ có sẵn managed data identifiers. Bổ sung bằng chứng trực tiếp cho phần SNS của C: trang Macie EventBridge nêu ví dụ rule tự động gửi finding tới SNS topic. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Amazon Macie dùng managed data identifiers để phát hiện và phân loại dữ liệu nhạy cảm trong S3 mà không cần viết code, và tự publish finding sang EventBridge; chỉ cần một rule EventBridge để gửi tới SNS topic có sẵn.",
+    "others": {
+      "Q036:A": "AWS Config theo dõi cấu hình tài nguyên, không quét nội dung object để tìm dữ liệu nhạy cảm.",
+      "Q036:B": "Lambda tự viết có thể làm được nhưng phải tự xây và bảo trì logic phát hiện, tốn công hơn Macie.",
+      "Q036:D": "GuardDuty phát hiện mối đe dọa (exfiltration, truy cập bất thường) chứ không phân loại dữ liệu nhạy cảm trong object."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "identify any sensitive data that is stored in an Amazon S3 bucket",
+      "meaning_vi": "Phát hiện dữ liệu nhạy cảm trong S3 -> Amazon Macie."
+    },
+    {
+      "phrase": "existing Amazon Simple Notification Service (Amazon SNS) topic",
+      "meaning_vi": "Macie finding -> EventBridge rule -> SNS."
+    },
+    {
+      "phrase": "LEAST implementation effort",
+      "meaning_vi": "Ưu tiên tính năng có sẵn (managed data identifiers) hơn code tự viết."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần tìm dữ liệu nhạy cảm (PII, thẻ tín dụng) trong S3 với ít công triển khai -> nghĩ đến Amazon Macie + EventBridge; kiểm tra: GuardDuty phát hiện mối đe dọa, Config theo dõi cấu hình, không quét nội dung.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon Macie",
+      "Amazon EventBridge",
+      "Amazon SNS",
+      "Amazon S3"
+    ],
+    "reason_vi": "Phát hiện và thông báo dữ liệu nhạy cảm lưu trong S3."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/managed-data-identifiers.html",
+      "title": "Using managed data identifiers - Amazon Macie",
+      "section": "Using managed data identifiers",
+      "snapshot_id": "a50abf27e815",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Macie uses a combination of criteria and techniques, including machine learning and pattern matching, to detect sensitive data in Amazon Simple Storage Service (Amazon S3) objects.",
+      "supports": "Macie phát hiện dữ liệu nhạy cảm trong S3 bằng managed data identifiers.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/findings-monitor-events-eventbridge.html",
+      "title": "Processing Macie findings with Amazon EventBridge",
+      "section": "Overview",
+      "snapshot_id": "340aca6d0eba",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This includes events that Amazon Macie publishes automatically for new policy findings and sensitive data findings.",
+      "supports": "Finding của Macie tự động vào EventBridge, có thể route tới SNS topic.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/s3-protection.html",
+      "title": "GuardDuty S3 Protection",
+      "section": "Overview",
+      "snapshot_id": "04aaf18dc609",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "S3 Protection helps you detect potential security risks for data, such as data exfiltration and destruction,",
+      "supports": "GuardDuty phát hiện mối đe dọa, không nhận diện dữ liệu nhạy cảm.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html",
+      "title": "What Is AWS Config?",
+      "section": "What Is AWS Config?",
+      "snapshot_id": "19eb8056b939",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Config provides a detailed view of the configuration of AWS resources in your AWS account.",
+      "supports": "AWS Config tập trung vào cấu hình tài nguyên, không quét nội dung dữ liệu.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/findings-monitor-events-eventbridge.html",
+      "title": "Processing Macie findings with Amazon EventBridge",
+      "section": "Overview",
+      "snapshot_id": "340aca6d0eba",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can create a rule that automatically sends new high-severity findings to an Amazon SNS topic",
+      "supports": "EventBridge rule có thể gửi finding của Macie tới SNS topic có sẵn (phần SNS của C).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:23Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q036:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key C; thêm ref5 (Macie EventBridge -> SNS topic) làm bằng chứng trực tiếp cho phần thông báo của C; status verified (high).",
+      "previous_answer": [
+        "Q036:C"
+      ]
+    }
+  ]
+}

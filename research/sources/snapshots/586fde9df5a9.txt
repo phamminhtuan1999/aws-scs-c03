@@ -1,0 +1,93 @@
+URL: https://docs.aws.amazon.com/singlesignon/latest/userguide/multi-region-iam-identity-center.html
+TITLE: Using IAM Identity Center across multiple AWS Regions - AWS IAM Identity Center
+
+# Using IAM Identity Center across multiple AWS Regions
+
+This topic explains how to use AWS IAM Identity Center across multiple AWS Regions. Learn how to replicate
+your instance
+to additional Regions, manage workforce access and sessions, deploy applications, and maintain
+account access
+during service disruptions.
+
+When you enable an organization instance of IAM Identity Center, you choose a single AWS Region (primary
+Region). You can replicate this instance to additional AWS Regions during instance creation
+or after, if it meets certain prerequisites. IAM Identity Center automatically replicates workforce identities,
+permission sets, user and group assignments, sessions, and other metadata from the primary Region
+to the chosen additional Regions.
+
+## Benefits of multi-Region support
+
+Replicating IAM Identity Center to additional AWS Regions provides two key benefits:
+
+- Improved resiliency of AWS account access – Your
+workforce can access their AWS accounts even if the IAM Identity Center instance experiences a service
+disruption in its primary Region. This applies to access with permissions provisioned
+before the disruption.
+
+- Enhanced flexibility in choosing deployment Regions for
+AWS managed applications – You can deploy AWS managed applications in your
+preferred Regions to meet application data residency requirements and improve performance
+through proximity to users. Applications deployed in additional Regions access replicated
+workforce identities locally for optimal performance and reliability.
+
+## Prerequisites and considerations
+
+Before you replicate your IAM Identity Center instance, ensure the following requirements are met:
+
+- Instance type - Your IAM Identity Center instance must be an organization instance.
+Multi-Region support is not available in account instances.
+
+- Identity source - Your IAM Identity Center instance must be
+connected to an external identity provider (IdP), such as Okta, or use the Identity Center directory as the identity source. Multi-Region support is not available for
+instances that use Active Directory as the identity source.
+
+- AWS Regions - Multi-Region support is available in commercial
+Regions enabled by default in your AWS account. Opt-in Regions are not currently
+supported.
+
+- KMS key type for encryption at rest - Your IAM Identity Center
+instance must be configured with a multi-Region customer managed
+KMS key. The KMS key must be located in the same AWS account as IAM Identity Center. For more
+information, see Implementing customer managed KMS keys in AWS IAM Identity Center.
+
+- AWS managed application compatibility - Visit the
+application table in
+AWS managed applications that you can use with IAM Identity Center
+to confirm the following two application requirements:
+
+- All AWS managed applications that are in use by your organization must support IAM Identity Center
+that is configured with a customer managed KMS key.
+
+- The AWS managed applications that you want to deploy in additional Regions must support
+this type of deployment.
+
+- External IdP compatibility (external identity providers only) - If you use an external identity provider, the
+IdP must support multiple assertion consumer service
+(ACS) URLs to fully take advantage of multi-Region support. This is a SAML feature that is supported by IdPs such as Okta, Microsoft Entra ID,
+PingFederate, PingOne, and JumpCloud.
+
+If you use an IdP that doesn't support multiple ACS URLs, such as Google Workspace, we recommend
+that you work with your IdP vendor to enable this feature. This prerequisite does not apply when using the Identity Center directory as the identity source. For options that are available without multiple ACS URLs, see Using AWS managed applications without multiple ACS URLs and AWS account access resiliency without multiple ACS URLs.
+
+## Choosing an additional Region
+
+When choosing an additional Region among commercial Regions enabled by default, consider these
+factors:
+
+- Compliance requirements – If you need to run AWS
+managed applications that access datasets limited to a specific Region for compliance
+reasons, choose the Region where the datasets reside.
+
+- Performance optimization – If data residency isn't a
+factor, select a Region closest to your application users to optimize their experience.
+
+- Application support – Verify that your required AWS
+applications are available in your chosen Region.
+
+- AWS account access resiliency – For continuity of
+access to AWS accounts, choose a Region geographically distant from the primary Region
+of your IAM Identity Center instance.
+
+Note
+
+IAM Identity Center has a quota on the number of AWS Regions. For more information, see Additional quotas.

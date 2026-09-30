@@ -1,0 +1,249 @@
+{
+  "question_id": "Q054",
+  "question_content_hash": "82acaa06ba017bb7d9fb8dcac3d6bef7c14f866fa2dbf6bc3cb1087a217d09f5",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:24Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema (RESEARCH_FORMAT.md, SOURCE_FACTS.md), research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Công ty đã dùng IAM Identity Center (organization instance) trong AWS Organizations.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Các bước cần làm TRƯỚC khi cấu hình delegated administration cho IAM Identity Center.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn 3 đáp án.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q054:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Best practice trước khi cấu hình delegated administration: giới hạn quyền truy cập management account ở mức tối thiểu (least privilege).",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q054:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Instance IAM Identity Center của organization đã tồn tại và luôn nằm trong management account; không cần tạo directory mới và đây không phải điều kiện tiên quyết.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref5",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q054:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Thêm Region là tính năng replicate để tăng resiliency, không nằm trong best practices hay prerequisites của delegated administration.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q054:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Best practice: dùng permission set riêng (dedicated) cho management account, vì delegated admin không thể sửa permission set đã provision trong management account.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q054:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tạo IAM user trái với best practice dùng federation/temporary credentials cho người dùng và không liên quan tới cấu hình delegated administration.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q054:F",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Best practice: gán trực tiếp user (không gán group) vào permission set có quyền truy cập management account; lựa chọn diễn đạt hơi khác nhưng khớp khuyến nghị gán user cho management account.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q054:A",
+      "Q054:D",
+      "Q054:F"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Mục Best practices của trang Delegated administration liệt kê đúng ba bước: least privilege cho management account, dedicated permission sets, và chỉ gán user (không group) cho management account.",
+      "open_issues": [
+        "Lựa chọn F diễn đạt 'Create user assignments only in the management account' không trùng từng chữ với 'Assign users only (not groups) to permission sets in the management account'."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref3",
+      "ref8",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:46:24Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html",
+      "title": "Delegated administration - AWS IAM Identity Center",
+      "section": "Best practices",
+      "snapshot_id": "c660f387fb6b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Here are some best practices to consider before you configure delegated administration: - Grant least privilege to the management account",
+      "supports": "Bước 1 trước khi cấu hình: least privilege cho management account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html",
+      "title": "Delegated administration - AWS IAM Identity Center",
+      "section": "Introduction",
+      "snapshot_id": "c660f387fb6b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Even though your IAM Identity Center instance must always reside in the management account",
+      "supports": "Instance đã nằm trong management account; không cần tạo mới.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html",
+      "title": "Delegated administration - AWS IAM Identity Center",
+      "section": "Best practices",
+      "snapshot_id": "c660f387fb6b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Dedicated permission sets for the management account – Use dedicated permission sets for the management account.",
+      "supports": "Bước 2: permission set riêng cho management account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html",
+      "title": "Delegated administration - AWS IAM Identity Center",
+      "section": "Prerequisites",
+      "snapshot_id": "c660f387fb6b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Organizations must be enabled and configured with at least one member account in addition to your default management account.",
+      "supports": "Prerequisites không bao gồm tạo directory mới, thêm Region hay IAM user.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/identity-center-instances.html",
+      "title": "Organization and account instances of IAM Identity Center",
+      "section": "Organization instance",
+      "snapshot_id": "8d883c0461f9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An instance of IAM Identity Center that you enable in the AWS Organizations management account.",
+      "supports": "Organization instance được bật sẵn trong management account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/multi-region-iam-identity-center.html",
+      "title": "Using IAM Identity Center across multiple AWS Regions",
+      "section": "Benefits of multi-Region support",
+      "snapshot_id": "586fde9df5a9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Improved resiliency of AWS account access",
+      "supports": "Multi-Region phục vụ resiliency, không phải điều kiện cho delegated admin.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html",
+      "title": "Security best practices in IAM",
+      "section": "Topics",
+      "snapshot_id": "081fe26e1732",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Require human users to use federation with an identity provider to access AWS using temporary credentials",
+      "supports": "Không nên tạo IAM user cho người dùng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html",
+      "title": "Delegated administration - AWS IAM Identity Center",
+      "section": "Best practices",
+      "snapshot_id": "c660f387fb6b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Assign users only (not groups) to permission sets in the management account",
+      "supports": "Bước 3: chỉ gán user cho permission set của management account.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q054:F",
+      "detail_vi": "Cách diễn đạt 'Create user assignments only in the organization’s management account' không rõ nghĩa ('only' đặt sai chỗ); ý đúng theo tài liệu là chỉ gán user (không group) cho management account."
+    }
+  ]
+}

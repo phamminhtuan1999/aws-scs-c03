@@ -1,0 +1,227 @@
+URL: https://docs.aws.amazon.com/drs/latest/userguide/CloudEndure-Concepts.html
+TITLE: Elastic Disaster Recovery Concepts - AWS Elastic Disaster Recovery
+
+# Elastic Disaster Recovery Concepts
+
+## What is the Recovery Time Objective (RTO) of Elastic Disaster Recovery?
+
+The Recovery Time Objective (RTO) of Elastic Disaster Recovery is typically measured in
+minutes. The RTO is highly dependent on the OS boot time.
+
+A: When launching a recovery job, the AWS DRS orchestration process creates cloned
+volumes by using the replicated volumes in the replication staging area. During
+this process, AWS DRS also initiates a process that converts all volumes that
+originated outside of AWS into AWS-compatible volumes, which are attached to EC2
+instances that can boot natively on AWS. The job and boot time depend on the
+following environment conditions:
+
+- OS type: The average recovered Linux server normally boots within 5 minutes, while the
+average recovered Windows server normally boots within 20 minutes because it is tied to the
+more resource-intensive Windows boot process.
+
+- OS configuration: The OS configuration and application components it runs can impact the
+boot time. For example, some servers run heavier workloads and start additional services
+when
+booted, which may increase their total boot time.
+
+- Target instance performance: AWS DRS sets a default instance type based on the CPU and RAM
+provisioned on the source server. Changing to a lower performance instance type will result
+in a slower boot time than that of a higher performance instance type.
+
+- Target volume performance: Using a lower performance volume type will result in a slower
+boot time than that of a higher performance volume type with more provisioned IOPS.
+
+## What is the Recovery Point Objective (RPO) of Elastic Disaster Recovery?
+
+The Recovery Point Objective (RPO) of Elastic Disaster Recovery is typically in the
+sub-second range.
+
+AWS Elastic Disaster Recovery (AWS DRS) provides continuous block-level replication, recovery
+orchestration, and automated server conversion capabilities. These allow customers
+to achieve a crash-consistent recovery point objective (RPO) of seconds, and a
+recovery time objective (RTO) typically ranging between 5–20 minutes. Below is an
+explanation of how RPO and RTO are measured, how AWS DRS supports these RPOs and
+RTOs, and what common environment conditions can impact RPO and RTO.
+
+### Recovery Point Objective (RPO)
+
+#### How is RPO measured?
+
+RPO is measured based on the latest point in time in which block data was written to the
+source server volume(s) and successfully copied in a crash-consistent state into the
+replication staging area located in the customer’s target AWS account.
+
+#### How does AWS DRS allow an RPO of seconds?
+
+The AWS Replication Agent continuously monitors the blocks written to the
+source server volume(s), and immediately attempts to copy the blocks across
+the network and into the replication staging area subnet located in the
+customer’s target AWS account. This continuous replication approach allows
+an RPO of seconds as long as the written data can be immediately copied
+across the network and into the replication Staging Area volumes.
+
+Important
+
+A crash-consistent recovery point allows the successful recovery of
+crash-consistent applications, such as databases. The recovery point
+will include any data that has been successfully written to the source
+server volume(s). Application data that is kept in memory is not
+replicated to the target replication Staging Area until it is written to
+the source server volume(s). Therefore, if a disruption occurs before
+in-memory application data is written to the volume(s), this data will
+not be available on the target server when launched for test or recovery
+purposes.
+
+#### What environment conditions can impact the ability to achieve a typical RPO of seconds?
+
+To achieve an RPO of seconds, AWS Elastic Disaster Recovery primarily requires that the outbound network, inbound
+network, and staging area resources must allow data to be copied across the network and
+written to the target environment faster than the rate at which it is written to the source
+volume(s). In the case that block writes burst at faster rates than these components can
+support, the RPO will temporarily increase until the data replication can catch up, at which
+point the RPO will return to seconds. Examples:
+
+- Outbound network: If a source server writes block data at a rate
+of 10 MB/second, the outbound network bandwidth must also support a
+rate of at least 10 MB/second in order to maintain a seconds RPO. If
+the source network contains 10 servers that each write at an average
+rate of 10 MB/second, the total bandwidth will need to support a
+rate of at least 100 MB/second in order to allow a seconds RPO.
+
+- Inbound network: Once the replicated data is sent from the source network, it must
+enter the target network at a rate greater to that at which the data is written to the
+source servers and sent from the source network in order to maintain a seconds RPO.
+
+- Staging area resources: When the data arrives to the target network, it is received by
+the AWS DRS replication server instance(s), which in turn writes the replicated data to
+attached
+EBS volumes. Both the replication server instance(s) and attached Amazon EBS volumes must allow
+the
+data to be written at a rate faster than that at which it is written to the source
+servers
+and sent by the source network in order to maintain an RPO of seconds.
+
+#### What happens if the block data written to the source volume(s) cannot be sent immediately to the target replication Staging Area Subnet?
+
+If the block data written on the source volume(s) cannot be sent immediately to the
+target replication Staging Area, the RPO will increase until the data can be flushed across
+the network. During this time, you will still be able to recover your server(s), but to a
+recovery point older than seconds, in accordance with the increase in RPO. The RPO represents
+the latest crash-consistent point in time during which data was replicated.
+
+## What are Point in Time Snapshots?
+
+Point in Time (PIT) Snapshots are an AWS Elastic Disaster Recovery feature which allows launching a Recovery Instance of a Source Server from a set of EBS Snapshots
+captured at a specific moment in time. The PIT Snapshot is a crash-consistent recovery point of your Source Server, and represent
+your Recovery Point Objective (RPO). After Source Servers complete Initial Sync and
+maintain Healthy replication status,
+Point in Time states are automatically created and stored in accordance to your snapshot retention policy.
+
+Each PIT Snapshot for a Source Server consists of one or more EBS Snapshots;
+one EBS snapshot for each volume being replicated. See below for where the EBS snapshots are stored:
+
+Replication Strategy
+
+Replication Target
+
+EBS Snapshot S3 Region
+
+EBS Snapshot Account
+
+Single Account
+
+Any Region
+
+Same Region as Replication Target
+
+Same AWS Account
+
+Extended Account
+
+Any Region
+
+Same Region as Replication Target
+
+Staging Account
+
+Multi-Account
+
+Any Region
+
+Same Region as Replication Target
+
+Target Account
+
+Reverse Replication
+
+Any Region
+
+Same Region as Source
+
+Source Account
+
+Any
+
+Outpost
+
+Stored locally on Outpost
+
+Outpost Account
+
+### What is the PIT Snapshot Retention Rate?
+
+Elastic Disaster Recovery has the following default PIT Snapshot frequency and retention schedule:
+
+- Minute - 1 PIT Snapshot per 10 minutes for the prior 1 hour.
+
+- Hour - 1 PIT Snapshot per 1 hour for the prior 24 hours.
+
+- Day - 1 PIT Snapshot per 1 day for the prior 7 days.
+
+### Can I adjust the PIT Snapshot Retention Rate?
+
+You can only adjust the Day PIT Snapshot retention limit from
+1 day through 365 days in the replication settings. As each PIT Snapshot consists of one or more EBS snapshots,
+increasing the PIT Snapshot retention rate can result in additional EBS costs.
+The frequency (i.e. how often) that AWS Elastic Disaster Recovery creates snapshots are not configurable.
+Learn more about managing Point in Time retention.
+
+### What is "Use most recent data"?
+
+"Use most recent data" is a feature available when selecting a PIT Snapshot from the AWS Elastic Disaster Recovery console
+during a Recovery Drill or Recovery.
+It is implicitly used when a Recovery Drill
+or Recovery is started programmatically (e.g. AWS CLI) without specifying a PIT Snapshot.
+When used, AWS Elastic Disaster Recovery will attempt to create an on-demand PIT Snapshot of all Source Servers within the Recovery Job,
+representing a sub-second RPO of the Source Server. This PIT Snapshot will be consistent to the
+time the Recovery Job was submitted.
+
+DRS requires an active network connection to the Source Server to successfully create this new PIT Snapshot.
+AWS Elastic Disaster Recovery may be unable to create this PIT Snapshot for various reasons, and will wait for up to 10 minutes for this
+new PIT Snapshot to be created. If DRS is unable to create this PIT Snapshot, it will use a snapshot based on the
+last consistent state from data on the Replication Server.
+Reasons why "Use most recent data" may fail to successfully create a PIT Snapshot include:
+
+- Unable to communicate with the Source Server.
+
+- Unable to transfer all changes present on the Source Server within the timeout window.
+
+As "Use most recent data" requires an active network connection to the Source Server to create a new PIT Snapshot,
+there may be circumstances (e.g Source Server is offline) where your RTO will be shortened by selecting an existing PIT Snapshot
+rather than waiting for "Use most recent data" to timeout.
+
+### What is "Any" and "All" in Point in Time Snapshot selection?
+
+The Any and All selection
+criteria are available in the AWS Elastic Disaster Recovery Console when selecting a Point in Time Snapshot for a job
+that contains multiple Source Servers.
+
+- Any - Displays all of the PIT Snapshots
+available for all of the selected source servers. AWS Elastic Disaster Recovery will launch a drill
+instance for each source server that has a PIT snapshot taken at the chosen time. For any Source
+Server that does not have a corresponding PIT snapshot taken at the chosen time, a previous PIT Snapshot
+will be used.
+
+- All - Displays only PIT Snapshots that
+all selected Source Servers share. If there are no points in time that include all Source Servers,
+the list will be empty.

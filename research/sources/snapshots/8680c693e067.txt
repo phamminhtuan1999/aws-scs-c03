@@ -1,0 +1,2376 @@
+URL: https://docs.aws.amazon.com/awssupport/latest/user/security-checks.html
+TITLE: Security - AWS Support
+
+# Security
+
+You can use the following checks for the security category.
+
+Note
+
+If you enabled Security Hub CSPM for your AWS account, you can view your findings in the
+Trusted Advisor console. For information, see Viewing AWS Security Hub CSPM controls in AWS Trusted Advisor.
+
+You can view all controls in the AWS Foundational Security Best Practices security
+standard except for controls that have the Category:
+Recover > Resilience. For a list of supported controls, see AWS
+Foundational Security Best Practices controls in the AWS Security Hub CSPM
+User Guide.
+
+Check names
+
+- Application Load Balancer security group
+
+- Amazon CloudWatch Log Group Retention Period
+
+- Amazon EC2 instances with Microsoft SQL Server end of support
+
+- Amazon EC2 instances with Microsoft Windows Server end of support
+
+- Amazon EC2 instances with Ubuntu LTS end of standard support
+
+- Amazon EFS clients not using data-in-transit encryption
+
+- Amazon EBS Public Snapshots
+
+- Amazon RDS Aurora storage encryption is turned off
+
+- Amazon RDS engine minor version upgrade is required
+
+- Amazon RDS Public Snapshots
+
+- Amazon RDS Security Group Access Risk
+
+- Amazon RDS storage encryption is turned off
+
+- Amazon Route 53 mismatching CNAME records pointing directly to S3 buckets
+
+- Amazon Route 53 MX Resource Record Sets and Sender Policy Framework
+
+- Amazon S3 Bucket Permissions
+
+- Amazon VPC Peering Connections with DNS Resolution Disabled
+
+- Application Load Balancer Target Groups Encrypted Protocol
+
+- AWS Backup Vault Without Resource-based Policy to Prevent Deletion of Recovery Points
+
+- AWS CloudTrail Management Event Logging
+
+- AWS Lambda Functions Using Deprecated Runtimes
+
+- AWS Well-Architected high risk issues for security
+
+- CloudFront Custom SSL Certificates in the IAM Certificate Store
+
+- CloudFront SSL Certificate on the Origin Server
+
+- ELB Listener Security
+
+- Classic Load Balancer Security Groups
+
+- Exposed Access Keys
+
+- IAM Access Key Rotation
+
+- IAM Access Analyzer External Access
+
+- IAM Password Policy
+
+- IAM SAML 2.0 Identity Provider
+
+- MFA on root account
+
+- Root User Access Key
+
+- Security Groups – Specific Ports Unrestricted
+
+- Security Groups – Unrestricted Access
+
+## Application Load Balancer security group
+
+Description
+
+Checks the security groups attached to the Application Load Balancer and its Amazon EC2 targets. Application Load Balancer security groups should only allow inbound ports that are configured in a listener. A target's security groups should not accept direct connections from the internet in the same port the target receives traffic from the load balancer.
+
+If a security group allows access to ports that are not configured for the load balancer or allows direct access to targets, the risk of loss of data or malicious attacks increases.
+
+This check excludes the following groups:
+
+- Target Groups that are not associated with IP addresses or EC2 instances.
+
+- Security group rules for IPv6 traffic.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+8604e947f2
+
+Alert Criteria
+
+- Red: Target has a public IP and a security group that allows inbound connections on the target control port from everywhere (0.0.0.0/0).
+
+- Red: Target has a public IP and a security group that allows inbound connections on the traffic port from everywhere (0.0.0.0/0).
+
+- Red: Application Load Balancer has authentication enabled and target allows inbound connections on the traffic port from everywhere (0.0.0.0/0).
+
+- Yellow: Target's security group allow inbound connections on the traffic port from everywhere (0.0.0.0/0).
+
+- Yellow: Target's security group allow inbound connections on the target control port from everywhere (0.0.0.0/0).
+
+- Yellow: Application Load Balancer security group allow inbound connections on ports that don't have a corresponding listener.
+
+- Yellow: Target's security group allow inbound connections on the target control port from a security group that is not attached to Application Load Balancer.
+
+- Green: Application Load Balancer security group only allows inbound connections on ports that match with a listener.
+
+Recommended Action
+
+For improved security, make sure that your security groups only allow the necessary traffic flows:
+
+- The Application Load Balancer's security groups should allow inbound connections only for the same ports configured in its listeners.
+
+- Use exclusive security groups for load balancers and targets.
+
+- Target security groups should allow connections in the traffic port only from the load balancer(s) it’s associated with.
+
+- Target security groups should allow connections in the target control port only from the load balancer(s) it's associated with.
+
+Additional Resources
+
+- Control traffic to your AWS resources using security groups
+
+- Security groups for your Application Load Balancer
+
+Report columns
+
+- Status
+
+- Region
+
+- Target Group
+
+- ALB Name
+
+- ALB SG ID
+
+- Target SG ID
+
+- Auth Enabled
+
+- Last Updated Time
+
+## Amazon CloudWatch Log Group Retention Period
+
+Description
+
+Checks if Amazon CloudWatch log group retention period is set to 365 days or other
+specified number.
+
+By default, logs are kept indefinitely and never expire. However, you can
+adjust the retention policy for each log group to comply with industry
+regulations or legal requirements for a specific period.
+
+You can specify the minimum retention time and log group names using the
+LogGroupNames and
+MinRetentionTime parameters in your AWS Config
+rules.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+c18d2gz186
+
+Source
+
+AWS Config Managed Rule: cw-loggroup-retention-period-check
+
+Alert Criteria
+
+Yellow: Retention period of an Amazon CloudWatch log group is less than the desired
+minimum number of days.
+
+Recommended Action
+
+Configure a retention period of more than 365 days for your log data
+stored in Amazon CloudWatch Logs to meet compliance requirements.
+
+For more information, see Change log data retention in CloudWatch Logs.
+
+Additional Resources
+
+Altering CloudWatch log retention
+
+Report columns
+
+- Status
+
+- Region
+
+- Resource
+
+- AWS Config Rule
+
+- Input Parameters
+
+- Last Updated Time
+
+## Amazon EC2 instances with Microsoft SQL Server end of support
+
+Description
+
+Checks the SQL Server versions for Amazon Elastic Compute Cloud (Amazon EC2) instances running in the past 24 hours. This check alerts you if the versions are near or have reached the end of support. Each SQL Server version offers 10 years of support, including 5 years of mainstream support and 5 years of extended support. After the end of support, the SQL Server version won’t receive regular security updates. Running applications with unsupported SQL Server versions can bring security or compliance risks.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+Qsdfp3A4L3
+
+Alert Criteria
+
+- Red: An EC2 instance has an SQL Server version that reached the
+end of support.
+
+- Yellow: An EC2 instance has an SQL Server version that will reach
+the end of support in 12 months.
+
+Recommended Action
+
+To modernize your SQL Server workloads, consider refactoring to
+AWS Cloud native databases like Amazon Aurora. For more information, see
+Modernize Windows
+Workloads with AWS.
+
+To move to a fully managed database, consider replatforming to Amazon Relational Database Service
+(Amazon RDS). For more information, see Amazon RDS for SQL Server.
+
+To upgrade your SQL Server on Amazon EC2, consider using the automation runbook
+to simplify your upgrade. For more information, see the AWS Systems Manager documentation.
+
+If you can’t upgrade your SQL Server on Amazon EC2, consider the
+End-of-Support Migration Program (EMP) for Windows Server. For more
+information, see the EMP
+Website.
+
+Additional Resources
+
+- Get ready for SQL
+Server end of support with AWS
+
+- Microsoft SQL Server on
+AWS
+
+Report columns
+
+- Status
+
+- Region
+
+- Instance ID
+
+- SQL Server Version
+
+- Support Cycle
+
+- End of Support
+
+- Last Updated Time
+
+## Amazon EC2 instances with Microsoft Windows Server end of support
+
+Description
+
+This check alerts you if your Microsoft Windows Server versions are near or have reached the end of support. Each Windows Server version offers 10 years of support, including 5 years of mainstream support and 5 years of extended support. After the end of support, the Windows Server version won't receive regular security updates. Running applications with unsupported Windows Server versions can bring security or compliance risks.
+
+Note
+
+This check generates results based on the AMI used to launch the EC2 instance. It's possible for the current instance operating system to be different from its launch AMI. For example, if you launched an instance from a Windows Server 2016 AMI and later upgrade to Windows Server 2019, the launch AMI doesn't change.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+Qsdfp3A4L4
+
+Alert criteria
+
+- Red: An EC2 instance
+runs on
+a Windows Server version that reached the end of support (Windows
+Server 2003, 2003 R2, 2008, and 2008 R2).
+
+- Yellow: An EC2 instance runs on a Windows Server version that will
+reach the end of support in less than 18 months (Windows Server 2012
+and 2012 R2).
+
+Recommended action
+
+To modernize your Windows Server workloads, consider the various options
+available on Modernize
+Windows Workloads with AWS.
+
+To upgrade your Windows Server workloads to run on
+more
+recent versions of Windows Server, you can use an
+automation runbook. For more information, see the AWS Systems
+Manager documentation.
+
+Complete the following steps:
+
+- Upgrade the Windows Server version
+
+- Hard stop and start upon upgrading
+
+- If using EC2Config, migrate to EC2Launch
+
+Report columns
+
+- Status
+
+- Region
+
+- Instance ID
+
+- Windows Server Version
+
+- Support Cycle
+
+- End of Support
+
+- Last Updated Time
+
+## Amazon EC2 instances with Ubuntu LTS end of standard support
+
+Description
+
+This check alerts you if the versions are near or have reached the end of
+standard support. It is important to take action – either by migrating to
+the next LTS or upgrading to Ubuntu Pro. After the end of support, your
+18.04 LTS machines will not receive any security updates. With an Ubuntu Pro
+subscription, your Ubuntu 18.04 LTS deployment can receive Expanded Security
+Maintenance (ESM) until 2028. Security vulnerabilities that remain unpatched
+open your systems to hackers and the potential of a major breach.
+
+Note
+
+Results for this check are automatically refreshed at least once daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+c1dfprch15
+
+Alert Criteria
+
+Red: An
+Amazon EC2
+instance has an Ubuntu version that reached the end of standard support
+(Ubuntu 18.04 LTS, 18.04.1 LTS, 18.04.2 LTS, 18.04.3 LTS, 18.04.4 LTS,
+18.04.5 LTS, and 18.04.6 LTS).
+
+Yellow: An
+Amazon EC2
+instance has an Ubuntu version that will reach the end of standard support
+in less than 6 months (Ubuntu 20.04 LTS, 20.04.1 LTS, 20.04.2 LTS, 20.04.3
+LTS, 20.04.4 LTS, 20.04.5 LTS, and 20.04.6 LTS).
+
+Green: All
+Amazon EC2
+instances are compliant.
+
+Recommended Action
+
+To upgrade the Ubuntu 18.04 LTS instances to a supported LTS version,
+please follow the steps mentioned in this
+article. To upgrade the Ubuntu 18.04 LTS instances to Ubuntu Pro, visit
+AWS License Manager
+console and follow the steps mentioned in the AWS License Manager
+user guide. You can also refer to the Ubuntu blog showing a step by step demo of upgrading Ubuntu
+instances to Ubuntu Pro.
+
+Additional Resources
+
+For information about pricing, reach out to Support.
+
+Report columns
+
+- Status
+
+- Region
+
+- Ubuntu Lts Version
+
+- Expected End Of Support Date
+
+- Instance ID
+
+- Support Cycle
+
+- Last Updated Time
+
+## Amazon EFS clients not using data-in-transit encryption
+
+Description
+
+Checks if
+Amazon EFS
+file system is mounted using data-in-transit encryption.
+AWS
+recommends
+that customers use data-in-transit encryption for all data
+flows to protect data from accidental exposure or unauthorized access.
+Amazon EFS
+recommends clients use the ‘-o tls’ mount setting using the
+Amazon EFS
+mount helper to encrypt data in transit using TLS v1.2.
+
+Check ID
+
+c1dfpnchv1
+
+Alert Criteria
+
+Yellow: One or more NFS clients for your
+Amazon EFS
+file system are not using the recommended mount settings that provide
+data-in-transit encryption.
+
+Green: All NFS clients for your
+Amazon EFS
+file system are using the recommended mount settings that provide
+data-in-transit encryption.
+
+Recommended Action
+
+To take advantage of data-in-transit encryption feature on
+Amazon EFS,
+we recommend that you remount your file system using the
+Amazon EFS
+mount helper and the recommended mount settings.
+
+Note
+
+Some Linux distributions don't include a version of stunnel that
+supports TLS features by default. If you're using an unsupported Linux
+distribution (see Supported distributions in the Amazon Elastic File System User Guide), then it's a best practice that you upgrade it before
+remounting with the recommended mount setting.
+
+Additional Resources
+
+- Encrypting data
+in transit
+
+Report columns
+
+- Status
+
+- Region
+
+- EFS File System ID
+
+- AZs with Unencrypted Connections
+
+- Last Updated Time
+
+## Amazon EBS Public Snapshots
+
+Description
+
+Checks the permission settings for your Amazon Elastic Block Store (Amazon EBS) volume snapshots
+and alerts you if any snapshots are publicly accessible.
+
+When you make a snapshot public, you give all AWS accounts and users
+access to all the data on the snapshot. To share a snapshot only
+with specific users or accounts, mark the snapshot as private. Then, specify
+the user or accounts that you want to share the snapshot data with. Note
+that if you have Block Public Access enabled in ‘block all sharing’ mode, then
+your public snapshots aren't publicly accessible and don't appear
+in the results of this check.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+Check ID
+
+ePs02jT06w
+
+Alert Criteria
+
+Red: The EBS volume snapshot is publicly accessible.
+
+Recommended Action
+
+Unless you are certain that you want to share all the data in the snapshot with
+all AWS accounts and users, modify the permissions: mark the snapshot as
+private, and then specify the accounts that you want to give permissions to.
+For more information, see Sharing an Amazon EBS Snapshot. Use Block Public Access for EBS
+Snapshots to control the settings that allow public access to your data.
+This check can't be excluded from view in the Trusted Advisor console.
+
+To modify permissions for your snapshots directly, use a runbook
+in the AWS Systems Manager console. For more information, see AWSSupport-ModifyEBSSnapshotPermission.
+
+Additional Resources
+
+Amazon EBS
+Snapshots
+
+Report columns
+
+- Status
+
+- Region
+
+- Volume ID
+
+- Snapshot ID
+
+- Description
+
+## Amazon RDS Aurora storage encryption is turned off
+
+Description
+
+Amazon RDS supports encryption at rest for all the database engines by using
+the keys that you manage in AWS Key Management Service. On an active DB instance with Amazon RDS
+encryption, the data stored at rest in the storage is encrypted, similar to
+automated backups, read replicas, and snapshots.
+
+If encryption isn't turned on while creating an Aurora DB cluster, then you
+must restore a decrypted snapshot to an encrypted DB cluster.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Note
+
+When a DB instance or DB cluster is stopped, you can view the Amazon RDS recommendations in Trusted Advisor for 3 to 5 days. After five days, the recommendations are not available in Trusted Advisor. To view the recommendations, open the Amazon RDS console, and then choose Recommendations.
+
+If you delete a DB instance or DB cluster, then recommendations associated with those instances or clusters are not available in Trusted Advisor or the Amazon RDS management console.
+
+Note
+
+This check relies on Amazon RDS Recommendations. This check doesn't
+evaluate DB instances in AWS Regions where Amazon RDS Recommendations
+isn't available. For information about regional availability, see
+Viewing and responding to Amazon RDS
+recommendations.
+
+Check ID
+
+c1qf5bt005
+
+Alert Criteria
+
+Red: Amazon RDS Aurora resources don't have encryption enabled.
+
+Recommended Action
+
+Turn on encryption of data at rest for your DB cluster.
+
+Additional Resources
+
+You can turn on encryption while creating a DB instance or use a
+workaround to turn on the encryption on an active DB instance. You can't
+modify a decrypted DB cluster to an encrypted DB cluster. However, you can
+restore a decrypted snapshot to an encrypted DB cluster. When you restore
+from the decrypted snapshot, you must specify a AWS KMS key.
+
+For more information, see Encrypting Amazon Aurora resources.
+
+Report columns
+
+- Status
+
+- Region
+
+- Resouce
+
+- Engine Name
+
+- Last Updated Time
+
+## Amazon RDS engine minor version upgrade is required
+
+Description
+
+Your database resources aren't running the latest minor DB engine version.
+The latest minor version contains the latest security fixes and other
+improvements.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Note
+
+When a DB instance or DB cluster is stopped, you can view the Amazon RDS recommendations in Trusted Advisor for 3 to 5 days. After five days, the recommendations are not available in Trusted Advisor. To view the recommendations, open the Amazon RDS console, and then choose Recommendations.
+
+If you delete a DB instance or DB cluster, then recommendations associated with those instances or clusters are not available in Trusted Advisor or the Amazon RDS management console.
+
+Note
+
+This check relies on Amazon RDS Recommendations. This check doesn't
+evaluate DB instances in AWS Regions where Amazon RDS Recommendations
+isn't available. For information about regional availability, see
+Viewing and responding to Amazon RDS
+recommendations.
+
+Check ID
+
+c1qf5bt003
+
+Alert Criteria
+
+Yellow: Amazon RDS resources aren't running the latest minor DB engine version.
+
+Recommended Action
+
+Upgrade to the latest engine version.
+
+Additional Resources
+
+We recommend that you maintain your database with the latest DB engine
+minor version as this version includes the latest security and functionality
+fixes. The DB engine minor version upgrades contain only the changes which
+are backward-compatible with earlier minor versions of the same major
+version of the DB engine.
+
+For more information, see Upgrading a DB instance engine version.
+
+Report columns
+
+- Status
+
+- Region
+
+- Resouce
+
+- Engine Name
+
+- Engine Version Current
+
+- Recommended Value
+
+- Last Updated Time
+
+## Amazon RDS Public Snapshots
+
+Description
+
+Checks the permission settings for your Amazon Relational Database Service (Amazon RDS) DB snapshots and
+alerts you if any snapshots are marked as public.
+
+When you make a snapshot public, you give all AWS accounts and users
+access to all the data on the snapshot. If you want to share a snapshot only
+with specific users or accounts, mark the snapshot as private. Then, specify
+the user or accounts you want to share the snapshot data with.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+Check ID
+
+rSs93HQwa1
+
+Alert Criteria
+
+Red: The Amazon RDS snapshot is marked as public.
+
+Recommended Action
+
+Unless you are certain you want to share all the data in the snapshot with
+all AWS accounts and users, modify the permissions: mark the snapshot as
+private, and then specify the accounts that you want to give permissions to.
+For more information, see Sharing a DB
+Snapshot or DB Cluster Snapshot. This check can't be excluded
+from view in the Trusted Advisor console.
+
+To modify permissions for your snapshots directly, you can use a runbook
+in the AWS Systems Manager console. For more information, see AWSSupport-ModifyRDSSnapshotPermission.
+
+Additional Resources
+
+Backing Up and Restoring Amazon RDS DB Instances
+
+Report columns
+
+- Status
+
+- Region
+
+- DB Instance or Cluster ID
+
+- Snapshot ID
+
+## Amazon RDS Security Group Access Risk
+
+Description
+
+Checks security group configurations for Amazon Relational Database Service (Amazon RDS) and warns when
+a security group rule grants overly permissive access to your database. The
+recommended configuration for a security group rule is to allow access only
+from specific Amazon Elastic Compute Cloud (Amazon EC2) security groups or from a specific IP
+address.
+
+Note
+
+This check evaluates only security groups that are attached toAmazon RDS
+instances running outside on an Amazon VPC.
+
+Check ID
+
+nNauJisYIT
+
+Alert Criteria
+
+- Yellow: A DB security group rule references an Amazon EC2 security
+group that grants global access on one of these ports: 20, 21, 22,
+1433, 1434, 3306, 3389, 4333, 5432, 5500.
+
+- Red: A DB security group rule grants global access (the CIDR rule
+suffix is /0).
+
+- Green: A DB security group doesn't include permissive
+rules.
+
+Recommended Action
+
+EC2-Classic was retired on August 15, 2022. It's recommend to move your
+Amazon RDS instances to a VPC and use Amazon EC2 security groups. For more information
+of moving your DB instance to a VPC see Moving a DB instance not in a VPC into a VPC.
+
+If
+you are unable to migrate your Amazon RDS instances to a VPC, then
+review
+your security group rules and restrict access to authorized IP addresses or
+IP ranges. To edit a security group, use the AuthorizeDBSecurityGroupIngress API or the AWS Management Console. For more
+information, see Working with DB Security Groups.
+
+Additional Resources
+
+- Amazon RDS Security Groups
+
+- Classless Inter-Domain Routing
+
+- List of TCP and UDP port numbers
+
+Report columns
+
+- Status
+
+- Region
+
+- RDS Security Group Name
+
+- Ingress Rule
+
+- Reason
+
+## Amazon RDS storage encryption is turned off
+
+Description
+
+Amazon RDS supports encryption at rest for all the database engines by using
+the keys that you manage in AWS Key Management Service. On an active DB instance with Amazon RDS
+encryption, the data stored at rest in the storage is encrypted, similar to
+automated backups, read replicas, and snapshots.
+
+If encryption isn't turned on while creating a DB instance, then you must
+restore an encrypted copy of the decrypted snapshot before you turn on the
+encryption.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Note
+
+When a DB instance or DB cluster is stopped, you can view the Amazon RDS recommendations in Trusted Advisor for 3 to 5 days. After five days, the recommendations are not available in Trusted Advisor. To view the recommendations, open the Amazon RDS console, and then choose Recommendations.
+
+If you delete a DB instance or DB cluster, then recommendations associated with those instances or clusters are not available in Trusted Advisor or the Amazon RDS management console.
+
+Note
+
+This check relies on Amazon RDS Recommendations. This check doesn't
+evaluate DB instances in AWS Regions where Amazon RDS Recommendations
+isn't available. For information about regional availability, see
+Viewing and responding to Amazon RDS
+recommendations.
+
+Check ID
+
+c1qf5bt006
+
+Alert Criteria
+
+Red: Amazon RDS resources don't have encryption enabled.
+
+Recommended Action
+
+Turn on encryption of data at rest for your DB instance.
+
+Additional Resources
+
+You can encrypt a DB instance only when you create the DB instance. To
+encrypt an existing active DB instance:
+
+Create an encrypted copy of the original DB instance
+
+- Create a snapshot of your DB instance.
+
+- Create an encrypted copy of the snapshot created in step 1.
+
+- Restore a DB instance from the encrypted snapshot.
+
+For more information, see the following resources:
+
+- Encrypting Amazon RDS resources
+
+- Copying
+a DB snapshot
+
+Report columns
+
+- Status
+
+- Region
+
+- Resouce
+
+- Engine Name
+
+- Last Updated Time
+
+## Amazon Route 53 mismatching CNAME records pointing directly to S3 buckets
+
+Description
+
+Checks the Amazon Route 53 Hosted Zones with CNAME records pointing directly to
+Amazon S3 bucket hostnames and alerts if your CNAME does not match with your
+S3 bucket name.
+
+Check ID
+
+c1ng44jvbm
+
+Alert Criteria
+
+Red: Amazon Route 53 Hosted Zone has CNAME records pointing to mismatching S3
+bucket hostnames.
+
+Green: No mismatching CNAME records found in your Amazon Route 53 Hosted
+Zone.
+
+Recommended Action
+
+When pointing CNAME records to S3 bucket hostnames, you must make sure
+that a matching bucket exists for any CNAME or alias record you configure.
+By doing this, you avoid the risk of your CNAME records being spoofed. You
+also prevent any unauthorized AWS user from hosting faulty or malicious web
+content with your domain.
+
+To avoid pointing CNAME records directly to S3 bucket hostnames, consider
+using origin access control (OAC) to access your S3 bucket web assets
+through Amazon CloudFront.
+
+For more information about associating CNAME with an Amazon S3 bucket hostname,
+see Customizing Amazon S3 URLs with CNAME records.
+
+Additional Resources
+
+- How to associate a hostname with an Amazon S3 bucket
+
+- Restricting access to an Amazon S3 origin with
+CloudFront
+
+Report columns
+
+- Status
+
+- Hosted Zone ID
+
+- Hosted Zone ARN
+
+- Matching CNAME Records
+
+- Mismatching CNAME Records
+
+- Last Updated Time
+
+## Amazon Route 53 MX Resource Record Sets and Sender Policy Framework
+
+Description
+
+For each MX record, checks for an associated TXT record that contains
+a valid SPF value. The TXT record value must start with “v=spf1". SPF
+record types are deprecated by the Internet Engineering Task Force
+(IETF). With Route 53, I'ts a best practice to use a TXT record instead of
+an SPF record. Trusted Advisor reports this check as green when an MX record
+has at least one associated TXT record with a valid SPF value.
+
+Note
+
+This check reports the resources that are flagged by the criteria and the total number of resources evaluated, including OK resources. The resources table lists only the flagged resources.
+
+Check ID
+
+c9D319e7sG
+
+Alert Criteria
+
+- Green: An MX resource record set has a TXT resource record that
+contains a valid SPF value.
+
+- Yellow: An MX resource record set has a TXT or SPF resource
+record that contains a valid SPF value.
+
+- Red: An MX resource record set doesn't have a TXT or SPF resource
+record that contains a valid SPF value.
+
+Recommended Action
+
+For each MX resource record set, create a TXT resource record set that
+contains a valid SPF value. For more information, see Sender Policy Framework:
+SPF Record Syntax and Creating
+Resource Record Sets By Using the Amazon Route 53 Console.
+
+Additional Resources
+
+- MX record type
+
+- SPF record type
+
+- re:Post Guidance
+
+- RFC
+7208
+
+Report columns
+
+- Hosted Zone Name
+
+- Hosted Zone ID
+
+- Resource Record Set Name
+
+- Status
+
+## Amazon S3 Bucket Permissions
+
+Description
+
+Checks buckets in Amazon Simple Storage Service (Amazon S3) that have open access permissions, or
+that allow access to any authenticated AWS user.
+
+This check examines explicit bucket permissions, as well as bucket
+policies that might override those permissions. Granting list access
+permissions to all users for an Amazon S3 bucket is not recommended. These
+permissions can lead to unintended users listing objects in the bucket at
+high frequency, which can result in higher than expected charges.
+Permissions that grant upload and delete access to everyone can lead to
+security vulnerabilities in your bucket.
+
+Check ID
+
+Pfx0RwqBli
+
+Alert criteria
+
+- Red: The bucket ACL allows List access or Upload/Delete access for Everyone or Any Authenticated AWS User and Block Public Access settings are not enabled.
+
+- Red: A bucket policy allows public access and Block Public Access settings are not enabled.
+
+- Red: Trusted Advisor does not have permission to check the policy, or the policy could not be evaluated for other reasons.
+
+- Yellow: A bucket policy allows public access, but the Restrict Public Buckets setting is turned on and restricts access to only authorized users of that account.
+
+- Yellow: The bucket is compliant but does not have full Block Public Access protection enabled.
+
+- Green: The bucket is compliant and has full Block Public Access protection enabled.
+
+Note
+
+Public ACL grants are not evaluated when Block Public Access Ignore Public ACLs is enabled.
+
+Recommended action
+
+If a bucket allows open access, determine if open access is truly
+needed.
+For example to host a static website, you can use Amazon CloudFront to serve the
+content hosted on Amazon S3. See Restricting access to an Amazon S3 origin in the
+Amazon CloudFront Developer Guide. When
+possible,,
+update the bucket permissions to restrict access to the
+owner or specific users. Use Amazon S3 Block Public Access to control the
+settings that allow public access to your data. See Setting Bucket and
+Object Access Permissions.
+
+Additional resources
+
+Managing Access
+Permissions to Your Amazon S3 Resources
+
+Configuring block public access settings for your Amazon S3 buckets
+
+Report columns
+
+- Status
+
+- Region Name
+
+- Region API Parameter
+
+- Bucket Name
+
+- ACL Allows List
+
+- ACL Allows Upload/Delete
+
+- Policy Allows Access
+
+## Amazon VPC Peering Connections with DNS Resolution Disabled
+
+Description
+
+Checks if your VPC peering connections have DNS resolution turned on for
+both the acceptor and requester VPCs.
+
+DNS resolution for a VPC peering connection allows the resolution of
+public DNS hostnames to private IPv4 addresses when queried from your VPC.
+This allows the use of DNS names for communication between resources in
+peered VPCs. DNS resolution in your VPC peering connections makes
+application development and management simpler and less error-prone, and it
+ensures that resources always communicate privately over the VPC peering
+connection.
+
+You can specify the VPC IDs, using the vpcIds
+parameters in your AWS Config rules.
+
+For more information, see Enable DNS resolution for a VPC peering connection.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+c18d2gz124
+
+Source
+
+AWS Config Managed Rule: vpc-peering-dns-resolution-check
+
+Alert Criteria
+
+Yellow: DNS resolution is not enabled for both the acceptor and the
+requestor VPCs in a VPC peering connection.
+
+Recommended Action
+
+Turn on DNS resolution for your VPC peering connections.
+
+Additional Resources
+
+- Modify VPC peering connection options
+
+- DNS
+attributes in your VPC
+
+Report columns
+
+- Status
+
+- Region
+
+- Resource
+
+- AWS Config Rule
+
+- Input Parameters
+
+- Last Updated Time
+
+## Application Load Balancer Target Groups Encrypted Protocol
+
+Description
+
+Checks Application Load Balancer (ALB) target groups are using HTTPS
+protocol to encrypt communication in transit for back-end target types of
+instance or IP. HTTPS requests between ALB and back-end targets
+help
+to maintain data confidentiality for data in transit.
+
+Check ID
+
+c2vlfg0p1w
+
+Alert Criteria
+
+- Yellow: Application Load Balancer target group using HTTP.
+
+- Green: Application Load Balancer target group using HTTPS.
+
+Recommended Action
+
+Configure back-end target types of instance or IP to support HTTPS access, and change target group to use HTTPS protocol to encrypt communication between ALB and back-end target types of instance or IP.
+
+Additional Resources
+
+Enforce encryption in transit
+
+Application Load Balancer Target Types
+
+Application Load Balancer Routing Configuration
+
+Data
+Protection
+in
+Elastic Load Balancing
+
+Report columns
+
+- Status
+
+- Region
+
+- ALB Arn
+
+- ALB Name
+
+- ALB VPC Id
+
+- Target Group Arn
+
+- Target Group Name
+
+- Target Group Protocol
+
+- Last Updated Time
+
+## AWS Backup Vault Without Resource-based Policy to Prevent Deletion of Recovery Points
+
+Description
+
+Checks if AWS Backup vaults have an attached resource-based policy that
+prevents recovery point deletion.
+
+The resource-based policy prevents unexpected deletion of recovery points,
+which allows you to enforce access control with least privileges against
+your backup data.
+
+You can specify the AWS Identity and Access Management ARNs that you don't want the rule to check
+in the principalArnList parameter of your AWS Config
+rules.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+c18d2gz152
+
+Source
+
+AWS Config Managed Rule:
+backup-recovery-point-manual-deletion-disabled
+
+Alert Criteria
+
+Yellow: There are AWS Backup vaults that don't have a resource-based policy to
+prevent deletion of recovery points.
+
+Recommended Action
+
+Create resource-based policies for your AWS Backup vaults to prevent unexpected
+deletion of recovery points.
+
+The policy must include a "Deny" statement with
+backup:DeleteRecoveryPoint, backup:UpdateRecoveryPointLifecycle, and
+backup:PutBackupVaultAccessPolicy permissions.
+
+For more information, see Set
+access policies on backup vaults.
+
+Report columns
+
+- Status
+
+- Region
+
+- Resource
+
+- AWS Config Rule
+
+- Input Parameters
+
+- Last Updated Time
+
+## AWS CloudTrail Management Event Logging
+
+Description
+
+Checks your use of AWS CloudTrail. CloudTrail provides increased visibility into
+activity in your AWS account. It does this by recording information about AWS API
+calls that are made on the account. You can use these logs to determine, for example,
+what actions a particular user has taken during a specified time period, or
+which users have taken actions on a particular resource during a specified
+time period.
+
+Because CloudTrail delivers log files to an Amazon Simple Storage Service (Amazon S3) bucket, CloudTrail must
+have write permissions for the bucket. If a trail applies to all AWS Regions
+(the default when creating a new trail),
+then the
+trail appears multiple times in the Trusted Advisor
+report.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+c25hn9x03v
+
+Alert Criteria
+
+- Red: No trail is created for an AWS Region, or logging isn’t enabled for any trail.
+
+- Yellow: CloudTrail is enabled but all trails report log delivery errors.
+
+- Green: CloudTrail is enabled and no log delivery errors are reported.
+
+Recommended Action
+
+To create a trail and start logging from the console, open the AWS CloudTrail console.
+
+To start logging, see Stopping and Starting Logging for a Trail.
+
+If you receive log delivery errors, then make sure that the bucket
+exists and that the necessary policy is attached to the bucket. See Amazon S3 Bucket Policy.
+
+Additional Resources
+
+- AWS CloudTrail User Guide
+
+- Supported Regions
+
+- Supported Services
+
+- Creating a trail for an organization
+
+Report columns
+
+- Status
+
+- Region
+
+- Logging Enabled
+
+- Delivery Error Reported
+
+- Last Updated Time
+
+## AWS Lambda Functions Using Deprecated Runtimes
+
+Description
+
+Checks for Lambda functions whose $LATEST version is configured to use a
+runtime that is approaching deprecation, or is deprecated. Deprecated
+runtimes are not eligible for security updates or technical
+support
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Published Lambda function versions are immutable, which means they can be
+invoked but not updated. Only the $LATEST version for a Lambda
+function can be updated. For more information, see Lambda function versions.
+
+Check ID
+
+L4dfs2Q4C5
+
+Alert Criteria
+
+- Red:
+The
+function's $LATEST version is configured to use a runtime that is
+already deprecated.
+
+- Yellow:
+The
+function's $LATEST version is running on a runtime that is approaching deprecation. Functions are included at least 180 days before the runtime deprecation date.
+
+Recommended Action
+
+If you have functions that are running on a runtime that is approaching
+deprecation, you should prepare for migration to a supported runtime. For
+more information, see Runtime support policy.
+
+We recommend that you delete earlier function versions that you’re no
+longer using.
+
+Additional Resources
+
+Lambda runtimes
+
+Report columns
+
+- Status
+
+- Region
+
+- Function ARN
+
+- Runtime
+
+- Days to Deprecation
+
+- Deprecation Date
+
+- Average Daily Invokes
+
+- Last Updated Time
+
+## AWS Well-Architected high risk issues for security
+
+Description
+
+Checks for high risk issues (HRIs) for your workloads in the security
+pillar. This check is based on your AWS-Well Architected
+reviews. Your check results depend on whether you completed the workload
+evaluation with AWS Well-Architected.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+Check ID
+
+Wxdfp4B1L3
+
+Alert Criteria
+
+- Red: At least one active high risk issue was identified in the
+security pillar for AWS Well-Architected.
+
+- Green: No active high risk issues were detected in the security
+pillar for AWS Well-Architected.
+
+Recommended Action
+
+AWS Well-Architected detected high risk issues during your workload
+evaluation. These issues present opportunities to reduce risk and save
+money. Sign in to the AWS
+Well-Architected tool to review your answers and take action to
+resolve your active issues.
+
+Report columns
+
+- Status
+
+- Region
+
+- Workload ARN
+
+- Workload Name
+
+- Reviewer Name
+
+- Workload Type
+
+- Workload Started Date
+
+- Workload Last Modified Date
+
+- Number of identified HRIs for Security
+
+- Number of HRIs resolved for Security
+
+- Number of questions for Security
+
+- Total number of questions in Security pillar
+
+- Last Updated Time
+
+## CloudFront Custom SSL Certificates in the IAM Certificate Store
+
+Description
+
+Note
+
+This check applies to classic Amazon CloudFront distributions.
+
+Checks the SSL certificates for CloudFront alternate domain names in the
+IAM certificate store. This check alerts you if a certificate is expired,
+will expire soon, uses outdated encryption, or is not configured correctly
+for the distribution.
+
+When a custom certificate for an alternate domain name expires, browsers
+that display your CloudFront content might show a warning message about the
+security of your website. Certificates that are encrypted by using the SHA-1
+hashing algorithm are being deprecated
+by most web browsers such as Chrome and Firefox.
+
+A certificate must contain a domain name that matches either the Origin
+Domain Name or the domain name in the host header of a viewer request. If it
+doesn't match, CloudFront returns an HTTP status code of 502 (bad gateway) to the
+user. For more information, see Using Alternate Domain Names and HTTPS.
+
+Note
+
+This check reports the resources that are flagged by the criteria and the total number of resources evaluated, including OK resources. The resources table lists only the flagged resources.
+
+Check ID
+
+N425c450f2
+
+Alert Criteria
+
+- Red: A custom SSL certificate is expired.
+
+- Yellow: A custom SSL certificate expires in the next seven
+days.
+
+- Yellow: A custom SSL certificate was encrypted by using the SHA-1
+hashing algorithm.
+
+- Yellow: One or more of the alternate domain names in the
+distribution don't appear either in the Common Name field or the
+Subject Alternative Names field of the custom SSL
+certificate.
+
+Recommended Action
+
+We recommend using AWS Certificate Manager to provision, manage, and deploy your server
+certificates. With ACM, you can request a new certificate or deploy an
+existing ACM or external certificate to AWS resources. Certificates
+provided by ACM are free and can be automatically renewed. For more
+information about using ACM, see the AWS Certificate Manager User
+Guide. To verify the AWS Regions ACM supports, see AWS Certificate Manager
+endpoints and quotas in the AWS General Reference.
+
+Renew expired certificates or certificates that are about to expire. For
+more information on renewing a certificate see Managing server certificates
+in IAM.
+
+Replace a certificate that was encrypted by using the SHA-1 hashing
+algorithm with a certificate that is encrypted by using the SHA-256 hashing
+algorithm.
+
+Replace the certificate with a certificate that contains the applicable
+values in the Common Name or Subject Alternative Domain Names fields.
+
+Additional Resources
+
+Using an HTTPS Connection to Access Your
+Objects
+
+Importing Certificates
+
+AWS Certificate Manager User Guide
+
+Report columns
+
+- Status
+
+- Distribution ID
+
+- Distribution Domain Name
+
+- Certificate Name
+
+- Reason
+
+## CloudFront SSL Certificate on the Origin Server
+
+Description
+
+Checks your origin server for SSL certificates that are expired, about to
+expire, missing, or that use outdated encryption. If a certificate has one
+of these issues, CloudFront responds to requests for your content with HTTP status
+code 502, Bad Gateway.
+
+Certificates that were encrypted by using the SHA-1 hashing algorithm are
+being deprecated by web browsers such as Chrome and Firefox. Depending on
+the number of SSL certificates that you have associated with your CloudFront
+distributions, this check might add a few cents per month to your bill with
+your web hosting provider, for example, AWS if you're using Amazon EC2 or Elastic Load Balancing
+as the origin for your CloudFront distribution. This check does not validate your
+origin certificate chain or certificate authorities. You can check these in
+your CloudFront configuration.
+
+Note
+
+This check reports the resources that are flagged by the criteria and the total number of resources evaluated, including OK resources. The resources table lists only the flagged resources.
+
+Check ID
+
+N430c450f2
+
+Alert Criteria
+
+- Red: An SSL certificate on your origin has expired or is
+missing.
+
+- Yellow: An SSL certificate on your origin expires in the next
+thirty days.
+
+- Yellow: An SSL certificate on your origin was encrypted by using
+the SHA-1 hashing algorithm.
+
+- Yellow: An SSL certificate on your origin can't be located. The
+connection might have failed due to timeout, or other HTTPS
+connection problems.
+
+Recommended Action
+
+Renew the certificate on your origin if it has expired or is about to
+expire.
+
+Add a certificate if one does not exist.
+
+Replace a certificate that was encrypted by using the SHA-1 hashing
+algorithm with a certificate that is encrypted by using the SHA-256 hashing
+algorithm.
+
+Additional Resources
+
+Using Alternate Domain Names and
+HTTPS
+
+Report columns
+
+- Status
+
+- Distribution ID
+
+- Distribution Domain Name
+
+- Origin
+
+- Reason
+
+## ELB Listener Security
+
+Description
+
+Checks for classic load balancers with listeners that don't use the
+recommended security configurations for encrypted communication. AWS
+recommends that you use a secure protocol (HTTPS or SSL), up-to-date
+security policies, and ciphers and protocols that are secure. When you use a
+secure protocol for a front-end connection (client to load balancer), the
+requests are encrypted between your clients and the load balancer. This
+creates a more secure environment. Elastic Load Balancing provides
+predefined security policies with ciphers and protocols that adhere to AWS
+security best practices. New versions of predefined policies are released as
+new configurations become available.
+
+Check ID
+
+a2sEc6ILx
+
+Alert Criteria
+
+- Red: A load balancer has no listeners configured with a secure
+protocol (HTTPS).
+
+- Yellow:
+A
+load balancer HTTPS listener is configured with a Security Policy
+that contains a weak cipher.
+
+- Yellow:
+A load balancer HTTPS listener is not configured with the
+recommended Security Policy.
+
+- Green:
+A load balancer has at least one HTTPS listener AND all HTTPS
+listeners are configured with the recommended policy.
+
+Recommended Action
+
+If the traffic to your load balancer must be secure, use either the HTTPS
+or the SSL protocol for the front-end connection.
+
+Upgrade your load balancer to the latest version of the predefined SSL
+security policy.
+
+Use only the recommended ciphers and protocols.
+
+For more information, see Listener Configurations for Elastic Load Balancing.
+
+Additional Resources
+
+- Listener Configurations Quick
+Reference
+
+- Update SSL Negotiation Configuration of
+Your Load Balancer
+
+- SSL Negotiation Configurations for
+Elastic Load Balancing
+
+- SSL Security Policy Table
+
+Report columns
+
+- Status
+
+- Region
+
+- Load Balancer Name
+
+- Load Balancer Port
+
+- Reason
+
+## Classic Load Balancer Security Groups
+
+Description
+
+Checks for load balancers configured with
+
+a security group that allows access to ports that are not configured for the
+load balancer.
+
+If a security group allows access to ports that are not configured for the
+load balancer, the risk of loss of data or malicious attacks
+increases.
+
+Check ID
+
+xSqX82fQu
+
+Alert Criteria
+
+- Yellow: The inbound rules of an Amazon VPC security group associated
+with a load balancer allow access to ports that are not defined in
+the load balancer's listener configuration.
+
+- Green:
+The inbound rules of an Amazon VPC security group associated with a load
+balancer do not allow access to ports that are not defined in the
+load balancers listener configuration.
+
+Recommended Action
+
+Configure the security group rules to restrict access to only those ports
+and protocols that are defined in the load balancer listener configuration,
+plus the ICMP protocol to support Path MTU Discovery. See Listeners for Your Classic Load Balancer
+and Security Groups for Load Balancers in a
+VPC.
+
+If a security group is missing, apply a new security group to the load
+balancer. Create security group rules that restrict access to only those
+ports and protocols that are defined in the load balancer listener
+configuration. See Security Groups for Load Balancers in a
+VPC.
+
+Additional Resources
+
+- Elastic Load Balancing User Guide
+
+- Migrate your Classic Load Balancer
+
+- Configure Your Classic Load
+Balancer
+
+Report columns
+
+- Status
+
+- Region
+
+- Load Balancer Name
+
+- Security Group IDs
+
+- Reason
+
+## Exposed Access Keys
+
+Description
+
+Checks popular code repositories for access keys that have been exposed to
+the public and for irregular Amazon Elastic Compute Cloud (Amazon EC2) usage that could be the
+result of a compromised access key.
+
+An access key consists of an access key ID and the corresponding secret
+access key. Exposed access keys pose a security risk to your account and
+other users, could lead to excessive charges from unauthorized activity or
+abuse, and violate the AWS
+Customer Agreement.
+
+If your access key is exposed, take immediate action to secure your
+account. To protect your account from excessive charges, AWS temporarily
+limits your ability to create some AWS resources. This does not make your
+account secure. It only partially limits the unauthorized usage for which
+you could be charged.
+
+Note
+
+This check doesn't guarantee the identification of exposed access keys
+or compromised EC2 instances. You are ultimately responsible for the
+safety and security of your access keys and AWS resources.
+
+Note
+
+Results for this check are automatically refreshed several times
+daily, and refresh requests are not allowed. It might take a few
+hours for changes to appear.
+
+For AWS Business Support+, AWS Enterprise Support, or AWS Unified Operations plan customers, you can use the BatchUpdateRecommendationResourceExclusion API to include or exclude one or more resources from your Trusted Advisor results.
+
+If a deadline is shown for an access key, AWS may suspend your
+AWS account if the unauthorized usage is not stopped by that date. If you
+believe an alert is in error, contact AWS Support.
+
+The information displayed in Trusted Advisor might not reflect the most recent
+state of your account. No exposed access keys are marked as resolved until
+all exposed access keys on the account have been resolved. This data
+synchronization can take up to one week.
+
+Check ID
+
+12Fnkpl8Y5
+
+Alert Criteria
+
+- Red: Potentially compromised – AWS has identified an
+access key ID and corresponding secret access key that have been
+exposed on the Internet and may have been compromised (used).
+
+- Red: Exposed – AWS has identified an access key ID and
+corresponding secret access key that have been exposed on the
+Internet.
+
+- Red: Suspected - Irregular Amazon EC2 usage indicates that an access
+key may have been compromised, but it has not been identified as
+exposed on the Internet.
+
+Recommended Action
+
+Delete the affected access key as soon as possible. If the key is
+associated with an IAM user, see Managing Access Keys for IAM Users.
+
+Check your account for unauthorized usage. Sign in to the AWS Management Console and check each service console
+for suspicious resources. Pay special attention to running Amazon EC2 instances,
+Spot Instance requests, access keys, and IAM users. You can also check
+overall usage on the Billing and Cost Management
+console.
+
+Additional Resources
+
+- Best Practices for Managing AWS Access
+Keys
+
+- AWS Security Audit
+Guidelines
+
+Report columns
+
+- Access Key ID
+
+- User Name (IAM or Root)
+
+- Fraud Type
+
+- Case ID
+
+- Time Updated
+
+- Location
+
+- Deadline
+
+- Usage (USD per Day)
+
+## IAM Access Key Rotation
+
+Description
+
+Checks for active IAM access keys that have not been rotated in the last
+90 days.
+
+When you rotate your access keys regularly, you reduce the chance that a
+compromised key could be used without your knowledge to access resources.
+For the purposes of this check, the last rotation date and time is when the
+access key was created or most recently activated. The access key number and
+date come from the access_key_1_last_rotated and
+access_key_2_last_rotated information in the most recent
+IAM credential report.
+
+Because the regeneration frequency of a credential report is restricted,
+refreshing this check might not reflect recent changes. For more
+information, see Getting Credential Reports for Your
+AWS account.
+
+In order to create and rotate access keys, a user must have the
+appropriate permissions. For more information, see Allow Users to Manage Their Own Passwords, Access
+Keys, and SSH Keys.
+
+Check ID
+
+DqdJqYeRm5
+
+Alert Criteria
+
+- Green: The access key is active and has been rotated in the last
+90 days.
+
+- Yellow: The access key is active and has been rotated in the last
+2 years, but more than 90 days ago.
+
+- Red: The access key is active and has not been rotated in the last
+2 years.
+
+Recommended Action
+
+Rotate access keys on a regular basis. See Rotating Access Keys and Managing Access Keys for IAM
+Users.
+
+Additional Resources
+
+- IAM Best Practices
+
+- How to rotate access keys for IAM
+users
+
+Report columns
+
+- Status
+
+- IAM user
+
+- Access Key
+
+- Key Last Rotated
+
+- Reason
+
+## IAM Access Analyzer External Access
+
+Description
+
+Checks if the
+IAM Access Analyzer
+external access at the account level is present.
+
+IAM Access Analyzer
+external access analyzers help identify resources in your accounts that are shared with an external entity. The analyzer then creates
+a centralized dashboard with the findings. After the new analyzer is
+activated in the IAM console, security teams can then prioritize which
+accounts to review based on excessive permissions. An external access
+analyzer creates public and cross-account access findings for resources, and
+is provided at no additional charge.
+
+Check ID
+
+07602fcad6
+
+Alert Criteria
+
+- Red: The analyzer external access isn’t activated at the account level.
+
+- Green: The analyzer external access is activated at the account level.
+
+Recommended Action
+
+The creation of an external access analyzer per account helps security
+teams to prioritize which accounts to review based on excessive permissions.
+For more information, see Getting
+started with
+AWS Identity and Access Management Access Analyzer
+findings.
+
+Additionally, its a best practice to utilize the unused access analyzer, a
+paid feature that simplifies inspecting unused access to guide you toward
+least privilege. For more information, see Identifying unused access granted to
+IAM
+users and roles.
+
+Additional Resources
+
+- Using
+AWS Identity and Access Management Access Analyzer
+
+- IAM Access Analyzer
+updates: Find unused access, check policies before deployment
+
+Report columns
+
+- Status
+
+- Region
+
+- Account External Access Analyzer Arn
+
+- Organization External Access Analyzer Arns
+
+- Last Updated Time
+
+## IAM Password Policy
+
+Description
+
+Checks the password policy for your account and warns when a password
+policy is not enabled, or if password content requirements have not been
+enabled.
+
+Password content requirements increase the overall security of your AWS
+environment by enforcing the creation of strong user passwords. When you
+create or change a password policy,
+the
+change is enforced immediately for new users but does not require existing
+users to change their passwords.
+
+Check ID
+
+Yw2K9puPzl
+
+Alert Criteria
+
+- Green: A password policy is enabled with recommended content
+requirement enabled.
+
+- Yellow: A password policy is enabled, but at least one content
+requirement is not enabled.
+
+Recommended Action
+
+If some content requirements are not enabled, consider enabling them. If
+no password policy is enabled, create and configure one. See Setting an Account Password Policy for IAM
+Users.
+
+To access the AWS Management Console, IAM users need passwords. As a best practice,
+AWS highly recommends that instead of creating IAM users, you use
+federation. Federation allows users to use their existing corporate
+credentials to log into the AWS Management Console. Use IAM Identity Center to create or federate the
+user, and then assume an IAM role into an account.
+
+To learn more about identity providers and federation, see Identity providers and federation in the IAM User Guide. To
+learn more about IAM Identity Center, see the IAM Identity Center User
+Guide.
+
+Additional Resources
+
+Managing Passwords
+
+Report columns
+
+- Password Policy
+
+- Uppercase
+
+- Lowercase
+
+- Number
+
+- Non-alphanumeric
+
+## IAM SAML 2.0 Identity Provider
+
+Description
+
+Checks if the
+AWS account
+is configured for access via an identity provider (IdP) that supports SAML
+2.0. Be sure to follow best practices when you centralize identities and
+configure users in an external identity
+provider or AWS IAM Identity Center.
+
+Check ID
+
+c2vlfg0p86
+
+Alert Criteria
+
+- Yellow: This account isn’t configured for access via an identity
+provider (IdP) that supports SAML 2.0.
+
+- Green: This account is configured for access via an identity provider (IdP) that supports SAML 2.0.
+
+Recommended Action
+
+Activate
+IAM Identity Center
+for the
+AWS account.
+For more information, see EnablingIAM Identity Center.
+After you turn on
+IAM Identity Center,
+you can then
+perform
+common tasks like creating a permission set and assigning access for
+Identity Center groups. For more information, see Common
+tasks.
+
+It’s a best practice to manage human users in
+IAM Identity Center.
+But you can activate federated user access with
+IAM
+for human users in the short-term for small scale deployments. For more
+information see SAML 2.0
+federation.
+
+Additional Resources
+
+What is
+IAM Identity Center?
+
+What
+IsIAM?
+
+Report columns
+
+- Status
+
+- AWS account
+Id
+
+- Last Updated Time
+
+## MFA on root account
+
+Description
+
+Checks the root user credentials of an account and warns if multi-factor authentication (MFA) is not enabled.
+
+For increased security, we recommend that you protect your account by
+using MFA, which requires a user to enter a unique authentication code from
+their MFA hardware or virtual device when interacting with the AWS Management Console and
+associated websites.
+
+Note
+
+For your AWS Organizations management account, AWS requires multi-factor
+authentication (MFA) for the root user when accessing the AWS Management Console.
+
+For your AWS Organizations member accounts, we recommend that you centrally manage root credentials using AWS Identity and Access Management. Member account root user credentials can be deleted centrally, removing the need to manage MFA on root user credentials. For more information, see Best practices for member accounts in the AWS Organizations User Guide.
+
+Check ID
+
+7DAFEmoDos
+
+Alert criteria
+
+- Red: MFA is not enabled on the root account.
+
+- Green: No root user credentials (root password) exist or MFA is enabled for the account.
+
+Recommended action
+
+If this is a member account in AWS Organizations: Log in to your management account, enable the root access management feature in IAM, and remove your root user credentials from this member account. See Centralize root access for member accounts.
+
+If this is a standalone or management account in AWS Organizations: Log in to your root account and activate an MFA device. For more information, see Check MFA status and AWS Multi-factor authentication in IAM
+
+Additional resources
+
+- Centrally manage root access for member accounts
+
+- AWS Multi-factor authentication in IAM
+
+- Multi-factor authentication for AWS account root user
+
+## Root User Access Key
+
+Description
+
+Checks if the root user access key is present.
+It's
+strongly
+recommended
+that you
+don't
+create access key pairs for your root user. Because only a few tasks require the root user and you typically
+perform those tasks infrequently,
+it’s
+a best practice to log in to the
+AWS Management Console
+to perform the root user tasks. Before you create access keys, review the
+alternatives to long-term access keys.
+
+Check ID
+
+c2vlfg0f4h
+
+Alert Criteria
+
+- Red: The root user access key is present
+
+- Green: The root user access key isn’t present
+
+Recommended Action
+
+Delete the access key(s) for the root user. See Deleting access keys for the root user. This task must be performed by the root user. You can't perform these steps as an IAM user or role.
+
+Additional Resources
+
+- Tasks that require root user credentials
+
+- Resetting a lost or forgotten root user password
+
+Report columns
+
+- Status
+
+- Account ID
+
+- Last Updated Time
+
+## Security Groups – Specific Ports Unrestricted
+
+Description
+
+Checks security groups for rules that allow unrestricted access
+(0.0.0.0/0) to specific ports.
+
+Unrestricted access increases opportunities for malicious activity
+(hacking, denial-of-service attacks, loss of data). The ports with highest
+risk are flagged red, and those with less risk are flagged yellow. Ports
+flagged green are typically used by applications that require unrestricted
+access, such as HTTP and SMTP.
+
+If you have intentionally configured your security groups in this manner,
+we recommend using additional security measures to secure your
+infrastructure (such as IP tables).
+
+Note
+
+This check only evaluates security groups that you create and their
+inbound rules for IPv4 addresses. Security groups created by AWS Directory Service
+are flagged as red or yellow, but they don’t pose a security risk and
+can be
+excluded.
+For more information, see the Trusted Advisor FAQ.
+
+Note
+
+This check reports the resources that are flagged by the criteria and the total number of resources evaluated, including OK resources. The resources table lists only the flagged resources.
+
+Check ID
+
+HCP4007jGY
+
+Alert Criteria
+
+- Green:
+Security
+Group provides unrestricted access on ports 80, 25, 443, or
+465.
+
+- Red:
+Security
+Group provides unrestricted access to
+port 20, 21, 22 , 1433, 1434, 3306, 3389, 4333, 5432, or
+5500.
+
+- Yellow:
+Security
+Group provides unrestricted access to any other
+port.
+
+Recommended Action
+
+Restrict access to only those IP addresses that require it. To restrict
+access to a specific IP address, set the suffix to /32 (for example,
+192.0.2.10/32). Be sure to delete overly permissive rules after creating
+rules that are more restrictive.
+
+Review and delete unused security groups. You can use AWS Firewall Manager to
+centrally configure and manage security groups at scale across
+AWS accounts, For more information, see the AWS Firewall Manager
+documentation.
+
+Consider using Systems Manager Sessions Manager for SSH (Port 22) and RDP
+(Port 3389) access to EC2 instances. With sessions manager, you can access
+your EC2 instances without enabling port 22 and 3389 in the security group.
+
+Additional Resources
+
+- Amazon EC2 Security Groups
+
+List of TCP and UDP port numbers
+
+- Classless Inter-Domain Routing
+
+- Working with Session Manager
+
+- AWS Firewall Manager
+
+Report columns
+
+- Status
+
+- Region
+
+- Security Group Name
+
+- Security Group ID
+
+- Protocol
+
+- From Port
+
+- To Port
+
+- Association
+
+## Security Groups – Unrestricted Access
+
+Description
+
+Checks security groups for rules that allow unrestricted access to a
+resource.
+
+Unrestricted access increases opportunities for malicious activity
+(hacking, denial-of-service attacks, loss of data).
+
+Note
+
+This
+check
+evaluates
+only security groups that you create and their inbound
+rules for IPv4 addresses. Security groups created by AWS Directory Service are
+flagged as red or yellow, but they don’t pose a security risk and can be
+excluded.
+For more information, see the Trusted Advisor FAQ.
+
+Note
+
+This check reports the resources that are flagged by the criteria and the total number of resources evaluated, including OK resources. The resources table lists only the flagged resources.
+
+Check ID
+
+1iG5NDGVre
+
+Alert Criteria
+
+- Green: A security group rule has a source IP address with a /0
+suffix for ports 25, 80, or 443.
+
+- Yellow: A security group rule has a source IP address with a /0
+suffix for ports other than 25, 80, or 443 and security group is
+attached to a resource.
+
+- Red: A security group rule has a source IP address with a /0
+suffix for ports other than 25, 80, or 443 and security group is not
+attached to a resource.
+
+Recommended Action
+
+Restrict access to only those IP addresses that require it. To restrict
+access to a specific IP address, set the suffix to /32 (for example,
+192.0.2.10/32). Be sure to delete overly permissive rules after creating
+rules that are more restrictive.
+
+Review and delete unused security groups. You can use AWS Firewall Manager to
+centrally configure and manage security groups at scale across
+AWS accounts, For more information, see the AWS Firewall Manager
+documentation.
+
+Consider using Systems Manager Sessions Manager for SSH (Port 22) and RDP
+(Port 3389) access to EC2 instances. With sessions manager, you can access
+your EC2 instances without enabling port 22 and 3389 in the security group.
+
+Additional Resources
+
+- Amazon EC2 Security Groups
+
+- Classless Inter-Domain Routing
+
+- Working with Session Manager
+
+- AWS Firewall Manager
+
+Report columns
+
+- Status
+
+- Region
+
+- Security Group Name
+
+- Security Group ID
+
+- Protocol
+
+- From Port
+
+- To Port
+
+- IP Range
+
+- Association

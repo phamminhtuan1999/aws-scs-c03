@@ -1,0 +1,301 @@
+URL: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html
+TITLE: Pre sign-up Lambda trigger - Amazon Cognito
+
+# Pre sign-up Lambda trigger
+
+You might want to customize the sign-up process in user pools that have self-service
+sign-up options. Some common uses of the pre sign-up trigger are to perform custom analysis
+and recording of new users, apply security and governance standards, or link users from a
+third-party IdP to a consolidated user
+profile. You might also have trusted users who aren't required to undergo verification and confirmation.
+
+Immediately before Amazon Cognito completes creation of a new local or federated user, it activates
+the pre sign-up Lambda function. The userAttributes in the request object sent
+to this function contain attributes that have been provided by local user sign-up or that
+have successfully been mapped from provider attributes for a federated user. Your user pool
+invokes this trigger on self-service sign-up with SignUp or
+first sign-in with a trusted identity
+provider, and on user creation with AdminCreateUser. As part of the sign-up process, you can use this function to
+analyze the sign-in event with custom logic, and modify or deny the new user.
+
+Topics
+
+- Pre sign-up Lambda trigger parameters
+
+- Pre sign-up example: Auto-confirm users from a registered domain
+
+- Pre sign-up example: Auto-confirm and auto-verify all users
+
+- Pre sign-up example: Deny sign-up if user name has fewer than five characters
+
+## Pre sign-up Lambda trigger parameters
+
+The request that Amazon Cognito passes to this Lambda function is a combination of the parameters below and the
+common parameters that Amazon Cognito adds to all requests.
+
+JSON
+
+{
+"request": {
+"userAttributes": {
+"string": "string",
+. . .
+},
+"validationData": {
+"string": "string",
+. . .
+},
+"clientMetadata": {
+"string": "string",
+. . .
+}
+},
+
+"response": {
+"autoConfirmUser": "boolean",
+"autoVerifyPhone": "boolean",
+"autoVerifyEmail": "boolean"
+}
+}
+
+### Pre sign-up request parameters
+
+userAttributes
+
+One or more name-value pairs representing user attributes. The
+attribute names are the keys.
+
+validationData
+
+One or more key-value pairs with user attribute data that your app
+passed to Amazon Cognito in the request to create a new user. Send this
+information to your Lambda function in the ValidationData parameter of
+your AdminCreateUser or SignUp API request.
+
+Amazon Cognito doesn't set your ValidationData data as attributes of the user
+that you create. ValidationData is temporary user information that you
+supply for the purposes of your pre sign-up Lambda trigger.
+
+clientMetadata
+
+One or more key-value pairs that you can provide as custom input to
+the Lambda function that you specify for the pre sign-up trigger. You can
+pass this data to your Lambda function by using the ClientMetadata
+parameter in the following API actions: AdminCreateUser, AdminRespondToAuthChallenge, ForgotPassword, and SignUp.
+
+### Pre sign-up response parameters
+
+In the response, you can set autoConfirmUser to true if
+you want to auto-confirm the user. You can set autoVerifyEmail to
+true to auto-verify the user's email. You can set
+autoVerifyPhone to true to auto-verify the user's
+phone number.
+
+Note
+
+Response parameters autoVerifyPhone, autoVerifyEmail
+and autoConfirmUser are ignored by Amazon Cognito when the pre sign-up Lambda
+function is triggered by the AdminCreateUser API.
+
+autoConfirmUser
+
+Set to true to auto-confirm the user, or
+false otherwise.
+
+autoVerifyEmail
+
+Set to true to set as verified the email address of a
+user who is signing up, or false otherwise. If
+autoVerifyEmail is set to true, the
+email attribute must have a valid, non-null value.
+Otherwise an error will occur and the user will not be able to complete
+sign-up.
+
+If the email attribute is selected as an alias, an alias
+will be created for the user's email address when
+autoVerifyEmail is set. If an alias with that email
+address already exists, the alias will be moved to the new user and the
+previous user's email address will be marked as unverified. For more
+information, see Customizing sign-in attributes.
+
+autoVerifyPhone
+
+Set to true to set as verified the phone number of a user
+who is signing up, or false otherwise. If
+autoVerifyPhone is set to true, the
+phone_number attribute must have a valid, non-null
+value. Otherwise an error will occur and the user will not be able to
+complete sign-up.
+
+If the phone_number attribute is selected as an alias, an
+alias will be created for the user's phone number when
+autoVerifyPhone is set. If an alias with that phone
+number already exists, the alias will be moved to the new user and the
+previous user's phone number will be marked as unverified. For more
+information, see Customizing sign-in attributes.
+
+## Pre sign-up example: Auto-confirm users from a registered domain
+
+This is example Lambda trigger code. The pre sign-up trigger is invoked immediately
+before Amazon Cognito processes the sign-up request. It uses a custom attribute
+custom:domain to automatically confirm new users from a
+particular email domain. Any new users not in the custom domain will be added to the
+user pool, but not automatically confirmed.
+
+Node.js
+
+export const handler = async (event, context, callback) => {
+// Set the user pool autoConfirmUser flag after validating the email domain
+event.response.autoConfirmUser = false;
+
+// Split the email address so we can compare domains
+var address = event.request.userAttributes.email.split("@");
+
+// This example uses a custom attribute "custom:domain"
+if (event.request.userAttributes.hasOwnProperty("custom:domain")) {
+if (event.request.userAttributes["custom:domain"] === address[1]) {
+event.response.autoConfirmUser = true;
+}
+}
+
+// Return to Amazon Cognito
+callback(null, event);
+};
+
+Python
+
+def lambda_handler(event, context):
+# It sets the user pool autoConfirmUser flag after validating the email domain
+event['response']['autoConfirmUser'] = False
+
+# Split the email address so we can compare domains
+address = event['request']['userAttributes']['email'].split('@')
+
+# This example uses a custom attribute 'custom:domain'
+if 'custom:domain' in event['request']['userAttributes']:
+if event['request']['userAttributes']['custom:domain'] == address[1]:
+event['response']['autoConfirmUser'] = True
+
+# Return to Amazon Cognito
+return event
+
+Amazon Cognito passes event information to your Lambda function. The function then returns the same event
+object to Amazon Cognito, with any changes in the response. In the Lambda console, you can set up a test
+event with data that is relevant to your Lambda trigger. The following is a test event for this code sample:
+
+JSON
+
+{
+"request": {
+"userAttributes": {
+"email": "testuser@example.com",
+"custom:domain": "example.com"
+}
+},
+"response": {}
+}
+
+## Pre sign-up example: Auto-confirm and auto-verify all users
+
+This example confirms all users and sets the user's email and
+phone_number attributes to verified if the attribute is present. Also,
+if aliasing is enabled, aliases will be created for phone_number and
+email when auto-verify is set.
+
+Note
+
+If an alias with the same phone number already exists, the alias will be moved to
+the new user, and the previous user's phone_number will be marked as
+unverified. The same is true for email addresses. To prevent this from happening,
+you can use the user pools ListUsers API to see if there is an existing user who is already using
+the new user's phone number or email address as an alias.
+
+Node.js
+
+exports.handler = (event, context, callback) => {
+// Confirm the user
+event.response.autoConfirmUser = true;
+
+// Set the email as verified if it is in the request
+if (event.request.userAttributes.hasOwnProperty("email")) {
+event.response.autoVerifyEmail = true;
+}
+
+// Set the phone number as verified if it is in the request
+if (event.request.userAttributes.hasOwnProperty("phone_number")) {
+event.response.autoVerifyPhone = true;
+}
+
+// Return to Amazon Cognito
+callback(null, event);
+};
+
+Python
+
+def lambda_handler(event, context):
+# Confirm the user
+event['response']['autoConfirmUser'] = True
+
+# Set the email as verified if it is in the request
+if 'email' in event['request']['userAttributes']:
+event['response']['autoVerifyEmail'] = True
+
+# Set the phone number as verified if it is in the request
+if 'phone_number' in event['request']['userAttributes']:
+event['response']['autoVerifyPhone'] = True
+
+# Return to Amazon Cognito
+return event
+
+Amazon Cognito passes event information to your Lambda function. The function then returns the same event
+object to Amazon Cognito, with any changes in the response. In the Lambda console, you can set up a test
+event with data that is relevant to your Lambda trigger. The following is a test event for this code sample:
+
+JSON
+
+{
+"request": {
+"userAttributes": {
+"email": "user@example.com",
+"phone_number": "+12065550100"
+}
+},
+"response": {}
+}
+
+## Pre sign-up example: Deny sign-up if user name has fewer than five characters
+
+This example checks the length of the user name in a sign-up request. The example
+returns an error if the user has entered a name less than five characters long.
+
+Node.js
+
+export const handler = (event, context, callback) => {
+// Impose a condition that the minimum length of the username is 5 is imposed on all user pools.
+if (event.userName.length < 5) {
+var error = new Error("Cannot register users with username less than the minimum length of 5");
+// Return error to Amazon Cognito
+callback(error, event);
+}
+// Return to Amazon Cognito
+callback(null, event);
+};
+
+Python
+
+def lambda_handler(event, context):
+if len(event['userName']) < 5:
+raise Exception("Cannot register users with username less than the minimum length of 5")
+# Return to Amazon Cognito
+return event
+
+Amazon Cognito passes event information to your Lambda function. The function then returns the same event
+object to Amazon Cognito, with any changes in the response. In the Lambda console, you can set up a test
+event with data that is relevant to your Lambda trigger. The following is a test event for this code sample:
+
+JSON
+
+{
+"userName": "rroe",
+"response": {}
+}

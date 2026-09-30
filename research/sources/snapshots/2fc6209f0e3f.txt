@@ -1,0 +1,389 @@
+URL: https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-geo-match.html
+TITLE: Geographic match rule statement - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director
+
+Introducing a new console experience for AWS WAF
+
+You can now use the updated experience to access AWS WAF functionality anywhere in the console.
+For more details, see Working with the console.
+
+# Geographic match rule statement
+
+This section explains what a geographic match statement is and how it works.
+
+Use geographic or geo match statements to manage web requests based on country and
+region of origin. A geo match statement add labels to web requests that indicate the
+country of origin and the region of origin. It adds these labels regardless of whether the statement
+criteria is a match for the request. A geo match statement also performs matching against the request's country of origin.
+
+## How to use the geo match statement
+
+You can use the geo match statement for country or region matching, as follows:
+
+- Country — You can use a geo match rule by itself
+to manage requests based solely on their country of origin. The rule
+statement matches against country codes. You can also follow a geo match
+rule with a label match rule that matches on the country of origin label.
+
+Note
+
+To filter traffic from Hong Kong, use the ISO 3166-1 alpha-2 country code HK in your geo match statement.
+
+- Region — Use a geo match rule followed by a
+label match rule to manage requests based on their region of origin. You
+can't use a geo match rule alone to match against region codes.
+
+For information about using label match rules, see Label match rule statement and Web request labeling in AWS WAF.
+
+## How the geo match statement works
+
+With the geo match statement, AWS WAF manages each web request as follows:
+
+- Determines the request's country and region codes
+— AWS WAF determines the country and region of a request based on
+its IP address. By default, AWS WAF uses the IP address of the web
+request's origin. You can instruct AWS WAF to use an IP address from an
+alternate request header, like X-Forwarded-For, by enabling
+forwarded IP configuration in the rule statement settings.
+
+AWS WAF determines the location of requests using MaxMind GeoIP databases.
+MaxMind reports very high accuracy of their data at the country level,
+although accuracy varies according to factors such as country and type of
+IP.
+For
+more information about MaxMind, see MaxMind IP Geolocation. If you think any of the GeoIP data is incorrect, you can submit a correction request
+to Maxmind at MaxMind Correct GeoIP2 Data.
+
+AWS WAF uses the alpha-2 country and region codes from the
+International Organization for Standardization (ISO) 3166 standard. You can find
+the codes at the following locations:
+
+- At the ISO website, you can search the country codes at ISO Online Browsing Platform
+(OBP).
+
+- On Wikipedia, the country codes are listed at ISO
+3166-2.
+
+The region codes for a country are listed at the URL
+https://en.wikipedia.org/wiki/ISO_3166-2:<ISO
+country code>. For example, the
+regions for the United States are at ISO
+3166-2:US and for Ukraine they're at ISO
+3166-2:UA.
+
+- Determines the country label and region label to add to the
+request — The labels indicate whether the geo
+match statement uses the origin IP or a forwarded IP
+configuration.
+
+- Origin IP
+
+The country label is
+awswaf:clientip:geo:country:<ISO
+country code>. Example for the
+United States:
+awswaf:clientip:geo:country:US.
+
+The region label is
+awswaf:clientip:geo:region:<ISO
+country code>-<ISO region
+code>. Example for Oregon in the
+United States:
+awswaf:clientip:geo:region:US-OR.
+
+- Forwarded IP
+
+The country label is
+awswaf:forwardedip:geo:country:<ISO
+country code>. Example for the
+United States:
+awswaf:forwardedip:geo:country:US.
+
+The region label is
+awswaf:forwardedip:geo:region:<ISO
+country code>-<ISO region
+code>. Example for Oregon in the
+United States:
+awswaf:forwardedip:geo:region:US-OR.
+
+If the country or region code isn't available for a request's specified IP address,
+AWS WAF uses XX in the labels, in the place of the value. For
+example, the following label is for a client IP whose country code isn't
+available: awswaf:clientip:geo:country:XX and the following
+is for a forwarded IP whose country is the United States, but whose
+region code isn't available:
+awswaf:forwardedip:geo:region:US-XX.
+
+- Evaluates the request's country code against the rule
+criteria
+
+The geo match statement adds country and region labels to all requests that it inspects,
+regardless of whether it finds a match.
+
+Note
+
+AWS WAF adds any labels at the end of a rule's web request evaluation. Because of this, any
+label matching that you use against the labels from a geo match statement must
+be defined in a separate rule from the rule that contains the geo match
+statement.
+
+If you want to inspect only region values, you can write a geo match rule with Count
+action and with a single country code match, followed by a label match rule for
+the region labels. You are required to supply a country code for the geo match
+rule to evaluate, even for this approach. You can reduce logging and count
+metrics by specifying a country that's very unlikely to be a source of traffic
+to your site.
+
+## CloudFront distributions and the CloudFront geo restriction feature
+
+For CloudFront distributions, if you use the CloudFront geo restriction feature, be aware
+that the feature doesn't forward blocked requests to AWS WAF. It does forward
+allowed requests to AWS WAF. If you want to block requests based on the geography
+plus other criteria that you can specify in AWS WAF, use the AWS WAF geo match
+statement and don't use the CloudFront geo restriction feature.
+
+## Rule statement characteristics
+
+Nestable – You can nest this statement
+type.
+
+WCUs – 1 WCU.
+
+Settings – This statement uses the following settings:
+
+- Country codes – An array of country codes to
+compare for a geo match. These must be two-character country codes from
+the alpha-2 country ISO codes of the ISO 3166 international standard,
+for example, ["US","CN"].
+
+- (Optional) Forwarded IP configuration
+– By default, AWS WAF uses the IP address in the web request origin to
+determine country of origin. Alternatively, you can configure the rule to
+use a forwarded IP in an HTTP header like X-Forwarded-For
+instead. AWS WAF uses the first IP address in the header. With this
+configuration, you also specify a fallback behavior to apply to a web
+request with a malformed IP address in the header. The fallback behavior
+sets the matching result for the request, to match or no match. For more
+information, see Using forwarded IP
+addresses.
+
+## Where to find this rule statement
+
+- Rule builder on the console –
+For Request option, choose Originates
+from a country in.
+
+- API – GeoMatchStatement
+
+## Examples
+
+You can use the geo match statement to manage requests from specific countries or
+regions. For example, if you want to block requests from certain countries,
+but still allow requests from a specific set of IP addresses in those
+countries, you could create a rule with the action set to
+Block and the following nested statements, shown in
+pseudocode:
+
+- AND statement
+
+- Geo match statement listing the countries that you want to
+block
+
+- NOT statement
+
+- IP set statement that specifies the IP addresses that
+you want to allow through
+
+Or, if you want to block some regions in certain countries, but still allow requests from
+other regions in those countries, you could first define a geo match rule with
+the action set to Count. Then, define a label match rule that
+matches against the added geo match labels and handles the requests as you need.
+
+The following pseudo code describes an example of this approach:
+
+- Geo match statement listing the countries with regions that you want to block, but with
+the action set to Count. This labels every web request regardless of
+match status, and it also gives you count metrics for the countries of
+interest.
+
+- AND statement with Block action
+
+- Label match statement that specifies the labels for the
+countries that you want to block
+
+- NOT statement
+
+- Label match statement that specifies the labels of the
+regions in those countries that you want to allow
+through
+
+The following JSON listing shows an implementation of the two rules described in the prior
+pseudocode. These rules block all traffic from the United States except for
+traffic from Oregon and Washington. The geo match statement adds country and
+region labels to all requests that it inspects. The label match rule runs after
+the geo match rule, so it can match against the country and region labels that
+the geo match rule has just added. The geo match statement uses a forwarded IP
+address, so the label matching also specifies forwarded IP labels.
+
+{
+"Name": "geoMatchForLabels",
+"Priority": 10,
+"Statement": {
+"GeoMatchStatement": {
+"CountryCodes": [
+"US"
+],
+"ForwardedIPConfig": {
+"HeaderName": "X-Forwarded-For",
+"FallbackBehavior": "MATCH"
+}
+}
+},
+"Action": {
+"Count": {}
+},
+"VisibilityConfig": {
+"SampledRequestsEnabled": true,
+"CloudWatchMetricsEnabled": true,
+"MetricName": "geoMatchForLabels"
+}
+},
+{
+"Name": "blockUSButNotOROrWA",
+"Priority": 11,
+"Statement": {
+"AndStatement": {
+"Statements": [
+{
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:forwardedip:geo:country:US"
+}
+},
+{
+"NotStatement": {
+"Statement": {
+"OrStatement": {
+"Statements": [
+{
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:forwardedip:geo:region:US-OR"
+}
+},
+{
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:forwardedip:geo:region:US-WA"
+}
+}
+]
+}
+}
+}
+}
+]
+}
+},
+"Action": {
+"Block": {}
+},
+"VisibilityConfig": {
+"SampledRequestsEnabled": true,
+"CloudWatchMetricsEnabled": true,
+"MetricName": "blockUSButNotOROrWA"
+}
+}
+
+As another example, you can combine geo matching with rate-based rules to prioritize
+resources for users in a particular country or region. You create a different
+rate-based statement for each geo match or label match statement that you use to
+differentiate your users. Set a higher rate limit for users in the preferred
+country or region and set a lower rate limit for other users.
+
+The following JSON listing shows a geo match rule followed by rate-based rules that limit
+the rate of traffic from the United States. The rules allow traffic from Oregon
+to come in at a higher rate than traffic from anywhere else in the country.
+
+{
+"Name": "geoMatchForLabels",
+"Priority": 190,
+"Statement": {
+"GeoMatchStatement": {
+"CountryCodes": [
+"US"
+]
+}
+},
+"Action": {
+"Count": {}
+},
+"VisibilityConfig": {
+"SampledRequestsEnabled": true,
+"CloudWatchMetricsEnabled": true,
+"MetricName": "geoMatchForLabels"
+}
+},
+{
+"Name": "rateLimitOregon",
+"Priority": 195,
+"Statement": {
+"RateBasedStatement": {
+"Limit": 3000,
+"AggregateKeyType": "IP",
+"ScopeDownStatement": {
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:clientip:geo:region:US-OR"
+}
+}
+}
+},
+"Action": {
+"Block": {}
+},
+"VisibilityConfig": {
+"SampledRequestsEnabled": true,
+"CloudWatchMetricsEnabled": true,
+"MetricName": "rateLimitOregon"
+}
+},
+{
+"Name": "rateLimitUSNotOR",
+"Priority": 200,
+"Statement": {
+"RateBasedStatement": {
+"Limit": 100,
+"AggregateKeyType": "IP",
+"ScopeDownStatement": {
+"AndStatement": {
+"Statements": [
+{
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:clientip:geo:country:US"
+}
+},
+{
+"NotStatement": {
+"Statement": {
+"LabelMatchStatement": {
+"Scope": "LABEL",
+"Key": "awswaf:clientip:geo:region:US-OR"
+}
+}
+}
+}
+]
+}
+}
+}
+},
+"Action": {
+"Block": {}
+},
+"VisibilityConfig": {
+"SampledRequestsEnabled": true,
+"CloudWatchMetricsEnabled": true,
+"MetricName": "rateLimitUSNotOR"
+}
+}

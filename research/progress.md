@@ -20,19 +20,19 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 | 2 | Q007–Q012 | done 6/6 valid | done 6/6 valid (5 verified, Q008 ambiguous) |
 | 3 | Q013–Q018 | done 6/6 valid | done 6/6 valid (6 verified, 0 differ) |
 | 4 | Q019–Q024 | done 6/6 valid | done 6/6 valid (5 verified, Q024 ambiguous) |
-| 5 | Q025–Q030 | done 6/6 valid | running |
-| 6 | Q031–Q036 | done 6/6 valid | running |
-| 7 | Q037–Q042 | running (2026-09-30) | queued |
-| 8 | Q043–Q048 | running (2026-09-30) | queued |
+| 5 | Q025–Q030 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 6 | Q031–Q036 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 7 | Q037–Q042 | done 6/6 valid | running |
+| 8 | Q043–Q048 | done 6/6 valid | running |
 | 9 | Q049–Q054 | running (2026-09-30) | queued |
 | 10 | Q055–Q060 | running (2026-09-30) | queued |
 | 11 | Q061–Q066 | running (2026-09-30) | queued |
 | 12 | Q067–Q072 | running (2026-09-30) | queued |
 | 13 | Q073–Q078 | running (2026-09-30) | queued |
 | 14 | Q079–Q084 | running (2026-09-30) | queued |
-| 15 | Q085–Q090 | queued | queued |
-| 16 | Q091–Q096 | queued | queued |
-| 17 | Q097–Q102 | queued | queued |
+| 15 | Q085–Q090 | running (2026-09-30) | queued |
+| 16 | Q091–Q096 | running (2026-09-30) | queued |
+| 17 | Q097–Q102 | running (2026-09-30) | queued |
 | 18 | Q103–Q108 | queued | queued |
 | 19 | Q109–Q114 | queued | queued |
 | 20 | Q115–Q120 | queued | queued |
@@ -56,3 +56,5 @@ Rule: any question whose final status/answer moved TOWARD the source key after t
 - Q023 — medium; engine not specified (Aurora MySQL vs PostgreSQL); RDS Proxy RequireTLS doc conflict (user guide vs API reference).
 - Charset check (2026-09-30): bank has no U+FFFD; "encoding error" claims in blind records of Q021, Q027–Q030, Q032, Q034 are console artifacts (U+2019) → removed at reconciliation. Real anomaly: Q052 option D uses Cyrillic `ЕС2` (U+0415, U+0421). See research/schema/SOURCE_FACTS.md.
 - Q028 — outdated finding name suffix (GuardDuty `.OutsideAWS`/`.InsideAWS`); Q029 — SSE-C disabled by default on new buckets since 2026-04 (time-dependent); Q030 — "Security Hub" renamed "Security Hub CSPM" (time-dependent naming).
+- Q046 — main evidence is a re:Post Knowledge Center article; Q047 — medium, mechanism of option A not native (aggregator read-only).
+- Q040 — medium; competing option A (revoke sessions) depends on whether attacker still controls the instance.

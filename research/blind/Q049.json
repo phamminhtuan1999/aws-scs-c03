@@ -1,0 +1,244 @@
+{
+  "question_id": "Q049",
+  "question_content_hash": "6b15dec8883eb54b8e26e1a9bd5173eb0b5f97c1daf48edb9313dc6277dba2c6",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:24Z",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema (RESEARCH_FORMAT.md, SOURCE_FACTS.md), research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phải CẢI THIỆN khả năng chịu lỗi (resilience) của từng workload trong production account, không chỉ báo cáo.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Cung cấp bằng chứng cho auditor rằng workload production chịu được gián đoạn.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phạm vi: production account (có tách development account và production account trong AWS Organizations).",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn 1 đáp án (multiple choice).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q049:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Audit Manager chỉ tự động thu thập bằng chứng tuân thủ theo framework (kể cả AWS operational best practices) và không tự đánh giá hay cải thiện gì; không có bước khắc phục nên không tăng resilience của workload.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q049:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "WA Tool đánh giá workload theo Well-Architected Framework (Reliability pillar nhắm tới kiến trúc resilient và khả năng phục hồi), tạo improvement plan cho HRI/MRI; triển khai mitigation giúp cải thiện workload và workload report/tài liệu dùng làm bằng chứng cho auditor.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q049:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Inspector CIS scan chỉ benchmark cấu hình bảo mật hệ điều hành EC2 theo CIS; không đo hay cải thiện khả năng chịu gián đoạn, và scan một lần không có bước khắc phục.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q049:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "FIS và experiment report (PDF) đúng là công cụ kiểm thử và làm bằng chứng resilience, nhưng phương án chạy thí nghiệm và điều chỉnh workload trong development account; báo cáo không chứng minh workload production resilient và không nêu thay đổi được áp dụng cho production.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q049:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "A và C rõ ràng không liên quan tới cải thiện resilience; B khớp cơ chế WA Tool (review, improvement plan, report). D hấp dẫn vì FIS report là 'evidence of resilience testing', nhưng bị giới hạn ở development account.",
+      "open_issues": [
+        "Nếu người ra đề coi 'Adjust the configuration and architecture of the workloads' là áp dụng cả cho production thì D có thể được tranh luận; theo văn bản, thí nghiệm và báo cáo chỉ thuộc development account.",
+        "Bằng chứng của B là tài liệu review/mitigation, không phải kiểm thử thực nghiệm; AWS Resilience Hub (không có trong lựa chọn) là công cụ chuyên biệt hơn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref8",
+      "ref9"
+    ],
+    "recorded_at": "2026-09-30T19:46:24Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/intro.html",
+      "title": "What is AWS Well-Architected Tool?",
+      "section": "What is AWS Well-Architected Tool?",
+      "snapshot_id": "f97cdd65c527",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Providing recommendations for improving your workload based on best practices",
+      "supports": "WA Tool đưa ra khuyến nghị để cải thiện workload theo best practices.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/workloads.html",
+      "title": "Workloads - AWS Well-Architected Tool",
+      "section": "High Risk Issues (HRIs) and Medium Risk Issues (MRIs)",
+      "snapshot_id": "af7bf23cdb96",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For all identified HRIs and MRIs, AWS suggests customers implement the best practice as defined in the AWS Well-Architected Tool.",
+      "supports": "Rủi ro được xác định trong review cần được khắc phục bằng cách triển khai best practice (mitigation).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/workloads-report.html",
+      "title": "Generate a workload report in AWS Well-Architected Tool",
+      "section": "Generate a workload report",
+      "snapshot_id": "5172384aacfd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A report enables you to share details about your workload with others who do not have access to AWS Well-Architected Tool.",
+      "supports": "Có thể tạo report để chia sẻ với auditor không có quyền truy cập WA Tool.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html",
+      "title": "Reliability Pillar - AWS Well-Architected Framework",
+      "section": "Introduction",
+      "snapshot_id": "30e64391644c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "strong foundations, resilient architecture, consistent change management, and proven failure recovery processes.",
+      "supports": "Reliability pillar nhắm tới kiến trúc resilient và quy trình phục hồi sau lỗi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/audit-manager/latest/userguide/what-is.html",
+      "title": "What is AWS Audit Manager?",
+      "section": "Note",
+      "snapshot_id": "091562b00ef6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "However, it doesn't assess your compliance itself.",
+      "supports": "Audit Manager chỉ thu thập bằng chứng, không tự đánh giá/cải thiện.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/audit-manager/latest/userguide/what-is.html",
+      "title": "What is AWS Audit Manager?",
+      "section": "Features of Audit Manager",
+      "snapshot_id": "091562b00ef6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "These include the CIS Foundation Benchmark, PCI DSS, GDPR, HIPAA, SOC2, GxP, and AWS operational best practices.",
+      "supports": "Framework AWS operational best practices là framework tuân thủ để thu thập bằng chứng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/scanning-cis.html",
+      "title": "CIS scans for Amazon EC2 instance operating systems - Amazon Inspector",
+      "section": "Introduction",
+      "snapshot_id": "3d61e09bbc0d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "benchmark your Amazon EC2 instance operating systems to make sure you configured them according to best practice recommendations established by the Center for Internet Security.",
+      "supports": "CIS scan chỉ kiểm tra cấu hình OS của EC2, không phải resilience.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/what-is.html",
+      "title": "What is AWS Fault Injection Service?",
+      "section": "Introduction",
+      "snapshot_id": "4cebfbd52402",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "before you use AWS FIS to run experiments in production, we strongly recommend that you complete a planning phase and run the experiments in a pre-production environment.",
+      "supports": "FIS hỗ trợ chạy thí nghiệm trong production; pre-production chỉ là bước chuẩn bị, nên kết quả ở dev không phải bằng chứng cho production.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html",
+      "title": "Experiment report configurations for AWS FIS",
+      "section": "Introduction",
+      "snapshot_id": "ca4f8567162e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "making it easier to produce evidence of resilience testing. The experiment report is a PDF document that summarizes experiment actions",
+      "supports": "FIS tạo PDF report làm bằng chứng kiểm thử resilience cho chính thí nghiệm đã chạy (ở account nơi chạy).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": []
+}

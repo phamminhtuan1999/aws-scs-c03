@@ -1,0 +1,60 @@
+URL: https://aws.amazon.com/blogs/networking-and-content-delivery/using-connection-tracking-improvements-to-increase-network-performance/
+TITLE: Using connection tracking improvements to increase network performance | Networking & Content Delivery
+
+## Networking & Content Delivery
+
+# Using connection tracking improvements to increase network performance
+
+Connection tracking (conntrack) is a networking concept where a networking device, like a firewall, router, or NAT device, needs to track and maintain information about the state of IP traffic going through it. The AWS Nitro System that underlies AWS networking does connection tracking for some types of network traffic to implement the stateful nature of security groups.
+
+Connection tracking requires memory and compute time, and thus there are always limits to how many connections a device can handle. The Nitro System allocates each Amazon Elastic Compute Cloud (Amazon EC2) instance a fixed number of connections that it can track simultaneously, called the conntrack allowance. This allowance is different by instance type—larger and networking-optimized types have higher allowances than others. These statistics can be monitored on an instance with the Elastic Network Adapter (ENA) driver metrics conntrack_allowance_available and conntrack_allowance_exceeded, as described in the Monitoring EC2 Connection Tracking utilization blog post.
+
+While the Nitro System conntrack allowance is sufficient for most workloads, workloads that handle a high number of simultaneous connections (like firewall instances that are processing traffic for multiple applications at once), may exhaust that allowance. The Nitro System will throttle traffic for new connections when the connection tracking limit is exceeded. For details on this topic, refer to the throttling section of the EC2 Security group connection tracking documentation. Thus, reducing connection tracking usage allows those instances to process more traffic and more connections before hitting this limit.
+
+Traffic patterns where both directions of a flow don’t go through the same networking path (referred to as asymmetric routing) pose a special challenge for connection tracking systems. Let’s look at the centralized firewall inspection example diagrammed in Figure 1.
+
+Figure 1: Diagram of a centralized firewall inspection pattern
+
+In Figure 1, the customer has centralized Gateway Load Balancer and its endpoint into an inspection virtual private cloud (VPC), with traffic coming in and out through AWS Transit Gateway attachments. The diagram shows two Transit Gateway attachments to enhance clarity in the example. However, if both are the same attachment, the same issue happens.
+
+In step 1, a TCP SYN from the client enters the inspection VPC. In step 2, the traffic goes through Gateway Load Balancer, is GENEVE encapsulated, and arrives at the firewall instance. In step 3, the firewall has permitted the traffic, but is sending it directly to the Transit Gateway attachment, instead of back through Gateway Load Balancer (“two-arm” mode, also sometimes called “direct server return”). In step 4, the returning SYN+ACK from the server is coming back, goes through the same GENEVE encapsulation in step 5, the firewall allows it through, and sends it out directly in step 6.
+
+This topology results in asymmetric routing: the two paths are not the reverse of each other from the perspective of the network interface the firewall instance is using to send traffic. In this example, while connection tracking on that network interface would be expecting to see the SYN+ACK from the server back to the firewall, the firewall is sending the SYN+ACK to the client instead. This problem continues through the TCP session because window state information, sequence numbers, and other state data are always not where the connection tracking expects them to be.
+
+This state mismatch forces the Nitro System to perform a more detailed evaluation on each packet, which requires additional processing time, and thus reduces the overall packet rate a given instance can handle before reaching its processing limit. Exceeding this limit is seen by increments to the pps_allowance_exceeded counter in smaller instance types, increments to tx_queue_stops in large instances, and the traffic being queued or dropped. These counters, along with information on how to get the most networking performance possible from your instance, are in the ENA Linux Driver Best Practices and Performance Optimization Guide. While written for Linux, most of the guidance and information in the guide pertains to other operating systems as well. Some additional counters are documented on the Monitor network performance for your EC2 instance page.
+
+AWS recently launched an update to the Nitro System, reducing the list of automatically tracked connections, regardless of security group settings. Previously, this list included Transit Gateway attachments and Gateway Load Balancers. This update removes those two constructs from the automatically tracked list. It allows you to have connections going to those constructs to be untracked, if they also meet the security group requirements listed in the Untracked connections documentation. The customer in the previous example can now apply those security group requirements, and avoid the traffic being connection tracked by the Nitro System, improving the performance of the workload.
+
+This change is also of interest if you use resources like firewalls, Route53 Resolver endpoints, or other AWS services that expose an interface in a subnet whose route table sends traffic to Transit Gateway, or an instance returning traffic back to a Gateway Load Balancer after it has filtered it.
+
+This new connection tracking improvement can affect the operation of other AWS services that operate elastic network interfaces in your VPC. For instance, Route 53 Resolver endpoints place a network interface in your VPC, which has a security group attached. Customers frequently put these in a central shared services VPC, and their on-premises resources connect to it through AWS Direct Connect and Transit Gateway, as shown in this diagram (Figure 2).
+
+Figure 2: Centralized Route53 Resolver endpoint behind a Transit Gateway attachment
+
+In Figure 2, we show DNS requests flowing from an instance over the Transit Gateway attachment (step 1) and through the Transit Gateway. It’s received in the shared services VPC (step 2), sent to the Route53 Resolver endpoint, which answers the query and sends the traffic back (step 3), making its way through the Transit Gateway attachment and back to the client (step 4). The connection tracking improvement helps the traffic flow at steps 2 and 3.
+
+Since Route 53 provides these as network interfaces into your VPC, the same connection tracking considerations apply. DNS is a protocol that can use a large number of connections, because typically every DNS query uses a new source port and is a new connection to track. Thus, the need to perform connection tracking can restrict the number of queries per second that one resolver endpoint can handle. In this type of deployment, all of these sessions were connection tracked in the past. The updated Nitro System, assuming the rest of the untracked connections requirements are met, eliminates the need to connection track the sessions and allowing more queries per second to be handled by a single endpoint.
+
+For connections that still must be connection tracked, AWS recently added support to configure some of the timeouts used in connection tracking to help optimize their usage for Nitro System instances. A common change made to these timeouts is to reduce the idle TCP established timeout. The default is 5 days, which you may find far exceeds what you need or what your firewalls, NAT devices, other security software, or other AWS services like Gateway Load Balancer support.
+
+To summarize, the requirements for taking advantage of this change are to meet the other rules stated in Untracked connections, but specifically:
+
+- You currently have a Transit Gateway attachment or Gateway Load Balancer as the routing target for traffic coming from an interface
+
+- Your security groups rules permit TCP or UDP flows for all traffic (0.0.0.0/0 or ::/0) and have a corresponding rule in the other direction that permits all response traffic (0.0.0.0/0 or ::/0) for any port (0-65535)
+
+## Getting started
+
+If you have workloads that require a large number of simultaneous connections and meet the requirements previously stated, take time to evaluate your deployments to see if you are already gaining the benefits, or if you’re willing to make the remaining changes to make connections untracked to get them. If so, you may be able to reduce the number of instances you’re using for these workloads, or get more networking performance out of the instances you have. Customers in these scenarios have asked for these changes to always-tracked connections. This update allows them to scale higher throughput on their instances or reduce their costs by being able to scale down.
+
+A correction was made on October 15, 2024: An earlier version of this post misstated the use of Direct Connect in Figure 2. This has been corrected.
+
+## About the authors
+
+### Andrew Gray
+
+Andrew Gray is a Principal Solutions Architect at Amazon Web Services, specializing in networking architecture and engineering. With experience as a lead networking engineer in telecommunications and higher education, Andrew enjoys applying his technical expertise to develop innovative cloud solutions. He is passionate about solving complex challenges at the intersection of networking, infrastructure, and code.
+
+### Jasmeet Sawhney
+
+Jasmeet Sawhney is a Senior Product Manager at AWS on the VPC product team based in California. Jasmeet focuses on enhancing AWS customer experience, for instance, in networking and AWS Nitro System encryption. Before joining AWS, she developed products and solutions for hybrid cloud, network virtualization, and cloud infrastructure to meet customers’ changing networking requirements. When not working, she loves golfing, biking, and traveling with her family.

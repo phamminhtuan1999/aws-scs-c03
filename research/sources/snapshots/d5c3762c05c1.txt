@@ -1,0 +1,81 @@
+URL: https://docs.aws.amazon.com/athena/latest/ug/create-waf-table-partition-projection.html
+TITLE: Create a table for AWS WAF S3 logs in Athena using partition projection - Amazon Athena
+
+# Create a table for AWS WAF S3 logs in Athena using partition projection
+
+Because AWS WAF logs have a known structure whose partition scheme you can specify in
+advance, you can reduce query runtime and automate partition management by using the
+Athena partition projection feature. Partition projection automatically adds new
+partitions as new data is added. This removes the need for you to manually add
+partitions by using ALTER TABLE ADD PARTITION.
+
+The following example CREATE TABLE statement automatically uses partition
+projection on AWS WAF logs from a specified date until the present for four different
+AWS regions. The PARTITION BY clause in this example partitions by region
+and by date, but you can modify this according to your requirements. Modify the fields
+as necessary to match your log output. In the LOCATION and
+storage.location.template clauses, replace the
+amzn-s3-demo-bucket and
+AWS_ACCOUNT_NUMBER placeholders with values that identify
+the Amazon S3 bucket location of your AWS WAF logs. For projection.day.range,
+replace
+2021/01/01
+with the starting date that you want to use. After you run the query successfully, you
+can query the table. You do not have to run ALTER TABLE ADD PARTITION to
+load the partitions.
+
+CREATE EXTERNAL TABLE `waf_logs_partition_projection`(
+`timestamp` bigint,
+`formatversion` int,
+`webaclid` string,
+`terminatingruleid` string,
+`terminatingruletype` string,
+`action` string,
+`terminatingrulematchdetails` array<struct<conditiontype:string,sensitivitylevel:string,location:string,matcheddata:array<string>>>,
+`httpsourcename` string,
+`httpsourceid` string,
+`rulegrouplist` array<struct<rulegroupid:string,terminatingrule:struct<ruleid:string,action:string,rulematchdetails:array<struct<conditiontype:string,sensitivitylevel:string,location:string,matcheddata:array<string>>>>,nonterminatingmatchingrules:array<struct<ruleid:string,action:string,overriddenaction:string,rulematchdetails:array<struct<conditiontype:string,sensitivitylevel:string,location:string,matcheddata:array<string>>>,challengeresponse:struct<responsecode:string,solvetimestamp:string>,captcharesponse:struct<responsecode:string,solvetimestamp:string>>>,excludedrules:string>>,
+`ratebasedrulelist` array<struct<ratebasedruleid:string,limitkey:string,maxrateallowed:int>>,
+`nonterminatingmatchingrules` array<struct<ruleid:string,action:string,rulematchdetails:array<struct<conditiontype:string,sensitivitylevel:string,location:string,matcheddata:array<string>>>,challengeresponse:struct<responsecode:string,solvetimestamp:string>,captcharesponse:struct<responsecode:string,solvetimestamp:string>>>,
+`requestheadersinserted` array<struct<name:string,value:string>>,
+`responsecodesent` string,
+`httprequest` struct<clientip:string,country:string,headers:array<struct<name:string,value:string>>,uri:string,args:string,httpversion:string,httpmethod:string,requestid:string,fragment:string,scheme:string,host:string>,
+`labels` array<struct<name:string>>,
+`captcharesponse` struct<responsecode:string,solvetimestamp:string,failurereason:string>,
+`challengeresponse` struct<responsecode:string,solvetimestamp:string,failurereason:string>,
+`ja3fingerprint` string,
+`ja4fingerprint` string,
+`oversizefields` string,
+`requestbodysize` int,
+`requestbodysizeinspectedbywaf` int)
+PARTITIONED BY (
+`log_time` string)
+ROW FORMAT SERDE
+'org.openx.data.jsonserde.JsonSerDe'
+STORED AS INPUTFORMAT
+'org.apache.hadoop.mapred.TextInputFormat'
+OUTPUTFORMAT
+'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+'s3://amzn-s3-demo-bucket/AWSLogs/AWS_ACCOUNT_NUMBER/WAFLogs/cloudfront/testui/'
+TBLPROPERTIES (
+'projection.enabled'='true',
+'projection.log_time.format'='yyyy/MM/dd/HH/mm',
+'projection.log_time.interval'='1',
+'projection.log_time.interval.unit'='minutes',
+'projection.log_time.range'='2025/01/01/00/00,NOW',
+'projection.log_time.type'='date',
+'storage.location.template'='s3://amzn-s3-demo-bucket/AWSLogs/AWS_ACCOUNT_NUMBER/WAFLogs/cloudfront/testui/${log_time}')
+
+Note
+
+The format of the path in the LOCATION clause in the example is
+standard but can vary based on the AWS WAF configuration that you have implemented.
+For example, the following example AWS WAF logs path is for a CloudFront distribution:
+
+s3://amzn-s3-demo-bucket/AWSLogs/AWS_ACCOUNT_NUMBER/WAFLogs/cloudfront/cloudfronyt/2025/01/01/00/00/
+
+If you experience issues while creating or querying your AWS WAF logs table, confirm
+the location of your log data or contact Support.
+
+For more information about partition projection, see Use partition projection with Amazon Athena.

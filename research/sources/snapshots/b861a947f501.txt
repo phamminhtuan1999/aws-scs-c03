@@ -1,0 +1,140 @@
+URL: https://aws.amazon.com/blogs/security/how-to-deploy-cloudhsm-securely-share-keys-with-saas-provider/
+TITLE: How to deploy CloudHSM to securely share your keys with your SaaS provider | AWS Security Blog
+
+## AWS Security Blog
+
+# How to deploy CloudHSM to securely share your keys with your SaaS provider
+
+August 31, 2021:AWS KMS is replacing the term customer master key (CMK) with AWS KMS key and KMS key. The concept has not changed. To prevent breaking changes, AWS KMS is keeping some variations of this term. More info.
+
+August 6, 2019: We’ve made an update to clarify use cases for VPC peering.
+
+If your organization is using software as a service (SaaS), your data is likely stored and protected by the SaaS provider. However, depending on the type of data that your organization stores and the compliance requirements that it must meet, you might need more control over how the encryption keys are stored, protected, and used. In this post, I’ll show you two options for deploying and managing your own CloudHSM cluster to secure your keys, while still allowing trusted third-party SaaS providers to securely access your HSM cluster in order to perform cryptographic operations. You can also use this architecture when you want to share your keys with another business unit or with an application that’s running in a separate AWS account.
+
+AWS CloudHSM is one of several cryptography services provided by AWS to help you secure your data and keys in the AWS cloud. AWS CloudHSM provides single-tenant HSMs based on third-party FIPS 140-2 Level 3 validated hardware, under your control, in your Amazon Virtual Private Cloud (Amazon VPC). You can generate and use keys on your HSM using CloudHSM command line tools or standards-compliant C, Java, and OpenSSL SDKs.
+
+A related, more widely used service is AWS Key Management Service (KMS). KMS is generally easier to use, cheaper to operate, and is natively integrated with most AWS services. However, there are some use cases for which you may choose to rely on CloudHSM to meet your security and compliance requirements.
+
+## Solution Overview
+
+There are two ways you can set up your VPC and CloudHSM clusters to allow trusted third-party SaaS providers to use the HSM cluster for cryptographic operations. The first option is to use VPC peering to allow traffic to flow between the SaaS provider’s HSM client VPC and your CloudHSM VPC, and to utilize a custom application to harness the HSM.
+
+The second option is to use KMS to manage the keys, specifying a custom key store to generate and store the keys. AWS KMS supports custom key stores backed by AWS CloudHSM clusters. When you create an AWS KMS key in a custom key store, AWS KMS generates and stores non-extractable key material for the KMS key in an AWS CloudHSM cluster that you own and manage.
+
+## Decision Criteria: VPC Peering vs Custom Key Store
+
+The right solution for you will depend on factors like your VPC configuration, security requirements, network setup, and the type of cryptographic operations you need. The following table provides a high-level summary of how these two options compare. Later in this post, I’ll go over both options in detail and explain the design considerations you need to be aware of before deploying the solution in your environment.
+
+Technical Considerations
+
+Solution
+
+VPC Peering
+
+Custom Keystore
+
+Are you able to peer or connect your HSM VPC with your SaaS provider?
+
+✔
+
+Is your SaaS provider sensitive to costs from KMS usage in their AWS account?
+
+✔
+
+Do you need CloudHSM-specific cryptographic tasks like asymmetric decryption, signing, or HMAC?
+
+✔
+
+Does your SaaS provider need to encrypt your data directly with the KMS key?
+
+✔
+
+Does your application rely on a PKCS#11-compliant or JCE-compliant SDK?
+
+✔
+
+Does your SaaS provider need to use the keys in AWS services?
+
+✔
+
+Do you need to log all key usage activities when SaaS providers use your HSM keys?
+
+✔
+
+## Option 1: VPC Peering
+
+Figure 1: Architecture diagram showing VPC peering between the SaaS provider’s HSM client VPC and the customer’s HSM VPC
+
+Figure 1 shows how you can deploy a CloudHSM cluster in a dedicated HSM VPC and peer this HSM VPC with your service provider’s VPC to allow them to access the HSM cluster through the client/application. I recommend that you deploy the CloudHSM cluster in a separate HSM VPC to limit the scope of resources running in that VPC. Since VPC peering is not transitive, service providers will not have access to any resources in your application VPCs or any other VPCs that are peered with the HSM VPC.
+
+It’s possible to leverage the HSM cluster for other purposes and applications, but you should be aware of the potential drawbacks before you do. This approach could make it harder for you to find non-overlapping CIDR ranges for use with your SaaS provider. It would also mean that your SaaS provider could accidentally overwrite HSM account credentials or lock out your HSMs, causing an availability issue for your other applications. Due to these reasons, I recommend that you dedicate a CloudHSM cluster for use with your SaaS providers and use small VPC and subnet sizes, like /27, so that you’re not wasting IP space and it’s easier to find non-overlapping IP addresses with your SaaS provider.
+
+If you’re using VPC peering, your HSM VPC CIDR cannot overlap with your SaaS provider’s VPC. Deploying the HSM cluster in a separate VPC gives you flexibility in selecting a suitable CIDR range that is non-overlapping with the service provider since you don’t have to worry about your other applications. Also, since you’re only hosting the HSM Cluster in this VPC, you can choose a CIDR range that is relatively small.
+
+### Design considerations
+
+Here are additional considerations to think about when deploying this solution in your environment:
+
+- VPC peering allow resources in either VPC to communicate with each other as long as security groups, NACLS, and routing allow for it. In order to improve security, place only resources that are meant to be shared in the VPC, and secure communication at the port/protocol level by using security groups.
+
+- If you decide to revoke the SaaS provider’s access to your CloudHSM, you have two choices:
+
+- At the network layer, you can remove connectivity by deleting the VPC peering or by modifying the CloudHSM security groups to disallow the SaaS provider’s CIDR ranges.
+
+- Alternately, you can log in to the CloudHSM as Crypto Officer (CO) and change the password or delete the Crypto user that the SaaS provider is using.
+
+- If you’re deploying CloudHSM across multiple accounts or VPCs within your organization, you can also use AWS Transit Gateway to connect the CloudHSM VPC to your application VPCs. Transit Gateway is ideal when you have multiple application VPCs that needs CloudHSM access, as it easily scales and you don’t have to worry about the VPC peering limits or the number of peering connections to manage.
+
+- If you’re the SaaS provider, and you have multiple clients who might be interested in this solution, you must make sure that one customer IP space doesn’t overlap with yours. You must also make sure that each customer’s HSM VPC doesn’t overlap with any of the others. One solution is to dedicate one VPC per customer, to keep the client/application dedicated to that customer, and to peer this VPC with your application VPC. This reduces the overlapping CIDR dependency among all your customers.
+
+## Option 2: Custom Key Store
+
+As the AWS KMS documentation explains, KMS supports custom key stores backed by AWS CloudHSM clusters. When you create an AWS KMS key in a custom key store, AWS KMS generates and stores non-extractable key material for the KMS key in an AWS CloudHSM cluster that you own and manage. When you use a KMS key in a custom key store, the cryptographic operations are performed in the HSMs in the cluster. This feature combines the convenience and widespread integration of AWS KMS with the added control of an AWS CloudHSM cluster in your AWS account. This option allows you to keep your KMS key in the CloudHSM cluster but allows your SaaS provider to use your key securely by using KMS.
+
+Each custom key store is associated with an AWS CloudHSM cluster in your AWS account. When you connect the custom key store to its cluster, AWS KMS creates the network infrastructure to support the connection. Then it logs into the key AWS CloudHSM client in the cluster using the credentials of a dedicated crypto user in the cluster. All of this is automatically set up, with no need to peer VPCs or connect to your SaaS provider’s VPC.
+
+You create and manage your custom key stores in AWS KMS, and you create and manage your HSM clusters in AWS CloudHSM. When you create KMS keys in an AWS KMS custom key store, you view and manage the keys in AWS KMS. But you can also view and manage their key material in AWS CloudHSM, just as you would do for other keys in the cluster.
+
+The following diagram shows how some keys can be located in a CloudHSM cluster but be visible through AWS KMS. These are the keys that AWS KMS can use for crypto operations performed through KMS.
+
+Figure 2: High level overview of KMS custom key store
+
+While this option eliminates many of the networking components you need to set up for Option 1, it does limit the type of cryptographic operations that your SaaS provider can perform. Since the SaaS provider doesn’t have direct access to CloudHSM, the crypto operations are limited to the encrypt and decrypt operations supported by KMS, and your SaaS provider must use KMS APIs for all of their operations. This is easy if they’re using AWS services which use KMS already, but if they’re performing operations within their application before storing the data in AWS storage services, this approach could be challenging, because KMS doesn’t support all the same types of cryptographic operations that CloudHSM supports.
+
+Figure 3 illustrates the various components that make up a custom key store and shows how a CloudHSM cluster can connect to KMS to create a customer controlled key store.
+
+Figure 3: A cluster of two CloudHSM instances is connected to KMS to create a customer controlled key store
+
+### Design Considerations
+
+- Note that when using custom key store, you’re creating a kmsuser CU account in your AWS CloudHSM cluster and providing the kmsuser account credentials to AWS KMS.
+
+- This option requires your service provider to be able to use KMS as the key management option within their application. Because your SaaS provider cannot communicate directly with the CloudHSM cluster, they must instead use KMS APIs to encrypt the data. If your SaaS provider is encrypting within their application without using KMS, this option may not work for you.
+
+- When deploying a custom key store, you must not only control access to the CloudHSM cluster, you must also control access to AWS KMS.
+
+- Because the custom key store and KMS are located in your account, you must give permission to the SaaS provider to use certain KMS keys. You can do this by enabling cross account access. For more information, please refer to the blog post “Share custom encryption keys more securely between accounts by using AWS Key Management Service.”
+
+- I recommend dedicating an AWS account to the CloudHSM cluster and custom key store, as this simplifies setup. For more information, please refer to Controlling Access to Your Custom Key Store.
+
+## Network architecture that is not supported by CloudHSM
+
+Figure 4: Diagram showing the network anti-pattern for deploying CloudHSM
+
+Figure 4 shows various networking technologies, like AWS PrivateLink, Network Address Translation (NAT), and AWS Load Balancers, that cannot be used with CloudHSM when placed between the CloudHSM cluster and the client/application. All of these methods mask the real IPs of the HSM cluster nodes from the client, which breaks the communication between the CloudHSM client and the HSMs.
+
+When the CloudHSM client successfully connects to the HSM cluster, it downloads a list of HSM IP addresses which is then stored and used for subsequent connections. When one of the HSM nodes is unavailable, the client/application will automatically try the IP address of the HSM nodes it knows about. When HSMs are added or removed from the cluster, the client is automatically reconfigured. Since the client relies on a current list of IP addresses to transparently handle high availability and failover within the cluster, masking the real IP address of the HSM node thus breaks the communication between the cluster and the client.
+
+You can read more about how the CloudHSM client works in the AWS CloudHSM User Guide.
+
+### Summary
+
+In this blog post, I’ve shown you two options for deploying CloudHSM to store your key material while allowing your SaaS provider to access and use those keys on your behalf. This allows you to remain in control of your encryption keys and use a SaaS solution without compromising security.
+
+It’s important to understand the security requirements, network setup, and type of cryptographic operation for each approach, and to choose the option that aligns the best with your goals. As a best practice, it’s also important to understand how to secure your CloudHSM and KMS deployment and to use necessary role-based access control with minimum privilege. Read more about AWS KMS Best Practices and CloudHSM Best Practices.
+
+If you have feedback about this blog post, submit comments in the Comments section below. If you have questions about this blog post, start a new thread on the AWS Key Management Service discussion forum.
+
+Want more AWS Security news? Follow us on Twitter.
+
+Loading comments…

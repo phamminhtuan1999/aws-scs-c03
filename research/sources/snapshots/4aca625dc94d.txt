@@ -1,0 +1,120 @@
+URL: https://docs.aws.amazon.com/controltower/latest/userguide/special-accounts.html
+TITLE: Service integration accounts - AWS Control Tower
+
+# Service integration accounts
+
+AWS Control Tower uses three special AWS accounts: the management account, the
+Config aggregator account, and the CloudTrail
+administrator account. AWS Control Tower refers to the Config aggregator account and the CloudTrail administrator account as service integration accounts.
+
+Legacy account names
+
+In landing zone versions earlier than 4.0, these accounts were called shared accounts (or sometimes core accounts).
+
+- You can select customized names for the service integration accounts when
+you're setting up your landing zone. For information about changing an account
+name, see Externally changing AWS Control Tower resource names.
+
+- You can also specify an existing AWS account as an AWS Control Tower service integration account,
+during the initial landing zone setup process. This option eliminates the need
+for AWS Control Tower to create new accounts. (This is a one-time
+selection.)
+
+For more information about the service integration accounts and their associated resources, see
+Resources created in the shared accounts.
+
+## Management account
+
+This AWS account launches AWS Control Tower. By default, the root user for this account
+and the IAM user or IAM administrator user for this account have full access to all resources
+within your landing zone.
+
+Note
+
+As a best practice, we recommend signing in as an IAM Identity Center user with
+Administrator privileges when performing administrative
+functions within the AWS Control Tower console, instead of the signing in as the root user
+or IAM administrator user for this account.
+
+For more information about the roles and resources available in the
+management account, see Resources created in the shared accounts.
+
+## CloudTrail administrator account
+
+AWS Control Tower sets up the CloudTrail administrator account when you enable the AWS CloudTrail centralized logging integration. Alternatively, you can use an existing AWS account as the CloudTrail administrator account. You might know this account by its previous name: the log archive account.
+
+This account contains a central Amazon S3 bucket that stores log files for all other
+accounts in your landing zone. In landing zone versions earlier than 4.0, this bucket
+stores both AWS CloudTrail and AWS Config log files. In landing zone version 4.0 and later, this
+bucket stores only AWS CloudTrail log files. AWS Config stores its log files in a dedicated
+bucket in the Config aggregator account.
+
+As a best practice, restrict access to this account to teams responsible for compliance
+and investigations, and their related security or audit tools. You can use this account for automated security audits. You can also host custom AWS Config Rules, such as Lambda
+functions, to perform remediation actions.
+
+Amazon S3 bucket policy
+
+For AWS Control Tower landing zone version 3.3 and later, accounts must meet an
+aws:SourceOrgID condition for any write permissions to your
+Audit bucket. This condition ensures that CloudTrail only can write logs on behalf of
+accounts within your organization to your S3 bucket; it prevents CloudTrail logs
+outside your organization from writing to your AWS Control Tower S3 bucket. For more
+information, see AWS Control Tower landing zone version 3.3.
+
+For more information about the roles and resources available in the log archive
+account, see Log archive account resources
+
+Note
+
+These logs cannot be changed. All logs are stored for the purposes of audit
+and compliance investigations related to account activity.
+
+## Config aggregator account
+
+AWS Control Tower sets up the Config aggregator account when you enable the AWS Config service integration. Alternatively, you can use an existing AWS account as the Config aggregator account. You might know this account by its previous name: the audit account.
+
+The Config aggregator account should be restricted to security and compliance teams with
+auditor (read-only) and administrator (full-access) cross-account roles to all
+accounts in the landing zone. These roles are intended to be used by security and
+compliance teams to:
+
+- Perform audits through AWS mechanisms, such as hosting custom AWS Config rule
+Lambda functions.
+
+- Perform automated security operations, such as remediation actions.
+
+The Config aggregator account also receives notifications through the Amazon Simple Notification Service (Amazon SNS)
+service. You can receive three categories of notification:
+
+- All Configuration Events – This
+topic aggregates all CloudTrail and AWS Config notifications from all accounts in your
+landing zone.
+
+- Aggregate Security Notifications –
+This topic aggregates all security notifications from specific CloudWatch events,
+AWS Config Rules compliance status change events, and GuardDuty findings.
+
+- Drift Notifications – This topic
+aggregates all the drift warnings discovered across all accounts, users,
+OUs, and SCPs in your landing zone. For more information on drift, see Detect and resolve drift in AWS Control Tower.
+
+Audit notifications that are triggered within a member account also can send
+alerts to a local Amazon SNS topic. This functionality allows account administrators to
+subscribe to audit notifications that are specific to an individual member account.
+As a result, administrators can resolve issues that affect an individual account,
+while still aggregating all account notifications to your centralized Config aggregator account.
+For more information, see Amazon Simple Notification Service Developer Guide.
+
+For more information about the roles and resources available in the Config aggregator account,
+see Audit account resources.
+
+For more information about programmatic auditing, see Programmatic roles and trust relationships for the AWS Control Tower audit account.
+
+Important
+
+The email address you provide for the Config aggregator account receives AWS
+Notification - Subscription Confirmation emails from every
+AWS Region supported by AWS Control Tower. To receive compliance emails in your Config aggregator
+account, you must choose the Confirm subscription link
+within each email from each AWS Region supported by AWS Control Tower.

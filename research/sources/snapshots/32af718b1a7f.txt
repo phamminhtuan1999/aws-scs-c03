@@ -1,0 +1,113 @@
+URL: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-define-rule.html
+TITLE: Defining a rule in EventBridge - AWS Security Hub
+
+# Defining a rule in EventBridge
+
+To trigger a custom action in Amazon EventBridge, you must create a corresponding rule in EventBridge. The
+rule definition includes the Amazon Resource Name (ARN) of the custom action.
+
+The event pattern for a Security Hub Findings - Custom
+Action event has the following format:
+
+{
+"source": [
+"aws.securityhub"
+],
+"detail-type": [
+"Security Hub Findings - Custom Action"
+],
+"resources": [ "<custom action ARN>" ]
+}
+
+The event pattern for a Security Hub Insight Results
+event has the following format:
+
+{
+"source": [
+"aws.securityhub"
+],
+"detail-type": [
+"Security Hub Insight Results"
+],
+"resources": [ "<custom action ARN>" ]
+}
+
+In both patterns, <custom action ARN>
+is the ARN of a custom action. You can configure a rule that applies to more than
+one custom action.
+
+The instructions provided here are for the EventBridge console. When you use the console,
+EventBridge automatically creates the required resource-based policy that enables EventBridge to
+write to CloudWatch Logs.
+
+You can also use the PutRule API operation of the EventBridge API. However, if you use
+the EventBridge API, then you must create the resource-based policy. For details on the
+required policy, see CloudWatch Logs permissions in the Amazon EventBridge User Guide.
+
+To define a rule in EventBridge (EventBridge console)
+
+- Open the Amazon EventBridge console at https://console.aws.amazon.com/events/.
+
+- In the navigation pane, choose Rules.
+
+- Choose Create rule.
+
+- Enter a name and description for the rule.
+
+- For Event bus, choose the event bus that you want to
+associate with this rule. If you want this rule to match events that come
+from your account, select default. When an AWS
+service in your account emits an event, it always goes to your account’s
+default event bus.
+
+- For Rule type, choose Rule with an event
+pattern.
+
+- Choose Next.
+
+- For Event source, choose AWS
+events.
+
+- For Event pattern, choose Event pattern
+form.
+
+- For Event source, choose AWS
+services.
+
+- For AWS service, choose
+Security Hub.
+
+- For Event type, do one of the following:
+
+- To create a rule to apply when you send findings to a custom
+action, choose Security Hub Findings - Custom
+Action.
+
+- To create a rule to apply when you send insight results to a
+custom action, choose Security Hub Insight
+Results.
+
+- Choose Specific custom action ARNs, add a custom
+action ARN.
+
+If the rule applies to multiple custom actions, choose
+Add to add more custom action ARNs.
+
+- Choose Next.
+
+- Under Select targets, choose and configure the target
+to invoke when this rule is matched.
+
+- Choose Next.
+
+- (Optional) Enter one or more tags for the rule. For more information, see
+Amazon EventBridge tags
+in the Amazon EventBridge User Guide.
+
+- Choose Next.
+
+- Review the details of the rule and choose Create
+rule.
+
+When you perform a custom action on findings or insight results in your
+account, events are generated in EventBridge.

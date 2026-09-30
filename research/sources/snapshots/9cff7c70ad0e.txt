@@ -1,0 +1,93 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/setup-autoremediation.html
+TITLE: Setting Up Auto Remediation for AWS Config - AWS Config
+
+# Setting Up Auto Remediation for AWS Config
+
+To apply remediation on noncompliant resources, you can either choose the remediation
+action you want to associate from a prepopulated list or create your own custom remediation
+actions using SSM documents. AWS Config provides a list of remediation action in the
+AWS Management Console.
+
+Setting Up Auto Remediation (Console)
+
+In the AWS Management Console, you can either choose to automatically remediate noncompliant resources by
+associating remediation actions with AWS Config rules. With all remediation actions, you can
+either choose manual or automatic remediation.
+
+- Sign in to the AWS Management Console and open the AWS Config console at
+https://console.aws.amazon.com/config/home.
+
+- Choose Rules on the left and then on the
+Rules page, choose Add Rule to add
+new rules to the rule list.
+
+For existing rules, select the noncompliant rule from the rule list and choose
+the Actions dropdown list.
+
+- From the Actions dropdown list, choose Manage
+remediation. Select "Automatic remediation" and then choose the
+appropriate remediation action from the list.
+
+Note
+
+You can only manage remediations for non-service linked AWS Config rules. For
+more information, see Service-Linked
+AWS Rules.
+
+Depending on the selected remediation action, you see specific parameters or
+no parameters.
+
+- Choose Auto remediation to automatically remediate
+noncompliant resources.
+
+If a resource is still noncompliant after auto remediation, you can set the
+rule to try auto remediation again. Enter the desired retries and
+seconds.
+
+Note
+
+There are costs associated with running a remediation script multiple
+times. Retries only occur if remediation fails and work within the specified time period; for example, 5 retries in 300 seconds.
+For more information, see Systems Manager Automation Pricing .
+
+- (Optional): If you want to pass the resource ID of noncompliant resources to
+the remediation action, choose Resource ID parameter. If
+selected, at runtime that parameter is substituted with the ID of the resource
+to be remediated.
+
+Each parameter has either a static value or a dynamic value. If you do not
+choose a specific resource ID parameter from the dropdown list, you can enter
+values for each key. If you choose a resource ID parameter from the dropdown
+list, you can enter values for all the other keys except the selected resource
+ID parameter.
+
+- Choose Save. The Rules page is
+displayed.
+
+For troubleshooting failed remediation actions
+
+For troubleshooting failed remediation actions, you can run the AWS Command Line
+Interface command describe-remediation-execution-status to get detailed
+view of a Remediation Execution for a set of resources. The details include state,
+timestamps for remediation execution steps, and any error messages for the failed
+steps.
+
+Auto remediation can be initiated even for compliant resources
+
+If you enable auto remediation for a specific AWS Config rule using the PutRemediationConfigurations API or the AWS Config console,
+it initiates the remediation process for all noncompliant resources for that specific rule.
+The auto remediation process relies on the compliance data snapshot which is captured on a periodic basis.
+Any noncompliant resource that is updated between the snapshot schedule will continue to be remediated based on the last known compliance data snapshot.
+
+This means that in some cases auto remediation can be initiated even for compliant resources, since the bootstrap processor uses a database that can have stale evaluation results based on the last known compliance data snapshot.
+
+Setting Up Auto Remediation
+(API)
+
+Use the following AWS Config API operation to set up auto remediation:
+
+- PutRemediationConfigurations, adds or updates the remediation configuration with a specific AWS Config rule with the selected target or action.
+
+- DescribeRemediationExecutionStatus, provides a detailed view of a Remediation Execution for a set of resources including state, timestamps for when steps for the remediation execution occur, and any error messages for steps that have failed.
+
+- DescribeRemediationConfigurations, returns the details of one or more remediation configurations.

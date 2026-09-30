@@ -1,0 +1,148 @@
+URL: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Alarms.html
+TITLE: Using Amazon CloudWatch alarms - Amazon CloudWatch
+
+# Using Amazon CloudWatch alarms
+
+You can create alarms that watch metrics and send notifications or automatically make
+changes to the resources you are monitoring when a threshold is breached. For example, you can
+monitor the CPU usage and disk reads and writes of your Amazon EC2 instances and then use that data
+to determine whether you should launch additional instances to handle increased load. You can
+also use this data to stop under-used instances to save money.
+
+You can create both metric and composite alarms
+in Amazon CloudWatch.
+
+You can create alarms on Metrics Insights queries that use AWS resource tags to filter and
+group metrics. To use tags with alarms, on the CloudWatch console, choose
+Settings. On the CloudWatch Settings page, under
+Enable resource tags on telemetry, choose Enable.
+For context-aware monitoring that automatically adapts to your tagging strategy, create alarms
+on Metrics Insights queries using AWS resource tags. This allows you to monitor all resources
+tagged with specific applications or environments.
+
+- A metric alarm watches a single CloudWatch metric or the result of a math
+expression based on CloudWatch metrics. The alarm performs one or more actions based on the value
+of the metric or expression relative to a threshold over a number of time periods. The
+action can be sending a notification to an Amazon SNS topic, performing an Amazon EC2 action or an
+Amazon EC2 Auto Scaling action, starting an investigation in CloudWatch investigations operational investigations, or
+creating an OpsItem or incident in Systems Manager.
+
+- A PromQL alarm monitors metrics using a Prometheus Query Language
+(PromQL) instant query on metrics ingested through the CloudWatch OTLP endpoint. The alarm
+tracks individual breaching time series as contributors and uses duration-based pending
+and recovery periods to control state transitions. For more information, see PromQL alarms.
+
+- A log alarm monitors the results of a CloudWatch Logs Insights
+query that runs on a schedule. The alarm evaluates aggregated query results against a
+threshold using M-out-of-N evaluation on recent query executions. Use log alarms to
+detect patterns, errors, or threshold breaches directly in your log data without
+creating metric filters. For more information, see
+Create a Log Alarm.
+
+- A composite alarm includes a rule expression that takes into
+account the alarm states of other alarms that you have created. The composite alarm goes
+into ALARM state only if all conditions of the rule are met. The alarms specified in a
+composite alarm's rule expression can include metric alarms and other composite
+alarms.
+
+Using composite alarms can reduce alarm noise. You can create multiple metric alarms,
+and also create a composite alarm and set up alerts only for the composite alarm. For
+example, a composite might go into ALARM state only when all of the underlying metric alarms
+are in ALARM state.
+
+Composite alarms can send Amazon SNS notifications when they change state, and can create
+investigations, Systems Manager OpsItems, or incidents when they go into ALARM state, but can't
+perform EC2 actions or Auto Scaling actions.
+
+Note
+
+You can create as many alarms as you want in your AWS account.
+
+You can add alarms to dashboards, so you can monitor and receive alerts about your AWS
+resources and applications across multiple regions. After you add an alarm to a dashboard, the
+alarm turns gray when it's in the INSUFFICIENT_DATA state and red when it's in the
+ALARM state. The alarm is shown with no color when it's in the OK
+state.
+
+You also can favorite recently visited alarms from the Favorites and
+recents option in the CloudWatch console navigation pane. The Favorites and
+recents option has columns for your favorited alarms and recently visited alarms.
+
+An alarm invokes actions only when the alarm changes state. The exception is for alarms with
+Auto Scaling actions. For Auto Scaling actions, the alarm continues to invoke the action once
+per minute that the alarm remains in the new state.
+
+An alarm can watch a metric in the same account. If you have enabled cross-account
+functionality in your CloudWatch console, you can also create alarms that watch metrics in other AWS
+accounts. Creating cross-account composite alarms is not supported. Creating cross-account
+alarms that use math expressions is supported, except that the
+ANOMALY_DETECTION_BAND, INSIGHT_RULE, and SERVICE_QUOTA
+functions are not supported for cross-account alarms.
+
+Note
+
+CloudWatch doesn't test or validate the actions that you specify, nor does it detect any
+Amazon EC2 Auto Scaling or Amazon SNS errors resulting from an attempt to invoke nonexistent actions. Make sure
+that your alarm actions exist.
+
+## Common features of CloudWatch alarms
+
+The following features apply to all CloudWatch alarms:
+
+- There is no limit to the number of alarms that you can create. To create or update an
+alarm, you use the CloudWatch console, the PutMetricAlarm or PutLogAlarm API actions, or the corresponding commands in
+the AWS CLI.
+
+- Alarm names must contain only UTF-8 characters, and can't contain ASCII control
+characters
+
+- You can list any or all of the currently configured alarms, and list any alarms in a
+particular state by using the CloudWatch console, the DescribeAlarms API action, or the
+describe-alarms
+command in the AWS CLI.
+
+- You can disable and enable alarm actions by using the DisableAlarmActions and EnableAlarmActions API actions, or
+the disable-alarm-actions and enable-alarm-actions
+commands in the AWS CLI.
+
+- You can test an alarm by setting it to any state using the SetAlarmState API action or the set-alarm-state command in
+the AWS CLI. This temporary state change lasts only until the next alarm comparison
+occurs.
+
+- You can create an alarm for a custom metric before you've created that custom metric.
+For the alarm to be valid, you must include all of the dimensions for the custom metric in
+addition to the metric namespace and metric name in the alarm definition. To do this, you
+can use the PutMetricAlarm API
+action, or the put-metric-alarm command in the AWS CLI.
+
+- You can view an alarm's history using the CloudWatch console, the DescribeAlarmHistory API action,
+or the describe-alarm-history command in the AWS CLI. CloudWatch preserves alarm history for
+30 days. Each state transition is marked with a unique timestamp. In rare cases, your
+history might show more than one notification for a state change. The timestamp enables
+you to confirm unique state changes.
+
+- You can favorite alarms from the Favorites and recents option in
+the CloudWatch console navigation pane by hovering over the alarm that you want to favorite and
+choosing the star symbol next to it.
+
+- Alarms have an evaluation period quota. The evaluation period is calculated by
+multiplying the alarm period by the number of evaluation periods used.
+
+- The maximum evaluation period is seven days for alarms with a period of at least
+one hour (3600 seconds).
+
+- The maximum evaluation period is one day for alarms with a shorter period.
+
+- The maximum evaluation period is one day for alarms that use the custom Lambda data
+source.
+
+Note
+
+Some AWS resources don't send metric data to CloudWatch under certain conditions.
+
+For example, Amazon EBS might not send metric data for an available volume that is not
+attached to an Amazon EC2 instance, because there is no metric activity to be monitored for that
+volume. If you have an alarm set for such a metric, you might notice its state change to
+INSUFFICIENT_DATA. This might indicate that your resource is inactive, and
+might not necessarily mean that there is a problem. You can specify how each alarm treats
+missing data. For more information, see Configuring how CloudWatch alarms treat missing data.

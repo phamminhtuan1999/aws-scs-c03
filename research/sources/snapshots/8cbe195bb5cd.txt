@@ -1,0 +1,438 @@
+URL: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-adaptive-authentication.html
+TITLE: Working with adaptive authentication - Amazon Cognito
+
+# Working with adaptive authentication
+
+With adaptive authentication, you can configure your user pool to block suspicious
+sign-ins or add second factor authentication in response to an increased risk level. For
+each sign-in attempt, Amazon Cognito generates a risk score for how likely the sign-in request is to
+be from a compromised source. This risk score is based on device and user factors that your
+application provides, and others that Amazon Cognito derives from the request. Some factors that
+contribute to the risk evaluation by Amazon Cognito are IP
+address, user agent, and geographical distance from other sign-in
+attempts. Adaptive authentication can turn on or require multi-factor
+authentication (MFA) for a user in your user pool when Amazon Cognito detects risk in a user's
+session, and the user hasn't yet chosen an MFA method. When you activate MFA for a user,
+they always receive a challenge to provide or set up a second factor during authentication,
+regardless of how you configured adaptive authentication. From your user's perspective, your
+app offers to help them set up MFA, and optionally Amazon Cognito prevents them from signing in again
+until they have configured an additional factor.
+
+Amazon Cognito publishes metrics about sign-in attempts, their risk levels, and failed challenges
+to Amazon CloudWatch. For more information, see Viewing threat protection metrics.
+
+To add adaptive authentication to your user pool, see Advanced security with threat protection.
+
+Topics
+
+- Adaptive authentication overview
+
+- Adding user device and session data to API requests
+
+- Viewing and exporting user event history
+
+- Providing event feedback
+
+- Sending notification messages
+
+## Adaptive authentication overview
+
+From the Threat protection menu in the Amazon Cognito console, you can
+choose settings for adaptive authentication, including what actions to take at different
+risk levels and customization of notification messages to users. You can assign a global
+threat protection configuration to all of your app clients, but apply a client-level
+configuration to individual app clients.
+
+Amazon Cognito adaptive authentication assigns one of the following risk levels to each user
+session: High, Medium, Low,
+or No Risk.
+
+Consider your options carefully when you change your Enforcement
+method from Audit-only to
+Full-function. The automatic responses that you apply to risk
+levels influence the risk level that Amazon Cognito assigns to subsequent user sessions with the
+same characteristics. For example, after you choose to take no action, or
+Allow, user sessions that Amazon Cognito initially evaluates to be
+high-risk, Amazon Cognito considers similar sessions to have a lower risk.
+
+For each risk level, you can choose from the following options:
+
+Option
+
+Action
+
+Allow
+
+Users can sign in without an additional factor.
+
+Optional MFA
+
+Users who have a second factor configured must complete a second factor
+challenge to sign in. A phone number for SMS and a TOTP software token are the
+available second factors. Users without a second factor configured can sign in
+with only one set of credentials.
+
+Require MFA
+
+Users who have a second factor configured must complete a second factor
+challenge to sign in. Amazon Cognito blocks sign-in for users who don't have a second
+factor configured.
+
+Block
+
+Amazon Cognito blocks all sign-in attempts at the designated risk level.
+
+Note
+
+You don't have to verify phone numbers to use them for SMS as a second
+authentication factor.
+
+## Adding user device and session data to API requests
+
+You can collect and pass information about your user's session to Amazon Cognito threat
+protection when you use the API to sign them up, sign them in, and reset their password.
+This information includes your user's IP address and a unique device identifier.
+
+You might have a intermediate network device between your users and Amazon Cognito, like a
+proxy service or an application server. You can collect users' context data and pass it to
+Amazon Cognito so that adaptive authentication calculates your risk based on the characteristics of
+the user endpoint, instead of your server or proxy. If your client-side app calls Amazon Cognito
+API operations directly, adaptive authentication automatically records the source IP
+address. However, it does not record other device information like the
+user-agent unless you also collect a device fingerprint.
+
+Generate this data with the Amazon Cognito context data collection library and submit it to
+Amazon Cognito threat protection with the ContextData and UserContextData parameters. The context data collection library is included in
+the AWS SDKs. For more information, see Integrating Amazon Cognito authentication and authorization with web and mobile apps. You can submit ContextData if you have
+the Plus feature plan. For more information, see Setting up threat protection.
+
+When you call the following Amazon Cognito authenticated API operations from your application
+server, pass the IP of the user’s device in the ContextData parameter. In
+addition, pass your server name, server path, and encoded device-fingerprinting
+data.
+
+- AdminInitiateAuth
+
+- AdminRespondToAuthChallenge
+
+When you call Amazon Cognito unauthenticated API operations, you can submit
+UserContextData to Amazon Cognito threat protection. This data includes a device
+fingerprint in the EncodedData parameter. You can also submit an
+IpAddress parameter in your UserContextData if you meet the
+following conditions:
+
+- Your user pool is on the Plus feature plan. For more information, see User pool feature plans.
+
+- Your app client has a client secret. For more information, see Application-specific settings with app clients.
+
+- You have activated Accept additional user context data in
+your app client. For more information, see Accepting additional user context data (AWS Management Console).
+
+Your app can populate the UserContextData parameter with encoded
+device-fingerprinting data and the IP address of the user's device in the following Amazon Cognito
+unauthenticated API operations.
+
+- InitiateAuth
+
+- RespondToAuthChallenge
+
+- SignUp
+
+- ConfirmSignUp
+
+- ForgotPassword
+
+- ConfirmForgotPassword
+
+- ResendConfirmationCode
+
+### Accepting additional user context data (AWS Management Console)
+
+Your user pool accepts an IP address in a UserContextData parameter
+after you activate the Accept additional user context data feature.
+You don’t need to activate this feature if:
+
+- Your users only sign in with authenticated API operations like AdminInitiateAuth , and you use the ContextData
+parameter.
+
+- You only want your unauthenticated API operations to send a device fingerprint,
+but not an IP address, to Amazon Cognito threat protection.
+
+Update your app client as follows in the Amazon Cognito console to add support for additional
+user context data.
+
+- Sign in to the Amazon Cognito console
+.
+
+- In the navigation pane, choose Manage your User Pools, and
+choose the user pool you want to edit.
+
+- Choose the App clients menu.
+
+- Choose or create an app client. For more information, see
+Configuring a user pool app client.
+
+- Choose Edit from the App client
+information container.
+
+- In the Advanced authentication settings for your app
+client, choose Accept additional user context data.
+
+- Choose Save changes.
+
+To configure your app client to accept user context data in the Amazon Cognito API, set
+EnablePropagateAdditionalUserContextData to true in a CreateUserPoolClient or UpdateUserPoolClient request. For information about how to work with threat
+protection in your web or mobile app, see Collecting data for threat protection in applications. When your app calls
+Amazon Cognito from your server, collect user context data from the client side. The following is
+an example that uses the JavaScript SDK method getData.
+
+var EncodedData = AmazonCognitoAdvancedSecurityData.getData(username, userPoolId, clientId);
+
+When you design your app to use adaptive authentication, we recommend that you
+incorporate the latest Amazon Cognito SDK into your app.. The latest version of the SDK collects
+device fingerprinting information like device ID, model, and time zone. For more
+information about Amazon Cognito SDKs, see Install a user pool
+SDK. Amazon Cognito threat protection only saves and assigns a risk score to events
+that your app submits in the correct format. If Amazon Cognito returns an error response, check
+that your request includes a valid secret hash and that the IPaddress
+parameter is a valid IPv4 or IPv6 address.
+
+ContextData and UserContextData resources
+
+- AWS Amplify SDK for Android: GetUserContextData
+
+- AWS Amplify SDK for iOS: userContextData
+
+- JavaScript: amazon-cognito-advanced-security-data.min.js
+
+## Viewing and exporting user event history
+
+Amazon Cognito generates a log for each authentication event by a user when you enable threat
+protection. By default, you can view user logs in the Users menu in
+the Amazon Cognito console or with the AdminListUserAuthEvents API operation. You can also export these events to an
+external system like CloudWatch Logs, Amazon S3, or Amazon Data Firehose. The export feature can make security
+information about user activity in your application more accessible to your own
+security-analysis systems.
+
+Topics
+
+- Viewing user event history (AWS Management Console)
+
+- Viewing user event history (API/CLI)
+
+- Exporting user authentication events
+
+### Viewing user event history (AWS Management Console)
+
+To see the sign-in history for a user, you can choose the user from the
+Users menu in the Amazon Cognito console. Amazon Cognito retains user event history
+for two years.
+
+Each sign-in event has an event ID. The event also has corresponding context data,
+such as location, device details, and risk detection results.
+
+You can also correlate the event ID with the token that Amazon Cognito issued at the time
+that it recorded the event. The ID and access tokens include this event ID in their
+payload. Amazon Cognito also correlates refresh token use to the original event ID. You can trace
+the original event ID back to the event ID of the sign-in event that resulted in issuing
+the Amazon Cognito tokens. You can trace token usage within your system to a particular
+authentication event. For more information, see Understanding user pool JSON web tokens (JWTs).
+
+### Viewing user event history (API/CLI)
+
+You can query user event history with the Amazon Cognito API operation AdminListUserAuthEvents
+or with the AWS Command Line Interface (AWS CLI) with admin-list-user-auth-events.
+
+AdminListUserAuthEvents request
+
+The following request body for AdminListUserAuthEvents returns
+the most recent activity log for one user.
+
+{
+"UserPoolId": "us-west-2_EXAMPLE",
+"Username": "myexampleuser",
+"MaxResults": 1
+}
+
+admin-list-user-auth-events request
+
+The following request for admin-list-user-auth-events returns the
+most recent activity log for one user.
+
+aws cognito-idp admin-list-user-auth-events --max-results 1 --username myexampleuser --user-pool-id us-west-2_EXAMPLE
+
+Response
+
+Amazon Cognito returns the same JSON response body to both requests. The following is
+an example response for a managed login sign-in event that wasn't found to contain
+risk factors:
+
+{
+"AuthEvents": [
+{
+"EventId": "[event ID]",
+"EventType": "SignIn",
+"CreationDate": "[Timestamp]",
+"EventResponse": "Pass",
+"EventRisk": {
+"RiskDecision": "NoRisk",
+"CompromisedCredentialsDetected": false
+},
+"ChallengeResponses": [
+{
+"ChallengeName": "Password",
+"ChallengeResponse": "Success"
+}
+],
+"EventContextData": {
+"IpAddress": "192.168.2.1",
+"DeviceName": "Chrome 125, Windows 10",
+"Timezone": "-07:00",
+"City": "Bellevue",
+"Country": "United States"
+}
+}
+],
+"NextToken": "[event ID]#[Timestamp]"
+}
+
+### Exporting user authentication events
+
+Configure your user pool to export user events from threat protection to an external
+system. The supported external systems–Amazon S3, CloudWatch Logs, and Amazon Data Firehose–might add
+costs to your AWS bill for data that you send or retrieve. For more information, see
+Exporting threat protection user activity logs.
+
+AWS Management Console
+
+- Sign in to the Amazon Cognito
+console.
+
+- Choose User Pools.
+
+- Choose an existing user pool from the list, or create a user
+pool.
+
+- Choose the Log streaming menu. Select
+Edit.
+
+- Under Logging status, select the checkbox next to
+Activate user activity log export.
+
+- Under Logging destination, choose the AWS service
+that you want to handle your logs: CloudWatch log group,
+Amazon Data Firehose stream, or S3
+bucket.
+
+- Your selection will populate the resource selector with the corresponding
+resource type. Select a log group, stream, or bucket from the list. You can
+also select the Create button to navigate to the
+AWS Management Console for the selected service and create a new resource.
+
+- Select Save changes.
+
+API
+
+Choose one type of destination for your user activity logs.
+
+The following is an example SetLogDeliveryConfiguration request
+body that sets a Firehose stream as the log destination.
+
+{
+"LogConfigurations": [
+{
+"EventSource": "userAuthEvents",
+"FirehoseConfiguration": {
+"StreamArn": "arn:aws:firehose:us-west-2:123456789012:deliverystream/example-user-pool-activity-exported"
+},
+"LogLevel": "INFO"
+}
+],
+"UserPoolId": "us-west-2_EXAMPLE"
+}
+
+The following is an example SetLogDeliveryConfiguration request
+body that sets a Amazon S3 bucket as the log destination.
+
+{
+"LogConfigurations": [
+{
+"EventSource": "userAuthEvents",
+"S3Configuration": {
+"BucketArn": "arn:aws:s3:::amzn-s3-demo-logging-bucket"
+},
+"LogLevel": "INFO"
+}
+],
+"UserPoolId": "us-west-2_EXAMPLE"
+}
+
+The following is an example SetLogDeliveryConfiguration request
+body that sets a CloudWatch log group as the log destination.
+
+{
+"LogConfigurations": [
+{
+"EventSource": "userAuthEvents",
+"CloudWatchLogsConfiguration": {
+"LogGroupArn": "arn:aws:logs:us-west-2:123456789012:log-group:DOC-EXAMPLE-LOG-GROUP"
+},
+"LogLevel": "INFO"
+}
+],
+"UserPoolId": "us-west-2_EXAMPLE"
+}
+
+## Providing event feedback
+
+Event feedback affects risk evaluation in real time and improves the risk evaluation
+algorithm over time. You can provide feedback on the validity of sign-in attempts through
+the Amazon Cognito console and API operations.
+
+Note
+
+Your event feedback influences the risk level that Amazon Cognito assigns to subsequent user
+sessions with the same characteristics.
+
+In the Amazon Cognito console, choose a user from the Users menu and
+select Provide event feedback. You can review the event details and
+Set as valid or Set as invalid.
+
+The console lists the sign-in history in user details in the
+Users menu. If you select an entry, you can mark the event as valid
+or not valid. You can also provide feedback through the user pool API operation AdminUpdateAuthEventFeedback, and through the AWS CLI command admin-update-auth-event-feedback.
+
+When you select Set as valid in the Amazon Cognito console or provide a
+FeedbackValue value of valid in the API, you tell Amazon Cognito that
+you trust a user session where Amazon Cognito has evaluated some level of risk. When you select
+Set as invalid in the Amazon Cognito console or provide a
+FeedbackValue value of invalid in the API, you tell Amazon Cognito that
+you don't trust a user session, or you don't believe that Amazon Cognito evaluated a
+high-enough risk level.
+
+## Sending notification messages
+
+With threat protection, Amazon Cognito can notify your users of risky sign-in attempts. Amazon Cognito
+can also prompt users to select links to indicate if the sign-in was valid or not valid.
+Amazon Cognito uses this feedback to improve the risk detection accuracy for your user pool.
+
+Note
+
+Amazon Cognito only sends notification messages to users when their action generates an
+automated risk response: block sign-in, allow sign-in, set MFA to optional, or require
+MFA. Some requests might be assigned a level of risk but don't generate adaptive
+authentication automated risk responses; for these, your user pool doesn't send
+notifications. For example, incorrect passwords might be logged with a risk rating, but
+the response by Amazon Cognito is to fail sign-in, not to apply an adaptive authentication
+rule.
+
+In the Automatic risk response section choose Notify
+Users for low, medium, or high-risk cases.
+
+Amazon Cognito sends email notifications to your users regardless of whether they have verified
+their email address.
+
+You can customize notification email messages, and provide both plaintext and HTML
+versions of these messages. To customize your email notifications, open Email
+templates from Adaptive authentication messages in your
+threat protection configuration. To learn more about email templates, see Message templates.

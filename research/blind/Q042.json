@@ -1,0 +1,63 @@
+{
+  "question_id": "Q042",
+  "question_content_hash": "e62090a808d0f62071cc737bfcdd9e39684bdabca6c34d1343c77a5ae5cdf7e4",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Phân tích access pattern (ai truy cập, truy cập thế nào) của REST API trên API Gateway.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Không cần tự parse log file.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "LEAST effort, chọn đúng 2 bước.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q042:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Access logging trên stage ghi 'ai truy cập API và bằng cách nào' vào log group CloudWatch Logs với format tùy chọn (ví dụ JSON với $context variables) — nguồn dữ liệu cần thiết cho phân tích access pattern.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q042:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "CloudTrail ghi các lệnh gọi API quản lý (control plane) của dịch vụ API Gateway, không ghi các request của client gọi vào REST API, nên không cho biết access pattern của API.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q042:C", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Access log của REST API chỉ gửi tới CloudWatch Logs hoặc Firehose, không trực tiếp tới S3 (chỉ execution log qua CloudWatch Logs delivery mới gửi thẳng S3). Đưa log vào S3 rồi phải tạo bảng Athena là nhiều công hơn Logs Insights.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref5", "ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q042:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "CloudWatch Logs Insights truy vấn tương tác trực tiếp trên log group và tự nhận diện field của log JSON, nên phân tích access log mà không phải tự parse file.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q042:E", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Detailed CloudWatch metrics chỉ cho số liệu tổng hợp theo method/resource (Count, latency, lỗi), không có thông tin caller, IP, user agent để phân tích ai truy cập và bằng cách nào; lại phát sinh chi phí thêm.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref7"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q042:A", "Q042:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Access logging -> CloudWatch Logs + Logs Insights là đường ít công nhất theo tài liệu; các phương án khác sai nguồn dữ liệu (CloudTrail, metrics) hoặc tốn thêm công (S3+Athena).", "open_issues": ["Nếu hiểu 'access patterns' chỉ là số lượt gọi theo method, E có thể cung cấp một phần thông tin mà không cần log, nhưng không ghép thành cặp hợp lý với lựa chọn khác."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html", "title": "Set up CloudWatch logging for REST APIs in API Gateway", "section": "Overview", "snapshot_id": "90629a253bbe", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Access logging – You log who accessed your API and how.",
+     "supports": "Access logging cung cấp dữ liệu về access pattern.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-access-logging.html", "title": "Access logging for REST APIs", "section": "Overview", "snapshot_id": "c78551ce190c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you select $context variables, a log format, and a log group destination.",
+     "supports": "Access log được cấu hình theo stage, gửi tới log group CloudWatch Logs.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html", "title": "Analyzing log data with CloudWatch Logs Insights", "section": "Overview", "snapshot_id": "35255ba80cf5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "any application or custom log that emits log events as JSON.",
+     "supports": "Logs Insights tự discover field của log JSON (không cần tự parse).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/cloudtrail.html", "title": "Logging Amazon API Gateway API calls using AWS CloudTrail", "section": "API Gateway management events in CloudTrail", "snapshot_id": "b52963bd77f7", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon API Gateway logs all API Gateway actions as management events, except for TestInvokeAuthorizer and TestInvokeMethod.",
+     "supports": "CloudTrail ghi các action quản lý của API Gateway, không phải request tới API.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-logging-to-kinesis.html", "title": "Log REST API calls to Amazon Data Firehose in API Gateway", "section": "Overview", "snapshot_id": "8a7b94ed4eed", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "For access logging, you can only enable CloudWatch or Firehose—you can't enable both.",
+     "supports": "Access log chỉ đi CloudWatch Logs hoặc Firehose; S3 cần thêm Firehose.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/rest-api-execution-logging.html", "title": "Execution logging for REST APIs", "section": "Amazon CloudWatch Logs delivery for execution logs", "snapshot_id": "73821b8c6be7", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You choose the destination: your own CloudWatch Logs log groups, Amazon S3 buckets, or Firehose streams.",
+     "supports": "Chỉ execution log (không phải access log) mới có đích S3 trực tiếp qua CloudWatch Logs delivery.", "kind": "direct"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-metrics-and-dimensions.html", "title": "Amazon API Gateway dimensions and metrics", "section": "Dimensions", "snapshot_id": "a7ee9c1f50a9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "API Gateway will not send these metrics unless you have explicitly enabled detailed CloudWatch metrics.",
+     "supports": "Detailed metrics chỉ là metric theo method/resource/stage, không có thông tin caller.", "kind": "inference"}
+  ],
+  "source_issues": []
+}

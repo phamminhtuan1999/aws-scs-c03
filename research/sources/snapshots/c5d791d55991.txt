@@ -1,0 +1,38 @@
+URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-servicerole.html
+TITLE: CloudFormation service role - AWS CloudFormation
+
+# CloudFormation service role
+
+A service role is an AWS Identity and Access Management (IAM) role that allows CloudFormation to
+make calls to resources in a stack on your behalf. You can specify an IAM role that allows
+CloudFormation to create, update, or delete your stack resources. By default, CloudFormation uses a
+temporary session that it generates from your user credentials for stack operations. If you
+specify a service role, CloudFormation uses that role's credentials.
+
+Use a service role to explicitly specify the actions that CloudFormation can perform, which
+might not always be the same actions that you or other users can do. For example, you might have
+administrative privileges, but you can limit CloudFormation access to only Amazon EC2 actions.
+
+You create the service role and its permission policy with the IAM service. For more
+information about creating a service role, see Create a role to delegate permissions to
+an AWS service in the IAM User Guide. Specify CloudFormation
+(cloudformation.amazonaws.com) as the service that can assume the role.
+
+To associate a service role with a stack, specify the role when you create the stack. For
+details, see Configure stack options.
+You can also change the service role when you update the stack in the console, or DeleteStack the stack through
+the API. Before you specify a service role, ensure that you have permission to pass it
+(iam:PassRole). The iam:PassRole permission specifies which roles
+you can use. For more information, see Grant a user permissions to pass a role to an AWS service in the
+IAM User Guide.
+
+Important
+
+When you specify a service role, CloudFormation always uses that role for all operations that
+are performed on that stack. It is not possible to remove a service role attached to a stack
+after the stack is created. Other users that have permissions to perform operations on this
+stack are able to use this role, regardless of whether those users have the
+iam:PassRole permission or not. If the role includes permissions that the user
+shouldn't have, you can unintentionally escalate a user's permissions. Ensure that the role
+grants least privilege. For more information, see Apply least-privilege
+permissions in the IAM User Guide.
