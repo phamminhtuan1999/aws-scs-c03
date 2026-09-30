@@ -107,8 +107,9 @@ function keyFromAnswer(type: QType, a: AnswerValue | undefined): Key | null {
   return { type: 'matching', answer: { ...a } };
 }
 
-export function sourceKeyOf(sk: KeyData['keys'][string] | undefined): Key | null {
-  if (!sk || !sk.gradable) return null;
+/** The source key as a Key. Returns null for an ungradable source key unless `forDisplay` is set (study display only, never scoring). */
+export function sourceKeyOf(sk: KeyData['keys'][string] | undefined, forDisplay = false): Key | null {
+  if (!sk || (!sk.gradable && !forDisplay)) return null;
   const a: AnswerValue | undefined =
     sk.type === 'ordering' ? sk.sequence : sk.type === 'matching' ? sk.pairs : sk.choice_ids;
   return keyFromAnswer(sk.type, a ?? null);
