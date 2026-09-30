@@ -1,0 +1,127 @@
+URL: https://docs.aws.amazon.com/securityhub/latest/userguide/designate-orgs-admin-account.html
+TITLE: Integrating Security Hub CSPM with AWS Organizations - AWS Security Hub
+
+# Integrating Security Hub CSPM with AWS Organizations
+
+To integrate AWS Security Hub CSPM and AWS Organizations, you create an organization in Organizations and use the organization management account to designate a
+delegated Security Hub CSPM administrator account. This enables Security Hub CSPM as a trusted service in Organizations. It also enables Security Hub CSPM in the current AWS Region
+for the delegated administrator account, and it allows the delegated administrator to enable Security Hub CSPM for member accounts, view data in member accounts, and
+perform other allowed actions on member accounts.
+
+If you use central configuration, then the delegated administrator can also create Security Hub CSPM configuration policies that specify
+how the Security Hub CSPM service, standards, and controls should be configured in organization accounts.
+
+## Creating an organization
+
+An organization is an entity that you create to consolidate your AWS accounts so that you can administer them as a single unit.
+
+You can create an organization by using either the AWS Organizations console or by using a command from the AWS CLI or one of the SDK APIs.
+For detailed instructions, see Create an organization
+in the AWS Organizations User Guide.
+
+You can use AWS Organizations to centrally view and manage all of the accounts within your organization.
+An organization has one management account along with zero or more member accounts. You can organize the accounts in a hierarchical,
+tree-like structure with a root at the top and organizational units (OUs) nested under the root. Each account can be directly under
+the root, or placed in one of the OUs in the hierarchy. An OU is a container for specific accounts. For example, you can create a finance OU
+that includes all accounts related to financial operations.
+
+## Recommendations for choosing the delegated Security Hub CSPM administrator
+
+If you have an administrator account in place from the manual invitation process and
+are transitioning to account management with AWS Organizations,
+we recommend designating that account as the delegated Security Hub CSPM administrator.
+
+Although the Security Hub CSPM APIs and console allow the organization management account to be the delegated Security Hub CSPM administrator,
+we recommend choosing two different accounts. This is
+because users who have access to the organization management account to manage
+billing are likely to be different from users who need access to Security Hub CSPM for
+security management.
+
+We recommend using the same delegated administrator across Regions. If you opt in to central configuration, Security Hub CSPM automatically
+designates the same delegated administrator in your home Region and any linked Regions.
+
+## Verify permissions to configure the delegated administrator
+
+To designate and remove a delegated Security Hub CSPM administrator account, the organization management account must have permissions for the
+EnableOrganizationAdminAccount and
+DisableOrganizationAdminAccount actions in Security Hub CSPM. The Organizations
+management account must also have administrative permissions for Organizations.
+
+To grant all of the required permissions, attach the following Security Hub CSPM managed policies
+to the IAM principal for the organization management account:
+
+- AWSSecurityHubFullAccess
+
+- AWSSecurityHubOrganizationsAccess
+
+## Designating the delegated administrator
+
+To designate the delegated Security Hub CSPM administrator account, you can use the Security Hub CSPM console, Security Hub CSPM API, or AWS CLI.
+Security Hub CSPM sets the delegated administrator in the current AWS Region only, and you must repeat the action in other Regions. If you start using central configuration, then
+Security Hub CSPM automatically sets the same delegated administrator in the home Region and linked Regions.
+
+The organization management account doesn't have to enable Security Hub CSPM in order to designate the
+delegated Security Hub CSPM administrator account.
+
+We recommend that the organization management account is not the delegated Security Hub CSPM administrator
+account. However, if you do choose the organization management account as the Security Hub CSPM
+delegated administrator, the management account must have Security Hub CSPM enabled. If the management account does not have Security Hub CSPM enabled, you must
+enable Security Hub CSPM for it manually. Security Hub CSPM can't be enabled automatically for the organization management account.
+
+You must designate the delegated Security Hub CSPM administrator using one of the following methods. Designating the delegated Security Hub CSPM administrator
+with Organizations APIs doesn't reflect in Security Hub CSPM.
+
+Choose your preferred method, and follow the steps to designate the delegated Security Hub CSPM administrator account.
+
+Security Hub CSPM console
+
+To designate the delegated administrator while onboarding
+
+- Open the AWS Security Hub CSPM console at https://console.aws.amazon.com/securityhub/.
+
+- Choose Go to Security Hub CSPM. You're prompted to sign in to the
+organization management account.
+
+- On the Designate delegated administrator page, in the
+Delegated administrator account section, specify the delegated administrator
+account. We recommend choosing the same delegated administrator that you have set for other AWS
+security and compliance services.
+
+- Choose Set delegated administrator. You're prompted to
+sign in to the delegated administrator account (if you're not already) to continue onboarding with central configuration. If you don't
+want to start central configuration, choose Cancel. Your delegated administrator is set, but you
+aren't yet using central configuration.
+
+To designate the delegated administrator from the Settings page
+
+- Open the AWS Security Hub CSPM console at https://console.aws.amazon.com/securityhub/.
+
+- In the Security Hub CSPM navigation pane, choose Settings. Then
+choose General.
+
+- If a Security Hub CSPM administrator account is currently assigned, then before you can
+designate a new account, you must remove the current account.
+
+Under Delegated Administrator, to remove the current
+account, choose Remove.
+
+- Enter the account ID of the account you want to designate as the
+Security Hub CSPM administrator account.
+
+You must designate the same Security Hub CSPM administrator account in all Regions. If you
+designate an account that is different from the account designated in other
+Regions, the console returns an error.
+
+- Choose Delegate.
+
+Security Hub CSPM API, AWS CLI
+
+From the organization management account, use the EnableOrganizationAdminAccount operation of the Security Hub CSPM API. If you're using the
+AWS CLI, run the enable-organization-admin-account command. Provide the
+AWS account ID of the delegated Security Hub CSPM administrator.
+
+The following example designates the delegated Security Hub CSPM administrator. This example is formatted for
+Linux, macOS, or Unix, and it uses the backslash (\) line-continuation
+character to improve readability.
+
+$ aws securityhub enable-organization-admin-account --admin-account-id 123456789012

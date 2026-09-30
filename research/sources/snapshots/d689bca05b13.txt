@@ -1,0 +1,282 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-extended-threat-detection.html
+TITLE: GuardDuty Extended Threat Detection - Amazon GuardDuty
+
+# GuardDuty Extended Threat Detection
+
+GuardDuty Extended Threat Detection automatically detects multi-stage attacks that span
+data sources, multiple types of AWS resources, and time, within an AWS account. With this capability, GuardDuty
+focuses on the sequence of multiple events that it observes by monitoring different types of data sources. Extended Threat Detection correlates
+these events to identify scenarios that present themselves as a potential threat
+to your AWS environment, and then generates an attack sequence finding.
+
+Topics
+
+- Attack sequence threat scenario examples
+
+- How it works
+
+- Enabling protection plans to maximize threat detection
+
+- Extended Threat Detection in GuardDuty console
+
+- Understanding and managing attack sequence findings
+
+- Additional resources
+
+## Attack sequence threat scenario examples
+
+Extended Threat Detection covers threat scenarios that involve compromise related to AWS credentials misuse, data
+compromise attempts in Amazon S3 buckets, and container and Kubernetes resource compromise in
+Amazon EKS clusters. A single finding can encompass an entire attack sequence. For example, the
+following list describes the scenarios
+that GuardDuty might detect:
+
+Example 1 - AWS credentials and Amazon S3 bucket data compromise
+
+- A threat actor gaining unauthorized access to a compute workload.
+
+- The actor then performing a series of actions such as privilege escalation and establishing persistence.
+
+- Finally, the actor exfiltrating data from an Amazon S3 resource.
+
+Example 2 - Amazon EKS cluster compromise
+
+- A threat actor attempts to exploit a container application within an Amazon EKS cluster.
+
+- The actor uses that compromised container to obtain privileged service account tokens.
+
+- The actor then leverages these elevated privileges to access sensitive Kubernetes secrets or AWS
+resources through pod identities.
+
+Because of the nature of
+the associated threat scenarios, GuardDuty considers all Attack sequence finding
+types
+as Critical.
+
+The following video provides a demonstration of how you can use Extended Threat Detection.
+
+## How it works
+
+When you enable Amazon GuardDuty in your account in a specific AWS Region, Extended Threat Detection is also enabled by default.
+There is no additional cost associated with the usage of Extended Threat Detection. By default, it correlates events across all Foundational data sources. However,
+when you enable more GuardDuty protection plans, such as S3 Protection, EKS Protection, and Runtime Monitoring, this will open additional types of
+attack sequence detections by widening the range of event sources. This will potentially
+help with a more comprehensive threat analysis and better detection of attack sequences.
+For more information, see Enabling protection plans to maximize threat detection.
+
+GuardDuty correlates multiple events, including API activities and GuardDuty findings. These events are called
+Signals.
+Sometimes, there might be events in your environment that, on their own, don't present themselves
+as a clear potential threat. GuardDuty terms them as weak signals. With Extended Threat Detection, GuardDuty identifies when
+a sequence of multiple actions align to a potentially suspicious activity, and generates an attack sequence finding in your
+account. These multiple actions can include weak signals and already identified GuardDuty findings in your account.
+
+Note
+
+When correlating events for attack sequences, Extended Threat Detection doesn't consider archived findings,
+including those findings that are automatically archived because of
+Suppression rules. This behavior ensures
+that only active, relevant signals contribute to attack sequence detection. To ensure that you're
+not impacted by this, review existing suppression rules in your account. For more information,
+see Using suppression rules with Extended Threat Detection.
+
+GuardDuty is also designed to identify potential in-progress or recent attack behaviors (within a 24-hour rolling time window)
+in your account. For example, an attack could start by an actor gaining unintended access to a compute workload. The
+actor would then perform a series of steps, including enumeration, escalation of privileges, and exfiltration
+of AWS credentials. These credentials could potentially be used for further compromise or malicious access
+to data.
+
+## Enabling protection plans to maximize threat detection
+
+Extended Threat Detection is enabled automatically for all GuardDuty accounts, evaluating by default signals from all protection plans enabled in the account. GuardDuty Foundational data sources provide important signals for several attack sequence detections. For example,
+with foundational threat detection, GuardDuty can identify a potential attack sequence starting from IAM privilege
+discovery activity on Amazon S3 APIs, and detect subsequent S3 control plane alterations, such as changes that make
+bucket resource policy more permissive. However, other attack sequences require advanced signals that are only available from advanced protection plans such as Runtime monitoring, S3 protection and EKS Audit Log Monitoring.
+
+Topics
+
+- Detecting attack sequences in Amazon EKS clusters
+
+- Detecting attack sequences in Amazon S3 buckets
+
+- Detecting attack sequences in Amazon ECS clusters
+
+- Detecting attack sequences in Amazon EC2 instance groups
+
+- Detecting attack sequences involving AI workloads
+
+### Detecting attack sequences in Amazon EKS clusters
+
+GuardDuty correlated multiple security signals across EKS audit logs, runtime behavior of processes, and
+AWS API activity to detect sophisticated attack patterns. To benefit from Extended Threat Detection for EKS, you must
+enable at least one of these features – EKS Protection or Runtime Monitoring (with EKS add-on). EKS Protection monitors
+control plane activities through audit logs, while Runtime Monitoring observes behaviors within containers.
+
+For maximum coverage and comprehensive threat detection, GuardDuty recommends enabling both protection plans. Together,
+they create a complete view of your EKS clusters, enabling GuardDuty to detect complex attack patterns. For example,
+it can identify an anomalous deployment of a privileged
+container (detected with EKS Protection), followed by persistence attempts, crypto-mining, and reverse shell
+creation within that container (detected with Runtime Monitoring). GuardDuty represents these related events as a single, critical-severity
+finding, called AttackSequence:EKS/CompromisedCluster. When you enable both the protection plans,
+the attack sequence finding covers the following threat scenarios:
+
+- Compromise of containers running vulnerable web applications
+
+- Unauthorized access through misconfigured credentials
+
+- Attempts to escalate privileges
+
+- Suspicious API requests
+
+- Attempts to access data maliciously
+
+The following list provides details when these dedicated protection plans are enabled individually:
+
+EKS Protection
+
+Enabling EKS Protection gives GuardDuty an ability to detect attack sequences involving Amazon EKS cluster control
+plane activities. This allows GuardDuty to correlate EKS audit logs and AWS API activity. For example,
+GuardDuty can detect an attack sequence where an actor attempts unauthorized access to cluster secrets,
+modifies Kubernetes role-based access control (RBAC) permissions, and creates privileged pods. For
+more information about enabling this protection plan, see EKS Protection.
+
+Runtime Monitoring for Amazon EKS
+
+Enabling Runtime Monitoring for Amazon EKS clusters gives GuardDuty an ability to enhance EKS attack sequence detection
+with container-level visibility. This helps GuardDuty detect potential malicious processes, suspicious runtime behaviors,
+and potential malware execution. For example, GuardDuty can detect an attack sequence where a container starts exhibiting
+suspicious behavior, such as cryptomining processes or establishing connections
+to known malicious endpoints. For more information about enabling this protection plan,
+see Runtime Monitoring.
+
+If you don't enable EKS Protection or Runtime Monitoring, GuardDuty will not be able to generate individual
+EKS Protection finding
+types
+or Runtime Monitoring finding types. Therefore,
+GuardDuty will not be able to detect multi-stage attack sequences that involve associated findings.
+
+### Detecting attack sequences in Amazon S3 buckets
+
+Enabling S3 Protection gives GuardDuty an ability to detect attack sequences involving attempts to data compromise in your Amazon S3
+buckets. Without S3 Protection, GuardDuty can detect when your S3 bucket resource policy becomes overly permissive. When you enable
+S3 Protection, GuardDuty gains the ability to detect potential data exfiltration activities that may occur after your
+S3 bucket becomes overly permissive.
+
+If S3 Protection is not enabled, GuardDuty will not be able to generate individual
+S3 Protection finding types. Therefore, GuardDuty will not be able to detect multi-stage attack sequences
+that involve associated findings. For more information about enabling this protection plan, see S3 Protection.
+
+### Detecting attack sequences in Amazon ECS clusters
+
+GuardDuty can identify attack sequences such as malicious processes, connections to malicious endpoints,
+or crypto-mining behaviors within ECS containers. By correlating diverse signals across network activity, process runtime behavior, and
+AWS API activity, GuardDuty can identify complex attack patterns that might be missed by individual detections and map the complete attack vector.
+
+GuardDuty represents these related events as a single, critical-severity
+finding, called AttackSequence:ECS/CompromisedCluster. The attack sequence finding covers the following threat scenarios:
+
+- Compromise of containers running vulnerable services
+
+- Unauthorized execution of suspicious tools, malware, or cryptomining processes
+
+- Attempts to escalate privileges
+
+- Communication with suspicious endpoints
+
+Important
+
+Extended Threat Detection for ECS requires Runtime Monitoring for Fargate or EC2, depending on your ECS infrastructure type. Runtime Monitoring observes behaviors within ECS containers running on both Fargate and EC2 instances. ECS on Managed EC2 instances is not supported.
+
+### Detecting attack sequences in Amazon EC2 instance groups
+
+GuardDuty can identify attack sequences affecting individual instances or groups of instances that share common attributes such as Auto Scaling groups, IAM instance profiles, launch templates, CloudFormation stacks, AMIs, or VPC IDs. These instances may exhibit suspicious behaviors like malicious processes, connections to malicious endpoints, crypto-mining, or abnormal usage of EC2 instance credentials.
+
+The attack sequence finding detects the following threat scenarios:
+
+- Compromise of instances running vulnerable services
+
+- Use of Amazon EC2 instance credentials obtained via IMDS from outside the AWS account the credentials were issued to
+
+- Use as infrastructure for attacks such as proxy, scanning, or denial of service
+
+- Unauthorized execution of suspicious tools, malware, or cryptomining processes
+
+- Communication with suspicious endpoints
+
+Extended Threat Detection helps identify these threats. GuardDuty represents these related events as a single, critical-severity finding, called AttackSequence:EC2/CompromisedInstanceGroup.
+
+To enhance Extended Threat Detection for EC2 detection capabilities, enable Runtime Monitoring. The combination of foundational GuardDuty, which monitors CloudTrail and network activity, and Runtime Monitoring, which observes process behaviors and system calls within instances, provides more comprehensive threat detection. This integrated monitoring allows GuardDuty to detect sophisticated attack sequences such as unauthorized access through misconfigured credentials, privilege escalation attempts, and unauthorized access to sensitive data. By correlating these diverse signals, GuardDuty can identify complex attack patterns that might be missed by individual detections and map the complete attack vector.
+
+### Detecting attack sequences involving AI workloads
+
+Enable AI Protection to help GuardDuty detect
+attack sequences that threaten the AI workloads in your account. AI Protection analyzes AWS CloudTrail data events
+from Amazon Bedrock and Amazon SageMaker AI. It can detect activities such as anomalous model invocations, cost harvesting attacks,
+and direct prompt injection attempts.
+
+To add signals from your AI workloads to AttackSequence:IAM/CompromisedCredentials attack sequences, you must enable AI Protection. GuardDuty
+can then use the following finding types as correlation signals:
+
+- Impact:IAMUser/AnomalousModelInvocation
+
+- Impact:IAMUser/CostHarvesting
+
+- Impact:IAMUser/PromptInjection.Direct
+
+For example, a threat actor might use the same
+potentially compromised AWS credentials to make an anomalous Amazon Bedrock or Amazon SageMaker AI model invocation. GuardDuty can correlate
+that invocation with other suspicious actions taken with those credentials. It then represents them as a single
+AttackSequence:IAM/CompromisedCredentials
+attack sequence finding. On their own, AI Protection findings do not generate an attack sequence.
+
+If AI Protection is not enabled, GuardDuty cannot generate individual AI Protection finding types. As a result, GuardDuty cannot detect multi-stage attack sequences
+that involve these findings. For more information about enabling this protection plan, see AI Protection.
+
+## Extended Threat Detection in GuardDuty console
+
+By default, the Extended Threat Detection page in GuardDuty
+console displays the Status as Enabled. With foundational threat detection,
+the status represents that GuardDuty can detect a potential attack sequence involving IAM privilege discovery activity on Amazon S3
+APIs and detecting subsequent S3 control plane alterations.
+
+Use the following steps to access the Extended Threat Detection page in GuardDuty console:
+
+- You can open GuardDuty console at https://console.aws.amazon.com/guardduty/.
+
+- In the left navigation pane, choose Extended Threat Detection.
+
+This page provides details about the threat scenarios that Extended Threat Detection covers.
+
+- On the Extended Threat Detection page, view the Related protection plans section.
+If you want to enable dedicated protection plans to enhance threat detection coverage in your
+account, select Configure option for that protection plan.
+
+## Understanding and managing attack sequence findings
+
+Attack sequence findings are just like other GuardDuty findings in your account.
+You can view them on the Findings page in the GuardDuty console. For information about
+viewing findings, see Findings page in GuardDuty
+console.
+
+Similar to other GuardDuty findings, attack sequence findings are also automatically sent to Amazon EventBridge.
+Based on your settings, attack sequence findings are also exported
+to a publishing destination (Amazon S3 bucket). To set a new publishing destination or update an existing one, see
+Exporting generated findings to
+Amazon S3.
+
+## Additional resources
+
+View the following sections to gain more understanding about attack sequences:
+
+- After learning about Extended Threat Detection and attack sequences, you can generate sample attack sequence
+finding types by following the steps in Sample findings.
+
+- Learn about Attack sequence finding
+types.
+
+- Review findings and explore finding details associated with
+Attack sequence
+finding details.
+
+- Prioritize and address attack sequence finding types by following the steps for the associated impacted resources in
+Remediating findings.

@@ -1,0 +1,452 @@
+URL: https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html
+TITLE: Perimeter implementation - Building A Data Perimeter on AWS
+
+# Perimeter implementation
+
+This section describes the complete perimeter solution by evaluating
+each perimeter authorization condition and how the different policy types
+are used to achieve it. Each section will describe the overall solution
+for that objective, provide links to detailed policy examples, explain how
+exceptions can be implemented, and demonstrate how the controls prevent
+the unintended access pattern.
+
+## Only trusted identities
+
+The objectives for this condition ensure that only trusted identities can
+access my resources and only trusted identities
+are allowed from my networks. You'll use RCPs
+and VPC endpoint policies to constrain which principals are allowed access.
+
+The primary way to ensure IAM principals belong to my AWS is by specifying
+the aws:PrincipalOrgID IAM policy condition in those policies.
+This requires that the principal being considered during the authorization of
+access to a resource you own or originating from a network you own (regardless
+of the resource owner) belongs to your AWS organization.
+
+You can implement a more granular restriction with the aws:PrincipalAccount
+or aws:PrincipalOrgPaths IAM policy conditions as well.
+
+When implementing data
+perimeter guardrails, it's still important to ensure
+that your resource policies only allow the intended access. You can use
+IAM Access
+Analyzer for supported resources to identify resource-based policies that are too permissive.
+You can also use IAM Access Analyzer to validate if your RCPs help prevent unintended access,
+regardless of the resource-based policies applied.
+
+The following diagram demonstrates how these controls prevent untrusted identities
+from accessing your resources or using your networks.
+
+Preventing untrusted identities in an RCP
+and a VPC endpoint policy
+
+In certain cases, AWS services might use an AWS service
+principal instead of an IAM role to interact with your resources. A service
+principal is not part of your AWS organization like IAM roles are. These are intended
+access patterns, but they need to be explicitly allowed in your RCPs and, in some cases, VPC
+endpoint policies. For example, AWS CloudTrail uses the service principal
+cloudtrail.amazonaws.com to deliver logs to your Amazon S3 bucket, which requires an
+exception in your RCP statements that enforce aws:PrincipalOrgID or related
+condition keys. Similarly, when you use a presigned URL for wait condition signaling from a VPC with AWS CloudFormation, you need to
+allow the cloudformation.amazonaws.com service principal.
+In Allow statements, the service principal can
+be listed explicitly. However, you might also have Deny statements that the service principal
+needs to be exempt from. You can’t use a NotPrincipal statement with an AWS
+service principal; instead, use the aws:PrincipalIsAWSService condition to exempt
+service principals from Deny statements.
+
+Use the aws:SourceOrgID condition key in your RCPs to ensure that AWS
+services access your
+resources only on your behalf. To continue with the CloudTrail example, you can require
+that the CloudTrail trail that delivers logs to your S3 bucket belongs to an account within
+your organization. Alternatively, you can use aws:SourceOrgPaths
+or aws:SourceAccount
+condition keys to enforce more granular controls when mitigating cross-service confused
+deputy risk.
+
+Refer to the AWS data
+perimeter policy examples repo for templates and instructions on how to create the
+required RCPs and VPC endpoint policies to achieve this objective as well
+as create any required exceptions. Specifically, look at the
+example
+resource_control_policies and the
+example
+vpc_endpoint_policies.
+
+## Only trusted resources
+
+The objectives for this condition ensure that my principals can
+only access trusted resources and that access from my networks only
+targets trusted resources (regardless of the principal involved). You’ll use
+SCPs and VPC endpoint policies to constrain which resources are allowed to be accessed.
+
+The primary way to ensure targeted resources belong to my AWS is
+by specifying the aws:ResourceOrgID IAM
+policy condition in SCPs and VPC endpoint policies. This ensures that the resource
+being considered during authorization, either being accessed directly or through a VPC
+endpoint, belongs to your AWS
+organization. The following diagram demonstrates how these policies prevent access to
+an untrusted resource.
+
+Preventing access to untrusted resources with SCPs and VPC
+endpoint policies
+
+Using VPC endpoint policies in this way can be considered a defense in depth approach.
+This is because implementing the controls for the Only trusted identities
+objectives apply a policy on each endpoint that ensures only my principals can access resources
+from my networks. Then, the SCP used for this objective always applies to these principals to
+constrain what resources they can access. This indirectly accomplishes the same outcome as
+applying an aws:ResourceOrgID condition to your VPC endpoint policies.
+
+In some cases, you might need to directly access resources outside of my
+AWS. These could be Amazon S3 buckets that AWS provides for things like Amazon
+Linux packages, CloudWatch agent installation, or public data repositories. They could also be
+resources like public SSM
+parameters. When you use cfn-hup, it
+supports the on.command hook, which allows you to use Amazon SQS messages to invoke
+the cfn-hup actions. This is used by AWS Elastic Beanstalk environments where the
+cfn-hup daemon retrieves an CloudFormation specific credential to query an Amazon SQS queue
+owned by AWS. Remember that SCPs don’t apply to SLRs or AWS service principals, so when
+you need to create exceptions to allow them to access resources from your VPCs, you’ll need to
+use VPC endpoint policies. For example, in order to use CloudFormation wait condition signaling, which
+uses an Amazon S3 presigned URL to a bucket owned by AWS, you have to create an exception to
+allow this access in a VPC endpoint policy.
+
+You will need to use SCPs and VPC endpoint policies together to create the necessary
+exceptions. In VPC endpoint policies, you can list the trusted resources explicitly in the
+resource element of an Allow statement. However, in an SCP, you can only list specific
+resources in a Deny statement. In this case, we don’t want to deny the resources; we want to
+allow them. Instead, you can amend the trusted resource guardrail SCP that requires
+aws:ResourceOrgID. This statement can use a NotAction element to
+exempt specific actions from meeting the aws:ResourceOrgID condition. This
+combined approach allows you to exempt specific actions in your SCPs from the
+aws:ResourceOrgID guardrail and ensures that only specific resources can be
+accessed with those permissions by explicitly allowing them in a VPC endpoint policy.
+
+In a few other scenarios, you can use services that use your credentials on your behalf to
+interact with resources that are not part of your organization. For example, AWS Service Catalog and AWS Data Exchange
+will write data to an Amazon S3 bucket that you don’t own. Amazon Athena can also write data to a
+bucket you don’t own. In the former cases, AWS owns the buckets those services store
+the data in, but in the latter case with Athena, the bucket could be owned by anyone.
+For that reason, you might not want to create a broad exception to accessing external
+resources with the aws:ViaAWSService condition. Not all of the resources
+that can be accessed through an AWS service should be considered a trusted resource.
+Instead, you can use the aws:CalledVia condition to explicitly allow services to behave this way.
+
+Refer to the AWS
+data perimeter policy examples repo for templates and instructions on how to create
+the required SCPs and VPC endpoint policies to achieve this objective as well as manage any
+required exceptions. Specifically look at the
+resource_perimeter_policy and the
+vpc_endpoint_policies.
+
+## Only expected networks
+
+This final condition’s objectives ensures that only expected networks can
+be the source of requests from my principals or to my resources.
+You’ll use SCPs and RCPs to constrain which networks are allowed for access.
+
+Within an SCP, you can define the expected networks by using an IP address with
+the aws:SourceIp condition key or a VPC identifier with
+the aws:SourceVpc condition. The following diagram shows how these
+policies prevent access from unexpected network locations.
+
+Preventing access from unexpected networks with SCPs and
+RCPs
+
+Applying a similar constraint with an RCP can also be considered a
+defense in depth approach. This is because applying the Only trusted identities objectives
+using an RCP helps ensure that only my principals can
+access those resources. Then, the network boundary SCP always applies to these principals to
+constrain the networks they can access resources from. This indirectly accomplishes the same
+outcome as applying an aws:SourceIp condition or aws:SourceVpc condition
+in your RCPs.
+
+There are several scenarios where AWS will act on your behalf with your IAM credentials
+from networks that AWS owns that will require exceptions to these policies. For example,
+you can use CloudFormation to define a template of resources for which AWS orchestrates the
+creation, update, and deletion. The initial request to create a CloudFormation stack will originate
+from an expected network, but the subsequent requests for each resource in the template are
+made by the CloudFormation service in an AWS network using your credentials with
+forward access sessions (FAS) or a
+service
+role for CloudFormation that you’ve specified. This situation also occurs when you use Athena to
+run queries
+on CloudTrail logs. The aws:ViaAWSService IAM policy condition provides
+a way to implement an exception for scenarios where FAS is used in requests made by AWS on your behalf.
+
+When AWS uses a service principal to interact with your resources, the source
+of that interaction is typically a network owned by AWS. In order to allow this
+access, you need to create an exception to the expected network control in your RCPs only
+since SCPs don’t apply to service principals. A typical example of
+this pattern is CloudTrail log delivery to your Amazon S3 bucket.
+
+The last consideration in implementing network perimeter controls is AWS
+services that operate in compute environments that are not part of
+your network. For example,
+Lambda
+functions and
+SageMaker AI
+Studio Notebooks both provide an option to run in AWS-owned
+networks.
+
+Some of these services provide a configuration option for running
+the service in your VPC as well. If you want to use the same VPC
+network boundary for these services, you should monitor and,
+where possible, enforce it using the VPC configuration.
+
+For example, customers can enforce AWS Lambda function deployments
+and updates to use Amazon Virtual Private Cloud (Amazon VPC)
+settings with
+IAM
+condition keys, use
+AWS Config Rules to audit this configuration, and then
+implement remediation with
+AWS Config Remediation Actions and AWS Systems Manager Automation
+documents.
+
+It is important to note that not all AWS services are hosted as an
+AWS-owned endpoint authorized with IAM; for example, Amazon Relational Database Service (Amazon RDS) databases. Instead, these
+services expose their data plane inside a
+customer VPC.
+
+The data plane is the part of the service that provides the day-to-day functionality of
+that thing. For MySQL RDS, it would be the IP address of the RDS instance on port 3306.
+Network controls such as firewalls or security groups should be used as part of your network
+boundary to prevent access to AWS services that are hosted in customer VPCs, but are not
+authorized with IAM credentials. Additionally, customers should leverage alternative
+authentication and authorization systems to access those services, such as AWS Secrets Manager for Amazon RDS access, when
+possible.
+
+Refer to the data perimeter policy
+examples repo for templates and instructions on how to create the required SCPs and
+RCPs to achieve this objective as well as create any required exceptions. Specifically, look at the
+network perimeter example in service_control_policies
+and resource_control_policies
+for details on how to write policies for this
+objective as well as manage exceptions. Also, look at the data_perimeter_governance
+examples in service_control_policies
+for preventing non-VPC deployments of Lambda and SageMaker AI.
+
+### Mobile devices
+
+In on-premises networks, there are some resources that are physically static, such as
+servers. Other resources such as laptops, however, are inherently mobile and can connect to
+networks outside of your control.
+
+For example, a laptop could be connected to a corporate network
+when accessing data, which is temporarily stored locally, but
+then joins a public Wi-Fi network and sends the data to a
+personal Amazon S3 bucket. This network access pattern could
+allow access to untrusted resources by bypassing corporate
+network controls and is a use case that you will need to
+consider with care.
+
+Customers have generally tried to solve this problem with
+preventative controls such as always-on VPNs to keep devices
+connected to a corporate network. They also use detective
+controls (including agents) to monitor traffic and identify when
+preventative controls are disabled.
+
+However, these controls aren’t fool-proof. There is still some
+risk that the device could join non-corporate networks. Virtual
+Desktop Infrastructure (VDI) is typically implemented when the
+risk of being able to operate a device outside of a controlled
+network is unacceptable and requires forcing access to AWS
+resources from non-mobile assets.
+
+Amazon WorkSpaces offers a VDI
+solution that can be used to require users, developers, and data
+scientists to use a static asset to interact with AWS resources
+that is subject to the same network controls as other resources
+in AWS VPCs. VDI solutions can also be operated by customers
+natively using Amazon Elastic Compute Cloud (Amazon EC2) instances in a
+VPC.
+
+## Additional considerations
+
+There are a few additional considerations for specific scenarios
+when building a data perimeter on AWS.
+
+### Amazon S3 resource considerations
+
+Amazon S3 is widely used to store and present publicly available
+website content and public data sets. Access to this content is
+typically performed anonymously, meaning that the HTTP requests
+do not have an authorization header or query string parameter
+generated from AWS credentials.
+
+You might need this anonymous access for users to browse
+internet websites from VPC networks or on-premises networks that
+are routed through VPC endpoints. It is also used for workloads
+that might need to access public data (such as package
+repositories hosted on Amazon S3 or agent downloads). In order
+to allow this type of access, you can allow
+anonymous GetObject API calls in your VPC endpoint policies.
+This is true whether the Amazon S3 content is being accessed
+using the virtual or path style endpoints or is being
+accessed
+via an Amazon S3 website endpoint.
+
+Access to all other Amazon S3 APIs should be authenticated. Refer to the
+S3 endpoint
+policy example, which includes details of how to allow anonymous GetObject API
+calls while enforcing authentication and permissions guardrails for trusted resources for the remainder
+of Amazon S3 actions. The example lists specific AWS resources, but you might
+also need unauthenticated access to resources where you do not know the bucket or
+object names (for example, downloading static content on a website in your browser). For
+those scenarios, you might want to use a dedicated Amazon S3 VPC endpoint that allows
+unauthenticated GetObject API calls for all Amazon S3 resources that
+is just used for networks where you expect this scenario to be required.
+
+### Cross-Region requests
+
+VPC endpoints only support routing AWS API calls to service
+endpoints that are in the same Region as the VPC endpoint
+itself. For example, an Amazon S3 VPC endpoint in a VPC in
+us-east-1 only supports routing traffic for requests made to Amazon S3
+buckets in us-east-1. A call to PutObject for a bucket in
+us-west-2 would not traverse the VPC endpoint and would not have
+the endpoint policy applied to the request. To ensure the
+intended security controls are applied consistently, you can
+handle cross-Region requests in three ways:
+
+- Prevent cross-Region API calls using a proxy. This does
+not require inspecting Transport Layer Security (TLS)
+and can be done by looking at the hostname in the CONNECT
+request. You can also use Server Name Indication (SNI) because the hostname presented in the
+ClientHello includes the AWS Region in the domain name of the URL (with the
+exception of global services).
+
+- Use a centralized VPC endpoint approach for each Region and share
+Route 53 private hosted zones (PHZ) for the endpoints. This allows instances
+to resolve the out-of-Region endpoint domain name locally and send their request
+directly to the VPC endpoint. This pattern is described in more detail in Centralized access to VPC private endpoints.
+
+- If you use HTTP/S proxies in your environment, you can use them to
+forward out-of-Region requests. There are two variations for
+this option:
+
+- Use proxy-chaining - The proxy in
+the local Region forwards traffic to a peer proxy running in a VPC in the
+destination Region. The out-of-Region proxy delivers the traffic to
+the appropriate VPC endpoint in its Region. See Appendix A – Proxy configuration example for an
+example proxy configuration that implements this proxy-chaining solution.
+The following diagram demonstrates a high-level reference architecture.
+
+Using proxy-chaining to send out-of-Region requests through
+VPC endpoints
+
+- Implement a centralized VPC endpoint approach using shared Route 53 private hosted
+zones - The local proxy uses AWS-provided VPC DNS and sends
+the request directly to the out-of-Region VPC endpoint. This eliminates the need to
+configure proxy-chaining, but does require the creation of a PHZ
+for each endpoint that will need to be shared with every VPC hosting a proxy. Refer to
+Cross
+Region endpoint access for more details.
+
+Forwarding out-of-Region requests using a shared Route 53
+PHZ
+
+### Preventing access to temporary credentials
+
+Except for the cases of credential theft or leakage, the only
+other way for an unintended entity to gain access to temporary
+credentials derived from IAM roles that are part of my AWS is
+through misconfigured IAM role trust policies.
+
+IAM role trust policies define the principals that you trust to
+assume an IAM role. A role trust policy is a required
+resource-based policy that is attached to a role in IAM. The
+principals that you can specify in the trust policy include
+users, roles, accounts, and services. If the trusted entity is a
+service principal, as a best practice, the trust policy should not
+trust more than one AWS service in order to apply least privilege.
+
+Additionally, RCPs can be configured to help ensure that no one
+from outside your account or organization can be
+authorized to assume the role. If the trusted entity is an IAM principal,
+such as a role or user, the
+policy can use either the aws:PrincipalOrgID,
+aws:PrincipalOrgPaths, or aws:PrincipalAccount condition.
+Exceptions can be
+created for known, external, expected
+accounts and they should
+use
+the sts:ExternalId condition.
+
+Refer to resource_control_policies
+for more details.
+
+### Resource sharing and external targets
+
+The final consideration are services that allow resource sharing or targeting external
+resources. With these services, you cannot use a condition such as
+aws:ResourceOrgID because the resource being evaluated in the policy belongs
+to your AWS organization, but its configuration specifies a resource that does not.
+
+Instead, you will need to use different approaches to prevent sharing resources with
+AWS accounts outside of your organization. AWS has several services that allow you
+to share a resource with another account or target a resource in another account.
+Some options include:
+
+- Amazon Machine Images (AMIs) - AMIs can be shared
+with other accounts or made public with the ModifyImageAttribute API.
+You can deny this action in an SCP and create an exception for a privileged
+IAM principal if required.
+
+- Amazon EBS Snapshots -
+Amazon EBS Snapshots can be shared with other accounts or made
+public with the ModifySnapshotAttribute API. You can deny
+this action in an SCP and create an exception for a
+privileged IAM principal if required.
+
+- Amazon RDS Snapshots -
+Amazon RDS Snapshots can be shared with other accounts or made
+public with the ModifyDBSnapshotAttribute API. You can deny
+this action in an SCP and create an exception for a
+privileged IAM principal if required.
+
+- AWS Resource Access Manager (AWS RAM) - AWS RAM is a service that allows sharing
+various types of resources with other AWS accounts. Sharing
+with AWS RAM can be constrained to your AWS organization using
+the ram:RequestedAllowsExternalPrincipals IAM condition.
+
+- Amazon CloudWatch Logs Subscription
+Filters - You can send CloudWatch Logs to cross
+account destinations. You can deny this action in an SCP and
+create an exception for a privileged IAM principals using a principal tag.
+
+- Amazon EventBridge Targets - You can add targets to an EventBridge
+rule that are in different accounts than the event bus. Use the events:TargetArn IAM
+condition to limit which accounts can be used as targets for EventBridge rules or create an exception
+for privileged IAM principals using a principal tag.
+
+AWS RAM allows for conditioning on sharing outside of your AWS organization in an
+SCP. For the rest of the services, you can use IAM policies to prevent the actions
+altogether. However, this isn’t always practical. In these cases, you can either allow just
+privileged roles to take those actions, or you can build detective controls and remediate
+the configuration using services such as AWS Config or EventBridge.
+
+For example, an EventBridge rule can look for PutSubscriptionFilter events and
+invoke a Lambda function to evaluate the destination Amazon Resource Name (ARN) in the subscription. If the ARN is
+for a resource not in the AWS organization, the function can remove the subscription.
+
+Refer to data perimeter governance policies in
+service_control_policies
+for additional examples of APIs that can be used to share resources and sample
+policies for helping prevent resource sharing.
+
+### AWS Management Console
+
+The AWS Management Console can be configured to use a
+Private Access option. This capability
+allows you to prevent users from signing in to unintended AWS accounts from within your network. You can use it to
+limit access to the management console to only a specified set of AWS accounts or organizations. AWS Management Console Private Access helps
+ensure only trusted identities are allowed from your expected networks. Refer to the documentation for
+supported AWS Regions, service
+consoles, and features. Instructions for
+implementing VPC endpoint policies
+with the aws:PrincipalOrgID condition to enforce only trusted identities and
+considerations for enforcing only expected networks
+with aws:SourceVpc can also be found in the documentation.

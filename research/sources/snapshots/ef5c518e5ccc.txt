@@ -1,0 +1,159 @@
+URL: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/provisioned-capacity-mode.html
+TITLE: DynamoDB provisioned capacity mode - Amazon DynamoDB
+
+# DynamoDB provisioned capacity mode
+
+When you create a new provisioned table in DynamoDB, you must specify its
+provisioned throughput capacity. This is the amount of read and
+write throughput that the table can support. You'll be charged based on the hourly read
+and write capacity you have provisioned, not how much of that provisioned capacity you
+actually consumed.
+
+As your application's data and access requirements change, you might need to adjust
+your table's throughput settings. You can use auto scaling to adjust your table’s
+provisioned capacity automatically in response to traffic changes. DynamoDB auto scaling
+uses a scaling policy in Application Auto Scaling. To configure auto scaling in DynamoDB, you set the
+minimum and maximum levels of read and write capacity in addition to the target
+utilization percentage. Application Auto Scaling creates and manages the CloudWatch alarms
+that trigger scaling events when the metric deviates from the target. Auto Scaling
+monitors your table’s activity and adjusts its capacity settings up or down based on
+preconfigured thresholds. Auto scaling triggers when your consumed capacity breaches the
+configured target utilization for two consecutive minutes. CloudWatch alarms might have a
+short delay of up to a few minutes before triggering auto scaling. For more information,
+see Managing throughput capacity automatically with DynamoDB auto scaling.
+
+If you're using DynamoDB auto scaling, the throughput settings are automatically adjusted
+in response to actual workloads. You can also use the UpdateTable
+operation to manually adjust your table's throughput capacity. For example, you might
+decide to do this if you need to bulk-load data from an existing data store into your
+new DynamoDB table. You could create the table with a large write throughput setting and
+then reduce this setting after the bulk data load is complete.
+
+Note
+
+By default, DynamoDB protects you from unintended, runaway usage. To scale
+beyond the 40,000 table-level read and write throughput limits for all tables in
+your account, you can request an increase for this quota. Throughput requests that
+exceed the default table throughput quota are throttled. For more information, see
+Throughput default quotas.
+
+You can switch tables from provisioned capacity mode to on-demand mode up to four times in a 24-hour rolling window.
+You can switch tables from on-demand mode to provisioned capacity mode at any time.
+
+For more information about switching between read and write capacity modes, see Considerations when switching capacity modes in DynamoDB.
+
+Topics
+
+- Read capacity units and write capacity units
+
+- Choosing initial throughput settings
+
+- DynamoDB auto scaling
+
+- Managing throughput capacity automatically with DynamoDB auto scaling
+
+- DynamoDB reserved capacity
+
+## Read capacity units and write capacity units
+
+For provisioned mode tables, you specify throughput requirements in terms of
+capacity units. These units represent the amount of data
+your application needs to read or write per second. You can modify these settings
+later, if needed, or enable DynamoDB auto scaling to modify them automatically.
+
+For an item up to 4 KB, one read capacity unit
+(RCU) represents one strongly consistent read operation per second, or two
+eventually consistent read operations per second. For more information about DynamoDB
+read consistency models, see DynamoDB read consistency.
+
+A write capacity unit (WCU) represents one
+write per second for an item up to 1 KB. For more information about the different
+read and write operations, see DynamoDB read and write operations.
+
+## Choosing initial throughput settings
+
+Every application has different requirements for reading from and writing to a
+database. When you're determining the initial throughput settings for a DynamoDB table,
+consider the following:
+
+- Expected read and write request rates
+— You should estimate the number of reads and writes you need to
+perform per second.
+
+- Item sizes — Some items are small
+enough that they can be read or written using a single capacity unit. Larger
+items require multiple capacity units. By estimating the average size of the
+items that will be in your table, you can specify accurate settings for your
+table's provisioned throughput.
+
+- Read consistency requirements —
+Read capacity units are based on strongly consistent read operations, which
+consume twice as many database resources as eventually consistent reads. You
+should determine whether your application requires strongly consistent
+reads, or whether it can relax this requirement and perform eventually
+consistent reads instead. Read operations in DynamoDB are eventually
+consistent, by default. You can request strongly consistent reads for these
+operations, if necessary.
+
+For example, say that you want to read 80 items per second from a table. The size
+of these items is 3 KB, and you want strongly consistent reads. In this case, each
+read requires one provisioned read capacity unit. To determine this number, divide
+the item size of the operation by 4 KB. Then, round up to the nearest whole number,
+as shown in the following example:
+
+- 3 KB / 4 KB = 0.75 or 1 read capacity
+unit
+
+Therefore, to read 80 items per second from a table, set the table's provisioned
+read throughput to 80 read capacity units as shown in the following example:
+
+- 1 read capacity unit per item × 80 reads per second = 80 read capacity units
+
+Now suppose that you want to write 100 items per second to your table and that the
+size of each item is 512 bytes. In this case, each write requires one provisioned
+write capacity unit. To determine this number, divide the item size of the operation
+by 1 KB. Then, round up to the nearest whole number, as shown in the following
+example:
+
+- 512 bytes / 1 KB = 0.5 or 1 write
+capacity unit
+
+To write 100 items per second to your table, set the table's provisioned write
+throughput to 100 write capacity units:
+
+- 1 write capacity unit per item × 100 writes per second = 100 write capacity units
+
+## DynamoDB auto scaling
+
+DynamoDB auto scaling actively manages provisioned throughput capacity for tables and
+global secondary indexes. With auto scaling, you define a range (upper and lower
+limits) for read and write capacity units. You also define a target utilization
+percentage within that range. DynamoDB auto scaling seeks to maintain your target
+utilization, even as your application workload increases or decreases.
+
+With DynamoDB auto scaling, a table or a global secondary index can increase its provisioned read and
+write capacity to handle sudden increases in traffic, without request throttling.
+When the workload decreases, DynamoDB auto scaling can decrease the throughput so that
+you don't pay for unused provisioned capacity.
+
+Note
+
+If you use the AWS Management Console to create a table or a global secondary index, DynamoDB auto scaling is
+enabled by default.
+
+You can manage auto scaling settings at any time by using the console, the
+AWS CLI, or one of the AWS SDKs. For more information, see Managing throughput capacity automatically with DynamoDB auto scaling.
+
+### Utilization rate
+
+Utilization rate can help you determine if you’re over provisioning capacity,
+in which case should reduce your table capacity to save costs. Conversely, it
+can also help you determine if you’re under provisioning capacity. In this case,
+you should increase table capacity to prevent potential throttling of requests
+during unexpected high traffic instances. For more information, see Amazon DynamoDB auto scaling: Performance and cost optimization at any
+scale.
+
+If you’re using DynamoDB auto scaling, you’ll also need to set a target
+utilization percentage. Auto scaling will use this percentage as a target to
+adjust capacity upward or downward. We recommend setting target utilization to
+70%. For more information, see Managing throughput capacity automatically with DynamoDB auto scaling.

@@ -1,0 +1,749 @@
+URL: https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html
+TITLE: Flow log records - Amazon Virtual Private Cloud
+
+# Flow log records
+
+A flow log record represents a network flow in your VPC. By default, each record
+captures a network internet protocol (IP) traffic flow (characterized by a 5-tuple on a
+per network interface basis) that occurs within an aggregation interval,
+also referred to as a capture window.
+
+Each record is a string with fields separated by spaces. A record includes values for the
+different components of the IP flow, for example, the source, destination, and protocol.
+
+When you create a flow log, you can use the default format for the flow log record, or
+you can specify a custom format.
+
+Contents
+
+- Aggregation interval
+
+- Default format
+
+- Custom format
+
+- Available fields
+
+## Aggregation interval
+
+The aggregation interval is the period of time during which a particular flow is
+captured and aggregated into a flow log record. By default, the maximum aggregation
+interval is 10 minutes. When you create a flow log, you can optionally specify a
+maximum aggregation interval of 1 minute. Flow logs with a maximum aggregation
+interval of 1 minute produce a higher volume of flow log records than flow logs with
+a maximum aggregation interval of 10 minutes.
+
+When a network interface is attached to a Nitro-based
+instance, the aggregation interval is always 1 minute or less,
+regardless of the specified maximum aggregation interval.
+
+After data is captured within an aggregation interval, it takes additional time to
+process and publish the data to CloudWatch Logs or Amazon S3. The flow log service typically
+delivers logs to CloudWatch Logs in about 5 minutes and to Amazon S3 in about 10 minutes. However,
+log delivery is on a best effort basis, and your logs might be delayed beyond the
+typical delivery time.
+
+## Default format
+
+With the default format, the flow log records include the version 2 fields, in the
+order shown in the available fields table.
+You cannot customize or change the default format. To capture additional fields or a
+different subset of fields, specify a custom format instead.
+
+## Custom format
+
+With a custom format, you specify which fields are included in the flow log
+records and in which order. This enables you to create flow logs that are specific
+to your needs and to omit fields that are not relevant. Using a custom format can
+reduce the need for separate processes to extract specific information from the
+published flow logs. You can specify any number of the available flow log fields,
+but you must specify at least one.
+
+## Available fields
+
+The following table describes all of the available fields for a flow log record.
+The Version column indicates the VPC Flow Logs
+version in which the field was introduced. The default format includes all version 2
+fields, in the same order that they appear in the table.
+
+When publishing flow log data to Amazon S3, the data type for the fields depends on the
+flow log format. If the format is plain text, all fields are of type
+STRING. If the format is Parquet, see the table for the field
+data types.
+
+If a field is not applicable or could not be computed for a specific record, the
+record displays a '-' symbol for that entry. Metadata fields that do not come directly
+from the packet header are best effort approximations, and their values might be
+missing or inaccurate.
+
+Field
+
+Description
+
+Version
+
+version
+
+The VPC Flow Logs version. If you use the default format, the
+version is 2. If you use a custom format, the version is the
+highest version among the specified fields. For example, if you
+specify only fields from version 2, the version is 2. If you
+specify a mixture of fields from versions 2, 3, and 4, the
+version is 4.
+
+Parquet data type: INT_32
+
+2
+
+account-id
+
+The AWS account ID of the owner of the source network
+interface for which traffic is recorded. If the network
+interface is created by an AWS service, for example when
+creating a VPC endpoint or Network Load Balancer, the record might display
+unknown for this field.
+
+Parquet data type: STRING
+
+2
+
+interface-id
+
+The ID of the network interface for which the traffic is
+recorded. Returns a '-' symbol for flows associated with a regional NAT gateway.
+
+Parquet data type: STRING
+
+2
+
+srcaddr
+
+For incoming traffic, this is the IP address of the source of traffic. For outgoing traffic,
+this is the private IPv4 address or the IPv6 address of the network interface sending the traffic.
+For outgoing traffic from regional NAT gateway, this is the same packet-level source IP address as in pkt-srcaddr.
+See also pkt-srcaddr.
+
+Parquet data type: STRING
+
+2
+
+dstaddr
+
+The destination address for outgoing traffic, or the IPv4 or
+IPv6 address of the network interface for incoming traffic on
+the network interface. The IPv4 address of the network interface
+is always its private IPv4 address. For incoming traffic to regional NAT gateway,
+this is the same packet-level destination IP address as in pkt-dstaddr.
+See also pkt-dstaddr.
+
+Parquet data type: STRING
+
+2
+
+srcport
+
+The source port of the traffic.
+
+Parquet data type: INT_32
+
+2
+
+dstport
+
+The destination port of the traffic.
+
+Parquet data type: INT_32
+
+2
+
+protocol
+
+The IANA protocol number of the traffic. For more information,
+see Assigned Internet Protocol Numbers.
+
+Parquet data type: INT_32
+
+2
+
+packets
+
+The number of packets transferred during the flow.
+
+Parquet data type: INT_64
+
+2
+
+bytes
+
+The number of bytes transferred during the flow.
+
+Parquet data type: INT_64
+
+2
+
+start
+
+The time, in Unix seconds, when the first packet of the flow
+was received within the aggregation interval. This might be
+either up to 60 seconds before the packet was received on the
+network interface or up to 60 seconds after the packet was
+transmitted.
+
+Parquet data type: INT_64
+
+2
+
+end
+
+The time, in Unix seconds, when the last packet of the flow
+was received within the aggregation interval. This might be up
+to 60 seconds after the packet was transmitted or received on
+the network interface.
+
+Parquet data type: INT_64
+
+2
+
+action
+
+The action that is associated with the traffic:
+
+- ACCEPT — The traffic was accepted.
+
+- REJECT — The traffic was rejected.
+For example, the traffic was not allowed by the security groups
+or network ACLs, or packets arrived after the connection was
+closed.
+
+Parquet data type: STRING
+
+2
+
+log-status
+
+The logging status of the flow log:
+
+- OK — Data is logging normally to the
+chosen destinations.
+
+- NODATA — There was no network traffic to
+or from the network interface during the aggregation
+interval.
+
+- SKIPDATA — Some flow log records were
+skipped during the aggregation interval. This might be
+because of an internal capacity constraint, or an
+internal error.
+
+Some flow log records may be skipped during the aggregation interval (see log-status in Available fields). This may be caused by an internal AWS capacity constraint or internal error. If you are using AWS Cost Explorer to view VPC flow log charges and some flow logs are skipped during the flow log aggregation interval, the number of flow logs reported in AWS Cost Explorer will be higher than the number of flow logs published by Amazon VPC.
+
+Parquet data type: STRING
+
+2
+
+vpc-id
+
+The ID of the VPC that contains the network interface for
+which the traffic is recorded.
+
+Parquet data type: STRING
+
+3
+
+subnet-id
+
+The ID of the subnet that contains the network interface for
+which the traffic is recorded. Returns a '-' symbol for flows associated with regional NAT gateway.
+
+Parquet data type: STRING
+
+3
+
+instance-id
+
+The ID of the instance that's associated with network
+interface for which the traffic is recorded, if the instance is
+owned by you. Returns a '-' symbol for a requester-managed network interface; for example,
+the network interface for a NAT gateway.
+
+Parquet data type: STRING
+
+3
+
+tcp-flags
+
+The bitmask value for the following TCP flags:
+
+- FIN — 1
+
+- SYN — 2
+
+- RST — 4
+
+- SYN-ACK — 18
+
+If no supported flags are recorded, the TCP flag
+value is 0. For example, since tcp-flags does not support logging
+ACK or PSH flags, records for traffic with these unsupported flags
+will result in tcp-flags value 0. If, however, an unsupported flag
+is accompanied by a supported flag, we will report the value of the
+supported flag. For example, if ACK is a part of SYN-ACK, it reports
+18. And if there is a record like SYN+ECE, since SYN is a supported
+flag and ECE is not, the TCP flag value is 2. If for some reason the
+flag combination is invalid and the value cannot be calculated, the
+value is '-'. If no flags are sent, the TCP flag value is 0.
+TCP
+flags can be OR-ed during the aggregation interval. For short
+connections, the flags might be set on the same line in the flow
+log record, for example, 19 for SYN-ACK and FIN, and 3 for SYN
+and FIN. For an example, see TCP flag sequence.
+
+For
+general information about TCP flags (such as the meaning of
+flags like FIN, SYN, and ACK), see TCP segment structure on
+Wikipedia.
+
+Parquet data
+type: INT_32
+
+3
+
+type
+
+The type of traffic. The possible values are: IPv4 |
+IPv6 | EFA. For more information, see
+Elastic Fabric Adapter.
+
+Parquet data type: STRING
+
+3
+
+pkt-srcaddr
+
+The packet-level (original) source IP address of the traffic.
+Use this field with the srcaddr field to
+distinguish between the IP address of an intermediate layer
+through which traffic flows, and the original source IP address
+of the traffic.
+
+For example, traffic might flow through a network interface for a NAT
+gateway. Another case is where the IP address of a
+pod in Amazon EKS is different from the IP address of the network
+interface of the instance node on which the pod is running
+(for communication within a VPC).
+
+Parquet data type: STRING
+
+3
+
+pkt-dstaddr
+
+The packet-level (original) destination IP address for the
+traffic. Use this field with the dstaddr field to
+distinguish between the IP address of an intermediate layer
+through which traffic flows, and the final destination IP
+address of the traffic.
+
+For example, traffic might flow through
+a network interface for
+a NAT gateway. Another case is where the IP address
+of a pod in Amazon EKS is different from the IP address of the
+network interface of the instance node on which the pod is
+running (for communication within a VPC).
+
+Parquet data type: STRING
+
+3
+
+region
+
+The Region that contains the network interface for which
+traffic is recorded.
+
+Parquet data type: STRING
+
+4
+
+az-id
+
+The ID of the Availability Zone that contains the network
+interface for which traffic is recorded. If the traffic is from
+a sublocation, the record displays a '-' symbol for this
+field.
+
+Parquet data type: STRING
+
+4
+
+sublocation-type
+
+The type of sublocation that's returned in the
+sublocation-id field. The possible values are:
+wavelength |
+outpost |
+localzone.
+If the traffic is not from a sublocation, the record displays
+a '-' symbol for this field.
+
+Parquet data type: STRING
+
+4
+
+sublocation-id
+
+The ID of the sublocation that contains the network interface
+for which traffic is recorded. If the traffic is not from a
+sublocation, the record displays a '-' symbol for this
+field.
+
+Parquet data type: STRING
+
+4
+
+pkt-src-aws-service
+
+The name of the subset of IP address ranges
+for the pkt-srcaddr field, if the source IP address is for an AWS
+service. If the source IP address belongs to an overlapped range,
+pkt-src-aws-service shows only one of the AWS service codes.
+The possible values are: AMAZON | AMAZON_APPFLOW | AMAZON_CONNECT | API_GATEWAY |
+AURORA_DSQL | CHIME_MEETINGS | CHIME_VOICECONNECTOR | CLOUD9 |
+CLOUDFRONT | CLOUDFRONT_ORIGIN_FACING | CODEBUILD |
+DYNAMODB |
+EBS | EC2 | EC2_INSTANCE_CONNECT |
+GLOBALACCELERATOR | IVS_LOW_LATENCY | IVS_REALTIME | KINESIS_VIDEO_STREAMS | MEDIA_PACKAGE_V2 |
+ROUTE53 | ROUTE53_HEALTHCHECKS | ROUTE53_HEALTHCHECKS_PUBLISHING | ROUTE53_RESOLVER |
+S3 | WORKSPACES_GATEWAYS.
+
+Parquet data type: STRING
+
+5
+
+pkt-dst-aws-service
+
+The name of the subset of IP address ranges for the
+pkt-dstaddr field, if the destination IP address
+is for an AWS service. For a list of possible values, see the
+pkt-src-aws-service field.
+
+Parquet data type: STRING
+
+5
+
+flow-direction
+
+The direction of the flow with respect to the interface where
+traffic is captured. The possible values are:
+ingress | egress.
+
+Parquet data type: STRING
+
+5
+
+traffic-path
+
+The path that egress traffic takes to the destination. To
+determine whether the traffic is egress traffic, check the
+flow-direction field. The possible values are
+as follows. If none of the values apply, the field is set to -.
+
+- 1 — Through another resource in the same VPC, including
+an AWS-managed network interface or an Outpost local gateway
+
+- 2 — Through an internet gateway or a gateway VPC endpoint
+
+- 3 — Through a virtual private gateway
+
+- 4 — Through an intra-region VPC peering connection
+
+- 5 — Through an inter-region VPC peering connection
+
+- 6 — Through a Local Zone or a Wavelength
+Zone
+
+- 7 — Through a gateway VPC endpoint
+
+- 8 — Through an internet gateway
+
+Parquet data type: INT_32
+
+5
+
+ecs-cluster-arn
+
+AWS Resource Name (ARN) of the ECS cluster if the traffic
+is from a running ECS task. To include this field in your
+subscription, you need permission to call
+ecs:ListClusters.
+Parquet data
+type: STRING
+
+7
+
+ecs-cluster-name
+
+Name of the ECS cluster if the traffic is from a running
+ECS task. To include this field in your subscription, you need
+permission to call ecs:ListClusters.
+Parquet data type: STRING
+
+7
+
+ecs-container-instance-arn
+
+ARN of the ECS container instance if the traffic is from a
+running ECS task on an EC2 instance. If the capacity provider is
+AWS Fargate, this field will be '-'. To include this field in your
+subscription, you need permission to call ecs:ListClusters and
+ecs:ListContainerInstances.
+Parquet
+data type: STRING
+
+7
+
+ecs-container-instance-id
+
+ID of the ECS container instance if the traffic is from a
+running ECS task on an EC2 instance. If the capacity provider is
+AWS Fargate, this field will be '-'. To include this field in your
+subscription, you need permission to call ecs:ListClusters and
+ecs:ListContainerInstances.
+Parquet
+data type: STRING
+
+7
+
+ecs-container-id
+
+Docker runtime ID of the container if the traffic is from a
+running ECS task. If there are one or more containers in the ECS
+task, this will be the docker runtime ID of the first container.
+To include this field in your subscription, you need permission
+to call ecs:ListClusters.
+Parquet
+data type: STRING
+
+7
+
+ecs-second-container-id
+
+Docker runtime ID of the container if the traffic is from a
+running ECS task. If there are more than one containers in the
+ECS task, this will be the Docker runtime ID of the second
+container. To include this field in your subscription, you need
+permission to call ecs:ListClusters.
+Parquet data type: STRING
+
+7
+
+ecs-service-name
+
+Name of the ECS service if the traffic is from a running
+ECS task and the ECS task is started by an ECS service. If the
+ECS task is not started by an ECS service, this field will be
+'-'. To include this field in your subscription, you need
+permission to call ecs:ListClusters and ecs:ListServices.
+
+Parquet data type:
+STRING
+
+7
+
+ecs-task-definition-arn
+
+ARN of the ECS task definition if the traffic is from a
+running ECS task. To include this field in your subscription,
+you need permission to call ecs:ListClusters and
+ecs:ListTaskDefinitions
+Parquet
+data type: STRING
+
+7
+
+ecs-task-arn
+
+ARN of the ECS task if the traffic is from a running ECS
+task. To include this field in your subscription, you need
+permission to call ecs:ListClusters and ecs:ListTasks.
+
+Parquet data type:
+STRING
+
+7
+
+ecs-task-id
+
+ID of the ECS task if the traffic is from a running ECS
+task. To include this field in your subscription, you need
+permission to call ecs:ListClusters and ecs:ListTasks.
+
+Parquet data type:
+STRING
+
+7
+
+reject-reason
+
+Reason why traffic was rejected. Possible values: BPA, EC. Returns a '-' for any other reject reason.
+
+- BPA — For more information about VPC Block Public Access (BPA), see Block public access to VPCs and subnets.
+
+- EC — The flow is rejected by VPC Endpoint due to encryption controls.
+For more information about VPC Encryption Controls, see Enforce VPC encryption in transit.
+
+Parquet data type: STRING
+
+8
+
+resource-id
+
+The ID of the regional NAT gateway that contains the network interface for which the traffic is recorded. Returns a '-' symbol for traffic flows not associated with a regional NAT gateway.
+For more information about regional NAT gateways, see Regional NAT gateways for automatic multi-AZ expansion.
+
+Parquet data type: STRING
+
+9
+
+encryption-status
+
+Encryption status of the flow. For more information about VPC Encryption Controls, see Enforce VPC encryption in transit. The possible values are:
+
+- 0 — not encrypted.
+
+- 1 — nitro-encrypted. It's encrypted by the Nitro system hardware.
+
+- 2 — application-encrypted. Only the following are considered as application-encrypted:
+
+- flows on TCP port 443 for interface endpoint to AWS service*
+
+- flows on TCP port 443 for gateway endpoint*
+
+- flows to encrypted Redshift cluster through VPC endpoint**
+
+- 3 — nitro-encrypted and application-encrypted.
+
+The value is '-' if VPC Encryption Controls is not enabled, or if FlowLog cannot get the status.
+
+Note
+
+* For interface and gateway endpoints, AWS does not look at packet data to determine encryption status, we instead rely on the port used to assume encryption status.
+
+** For specified AWS managed endpoints, AWS determines encryption status based on the requirement for TLS in the service configuration.
+
+Parquet data type: INT_32
+
+10
+
+instance-tag
+
+Tag value for the first instance tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call ec2:DescribeTags and iam:CreateServiceLinkedRole.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+instance-tag-2
+
+Tag value for the second instance tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call ec2:DescribeTags and iam:CreateServiceLinkedRole.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+interface-tag
+
+Tag value for the first network-interface tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call ec2:DescribeTags and iam:CreateServiceLinkedRole.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+interface-tag-2
+
+Tag value for the second network-interface tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call ec2:DescribeTags and iam:CreateServiceLinkedRole.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+asg-tag
+
+Tag value for the first auto-scaling-group tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call autoscaling:DescribeTags and iam:CreateServiceLinkedRole.
+You must have at least one enabled CloudTrail trail in your account for Auto Scaling group tag values to be properly tracked and updated in real time.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+asg-tag-2
+
+Tag value for the second auto-scaling-group tag included in your TagFieldSpecifications. Tag values are displayed translating all special characters with UTF-8 percent encoding.
+To include this field in your subscription, you need permission to call autoscaling:DescribeTags and iam:CreateServiceLinkedRole.
+You must have at least one enabled CloudTrail trail in your account for Auto Scaling group tag values to be properly tracked and updated in real time.
+For information about the Flow Logs Amazon EC2 Tags Service Linked Role, see Using service-linked roles for VPC Flow Logs.
+
+Parquet data type: STRING
+
+11
+
+interface-type
+
+The type of the local network interface which captures the flow.
+The supported values are: nat_gateway | network_load_balancer | regional_nat_gateway | transit_gateway | vpc_endpoint.
+If the network interface doesn't have an associate service, or the service is not supported, the value is '-'.
+
+Parquet data type: STRING
+
+11
+
+next-hop-interface-id
+
+The ID of the next hop network interface.
+For egress traffic, this is the interface that receives the traffic.
+For ingress traffic, this is the interface that sends the traffic.
+
+Parquet data type: STRING
+
+11
+
+next-hop-subnet-id
+
+The ID of the subnet that contains the next hop network interface.
+
+Parquet data type: STRING
+
+11
+
+next-hop-az-id
+
+The ID of the Availability Zone that contains the next hop network interface.
+
+Parquet data type: STRING
+
+11
+
+next-hop-vpc-id
+
+The ID of the VPC that contains the next hop network interface.
+
+Parquet data type: STRING
+
+11
+
+next-hop-interface-type
+
+The type of the next hop network interface. For a list of possible values, see the interface-type field
+
+Parquet data type: STRING
+
+11

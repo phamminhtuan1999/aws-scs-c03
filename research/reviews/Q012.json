@@ -1,0 +1,290 @@
+{
+  "question_id": "Q012",
+  "question_content_hash": "bb9496e19e81fb77abff87eec33692342de7d97c3df66b1e52e2ba7f8793992d",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "a2f6b7919c3ddb41ac5ba1785ef2db3a14721c163bbdf90df8c7cce6236c3267",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phát hiện rủi ro bảo mật Kubernetes bằng cách giám sát EKS audit logs.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Đồng thời giám sát sự kiện hệ điều hành, mạng và file (runtime) trên EKS.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Gửi email cảnh báo cho mailing list của security team với mỗi rủi ro phát hiện được.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q012:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Các control EKS của Security Hub CSPM là kiểm tra cấu hình qua AWS Config (endpoint public, phiên bản, audit logging bật chưa...), không phân tích nội dung audit log hay sự kiện OS/mạng/file.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q012:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Inspector quét lỗ hổng image ECR, Detective hỗ trợ điều tra sau khi có finding; Lambda tự viết để xử lý audit log không phải cơ chế phát hiện threat có sẵn, và không có giám sát sự kiện OS/mạng/file runtime.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q012:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "GuardDuty EKS Protection phân tích EKS audit logs; Runtime Monitoring cho EKS phân tích sự kiện OS, mạng, file; finding GuardDuty gửi qua EventBridge tới SNS topic có subscriber email.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q012:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Chỉ thu thập audit log và báo động mỗi khi có log mới — không phát hiện rủi ro, gây cảnh báo liên tục; SSM Agent không cung cấp giám sát sự kiện OS/mạng/file để phát hiện threat.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q012:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu GuardDuty nêu trực tiếp EKS Protection dùng EKS audit logs và Runtime Monitoring phân tích sự kiện OS, mạng, file; EventBridge->SNS là mẫu chuẩn gửi email.",
+      "open_issues": [
+        "Runtime Monitoring không hỗ trợ EKS trên Fargate (đề không nói dùng Fargate)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "source_answer": [
+    "Q012:C"
+  ],
+  "researched_answer": [
+    "Q012:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu GuardDuty nêu trực tiếp EKS Protection dùng EKS audit logs và Runtime Monitoring phân tích sự kiện OS, mạng, file; EventBridge -> SNS email là mẫu được tài liệu GuardDuty mô tả.",
+    "open_issues": [
+      "Runtime Monitoring không hỗ trợ EKS trên Fargate (đề không nói dùng Fargate)."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn C. Đã kiểm tra lại phương án cạnh tranh mạnh nhất A: control EKS của Security Hub CSPM chỉ kiểm tra cấu hình (ví dụ EKS.8 kiểm tra audit logging có bật), không phân tích nội dung audit log hay sự kiện runtime; B ghép Inspector (quét lỗ hổng image) và Detective (điều tra) với Lambda tự viết, không có giám sát runtime OS/mạng/file; D chỉ báo động mỗi khi có log mới. Giữ C.",
+  "explanation_vi": {
+    "why_correct": "GuardDuty EKS Protection phân tích EKS audit logs và Runtime Monitoring cho EKS phân tích sự kiện OS, mạng, file để phát hiện threat; finding được EventBridge rule chuyển tới SNS topic có mailing list subscribe, nên security team nhận email.",
+    "others": {
+      "Q012:A": "Control EKS của Security Hub CSPM chỉ kiểm tra cấu hình (ví dụ audit logging đã bật chưa), không phân tích audit log hay sự kiện OS/mạng/file.",
+      "Q012:B": "Inspector quét lỗ hổng image và Detective dùng để điều tra; Lambda tự viết không thay được cơ chế phát hiện threat và thiếu giám sát runtime.",
+      "Q012:D": "Chỉ thu thập audit log và báo động khi có log mới — không phát hiện rủi ro, gây cảnh báo liên tục; SSM Agent không giám sát sự kiện runtime để phát hiện threat."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "Amazon EKS audit logs",
+      "meaning_vi": "Nguồn dữ liệu của GuardDuty EKS Protection."
+    },
+    {
+      "phrase": "operating system, networking, and file events",
+      "meaning_vi": "Sự kiện runtime -> GuardDuty Runtime Monitoring (agent trên node EKS)."
+    },
+    {
+      "phrase": "email alerts",
+      "meaning_vi": "EventBridge rule -> SNS topic với subscriber email."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề nêu EKS audit logs + sự kiện OS/mạng/file -> nghĩ đến GuardDuty EKS Protection + Runtime Monitoring, cảnh báo qua EventBridge -> SNS; kiểm tra EKS trên Fargate không được Runtime Monitoring hỗ trợ.",
+  "tags": {
+    "domains": [
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon GuardDuty",
+      "Amazon EKS",
+      "Amazon EventBridge",
+      "Amazon SNS"
+    ],
+    "reason_vi": "Phát hiện threat cho Kubernetes bằng dịch vụ phát hiện có sẵn và định tuyến cảnh báo."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html",
+      "title": "GuardDuty EKS Protection",
+      "section": "intro",
+      "snapshot_id": "67be78a3cdd3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "EKS Protection uses EKS audit logs to analyze activities of users and applications.",
+      "supports": "EKS Protection giám sát EKS audit logs để phát hiện rủi ro (R1).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring.html",
+      "title": "GuardDuty Runtime Monitoring",
+      "section": "intro",
+      "snapshot_id": "407f11992433",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Runtime Monitoring observes and analyzes operating system-level, networking, and file events to help you detect potential threats",
+      "supports": "Runtime Monitoring phủ sự kiện OS, mạng, file cho EKS (R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+      "title": "Processing GuardDuty findings with Amazon EventBridge",
+      "section": "intro",
+      "snapshot_id": "0e9346cee7b7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Set up an Amazon SNS topic and endpoint (Email, Slack, and Amazon Chime)",
+      "supports": "Finding GuardDuty gửi qua EventBridge tới SNS topic với endpoint email (R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring.html",
+      "title": "GuardDuty Runtime Monitoring",
+      "section": "intro",
+      "snapshot_id": "407f11992433",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty doesn't support Amazon EKS clusters running on AWS Fargate.",
+      "supports": "Giới hạn: Runtime Monitoring không áp dụng cho EKS trên Fargate.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/eks-controls.html",
+      "title": "Security Hub CSPM controls for Amazon EKS",
+      "section": "[EKS.8] EKS clusters should have audit logging enabled",
+      "snapshot_id": "7206e32f13ad",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This control checks whether an Amazon EKS cluster has audit logging enabled.",
+      "supports": "Control EKS của Security Hub chỉ kiểm tra cấu hình (ví dụ audit logging có bật), không phân tích log để phát hiện threat.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/scanning-ecr.html",
+      "title": "Scanning Amazon ECR container images with Amazon Inspector",
+      "section": "intro",
+      "snapshot_id": "7eff72de2af7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Inspector scans container images stored in Amazon Elastic Container Registry for software vulnerabilities",
+      "supports": "Inspector quét lỗ hổng image, không giám sát audit log hay runtime.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/detective/latest/userguide/detective-investigation-about.html",
+      "title": "How Detective is used for investigation",
+      "section": "intro",
+      "snapshot_id": "9cb49b60a42d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Detective makes it easy to analyze, investigate, and quickly identify the root cause of security findings or suspicious activity.",
+      "supports": "Detective là công cụ điều tra finding, không phải nguồn phát hiện/cảnh báo.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q012:C",
+      "detail_vi": "'Enable Amazon GuardDuty Enable EKS Protection' thiếu dấu chấm giữa hai câu."
+    },
+    {
+      "type": "typo",
+      "location": "Q012:A",
+      "detail_vi": "'mailiing' — đúng ra là 'mailing'."
+    },
+    {
+      "type": "typo",
+      "location": "Q012:D",
+      "detail_vi": "'lo collect' và 'when now audit logs' — đúng ra là 'to collect', 'when new audit logs'."
+    }
+  ],
+  "notes_vi": "Từ khóa: EKS audit logs + OS/network/file events => GuardDuty EKS Protection + Runtime Monitoring.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q012:C\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key C khớp blind; giữ C, status verified",
+      "previous_answer": null
+    }
+  ]
+}

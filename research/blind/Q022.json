@@ -1,0 +1,63 @@
+{
+  "question_id": "Q022",
+  "question_content_hash": "b9cc191ae8dc86451bd550b6149b39543fd19fbb721d38fb1d7ad1c12e311356",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "RDS snapshot phải được mã hóa.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Chia sẻ snapshot sang hai account khác (DR) và mỗi account phải giải mã được snapshot.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q022:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Snapshot mã hóa bằng default KMS key (AWS managed key) không chia sẻ được; KMS key không thể sao chép/xuất ra khỏi AWS KMS nên Lambda 'copy key' sang account khác là không khả thi.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q022:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Dùng customer managed key là đúng hướng, nhưng không thể 'import KMS key' sang account khác: import key material là đưa vật liệu khóa của bạn vào KMS, không phải chuyển một KMS key đã có; key material do KMS tạo không rời KMS ở dạng rõ.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref5", "ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q022:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Không thể chia sẻ snapshot mã hóa bằng default KMS key của account nguồn, và không thể sửa key policy của AWS managed key để cấp quyền cho account khác.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q022:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Mã hóa bằng customer managed key, cấp quyền dùng key cho hai account qua key policy và IAM policy của principal trong mỗi account, rồi share snapshot; đây là cách RDS hướng dẫn cho snapshot mã hóa.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2", "ref6"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q022:D"],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu RDS nói rõ không share được snapshot mã hóa bằng default KMS key và hướng dẫn dùng customer managed key cấp quyền cho account khác; KMS yêu cầu key policy + IAM policy cho truy cập cross-account.",
+      "open_issues": ["Diễn đạt 'share the KMS key ... by using an IAM principal' hơi lỏng: cần cả key policy của key nguồn lẫn IAM policy ở account đích, và vẫn phải share chính snapshot."]
+    },
+    "reference_ids": ["ref1", "ref2", "ref6"],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/share-encrypted-snapshot.html", "title": "Sharing encrypted snapshots for Amazon RDS", "section": "Restrictions", "snapshot_id": "11d667a61322", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can't share a snapshot that has been encrypted using the default KMS key of the AWS account that shared the snapshot.",
+     "supports": "Loại A và C (default KMS key).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/share-encrypted-snapshot.html", "title": "Sharing encrypted snapshots for Amazon RDS", "section": "Create a customer managed key and give access to it", "snapshot_id": "11d667a61322", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "While creating the customer managed key, you give access to it for another AWS account.",
+     "supports": "Customer managed key cấp quyền cho account khác là cách chia sẻ snapshot mã hóa (D).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html", "title": "AWS KMS keys", "section": "AWS managed keys", "snapshot_id": "51ffc263dff1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you cannot change any properties of AWS managed keys, rotate them, change their key policies, or schedule them for deletion.",
+     "supports": "Không thể cấp quyền cross-account trên AWS managed (default) key (C).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/overview.html", "title": "AWS Key Management Service", "section": "Overview", "snapshot_id": "d48094f18d5f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "They never leave AWS KMS unencrypted.",
+     "supports": "Không thể 'copy' KMS key sang account khác bằng Lambda (A, B).", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html", "title": "Importing key material for AWS KMS keys", "section": "Overview", "snapshot_id": "1e3ebbced033", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you can create a KMS key without key material and then import your own key material into that KMS key",
+     "supports": "Import là đưa key material của khách hàng vào KMS, không phải chuyển KMS key giữa các account (B).", "kind": "inference"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html", "title": "Allowing users in other accounts to use a KMS key", "section": "Overview", "snapshot_id": "ab981fa5d441", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Cross-account access requires permission in the key policy of the KMS key and in an IAM policy in the external user's account.",
+     "supports": "D: principal trong mỗi account cần IAM policy phù hợp cùng key policy cho phép.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q022:stem:0", "detail_vi": "'sands' phải là 'sends'."},
+    {"type": "typo", "location": "Q022:A", "detail_vi": "'Key Management Sen/ice' phải là 'Key Management Service'."}
+  ]
+}

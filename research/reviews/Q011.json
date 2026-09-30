@@ -1,0 +1,268 @@
+{
+  "question_id": "Q011",
+  "question_content_hash": "1219b12896bab6eb63d127a9f9b20ed9664c8c4473060c41157211ae1aa40d56",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "79be392dc9692a9c2117f986b164254b13148ab02a3fbd8c71f8752a735e485c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Truy cập shell (bảo trì) vào cả EC2 instance và server on-premises.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ngoài khung giờ bảo trì, máy phải cô lập hoàn toàn khỏi phần còn lại của mạng (không mở inbound).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Không muốn quản lý SSH key.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chỉ trả tiền cho thời gian có kết nối (không trả cho hạ tầng chạy thường trực như bastion).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q011:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Bastion host cần mở inbound SSH, quản lý SSH key và chạy (trả tiền) liên tục; vi phạm R2, R3, R4.",
+      "requirement_ids": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q011:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Session Manager hỗ trợ EC2 và on-premises, không cần mở inbound port, bastion hay SSH key; quyền cấp qua IAM. EC2 không tính phí thêm; hybrid node tính theo session (từ 30/09/2026).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q011:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "CloudShell là shell trên trình duyệt đã xác thực để chạy AWS CLI; không phải cơ chế truy cập máy — SSH từ CloudShell vẫn cần SSH key và đường mạng tới máy (on-premises).",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q011:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Interface VPC endpoint dùng để kết nối tới dịch vụ qua PrivateLink, không phải đặt cho từng máy để SSH; tính phí theo giờ liên tục và không bỏ được SSH key.",
+      "requirement_ids": [
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q011:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu Session Manager nêu rõ hỗ trợ on-premises, không cần inbound port/bastion/SSH key; các phương án khác đều cần SSH key hoặc hạ tầng chạy thường trực.",
+      "open_issues": [
+        "Đề dùng chữ 'SSH' nhưng Session Manager mặc định là shell session qua agent; SSH qua Session Manager (AWS-StartSSHSession) vẫn cần key.",
+        "Session Manager vẫn cần outbound HTTPS tới endpoint Systems Manager, nên 'cô lập hoàn toàn' hiểu là không có inbound.",
+        "Giá: trước 30/06/2026 hybrid node cần advanced-instances tier tính theo giờ; từ 30/09/2026 tính theo session."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "source_answer": [
+    "Q011:B"
+  ],
+  "researched_answer": [
+    "Q011:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu Session Manager nêu trực tiếp không cần inbound port, bastion hay SSH key và hỗ trợ cả EC2 lẫn node on-premises; các phương án khác đều cần SSH key hoặc hạ tầng chạy thường trực.",
+    "open_issues": [
+      "Đề dùng chữ 'SSH' nhưng Session Manager mặc định là shell session qua SSM Agent; SSH qua Session Manager (AWS-StartSSHSession) vẫn cần key.",
+      "Session Manager cần outbound HTTPS tới endpoint Systems Manager; 'cô lập hoàn toàn' được hiểu là không mở inbound.",
+      "Giá cho node on-premises thay đổi 2026: bỏ Advanced Instances Tier từ 30/06/2026, tính $0.05/session từ 30/09/2026; EC2 không tính phí thêm."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn B. Đã kiểm tra lại các phương án cạnh tranh: A (bastion) chạy thường trực, cần inbound SSH và SSH key; C (CloudShell) chỉ là shell trình duyệt để chạy AWS CLI, SSH từ đó vẫn cần key và đường mạng tới on-premises; D (interface endpoint) phục vụ kết nối tới dịch vụ PrivateLink, tính phí theo giờ. Kiểm tra lại trang giá Systems Manager: trước 30/06/2026 node on-premises dùng Advanced Instances Tier (không hoàn toàn 'chỉ trả khi có kết nối'), hiện tại tính theo session — điều này làm B khớp yêu cầu giá tốt hơn chứ không làm phương án khác đúng. Giữ B.",
+  "explanation_vi": {
+    "why_correct": "Session Manager cho truy cập shell vào cả EC2 và server on-premises (managed node) mà không cần mở inbound port, bastion hay SSH key; quyền cấp qua IAM, và chi phí phát sinh theo session thay vì hạ tầng chạy thường trực.",
+    "others": {
+      "Q011:A": "Bastion host chạy (và tính tiền) liên tục, cần mở inbound SSH và quản lý SSH key.",
+      "Q011:C": "CloudShell chỉ là shell trình duyệt để chạy AWS CLI; SSH từ đó vẫn cần SSH key và đường mạng tới máy on-premises.",
+      "Q011:D": "Interface VPC endpoint dùng để kết nối tới dịch vụ qua PrivateLink, tính phí theo giờ và không loại bỏ SSH key."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "on-premises servers",
+      "meaning_vi": "Phải hỗ trợ cả máy ngoài AWS -> hybrid managed node của Systems Manager."
+    },
+    {
+      "phrase": "completely isolated from the rest of the network",
+      "meaning_vi": "Không mở inbound port; agent chỉ gọi ra endpoint SSM."
+    },
+    {
+      "phrase": "does not want to maintain any SSH keys",
+      "meaning_vi": "Xác thực bằng IAM thay vì SSH key -> Session Manager."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần truy cập shell vào EC2 + on-premises mà không SSH key, không mở inbound port -> nghĩ đến Systems Manager Session Manager; kiểm tra node có SSM Agent, IAM role/hybrid activation và outbound HTTPS tới endpoint SSM.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS Systems Manager Session Manager",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Truy cập quản trị an toàn vào compute mà không mở cổng mạng hay quản lý SSH key."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html",
+      "title": "AWS Systems Manager Session Manager",
+      "section": "intro",
+      "snapshot_id": "ef5123406f80",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Session Manager provides secure node management without the need to open inbound ports, maintain bastion hosts, or manage SSH keys.",
+      "supports": "Không inbound port, không bastion, không SSH key (R2, R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html",
+      "title": "AWS Systems Manager Session Manager",
+      "section": "How can Session Manager benefit my organization?",
+      "snapshot_id": "ef5123406f80",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can connect to both Amazon Elastic Compute Cloud (Amazon EC2) instances and non-EC2 nodes in your hybrid and multicloud environment.",
+      "supports": "Hỗ trợ cả EC2 và server on-premises (R1).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://aws.amazon.com/systems-manager/pricing/",
+      "title": "AWS Systems Manager Pricing",
+      "section": "Session Manager / Hybrid and Multicloud Node Management",
+      "snapshot_id": "c28437022921",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "No additional charges for usage on Amazon EC2 instances.",
+      "supports": "Session Manager không tính phí thêm trên EC2; hybrid node tính $0.05 mỗi session từ 30/09/2026 — chỉ trả khi có kết nối (R4).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html",
+      "title": "What is AWS CloudShell?",
+      "section": "intro",
+      "snapshot_id": "f51d00993ff2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS CloudShell is a browser-based, pre-authenticated shell that you can launch directly from the AWS Management Console.",
+      "supports": "CloudShell là shell chạy AWS CLI trên trình duyệt, không phải cơ chế truy cập máy không cần key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/create-interface-endpoint.html",
+      "title": "Access an AWS service using an interface VPC endpoint",
+      "section": "intro",
+      "snapshot_id": "c0406932b2ed",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can create an interface VPC endpoint to connect to services powered by AWS PrivateLink, including many AWS services.",
+      "supports": "Interface endpoint là để kết nối tới dịch vụ PrivateLink, không phải để SSH vào từng máy; tính phí theo giờ.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q011:stem:0",
+      "detail_vi": "Đề yêu cầu 'use SSH' nhưng lại không muốn quản lý SSH key; Session Manager đáp ứng nhu cầu truy cập shell chứ không phải SSH thuần."
+    },
+    {
+      "type": "outdated",
+      "location": "Q011:B",
+      "detail_vi": "Mô hình giá cho hybrid node thay đổi năm 2026 (bỏ Advanced Instances Tier theo giờ, chuyển sang tính theo session); kết luận không đổi."
+    }
+  ],
+  "notes_vi": "B là phương án duy nhất loại bỏ SSH key, bastion và inbound port cho cả EC2 lẫn on-premises.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q011:B\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key B khớp blind; giữ B, status verified",
+      "previous_answer": null
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "question_id": "Q009",
+  "question_content_hash": "dbd03b77334afeab17880b4562415b7e162590082d89aa4863b19ee3d2e90c70",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Sao chép object S3 từ Region chính sang Region phụ (DR).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Người có quyền administrator cũng KHÔNG được xóa vĩnh viễn dữ liệu ở Region phụ.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Bảo vệ dữ liệu quan trọng khỏi bị xóa vĩnh viễn (immutability).", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q009:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Vault Lock governance mode có thể bị gỡ/quản lý bởi người có đủ quyền IAM, nên admin vẫn xóa được recovery point; không đạt R2 (cần compliance mode).",
+     "requirement_ids": ["R2"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q009:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Object Lock compliance mode: không user nào kể cả root xóa/ghi đè được trong thời hạn giữ; S3 Replication sao chép cả thông tin retention sang replica (bucket đích buộc phải bật Object Lock), nên dữ liệu ở Region phụ cũng bất biến.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q009:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "s3:ReplicateDelete chỉ là quyền để S3 sao chép delete marker sang bucket đích; từ chối nó không ngăn admin xóa trực tiếp object version ở bucket phụ (và admin có thể sửa bucket policy).",
+     "requirement_ids": ["R2"], "reference_ids": ["ref5", "ref6"], "evidence_kind": "inference"},
+    {"unit_id": "Q009:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Versioning chỉ chặn DELETE không kèm version ID; người có quyền vẫn xóa vĩnh viễn bằng DELETE kèm versionId. (Replication vốn đã bắt buộc versioning.)",
+     "requirement_ids": ["R2"], "reference_ids": ["ref6"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q009:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu S3 nêu compliance mode chặn cả root user và replication mang theo retention; các phương án khác đều có đường cho admin xóa.",
+     "open_issues": ["B không nói rõ bật Object Lock ở bucket đích, nhưng tài liệu nói đây là điều bắt buộc khi replicate từ bucket có Object Lock."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html", "title": "Locking objects with Object Lock", "section": "Retention modes", "snapshot_id": "b105a845c1ae", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "In compliance mode, a protected object version can't be overwritten or deleted by any user, including the root user in your AWS account.",
+     "supports": "Compliance mode ngăn cả admin/root xóa vĩnh viễn.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html", "title": "What does Amazon S3 replicate?", "section": "What is replicated", "snapshot_id": "33f1a8b1dee5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "When Amazon S3 replicates objects that have retention information applied, it applies those same retention controls to your replicas",
+     "supports": "Replica ở Region phụ nhận cùng retention (compliance) như object nguồn.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html", "title": "Object Lock considerations", "section": "Using Object Lock with S3 Replication", "snapshot_id": "fa60a29c87c7", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "if the source bucket has Object Lock enabled, the destination buckets must also have Object Lock enabled.",
+     "supports": "Replication với Object Lock yêu cầu bucket đích cũng bật Object Lock (điều kiện ngầm của B).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html", "title": "AWS Backup Vault Lock", "section": "Vault Lock modes", "snapshot_id": "16072b8660f4", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "A vault locked in Governance mode can be managed or deleted by users who have the appropriate IAM permissions.",
+     "supports": "Governance mode không ngăn được admin có quyền IAM (A không đạt).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/setting-repl-config-perm-overview.html", "title": "Setting up permissions for live replication", "section": "Destination permissions", "snapshot_id": "04713240597b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "allow Amazon S3 to replicate objects or delete markers to the destination bucket.",
+     "supports": "s3:ReplicateDelete chỉ liên quan đến việc replicate delete marker, không kiểm soát xóa trực tiếp ở bucket đích.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeletingObjectVersions.html", "title": "Deleting object versions from a versioning-enabled bucket", "section": "intro", "snapshot_id": "3bf31528548a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To delete versioned objects permanently, you must use DELETE Object versionId.",
+     "supports": "Với versioning, người có quyền vẫn xóa vĩnh viễn được bằng versionId (C, D không đạt).", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Thời hạn retention không được nêu trong đề; giả định đủ dài cho yêu cầu DR."
+}

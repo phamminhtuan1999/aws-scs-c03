@@ -1,0 +1,59 @@
+{
+  "question_id": "Q023",
+  "question_content_hash": "b46f682293ec3f16881d621585e437dbcea5018616146dbfe6275c4cd3dc931c",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Bắt buộc (enforce) mã hóa in transit cho TẤT CẢ kết nối tới Aurora cluster.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Đề không nêu engine (Aurora MySQL hay Aurora PostgreSQL).", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q023:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Với Aurora MySQL, đặt DB cluster parameter require_secure_transport = ON buộc mọi kết nối người dùng dùng TLS, không cần reboot (với Aurora PostgreSQL tham số tương đương là rds.force_ssl).",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q023:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS Managed Microsoft AD + Kerberos là cơ chế XÁC THỰC người dùng database, không bắt buộc mã hóa kênh truyền dữ liệu.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q023:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Server certificate của Aurora do các CA của Amazon RDS ký, không cấu hình bằng ACM; dù có certificate, việc cung cấp chứng chỉ không bắt buộc client phải dùng TLS.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q023:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "RDS Proxy có thể yêu cầu TLS giữa proxy và DB, còn TLS giữa client và proxy phải đặt ở phía client; client vẫn có thể kết nối thẳng tới cluster endpoint không mã hóa, nên không enforce cho mọi kết nối.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref5"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q023:A"],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu Aurora MySQL nêu trực tiếp require_secure_transport buộc mọi kết nối dùng TLS; các lựa chọn khác không enforce. Độ tin cậy trung bình vì đề không nêu engine và tham số này chỉ áp dụng cho Aurora MySQL.",
+      "open_issues": ["Nếu cluster là Aurora PostgreSQL thì tham số đúng là rds.force_ssl, không phải require_secure_transport."]
+    },
+    "reference_ids": ["ref1", "ref5"],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Security.html", "title": "Security with Amazon Aurora MySQL", "section": "TLS connections to Aurora MySQL DB clusters", "snapshot_id": "ddec58bb5ecb", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can require that all user connections to your Aurora MySQL DB cluster use TLS by using the require_secure_transport DB cluster parameter.",
+     "supports": "A enforce TLS cho mọi kết nối (Aurora MySQL).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Security.html", "title": "Security with Amazon Aurora PostgreSQL", "section": "Requiring an SSL/TLS connection to an Aurora PostgreSQL DB cluster", "snapshot_id": "4950125d9d6b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To require SSL/TLS connections to your Aurora PostgreSQL DB cluster, use rds.force_ssl parameter.",
+     "supports": "Điều kiện engine: Aurora PostgreSQL dùng rds.force_ssl thay cho require_secure_transport.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/postgresql-kerberos.html", "title": "Using Kerberos authentication with Aurora PostgreSQL", "section": "Overview", "snapshot_id": "a4efa7723442", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can use Kerberos to authenticate users when they connect to your DB cluster",
+     "supports": "Kerberos là xác thực, không phải enforce mã hóa in transit (B).", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL.html", "title": "Using SSL/TLS to encrypt a connection to a DB cluster", "section": "Certificate authorities", "snapshot_id": "c90c936867ff", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon RDS provides the following CAs to sign the DB server certificate for a database.",
+     "supports": "Chứng chỉ server của Aurora đến từ CA của RDS, không phải cấu hình ACM (C).", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-proxy.howitworks.html", "title": "RDS Proxy concepts and terminology", "section": "Using TLS/SSL with RDS Proxy", "snapshot_id": "58fb5c4fe283", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To have RDS Proxy do so, specify the requirement on the client side.",
+     "supports": "TLS giữa client và proxy do client quyết định; proxy không enforce mọi kết nối tới cluster (D).", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "ambiguous", "location": "Q023:stem:0", "detail_vi": "Không nêu engine Aurora; require_secure_transport chỉ đúng cho Aurora MySQL (PostgreSQL dùng rds.force_ssl)."}
+  ]
+}

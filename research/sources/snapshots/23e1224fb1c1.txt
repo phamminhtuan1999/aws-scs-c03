@@ -1,0 +1,496 @@
+URL: https://docs.aws.amazon.com/macie/latest/user/findings-publish-event-schemas.html
+TITLE: Amazon EventBridge event schema for Macie findings - Amazon Macie
+
+# Amazon EventBridge event schema for Macie findings
+
+To support integration with other applications, services, and systems, such as monitoring
+or event management systems, Amazon Macie automatically publishes findings to Amazon EventBridge as
+events. EventBridge, formerly Amazon CloudWatch Events, is a serverless event bus service that delivers a stream
+of real-time data from applications and other AWS services to targets such as AWS Lambda
+functions, Amazon Simple Notification Service topics, and Amazon Kinesis streams. To learn more about EventBridge, see the Amazon EventBridge User Guide.
+
+Note
+
+If you currently use CloudWatch Events, note that EventBridge and CloudWatch Events are the same underlying service
+and API. However, EventBridge includes additional features that enable you to receive events
+from software as a service (SaaS) applications and your own applications. Because the
+underlying service and API are the same, the event schema for Macie findings is also the
+same.
+
+Macie automatically publishes events for all new findings and subsequent occurrences of
+existing policy findings, except findings that are archived automatically by a suppression rule. The events are JSON objects that
+conform to the EventBridge schema for AWS events. Each event contains a JSON representation of a
+particular finding. Because the data is structured as an EventBridge event, you can more easily
+monitor, process, and act upon a finding by using other applications, services, and tools.
+For details about how and when Macie publishes events for findings, see Configuring publication settings
+for findings.
+
+Topics
+
+- Event schema for Macie findings
+
+- Example of an event for a policy finding
+
+- Example of an event for a sensitive data finding
+
+## Event schema for Macie findings
+
+The following example shows the schema of an Amazon EventBridge event for an
+Amazon Macie finding. For detailed descriptions of the fields that can be included in a
+finding event, see Findings in the
+Amazon Macie API Reference. The structure and fields
+of a finding event map closely to the Finding object of the Amazon Macie
+API.
+
+{
+"version": "0",
+"id": "event ID",
+"detail-type": "Macie Finding",
+"source": "aws.macie",
+"account": "AWS account ID (string)",
+"time": "event timestamp (string)",
+"region": "AWS Region (string)",
+"resources": [
+<-- ARNs of the resources involved in the event -->
+],
+"detail": {
+<-- Details of a policy or sensitive data finding -->
+},
+"policyDetails": null, <-- Additional details of a policy finding or null for a sensitive data finding -->
+"sample": Boolean,
+"archived": Boolean
+}
+
+## Example of an event for a policy finding
+
+The following example uses sample data to demonstrate the structure and nature of
+objects and fields in an Amazon EventBridge event for a policy finding. In this example, the event reports a subsequent occurrence
+of an existing policy finding: Amazon Macie detected that block public access settings were
+disabled for an S3 bucket. The following fields and values can help you determine that
+this is the case:
+
+- The type field is set to
+Policy:IAMUser/S3BlockPublicAccessDisabled.
+
+- The createdAt and updatedAt fields have different
+values. This is one indicator that the event reports a subsequent occurrence of
+an existing policy finding. The values for these fields would be the same if the
+event reported a new finding.
+
+- The count field is set to 2, which indicates that
+this is the second occurrence of the finding.
+
+- The category field is set to POLICY.
+
+- The value for the classificationDetails field is
+null, which helps differentiate this event for a policy finding
+from an event for a sensitive data finding. For a sensitive data finding, this
+value would be a set of objects and fields that provide information about how
+and what sensitive data was found.
+
+Also note that the value for the sample field is true. This
+value emphasizes that this is an example event for use in the documentation.
+
+{
+"version": "0",
+"id": "0948ba87-d3b8-c6d4-f2da-732a1example",
+"detail-type": "Macie Finding",
+"source": "aws.macie",
+"account": "123456789012",
+"time": "2024-04-30T23:12:15Z",
+"region":"us-east-1",
+"resources": [],
+"detail": {
+"schemaVersion": "1.0",
+"id": "64b917aa-3843-014c-91d8-937ffexample",
+"accountId": "123456789012",
+"partition": "aws",
+"region": "us-east-1",
+"type": "Policy:IAMUser/S3BlockPublicAccessDisabled",
+"title": "Block public access settings are disabled for the S3 bucket",
+"description": "All bucket-level block public access settings were disabled for the S3 bucket. Access to the bucket is controlled by account-level block public access settings, access control lists (ACLs), and the bucket’s bucket policy.",
+"severity": {
+"score": 3,
+"description": "High"
+},
+"createdAt": "2024-04-29T15:46:02Z",
+"updatedAt": "2024-04-30T23:12:15Z",
+"count": 2,
+"resourcesAffected": {
+"s3Bucket": {
+"arn": "arn:aws:s3:::amzn-s3-demo-bucket1",
+"name": "amzn-s3-demo-bucket1",
+"createdAt": "2020-04-03T20:46:56.000Z",
+"owner":{
+"displayName": "johndoe",
+"id": "7009a8971cd538e11f6b6606438875e7c86c5b672f46db45460ddcd08example"
+},
+"tags": [
+{
+"key": "Division",
+"value": "HR"
+},
+{
+"key": "Team",
+"value": "Recruiting"
+}
+],
+"defaultServerSideEncryption": {
+"encryptionType": "aws:kms",
+"kmsMasterKeyId": "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+},
+"publicAccess": {
+"permissionConfiguration": {
+"bucketLevelPermissions": {
+"accessControlList": {
+"allowsPublicReadAccess": false,
+"allowsPublicWriteAccess": false
+},
+"bucketPolicy": {
+"allowsPublicReadAccess": false,
+"allowsPublicWriteAccess": false
+},
+"blockPublicAccess": {
+"ignorePublicAcls": false,
+"restrictPublicBuckets": false,
+"blockPublicAcls": false,
+"blockPublicPolicy": false
+}
+},
+"accountLevelPermissions": {
+"blockPublicAccess": {
+"ignorePublicAcls": true,
+"restrictPublicBuckets": true,
+"blockPublicAcls": true,
+"blockPublicPolicy": true
+}
+}
+},
+"effectivePermission": "NOT_PUBLIC"
+},
+"allowsUnencryptedObjectUploads": "FALSE"
+},
+"s3Object": null
+},
+"category": "POLICY",
+"classificationDetails": null,
+"policyDetails": {
+"action": {
+"actionType": "AWS_API_CALL",
+"apiCallDetails": {
+"api": "PutBucketPublicAccessBlock",
+"apiServiceName": "s3.amazonaws.com",
+"firstSeen": "2024-04-29T15:46:02.401Z",
+"lastSeen": "2024-04-30T23:12:15.401Z"
+}
+},
+"actor": {
+"userIdentity": {
+"type": "AssumedRole",
+"assumedRole": {
+"principalId": "AROA1234567890EXAMPLE:AssumedRoleSessionName",
+"arn": "arn:aws:sts::123456789012:assumed-role/RoleToBeAssumed/MySessionName",
+"accountId": "111122223333",
+"accessKeyId": "AKIAIOSFODNN7EXAMPLE",
+"sessionContext": {
+"attributes": {
+"mfaAuthenticated": false,
+"creationDate": "2024-04-29T10:25:43.511Z"
+},
+"sessionIssuer": {
+"type": "Role",
+"principalId": "AROA1234567890EXAMPLE",
+"arn": "arn:aws:iam::123456789012:role/RoleToBeAssumed",
+"accountId": "123456789012",
+"userName": "RoleToBeAssumed"
+}
+}
+},
+"root": null,
+"iamUser": null,
+"federatedUser": null,
+"awsAccount": null,
+"awsService": null
+},
+"ipAddressDetails":{
+"ipAddressV4": "192.0.2.0",
+"ipOwner": {
+"asn": "-1",
+"asnOrg": "ExampleFindingASNOrg",
+"isp": "ExampleFindingISP",
+"org": "ExampleFindingORG"
+},
+"ipCountry": {
+"code": "US",
+"name": "United States"
+},
+"ipCity": {
+"name": "Ashburn"
+},
+"ipGeoLocation": {
+"lat": 39.0481,
+"lon": -77.4728
+}
+},
+"domainDetails": null
+}
+},
+"sample": true,
+"archived": false
+}
+}
+
+## Example of an event for a sensitive data finding
+
+The following example uses sample data to demonstrate the structure and nature of
+objects and fields in an Amazon EventBridge event for a sensitive data finding. In this
+example, the event reports a new sensitive data finding: Amazon Macie found multiple
+categories and types of sensitive data in an S3 object. The following fields and values
+can you help you determine that this is the case:
+
+- The type field is set to
+SensitiveData:S3Object/Multiple.
+
+- The createdAt and updatedAt fields have the same
+values. Unlike policy findings, this is always the case for sensitive data
+findings. All sensitive data findings are considered new.
+
+- The count field is set to 1, which indicates that
+this is a new finding. Unlike policy findings, this is always the case for
+sensitive data findings. All sensitive data findings are considered unique
+(new).
+
+- The category field is set to CLASSIFICATION.
+
+- The value for the policyDetails field is null, which
+helps differentiate this event for a sensitive data finding from an event for a
+policy finding. For a policy finding, this value would be a set of objects and
+fields that provide information about a potential policy violation or issue with
+the security or privacy of an S3 bucket.
+
+Also note that the value for the sample field is true. This
+value emphasizes that this is an example event for use in the documentation.
+
+{
+"version": "0",
+"id": "14ddd0b1-7c90-b9e3-8a68-6a408example",
+"detail-type": "Macie Finding",
+"source": "aws.macie",
+"account": "123456789012",
+"time": "2024-04-20T08:19:10Z",
+"region": "us-east-1",
+"resources": [],
+"detail": {
+"schemaVersion": "1.0",
+"id": "4ed45d06-c9b9-4506-ab7f-18a57example",
+"accountId": "123456789012",
+"partition": "aws",
+"region": "us-east-1",
+"type": "SensitiveData:S3Object/Multiple",
+"title": "The S3 object contains multiple categories of sensitive data",
+"description": "The S3 object contains more than one category of sensitive data.",
+"severity": {
+"score": 3,
+"description": "High"
+},
+"createdAt": "2024-04-20T18:19:10Z",
+"updatedAt": "2024-04-20T18:19:10Z",
+"count": 1,
+"resourcesAffected": {
+"s3Bucket": {
+"arn": "arn:aws:s3:::amzn-s3-demo-bucket2",
+"name": "amzn-s3-demo-bucket2",
+"createdAt": "2020-05-15T20:46:56.000Z",
+"owner": {
+"displayName": "johndoe",
+"id": "7009a8971cd538e11f6b6606438875e7c86c5b672f46db45460ddcd08example"
+},
+"tags":[
+{
+"key":"Division",
+"value":"HR"
+},
+{
+"key":"Team",
+"value":"Recruiting"
+}
+],
+"defaultServerSideEncryption": {
+"encryptionType": "aws:kms",
+"kmsMasterKeyId": "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+},
+"publicAccess": {
+"permissionConfiguration": {
+"bucketLevelPermissions": {
+"accessControlList": {
+"allowsPublicReadAccess": false,
+"allowsPublicWriteAccess": false
+},
+"bucketPolicy":{
+"allowsPublicReadAccess": false,
+"allowsPublicWriteAccess": false
+},
+"blockPublicAccess": {
+"ignorePublicAcls": true,
+"restrictPublicBuckets": true,
+"blockPublicAcls": true,
+"blockPublicPolicy": true
+}
+},
+"accountLevelPermissions": {
+"blockPublicAccess": {
+"ignorePublicAcls": false,
+"restrictPublicBuckets": false,
+"blockPublicAcls": false,
+"blockPublicPolicy": false
+}
+}
+},
+"effectivePermission": "NOT_PUBLIC"
+},
+"allowsUnencryptedObjectUploads": "TRUE"
+},
+"s3Object":{
+"bucketArn": "arn:aws:s3:::amzn-s3-demo-bucket2",
+"key": "2024 Sourcing.csv",
+"path": "amzn-s3-demo-bucket2/2024 Sourcing.csv",
+"extension": "csv",
+"lastModified": "2024-04-19T22:08:25.000Z",
+"versionId": "",
+"serverSideEncryption": {
+"encryptionType": "aws:kms",
+"kmsMasterKeyId": "arn:aws:kms:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+},
+"size": 4750,
+"storageClass": "STANDARD",
+"tags":[
+{
+"key":"Division",
+"value":"HR"
+},
+{
+"key":"Team",
+"value":"Recruiting"
+}
+],
+"publicAccess": false,
+"etag": "6bb7fd4fa9d36d6b8fb8882caexample"
+}
+},
+"category": "CLASSIFICATION",
+"classificationDetails": {
+"jobArn": "arn:aws:macie2:us-east-1:123456789012:classification-job/3ce05dbb7ec5505def334104bexample",
+"jobId": "3ce05dbb7ec5505def334104bexample",
+"result": {
+"status": {
+"code": "COMPLETE",
+"reason": null
+},
+"sizeClassified": 4750,
+"mimeType": "text/csv",
+"additionalOccurrences": true,
+"sensitiveData": [
+{
+"category": "PERSONAL_INFORMATION",
+"totalCount": 65,
+"detections": [
+{
+"type": "USA_SOCIAL_SECURITY_NUMBER",
+"count": 30,
+"occurrences": {
+"lineRanges": null,
+"offsetRanges": null,
+"pages": null,
+"records": null,
+"cells": [
+{
+"row": 2,
+"column": 1,
+"columnName": "SSN",
+"cellReference": null
+},
+{
+"row": 3,
+"column": 1,
+"columnName": "SSN",
+"cellReference": null
+},
+{
+"row": 4,
+"column": 1,
+"columnName": "SSN",
+"cellReference": null
+}
+]
+}
+},
+{
+"type": "NAME",
+"count": 35,
+"occurrences": {
+"lineRanges": null,
+"offsetRanges": null,
+"pages": null,
+"records": null,
+"cells": [
+{
+"row": 2,
+"column": 3,
+"columnName": "Name",
+"cellReference": null
+},
+{
+"row": 3,
+"column": 3,
+"columnName": "Name",
+"cellReference": null
+}
+]
+}
+}
+]
+},
+{
+"category": "FINANCIAL_INFORMATION",
+"totalCount": 30,
+"detections": [
+{
+"type": "CREDIT_CARD_NUMBER",
+"count": 30,
+"occurrences": {
+"lineRanges": null,
+"offsetRanges": null,
+"pages": null,
+"records": null,
+"cells": [
+{
+"row": 2,
+"column": 14,
+"columnName": "CCN",
+"cellReference": null
+},
+{
+"row": 3,
+"column": 14,
+"columnName": "CCN",
+"cellReference": null
+}
+]
+}
+}
+]
+}
+],
+"customDataIdentifiers": {
+"totalCount": 0,
+"detections": []
+}
+},
+"detailedResultsLocation": "s3://macie-data-discovery-results/AWSLogs/123456789012/Macie/us-east-1/3ce05dbb7ec5505def334104bexample/d48bf16d-0deb-3e49-9d8c-d407cexample.jsonl.gz",
+"originType": "SENSITIVE_DATA_DISCOVERY_JOB"
+},
+"policyDetails": null,
+"sample": true,
+"archived": false
+}
+}

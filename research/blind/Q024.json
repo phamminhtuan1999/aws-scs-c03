@@ -1,0 +1,68 @@
+{
+  "question_id": "Q024",
+  "question_content_hash": "bb2253ced9f06aa8b106429571c65419e40cbe102d591a3f0b5e58d56a4c5bf7",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Giới hạn mỗi client IP chỉ được đọc dữ liệu 3 lần trong bất kỳ khoảng 5 phút nào (thực sự chặn, không chỉ cảnh báo).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Bối cảnh: website công khai ALB -> EC2 (ứng dụng stateless, nhiều instance) -> DynamoDB; lo ngại quét độc hại và DDoS.", "kind": "scope"},
+    {"id": "R3", "text_vi": "LEAST effort.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q024:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS WAF gắn vào ALB với rate-based rule theo IP, cửa sổ 300 giây là cơ chế ít công sức nhất để chặn; nhưng giới hạn thấp nhất cho phép là 10 (API: minimum 10) và WAF không đảm bảo khớp chính xác, nên không thể đặt đúng 3 lần/5 phút.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q024:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Lambda chỉ đếm và gửi thông báo khi vượt ngưỡng, không chặn request nên không áp đặt được giới hạn; 'CloudWatch request' cũng không phải nguồn sự kiện rõ ràng.",
+     "requirement_ids": ["R1"], "reference_ids": [], "evidence_kind": "inference"},
+    {"unit_id": "Q024:C", "unit_type": "choice", "verdict": "undetermined",
+     "reason_vi": "Tự viết logic trong ứng dụng có thể trả lỗi khi vượt 3 lần, nhưng sau ALB địa chỉ nguồn là của load balancer (phải đọc X-Forwarded-For) và ứng dụng stateless nhiều instance cần bộ đếm dùng chung không được nêu; dù làm được thì công sức lớn nhất và không giảm tải DDoS trước EC2.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q024:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Read capacity của DynamoDB là thông lượng mỗi giây cho cả bảng, không theo từng IP; TTL xóa item trong vòng vài ngày chứ không đúng 5 phút; hạ RCU xuống 3 chỉ gây throttle cho mọi người dùng.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref5", "ref6"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": null,
+    "proposed_status": "ambiguous",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Rõ ràng đề nhắm tới AWS WAF rate-based rule (lựa chọn A) vì đây là cơ chế chặn theo IP ít công sức nhất, nhưng tài liệu hiện hành nêu rate limit tối thiểu là 10 và không chính xác tuyệt đối, nên con số 3 lần/5 phút không cấu hình được. Không lựa chọn nào đáp ứng đúng nguyên văn yêu cầu mà vẫn ít công sức.",
+      "open_issues": [
+        "Nếu bỏ qua con số 3 (hiểu là 'giới hạn tần suất theo IP'), A là lựa chọn hợp lý duy nhất.",
+        "Chưa xác minh lịch sử ngưỡng tối thiểu của WAF (trước đây từng cao hơn); ở mọi thời điểm đều không cho phép 3."
+      ]
+    },
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-high-level-settings.html", "title": "Rate-based rule high-level settings in AWS WAF", "section": "Rate limit / Evaluation window", "snapshot_id": "5bf095f4854b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The lowest limit setting allowed is 10.",
+     "supports": "Không thể đặt giới hạn 3 request trong rate-based rule (A).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedStatement.html", "title": "RateBasedStatement - AWS WAFV2", "section": "Limit", "snapshot_id": "c2e2bc9ecd9a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Valid Range: Minimum value of 10. Maximum value of 2000000000.",
+     "supports": "API xác nhận giới hạn tối thiểu 10.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-caveats.html", "title": "Rate-based rule caveats in AWS WAF", "section": "Caveats", "snapshot_id": "3885312d4e35", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "It's not intended for precise request-rate limiting.",
+     "supports": "WAF rate limiting không chính xác tuyệt đối, không đảm bảo 'bất kỳ 5 phút nào' đúng 3 lần.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html", "title": "HTTP headers and Application Load Balancers", "section": "X-Forwarded-For", "snapshot_id": "227aa20bf999", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "your server access logs only contain the IP address of the load balancer.",
+     "supports": "Ứng dụng sau ALB không thấy trực tiếp IP client; C phải xử lý X-Forwarded-For.", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/provisioned-capacity-mode.html", "title": "DynamoDB provisioned capacity mode", "section": "Read capacity units and write capacity units", "snapshot_id": "ef5c518e5ccc", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "one read capacity unit (RCU) represents one strongly consistent read operation per second",
+     "supports": "RCU là thông lượng mỗi giây của bảng, không phải giới hạn theo IP (D).", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html", "title": "Using time to live (TTL) in DynamoDB", "section": "Overview", "snapshot_id": "c82a46c4cde1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "DynamoDB automatically deletes expired items within a few days of their expiration time",
+     "supports": "TTL không xóa đúng sau 5 phút (D).", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "data", "location": "Q024:A", "detail_vi": "Giới hạn 3 request/5 phút thấp hơn mức tối thiểu 10 của AWS WAF rate-based rule; đề có vẻ nhắm tới WAF nhưng con số không cấu hình được."},
+    {"type": "ambiguous", "location": "Q024:B", "detail_vi": "'Lambda function based on an Amazon CloudWatch request' không rõ nghĩa."}
+  ],
+  "notes_vi": "Cơ chế đúng về ý tưởng là AWS WAF rate-based rule gắn vào ALB (A). Vì không option nào đáp ứng đúng con số 3 lần/5 phút, đề được đánh dấu ambiguous."
+}

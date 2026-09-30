@@ -1,0 +1,147 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html
+TITLE: GuardDuty foundational data sources - Amazon GuardDuty
+
+# GuardDuty foundational data sources
+
+GuardDuty uses the foundational data sources to detect communication with known malicious
+domains and IP addresses, and identify potentially anomalous behavior and unauthorized
+activity. While in transit from these sources to GuardDuty, all of the log data is encrypted.
+GuardDuty extracts various fields from these logs sources for profiling and anomaly detection,
+and then discards these logs.
+
+When you enable GuardDuty for the first time in a Region, there is a 30-day free trial that
+includes threat detection for all the foundational data sources. During this free trial, you
+can monitor an estimated monthly usage broken down by each foundational data source. As a
+delegated GuardDuty administrator account, you can view the estimated monthly usage cost broken down by each member account
+that belongs to your organization and has enabled GuardDuty. After the 30-day trial ends, you
+can use AWS Billing for information about the usage cost.
+
+There is no additional cost when GuardDuty accesses the events and logs from these
+foundational data sources.
+
+After you enable GuardDuty in your AWS account, it automatically starts to monitor the log
+sources explained in the following sections. You don't need
+to enable anything else for GuardDuty to start analyzing and processing these data sources to
+generate associated security findings.
+
+Topics
+
+- AWS CloudTrail management events
+
+- VPC Flow Logs
+
+- Route53 Resolver DNS query logs
+
+## AWS CloudTrail management events
+
+AWS CloudTrail provides you with a history of AWS API calls for your account, including
+API calls made using the AWS Management Console, the AWS SDKs, the command line tools, and certain
+AWS services. CloudTrail also helps you identify which users and accounts invoked AWS APIs
+for services that support CloudTrail, the source IP address from where the calls were invoked,
+and the time at which the calls were invoked. For more information, see What is AWS CloudTrail in AWS CloudTrail User Guide.
+
+GuardDuty monitors CloudTrail management events, also known as control plane events. These
+events provide insight into management operations that are performed on resources in
+your AWS account.
+
+The following are examples of CloudTrail management events that GuardDuty monitors:
+
+- Configuring security (IAM AttachRolePolicy API
+operations)
+
+- Configuring rules for routing data (Amazon EC2 CreateSubnet API
+operations)
+
+- Setting up logging (AWS CloudTrail CreateTrail API operations)
+
+When you enable GuardDuty, it starts consuming CloudTrail management events directly from CloudTrail
+through an independent and duplicated stream of events and analyzes your CloudTrail event
+logs.
+
+GuardDuty does not manage your CloudTrail events or affect your existing CloudTrail configurations.
+Similarly, your CloudTrail configurations don't affect how GuardDuty consumes and processes the
+event logs. To manage access and retention of your CloudTrail events, use the CloudTrail service
+console or API. For more information, see Viewing events with
+CloudTrail event history in AWS CloudTrail User Guide.
+
+### How GuardDuty handles AWS CloudTrail global events
+
+For most AWS services, CloudTrail events are recorded in the AWS Region where they
+are created. For global services such as AWS Identity and Access Management (IAM), AWS Security Token Service (AWS STS),
+Amazon Simple Storage Service (Amazon S3), Amazon CloudFront, and Amazon Route 53 (Route 53), events are only generated in the
+Region where they occur but they have a global significance.
+
+When GuardDuty consumes CloudTrail Global service events (GSE) with security value such as network
+configurations or user permissions, it replicates those events and processes them in
+each Region where you have enabled GuardDuty. This behavior helps GuardDuty maintain user
+and role profiles in each Region, which is vital to detecting anomalous
+events.
+
+Note
+
+For findings generated from these global service events, the Region value in
+the finding may differ from the Region where GuardDuty creates the detection. For
+example, a finding might show us-east-1 as the Region even if GuardDuty
+creates the detection in a different Region.
+
+We recommend that you enable GuardDuty in all AWS Regions available in your
+AWS account. Even if you don't have resources deployed in certain Regions,
+enabling GuardDuty helps protect your account from potential threats. Threat actors can
+potentially launch attacks through global services (such as IAM, AWS STS, or
+Amazon CloudFront). They can attempt to create unauthorized resources to exploit Regions
+where you have limited presence. GuardDuty processes global service events in all
+Regions where you've enabled the service, including both default and opt-in
+Regions. This helps GuardDuty detect potentially suspicious activities across your
+AWS account, including Regions where you don't actively use resources.
+
+## VPC Flow Logs
+
+The VPC Flow Logs feature of Amazon VPC captures information about the IP traffic going to
+and from network interfaces attached to the Amazon Elastic Compute Cloud (Amazon EC2) instances within your
+AWS environment.
+
+When you enable GuardDuty, it immediately starts analyzing VPC flow log data from Amazon EC2
+instances within your account. GuardDuty consumes this data through an independent and
+duplicate stream of flow logs. You don't need to create or configure VPC flow logs
+in your account for GuardDuty to access this data. This process does not affect any of
+your existing flow logs configuration.
+
+Lambda Protection
+
+Lambda Protection is an optional enhancement to Amazon GuardDuty. Presently,
+Lambda Network Activity Monitoring includes Amazon VPC flow logs from all Lambda functions for your
+account, even those logs that don't use VPC networking. To protect your
+Lambda function from potential security threats, you will need to configure
+Lambda Protection in your GuardDuty account. For more information, see Lambda Protection.
+
+GuardDuty Runtime Monitoring
+
+When you manage the security agent (either manually or through GuardDuty) in EKS Runtime Monitoring
+or Runtime Monitoring for EC2 instances, and
+GuardDuty is presently deployed on an Amazon EC2 instance and receives
+the Collected runtime event
+types from this instance, GuardDuty will not charge
+your AWS account for the analysis of VPC flow logs from this Amazon EC2 instance. This helps GuardDuty avoid double usage cost in the account.
+
+GuardDuty doesn't manage your flow logs or make them accessible in your account. To manage
+access to and retention of your flow logs, you must configure the VPC Flow Logs feature.
+
+## Route53 Resolver DNS query logs
+
+If you use AWS DNS resolvers for your Amazon EC2 instances (the default setting), then
+GuardDuty can access and process your request and response Route53 Resolver DNS query logs
+through the internal AWS DNS resolvers. If you use another DNS resolver, such as
+OpenDNS or GoogleDNS, or if you set up your own DNS resolvers, then GuardDuty cannot access
+and process data from this data source.
+
+When you enable GuardDuty, it immediately starts analyzing your Route53 Resolver DNS query
+logs from an independent stream of data. This data stream is separate from the data
+provided through the Route 53 Resolver query
+logging feature. Configuration of this feature does not affect GuardDuty
+analysis.
+
+Note
+
+GuardDuty doesn't support monitoring DNS logs for Amazon EC2 instances that are launched on
+AWS Outposts because the Amazon Route 53 Resolver query logging feature is not available in that
+environment.

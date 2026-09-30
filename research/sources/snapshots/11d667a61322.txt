@@ -1,0 +1,151 @@
+URL: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/share-encrypted-snapshot.html
+TITLE: Sharing encrypted snapshots for Amazon RDS - Amazon Relational Database Service
+
+# Sharing encrypted snapshots for Amazon RDS
+
+You can share DB snapshots that have been encrypted "at rest" using the AES-256 encryption algorithm, as described in
+Encrypting Amazon RDS resources.
+
+The following restrictions apply to sharing encrypted snapshots:
+
+- You can't share encrypted snapshots as public.
+
+- You can't share Oracle or Microsoft SQL Server snapshots that are encrypted using Transparent Data Encryption
+(TDE).
+
+- You can't share a snapshot that has been encrypted using the default KMS key of the AWS account that shared the snapshot.
+
+For more information about AWS KMS key management for Amazon RDS, see AWS KMS key management.
+
+To work around the default KMS key issue, perform the following tasks:
+
+- Create a customer managed key and give access to it.
+
+- Copy and share the snapshot from the source account.
+
+- Copy the shared snapshot in the target account.
+
+## Create a customer managed key and give access to it
+
+First you create a custom KMS key in the same AWS Region as the encrypted DB snapshot. While creating the
+customer managed key, you give access to it for another AWS account.
+
+Note
+
+You can also use a KMS key from another AWS account when the key policy grants access to the source and target accounts.
+
+To create a customer managed key and give access to it
+
+- Sign in to the AWS Management Console from the source AWS account.
+
+- Open the AWS KMS console at https://console.aws.amazon.com/kms.
+
+- To change the AWS Region, use the Region selector in the upper-right corner of the page.
+
+- In the navigation pane, choose Customer managed keys.
+
+- Choose Create key.
+
+- On the Configure key page:
+
+- For Key type, select Symmetric.
+
+- For Key usage, select Encrypt and decrypt.
+
+- Expand Advanced options.
+
+- For Key material origin, select KMS.
+
+- For Regionality, select Single-Region key.
+
+- Choose Next.
+
+- On the Add labels page:
+
+- For Alias. enter a display name for your KMS key, for example
+share-snapshot.
+
+- (Optional) Enter a description for your KMS key.
+
+- (Optional) Add tags to your KMS key.
+
+- Choose Next.
+
+- On the Define key administrative permissions page, choose Next.
+
+- On the Define key usage permissions page:
+
+- For Other AWS accounts, choose Add another
+AWS account.
+
+- Enter the ID of the AWS account to which you want to give access.
+
+You can give access to multiple AWS accounts.
+
+- Choose Next.
+
+- Review your KMS key, then choose Finish.
+
+## Copy and share the snapshot from the source account
+
+Next you copy the source DB snapshot to a new snapshot using the customer managed key. Then you share it with the target
+AWS account.
+
+To copy and share the snapshot
+
+- Sign in to the AWS Management Console from the source AWS account.
+
+- Open the Amazon RDS console at https://console.aws.amazon.com/rds/
+
+- In the navigation pane, choose Snapshots.
+
+- Select the DB snapshot you want to copy.
+
+- For Actions, choose Copy snapshot.
+
+- On the Copy snapshot page:
+
+- For Destination Region, choose the AWS Region where you created the customer managed key in
+the previous procedure.
+
+- Enter the name of the DB snapshot copy in New DB Snapshot Identifier.
+
+- For AWS KMS key, choose the customer managed key that you created.
+
+- Choose Copy snapshot.
+
+- When the snapshot copy is available, select it.
+
+- For Actions, choose Share snapshot.
+
+- On the Snapshot permissions page:
+
+- Enter the AWS account ID with which you're sharing the snapshot copy, then choose
+Add.
+
+- Choose Save.
+
+The snapshot is shared.
+
+## Copy the shared snapshot in the target account
+
+Now you can copy the shared snapshot in the target AWS account.
+
+To copy the shared snapshot
+
+- Sign in to the AWS Management Console from the target AWS account.
+
+- Open the Amazon RDS console at https://console.aws.amazon.com/rds/
+
+- In the navigation pane, choose Snapshots.
+
+- Choose the Shared with me tab.
+
+- Select the shared snapshot.
+
+- For Actions, choose Copy snapshot.
+
+- Choose your settings for copying the snapshot as in the previous procedure, but use an AWS KMS key that belongs
+to the target account.
+
+Choose Copy snapshot.

@@ -1,0 +1,2610 @@
+URL: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-concepts.html
+TITLE: CloudTrail concepts - AWS CloudTrail
+
+# CloudTrail concepts
+
+This section summarizes basic concepts related to CloudTrail.
+
+Concepts:
+
+- CloudTrail events
+
+- Event history
+
+- Trails
+
+- Organization trails
+
+- CloudTrail Lake and event data stores
+
+- CloudTrail Insights
+
+- Tags
+
+- AWS Security Token Service and CloudTrail
+
+- Global service events
+
+## CloudTrail events
+
+An event in CloudTrail is the record of an activity in an AWS account. This activity can
+be an action taken by an IAM identity, or service that is monitorable by CloudTrail. CloudTrail
+events provide a history of both API and non-API account activity made through the
+AWS Management Console, AWS SDKs, command line tools, and other AWS services.
+
+CloudTrail log files aren't an ordered stack trace of the public API calls, so events don't appear in any specific order.
+
+CloudTrail logs four types of events:
+
+- Management
+events
+
+- Data events
+
+- Network activity events
+
+- Insights events
+
+All event types use a CloudTrail JSON log format.
+
+By default, trails and event data stores log management events, but not data or
+Insights events.
+
+For information about how AWS services integrate with CloudTrail, see AWS service topics for CloudTrail.
+
+### Management events
+
+Management events provide information about management operations that are
+performed on resources in your AWS account. These are also known as control plane operations.
+
+Example management events include:
+
+- Configuring security (for example, AWS Identity and Access Management AttachRolePolicy
+API operations).
+
+- Registering devices (for example, Amazon EC2 CreateDefaultVpc API
+operations).
+
+- Configuring rules for routing data (for example, Amazon EC2
+CreateSubnet API operations).
+
+- Setting up logging (for example, AWS CloudTrail CreateTrail API
+operations).
+
+Management events can also include non-API events that occur in your account. For
+example, when a user signs in to your account, CloudTrail logs the
+ConsoleLogin event. For more information, see Non-API events captured by CloudTrail.
+
+By default, CloudTrail trails and CloudTrail Lake event data stores log management events. For
+more information about logging management events, see Logging management events.
+
+### Data events
+
+Data events provide information about the resource operations performed on or in a
+resource. These are also known as data plane
+operations. Data events are often high-volume activities.
+
+Example data events include:
+
+- Amazon S3 object-level API activity (for example,
+GetObject, DeleteObject, and
+PutObject API operations) on objects in S3 buckets.
+
+- AWS Lambda function execution activity (the Invoke
+API).
+
+- CloudTrail PutAuditEvents activity on a CloudTrail Lake channel
+that is used to log events from outside AWS.
+
+- Amazon SNS Publish and PublishBatch API operations on topics.
+
+The following table shows the resource types available for trails and event
+data stores. The Resource type (console) column shows the appropriate selection in the console.
+The resources.type value column shows the
+resources.type value that you would specify to include data
+events of that type in your trail or event data store using the AWS CLI or CloudTrail APIs.
+
+For trails, you can use basic or advanced event selectors to log data events for Amazon S3 objects in general purpose buckets, Lambda functions, and DynamoDB tables (shown in the first three rows of the table). You can use only advanced event selectors to log the resource types shown in the remaining rows.
+
+For event data stores, you can use only advanced event selectors to include data events.
+
+#### Data events supported by AWS CloudTrail
+
+AWS service
+
+Description
+
+Resource type (console)
+
+resources.type value
+
+Amazon WorkSpaces Applications
+
+Agents accessing WorkSpaces Applications MCP tool events
+
+Agent Access MCP Tools
+
+AWS::AgentAccessMCP::Tools
+
+AWS Agent Registry
+
+API activity on AWS::AgentRegistry::Registry resources.
+
+AWS Agent Registry
+
+AWS::AgentRegistry::Registry
+
+Amazon AIDevOps
+
+AIDevOps API activity on agent spaces.
+
+Agent Space
+
+AWS::AIDevOps::AgentSpace
+
+Amazon AIDevOps
+
+AIDevOps API activity on associations.
+
+AIDevOps association
+
+AWS::AIDevOps::Association
+
+Amazon AIDevOps
+
+AIDevOps API activity on operator app teams.
+
+AIDevOps operator app team
+
+AWS::AIDevOps::OperatorAppTeam
+
+Amazon AIDevOps
+
+AIDevOps API activity on pipeline metadata.
+
+AIDevOps Pipelines Metadata
+
+AWS::AIDevOps::PipelineMetadata
+
+Amazon AIDevOps
+
+AIDevOps API activity on services.
+
+AIDevOps service
+
+AWS::AIDevOps::Service
+
+Amazon Q Developer
+
+Amazon Q Developer API activity on operational investigations. For more information, see Amazon Q Developer.
+
+AIOps Investigation Group
+
+AWS::AIOps::InvestigationGroup
+
+Amazon OpenSearch Serverless
+
+API activity on AWS::AOSS::Collection resources.
+
+AWS::AOSS::Collection
+
+AWS::AOSS::Collection
+
+AWS AppConfig
+
+AWS AppConfig API activity for configuration operations such as calls to StartConfigurationSession and GetLatestConfiguration. For more information, see AWS AppConfig.
+
+AWS AppConfig
+
+AWS::AppConfig::Configuration
+
+CloudWatch Application Signals
+
+API activity on AWS::ApplicationSignals::InstrumentationConfig resources.
+
+AWS::ApplicationSignals::InstrumentationConfig
+
+AWS::ApplicationSignals::InstrumentationConfig
+
+AWS AppSync
+
+AWS AppSync API activity on AppSync GraphQL APIs. For more information, see AWS AppSync.
+
+AppSync GraphQL
+
+AWS::AppSync::GraphQLApi
+
+External anthropic workspace
+
+API activity on AWS::AWSExternalAnthropic::Workspace resources.
+
+External anthropic workspace
+
+AWS::AWSExternalAnthropic::Workspace
+
+AWS B2B Data Interchange
+
+B2B Data Interchange API activity for Transformer operations such as calls to GetTransformerJob and StartTransformerJob.
+
+B2B Data Interchange
+
+AWS::B2BI::Transformer
+
+AWS Backup access point
+
+API activity on AWS::Backup::BackupAccessPoint resources.
+
+AWS Backup access point
+
+AWS::Backup::BackupAccessPoint
+
+AWS Backup
+
+AWS Backup Search Data API activity on search jobs.
+
+AWS Backup Search Data APIs
+
+AWS::Backup::SearchJob
+
+Amazon Bedrock
+
+Bedrock API activity on advanced optimize prompt jobs.
+
+AdvancedOptimizePromptJob
+
+AWS::Bedrock::AdvancedOptimizePromptJob
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an agent alias. For more information, see Amazon Bedrock.
+
+Bedrock agent alias
+
+AWS::Bedrock::AgentAlias
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on async invocations.
+
+Bedrock async invoke
+
+AWS::Bedrock::AsyncInvoke
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an automated reasoning policy.
+
+Bedrock Automated Reasoning Policy
+
+AWS::Bedrock::AutomatedReasoningPolicy
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an automated reasoning policy version.
+
+Bedrock Automated Reasoning Policy Version
+
+AWS::Bedrock::AutomatedReasoningPolicyVersion
+
+Amazon Bedrock
+
+Amazon Bedrock blueprint API activity.
+
+Bedrock blueprint
+
+AWS::Bedrock::Blueprint
+
+Amazon Bedrock
+
+Bedrock data automation invocation API activity.
+
+Bedrock Data Automation invocation
+
+AWS::Bedrock::DataAutomationInvocation
+
+Amazon Bedrock
+
+Amazon Bedrock data automation profile API activity.
+
+Bedrock Data Automation profile
+
+AWS::Bedrock::DataAutomationProfile
+
+Amazon Bedrock
+
+Amazon Bedrock data automation project API activity.
+
+Bedrock Data Automation project
+
+AWS::Bedrock::DataAutomationProject
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on a flow alias.
+
+Bedrock flow alias
+
+AWS::Bedrock::FlowAlias
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on flow executions.
+
+Flow Execution
+
+AWS::Bedrock::FlowExecution
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on guardrails.
+
+Bedrock guardrail
+
+AWS::Bedrock::Guardrail
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on inline agents.
+
+Bedrock Invoke Inline-Agent
+
+AWS::Bedrock::InlineAgent
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on a knowledge base. For more information, see Amazon Bedrock.
+
+Bedrock knowledge base
+
+AWS::Bedrock::KnowledgeBase
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on models.
+
+Bedrock model
+
+AWS::Bedrock::Model
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on prompts.
+
+Bedrock prompt
+
+AWS::Bedrock::PromptVersion
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on sessions.
+
+Bedrock session
+
+AWS::Bedrock::Session
+
+Amazon Bedrock
+
+Amazon Bedrock Tool API activity.
+
+Bedrock Tool
+
+AWS::Bedrock::Tool
+
+Bedrock-AgentCore ABTest
+
+API activity on AWS::BedrockAgentCore::ABTest resources.
+
+Bedrock-AgentCore ABTest
+
+AWS::BedrockAgentCore::ABTest
+
+Amazon Bedrock
+
+Amazon Bedrock APIKey CredentialProvider API activity.
+
+Bedrock-AgentCore APIKey CredentialProvider
+
+AWS::BedrockAgentCore::APIKeyCredentialProvider
+
+BedrockAgentCore batch evaluate
+
+API activity on AWS::BedrockAgentCore::BatchEvaluate resources.
+
+BedrockAgentCore batch evaluate
+
+AWS::BedrockAgentCore::BatchEvaluate
+
+Amazon Bedrock
+
+Amazon Bedrock Browser API activity.
+
+Bedrock-AgentCore Browser
+
+AWS::BedrockAgentCore::Browser
+
+Amazon Bedrock
+
+Amazon Bedrock Browser-Custom API activity.
+
+Bedrock-AgentCore Browser-Custom
+
+AWS::BedrockAgentCore::BrowserCustom
+
+Bedrock-AgentCore Browser Profile
+
+API activity on AWS::BedrockAgentCore::BrowserProfile resources.
+
+Bedrock-AgentCore Browser Profile
+
+AWS::BedrockAgentCore::BrowserProfile
+
+BedrockAgentCore CapacityProvider
+
+API activity on AWS::BedrockAgentCore::CapacityProvider resources.
+
+BedrockAgentCore CapacityProvider
+
+AWS::BedrockAgentCore::CapacityProvider
+
+Amazon Bedrock
+
+Amazon Bedrock Code-Interpreter API activity.
+
+Bedrock-AgentCore Code-Interpreter
+
+AWS::BedrockAgentCore::CodeInterpreter
+
+Amazon Bedrock
+
+Amazon Bedrock Code-Interpreter-Custom API activity.
+
+Bedrock-AgentCore Code-Interpreter-Custom
+
+AWS::BedrockAgentCore::CodeInterpreterCustom
+
+Amazon Bedrock AgentCore
+
+Bedrock AgentCore API activity on evaluators.
+
+Bedrock-AgentCore Evaluator
+
+AWS::BedrockAgentCore::Evaluator
+
+Amazon Bedrock
+
+Amazon Bedrock Gateway API activity.
+
+Bedrock-AgentCore Gateway
+
+AWS::BedrockAgentCore::Gateway
+
+Amazon Bedrock
+
+Amazon Bedrock Memory API activity.
+
+Bedrock-AgentCore Memory
+
+AWS::BedrockAgentCore::Memory
+
+Amazon Bedrock
+
+Amazon Bedrock Oauth2 CredentialProvider API activity.
+
+Bedrock-AgentCore Oauth2 CredentialProvider
+
+AWS::BedrockAgentCore::OAuth2CredentialProvider
+
+Bedrock-AgentCore payments
+
+API activity on AWS::BedrockAgentCore::Payments resources.
+
+Bedrock-AgentCore payments
+
+AWS::BedrockAgentCore::Payments
+
+Bedrock-AgentCore policy
+
+API activity on AWS::BedrockAgentCore::Policy resources.
+
+Bedrock-AgentCore policy
+
+AWS::BedrockAgentCore::Policy
+
+Bedrock-AgentCore policy engine
+
+API activity on AWS::BedrockAgentCore::PolicyEngine resources.
+
+Bedrock-AgentCore policy engine
+
+AWS::BedrockAgentCore::PolicyEngine
+
+Bedrock-AgentCore Recommendation
+
+API activity on AWS::BedrockAgentCore::Recommendation resources.
+
+Bedrock-AgentCore Recommendation
+
+AWS::BedrockAgentCore::Recommendation
+
+Bedrock-AgentCore Registry
+
+API activity on AWS::BedrockAgentCore::Registry resources.
+
+Bedrock-AgentCore Registry
+
+AWS::BedrockAgentCore::Registry
+
+Amazon Bedrock
+
+Amazon Bedrock Runtime API activity.
+
+Bedrock-AgentCore Runtime
+
+AWS::BedrockAgentCore::Runtime
+
+Amazon Bedrock
+
+Amazon Bedrock Runtime-Endpoint API activity.
+
+Bedrock-AgentCore Runtime-Endpoint
+
+AWS::BedrockAgentCore::RuntimeEndpoint
+
+Amazon Bedrock
+
+Amazon Bedrock Token Vault API activity.
+
+Bedrock-AgentCore Token Vault
+
+AWS::BedrockAgentCore::TokenVault
+
+Amazon Bedrock
+
+Amazon Bedrock Workload Identity API activity.
+
+Bedrock-AgentCore Workload Identity
+
+AWS::BedrockAgentCore::WorkloadIdentity
+
+Amazon Bedrock
+
+Amazon Bedrock Workload Identity Directory API activity.
+
+Bedrock-AgentCore Workload Identity Directory
+
+AWS::BedrockAgentCore::WorkloadIdentityDirectory
+
+Bedrock Mantle Project
+
+API activity on AWS::BedrockMantle::Project resources.
+
+Bedrock Mantle Project
+
+AWS::BedrockMantle::Project
+
+Bedrock Web Search Tool
+
+API activity on AWS::BedrockWebSearch::Tool resources.
+
+Bedrock Web Search Tool
+
+AWS::BedrockWebSearch::Tool
+
+Amazon Keyspaces (for Apache Cassandra)
+
+Amazon Keyspaces (for Apache Cassandra) API activity on Cassandra CDC streams.
+
+Cassandra CDC streams
+
+AWS::Cassandra::Stream
+
+Amazon Keyspaces (for Apache Cassandra)
+
+Amazon Keyspaces API activity on a table. For more information, see Amazon Keyspaces (for Apache Cassandra).
+
+Cassandra table
+
+AWS::Cassandra::Table
+
+Certificate Manager
+
+API activity on AWS::CertificateManager::AcmeEndpoint resources.
+
+AWS::CertificateManager::AcmeEndpoint
+
+AWS::CertificateManager::AcmeEndpoint
+
+Clinical Trials Tech codelist
+
+API activity on AWS::ClinicalTrialsTech::Codelist resources.
+
+Clinical Trials Tech codelist
+
+AWS::ClinicalTrialsTech::Codelist
+
+Clinical Trials Tech dataset
+
+API activity on AWS::ClinicalTrialsTech::Dataset resources.
+
+Clinical Trials Tech dataset
+
+AWS::ClinicalTrialsTech::Dataset
+
+Clinical Trials Tech execution
+
+API activity on AWS::ClinicalTrialsTech::Execution resources.
+
+Clinical Trials Tech execution
+
+AWS::ClinicalTrialsTech::Execution
+
+Clinical Trials Tech instance
+
+API activity on AWS::ClinicalTrialsTech::Instance resources.
+
+Clinical Trials Tech instance
+
+AWS::ClinicalTrialsTech::Instance
+
+Clinical Trials Tech mapping
+
+API activity on AWS::ClinicalTrialsTech::Mapping resources.
+
+Clinical Trials Tech mapping
+
+AWS::ClinicalTrialsTech::Mapping
+
+Clinical Trials Tech schedule
+
+API activity on AWS::ClinicalTrialsTech::Schedule resources.
+
+Clinical Trials Tech schedule
+
+AWS::ClinicalTrialsTech::Schedule
+
+Clinical Trials Tech study
+
+API activity on AWS::ClinicalTrialsTech::Study resources.
+
+Clinical Trials Tech study
+
+AWS::ClinicalTrialsTech::Study
+
+Amazon CloudFront
+
+CloudFront API activity on a KeyValueStore. For more information, see Amazon CloudFront.
+
+CloudFront KeyValueStore
+
+AWS::CloudFront::KeyValueStore
+
+Amazon Cost Optimization
+
+CloudOptimization API activity on profiles.
+
+AWS::CloudOptimization::Profile
+
+AWS::CloudOptimization::Profile
+
+Amazon Cost Optimization
+
+CloudOptimization API activity on recommendations.
+
+AWS::CloudOptimization::Recommendation
+
+AWS::CloudOptimization::Recommendation
+
+AWS CloudTrail
+
+CloudTrail PutAuditEvents activity on a CloudTrail Lake channel that is used to log events from outside AWS. For more information, see AWS CloudTrail.
+
+CloudTrail channel
+
+AWS::CloudTrail::Channel
+
+CloudWatch dataset
+
+API activity on AWS::CloudWatch::Dataset resources.
+
+CloudWatch dataset
+
+AWS::CloudWatch::Dataset
+
+Observability ingestion endpoint
+
+API activity on AWS::CloudWatch::IngestionEndpoint resources.
+
+Observability ingestion endpoint
+
+AWS::CloudWatch::IngestionEndpoint
+
+Amazon CloudWatch
+
+Amazon CloudWatch API activity on metrics. For more information, see Amazon CloudWatch.
+
+CloudWatch metric
+
+AWS::CloudWatch::Metric
+
+Amazon CodeGuru Profiler
+
+CodeGuru Profiler API activity on profiling groups.
+
+CodeGuru Profiler profiling group
+
+AWS::CodeGuruProfiler::ProfilingGroup
+
+Amazon CodeWhisperer
+
+Amazon CodeWhisperer API activity on a customization.
+
+CodeWhisperer customization
+
+AWS::CodeWhisperer::Customization
+
+Amazon CodeWhisperer
+
+Amazon CodeWhisperer API activity on a profile.
+
+CodeWhisperer
+
+AWS::CodeWhisperer::Profile
+
+Amazon Cognito
+
+Amazon Cognito API activity on Amazon Cognito identity pools. For more information, see Amazon Cognito.
+
+Cognito Identity Pools
+
+AWS::Cognito::IdentityPool
+
+AWS Data Exchange
+
+AWS Data Exchange API activity on assets.
+
+Data Exchange asset
+
+AWS::DataExchange::Asset
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on fleets. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud fleet
+
+AWS::Deadline::Fleet
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on jobs. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud job
+
+AWS::Deadline::Job
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on queues. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud queue
+
+AWS::Deadline::Queue
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on workers. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud worker
+
+AWS::Deadline::Worker
+
+Diode Alerting linked alert
+
+API activity on AWS::DiodeAlerting::LinkedAlert resources.
+
+Diode Alerting linked alert
+
+AWS::DiodeAlerting::LinkedAlert
+
+Amazon Aurora DSQL
+
+Amazon Aurora DSQL API activity on cluster resources.
+
+Amazon Aurora DSQL
+
+AWS::DSQL::Cluster
+
+Amazon DynamoDB
+
+Amazon DynamoDB API activity on streams. For more information, see Amazon DynamoDB.
+
+DynamoDB Streams
+
+AWS::DynamoDB::Stream
+
+Amazon DynamoDB
+
+Amazon DynamoDB item-level API activity on tables (for example, PutItem, DeleteItem, and UpdateItem API operations). For tables with streams enabled, the resources field in the data event contains both AWS::DynamoDB::Stream and AWS::DynamoDB::Table. If you specify AWS::DynamoDB::Table for the resources.type, it will log both DynamoDB table and DynamoDB streams events by default. To exclude streams events, add a filter on the eventName field. For more information, see Amazon DynamoDB.
+
+DynamoDB
+
+AWS::DynamoDB::Table
+
+Amazon Elastic Compute Cloud
+
+Amazon EC2 instance connect endpoint API activity.
+
+EC2 instance connect endpoint
+
+AWS::EC2::InstanceConnectEndpoint
+
+Amazon Elastic Block Store
+
+Amazon Elastic Block Store (EBS) direct APIs, such as PutSnapshotBlock, GetSnapshotBlock, and ListChangedBlocks on Amazon EBS snapshots. For more information, see Amazon Elastic Block Store.
+
+EBS direct APIs
+
+AWS::EC2::Snapshot
+
+Amazon Elastic Container Service
+
+Amazon Elastic Container Service API activity on a container instance.
+
+ECS container instance
+
+AWS::ECS::ContainerInstance
+
+Amazon Elastic Kubernetes Service
+
+Amazon Elastic Kubernetes Service API activity on dashboards.
+
+EKS dashboard
+
+AWS::EKS::Dashboard
+
+Amazon EMR
+
+Amazon EMR API activity on a write-ahead log workspace. For more information, see Amazon EMR.
+
+EMR write-ahead log workspace
+
+AWS::EMRWAL::Workspace
+
+EventBridge endpoint
+
+API activity on AWS::Events::Endpoint resources.
+
+EventBridge endpoint
+
+AWS::Events::Endpoint
+
+EventBridge event bus
+
+API activity on AWS::Events::EventBus resources.
+
+EventBridge event bus
+
+AWS::Events::EventBus
+
+EventBridge partner event source
+
+API activity on AWS::Events::EventSource resources.
+
+EventBridge partner event source
+
+AWS::Events::EventSource
+
+EventBridge rule
+
+API activity on AWS::Events::Rule resources.
+
+EventBridge rule
+
+AWS::Events::Rule
+
+Amazon FinSpace
+
+Amazon FinSpace API activity on environments. For more information, see Amazon FinSpace.
+
+FinSpace
+
+AWS::FinSpace::Environment
+
+Amazon FSx
+
+Amazon FSx API activity on volumes.
+
+FSx Volume
+
+AWS::FSx::Volume
+
+Amazon GameLift Streams
+
+Amazon GameLift Streams streaming API activity on applications. For more information, see Amazon GameLift Streams.
+
+GameLift Streams application
+
+AWS::GameLiftStreams::Application
+
+Amazon GameLift Streams
+
+Amazon GameLift Streams streaming API activity on stream groups. For more information, see Amazon GameLift Streams.
+
+GameLift Streams stream group
+
+AWS::GameLiftStreams::StreamGroup
+
+Amazon Location Maps
+
+Amazon Location Maps API activity.
+
+Geo Maps
+
+AWS::GeoMaps::Provider
+
+Amazon Location Places
+
+Amazon Location Places API activity.
+
+Geo Places
+
+AWS::GeoPlaces::Provider
+
+Amazon Location Routes
+
+Amazon Location Routes API activity.
+
+Geo Routes
+
+AWS::GeoRoutes::Provider
+
+AWS Glue
+
+AWS Glue API activity on tables that were created by Lake Formation.
+
+Lake Formation
+
+AWS::Glue::Table
+
+AWS IoT Greengrass Version 2
+
+Greengrass API activity from a Greengrass core device on a component version. Greengrass doesn't log access denied events. For more information, see AWS IoT Greengrass Version 2.
+
+IoT Greengrass component version
+
+AWS::GreengrassV2::ComponentVersion
+
+AWS IoT Greengrass Version 2
+
+Greengrass API activity from a Greengrass core device on a deployment. Greengrass doesn't log access denied events. For more information, see AWS IoT Greengrass Version 2.
+
+IoT Greengrass deployment
+
+AWS::GreengrassV2::Deployment
+
+Amazon GuardDuty
+
+Amazon GuardDuty API activity for a detector. For more information, see Amazon GuardDuty.
+
+GuardDuty detector
+
+AWS::GuardDuty::Detector
+
+Amazon GuardDuty
+
+GuardDuty API activity on malware scans.
+
+GuardDuty malware scan
+
+AWS::GuardDuty::MalwareScan
+
+Health agent domain
+
+API activity on AWS::HealthAgent::Domain resources.
+
+Health agent domain
+
+AWS::HealthAgent::Domain
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::Integration resources.
+
+AWS::HealthAgent::Integration
+
+AWS::HealthAgent::Integration
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::PatientInsightsJob resources.
+
+health-agent.amazonaws.com
+
+AWS::HealthAgent::PatientInsightsJob
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::Session resources.
+
+AWS::HealthAgent::Session
+
+AWS::HealthAgent::Session
+
+Health agent subscription
+
+API activity on AWS::HealthAgent::Subscription resources.
+
+Health agent subscription
+
+AWS::HealthAgent::Subscription
+
+Health Lake data transformation profile
+
+API activity on AWS::HealthLake::DataTransformationProfile resources.
+
+Health Lake data transformation profile
+
+AWS::HealthLake::DataTransformationProfile
+
+AWS IoT
+
+AWS IoT API activity on certificates. For more information, see AWS IoT.
+
+IoT certificate
+
+AWS::IoT::Certificate
+
+AWS IoT
+
+AWS IoT API activity on things. For more information, see AWS IoT.
+
+IoT thing
+
+AWS::IoT::Thing
+
+AWS IoT tunnel
+
+API activity on AWS::IoT::Tunnel resources.
+
+AWS IoT tunnel
+
+AWS::IoT::Tunnel
+
+AWS IoT SiteWise
+
+IoT SiteWise API activity on assets. For more information, see AWS IoT SiteWise.
+
+IoT SiteWise asset
+
+AWS::IoTSiteWise::Asset
+
+IoT SiteWise dataset
+
+API activity on AWS::IoTSiteWise::Dataset resources.
+
+IoT SiteWise dataset
+
+AWS::IoTSiteWise::Dataset
+
+IoT SiteWise pipeline
+
+API activity on AWS::IoTSiteWise::Pipeline resources.
+
+IoT SiteWise pipeline
+
+AWS::IoTSiteWise::Pipeline
+
+AWS IoT SiteWise
+
+IoT SiteWise API activity on time series. For more information, see AWS IoT SiteWise.
+
+IoT SiteWise time series
+
+AWS::IoTSiteWise::TimeSeries
+
+IoT SiteWise workspace
+
+API activity on AWS::IoTSiteWise::Workspace resources.
+
+IoT SiteWise workspace
+
+AWS::IoTSiteWise::Workspace
+
+AWS IoT TwinMaker
+
+IoT TwinMaker API activity on an entity. For more information, see AWS IoT TwinMaker.
+
+IoT TwinMaker entity
+
+AWS::IoTTwinMaker::Entity
+
+AWS IoT TwinMaker
+
+IoT TwinMaker API activity on a workspace. For more information, see AWS IoT TwinMaker.
+
+IoT TwinMaker workspace
+
+AWS::IoTTwinMaker::Workspace
+
+Amazon Kendra Intelligent Ranking
+
+Amazon Kendra Intelligent Ranking API activity on rescore execution plans. For more information, see Amazon Kendra Intelligent Ranking.
+
+Kendra Ranking
+
+AWS::KendraRanking::ExecutionPlan
+
+Amazon Kinesis Data Streams
+
+Kinesis Data Streams API activity on streams. For more information, see Amazon Kinesis Data Streams.
+
+Kinesis stream
+
+AWS::Kinesis::Stream
+
+Amazon Kinesis Data Streams
+
+Kinesis Data Streams API activity on stream consumers. For more information, see Amazon Kinesis Data Streams.
+
+Kinesis stream consumer
+
+AWS::Kinesis::StreamConsumer
+
+Amazon Data Firehose
+
+Amazon Data Firehose delivery stream API activity.
+
+Amazon Data Firehose
+
+AWS::KinesisFirehose::DeliveryStream
+
+Amazon Kinesis Video Streams
+
+Kinesis Video Streams video signaling channel API activity.
+
+Kinesis video signaling channel
+
+AWS::KinesisVideo::SignalingChannel
+
+Amazon Kinesis Video Streams
+
+Kinesis Video Streams API activity on video streams, such as calls to GetMedia and PutMedia.
+
+Kinesis video stream
+
+AWS::KinesisVideo::Stream
+
+AWS Lambda
+
+AWS Lambda function execution activity (the Invoke API).
+
+Lambda
+
+AWS::Lambda::Function
+
+Lambda microvm image
+
+API activity on AWS::Lambda::MicrovmImage resources.
+
+Lambda microvm image
+
+AWS::Lambda::MicrovmImage
+
+Lex Bot
+
+API activity on AWS::Lex::Bot resources.
+
+Lex Bot
+
+AWS::Lex::Bot
+
+AWS Lex Bot Alias
+
+API activity on AWS::Lex::BotAlias resources.
+
+AWS Lex Bot Alias
+
+AWS::Lex::BotAlias
+
+CloudWatch Logs log group authorization
+
+API activity on AWS::Logs::LogGroupAuthorization resources.
+
+CloudWatch Logs log group authorization
+
+AWS::Logs::LogGroupAuthorization
+
+Logs ScheduledQuery
+
+API activity on AWS::Logs::ScheduledQuery resources.
+
+Logs ScheduledQuery
+
+AWS::Logs::ScheduledQuery
+
+Amazon Machine Learning
+
+Machine Learning API activity on ML models.
+
+Machine Learning MlModel
+
+AWS::MachineLearning::MlModel
+
+Amazon Managed Blockchain
+
+Amazon Managed Blockchain API activity on a network.
+
+Managed Blockchain network
+
+AWS::ManagedBlockchain::Network
+
+Amazon Managed Blockchain
+
+Amazon Managed Blockchain JSON-RPC calls on Ethereum nodes, such as eth_getBalance or eth_getBlockByNumber. For more information, see Amazon Managed Blockchain.
+
+Managed Blockchain
+
+AWS::ManagedBlockchain::Node
+
+Amazon Managed Blockchain Query
+
+Amazon Managed Blockchain Query API activity.
+
+Managed Blockchain Query
+
+AWS::ManagedBlockchainQuery::QueryAPI
+
+AWS HealthImaging
+
+AWS HealthImaging API activity on data stores.
+
+MedicalImaging data store
+
+AWS::MedicalImaging::Datastore
+
+AWS HealthImaging
+
+AWS HealthImaging image set API activity.
+
+MedicalImaging image set
+
+AWS::MedicalImaging::Imageset
+
+Amazon Managed Workflows for Apache Airflow
+
+Amazon MWAA API activity on environments.
+
+Managed Apache Airflow
+
+AWS::MWAA::Environment
+
+Amazon Neptune Graph
+
+Data API activities, for example queries, algorithms, or vector search, on a Neptune Graph.
+
+Neptune Graph
+
+AWS::NeptuneGraph::Graph
+
+Amazon CloudWatch Network Flow Monitor
+
+Amazon CloudWatch Network Flow Monitor API activity on monitors.
+
+Network Flow Monitor monitor
+
+AWS::NetworkFlowMonitor::Monitor
+
+Amazon CloudWatch Network Flow Monitor
+
+Amazon CloudWatch Network Flow Monitor API activity on scopes.
+
+Network Flow Monitor scope
+
+AWS::NetworkFlowMonitor::Scope
+
+Amazon NovaAct
+
+Amazon NovaAct API activity on workflow definitions.
+
+Workflow definition
+
+AWS::NovaAct::WorkflowDefinition
+
+Amazon NovaAct
+
+Amanzon NovaAct API activity on workflow runs.
+
+Workflow run
+
+AWS::NovaAct::WorkflowRun
+
+Amazon One Enterprise
+
+Amazon One Enterprise API activity on a UKey.
+
+Amazon One UKey
+
+AWS::One::UKey
+
+Amazon One Enterprise
+
+Amazon One Enterprise API activity on users.
+
+Amazon One User
+
+AWS::One::User
+
+AWS Payment Cryptography
+
+AWS Payment Cryptography API activity on aliases.
+
+Payment Cryptography alias
+
+AWS::PaymentCryptography::Alias
+
+AWS Payment Cryptography
+
+AWS Payment Cryptography API activity on keys.
+
+Payment Cryptography key
+
+AWS::PaymentCryptography::Key
+
+AWS Private CA
+
+AWS Private CA Connector for Active Directory API activity.
+
+Private CA Connector for Active Directory
+
+AWS::PCAConnectorAD::Connector
+
+AWS Private CA
+
+AWS Private CA Connector for SCEP API activity.
+
+Private CA Connector for SCEP
+
+AWS::PCAConnectorSCEP::Connector
+
+Amazon Pinpoint
+
+Amazon Pinpoint API activity on mobile targeting applications.
+
+Mobile Targeting Application
+
+AWS::Pinpoint::App
+
+Amazon Q Apps
+
+Data API activity on Amazon Q Apps. For more information, see Amazon Q Apps.
+
+Amazon Q Apps
+
+AWS::QApps::QApp
+
+Amazon Q Apps
+
+Data API activity on Amazon Q App sessions.
+
+Amazon Q App Session
+
+AWS::QApps::QAppSession
+
+Amazon Q Business
+
+Amazon Q Business API activity on an application. For more information, see Amazon Q Business.
+
+Amazon Q Business application
+
+AWS::QBusiness::Application
+
+Amazon Q Business
+
+Amazon Q Business API activity on a data source. For more information, see Amazon Q Business.
+
+Amazon Q Business data source
+
+AWS::QBusiness::DataSource
+
+Amazon Q Business
+
+Amazon Q Business API activity on an index. For more information, see Amazon Q Business.
+
+Amazon Q Business index
+
+AWS::QBusiness::Index
+
+Amazon Q Business
+
+Amazon Q Business integration API activity.
+
+Amazon Q Business integration
+
+AWS::QBusiness::Integration
+
+Amazon Q Business
+
+Amazon Q Business API activity on a web experience. For more information, see Amazon Q Business.
+
+Amazon Q Business web experience
+
+AWS::QBusiness::WebExperience
+
+Amazon Q Developer
+
+Amazon Q Developer API activity on an integration.
+
+Q Developer integration
+
+AWS::QDeveloper::Integration
+
+Amazon Quick
+
+Amazon Quick API activity on an action connector.
+
+AWS QuickSuite Actions
+
+AWS::Quicksight::ActionConnector
+
+Amazon QuickSight App
+
+API activity on AWS::QuickSight::App resources.
+
+Amazon QuickSight App
+
+AWS::QuickSight::App
+
+QuickSight automation
+
+API activity on AWS::QuickSight::Automation resources.
+
+QuickSight automation
+
+AWS::QuickSight::Automation
+
+QuickSight automation job
+
+API activity on AWS::QuickSight::AutomationJob resources.
+
+QuickSight automation job
+
+AWS::QuickSight::AutomationJob
+
+AWS QuickSight Extension
+
+API activity on AWS::QuickSight::Extension resources.
+
+AWS QuickSight Extension
+
+AWS::QuickSight::Extension
+
+AWS QuickSight Extension Access
+
+API activity on AWS::QuickSight::ExtensionAccess resources.
+
+AWS QuickSight Extension Access
+
+AWS::QuickSight::ExtensionAccess
+
+Amazon Quick
+
+Amazon Quick Flow API activity.
+
+AWS QuickSight flow
+
+AWS::QuickSight::Flow
+
+Amazon Quick
+
+Amazon Quick FlowSession API activity.
+
+AWS QuickSight flow session
+
+AWS::QuickSight::FlowSession
+
+Amazon QuickSight Page
+
+API activity on AWS::QuickSight::Page resources.
+
+Amazon QuickSight Page
+
+AWS::QuickSight::Page
+
+QuickSight Task
+
+API activity on AWS::QuickSight::Task resources.
+
+QuickSight Task
+
+AWS::QuickSight::Task
+
+Amazon RDS
+
+Amazon RDS API activity on a DB Cluster. For more information, see Amazon RDS.
+
+RDS Data API - DB Cluster
+
+AWS::RDS::DBCluster
+
+Amazon Redshift
+
+Redshift API activity on clusters.
+
+Redshift Cluster
+
+AWS::Redshift::Cluster
+
+AWS Resource Explorer managed-view
+
+API activity on AWS::ResourceExplorer2::ManagedView resources.
+
+AWS Resource Explorer managed-view
+
+AWS::ResourceExplorer2::ManagedView
+
+AWS Resource Explorer view
+
+API activity on AWS::ResourceExplorer2::View resources.
+
+AWS Resource Explorer view
+
+AWS::ResourceExplorer2::View
+
+Amazon CloudWatch RUM
+
+Amazon CloudWatch RUM API activity on app monitors.
+
+RUM app monitor
+
+AWS::RUM::AppMonitor
+
+Amazon S3
+
+Amazon S3 API activity on access points. For more information, see Amazon S3.
+
+S3 Access Point
+
+AWS::S3::AccessPoint
+
+Amazon S3
+
+Amazon S3 object-level API activity (for example, GetObject, DeleteObject, and PutObject API operations) on objects in general purpose buckets. For more information, see Amazon S3.
+
+S3
+
+AWS::S3::Object
+
+S3 Express Access Point
+
+API activity on AWS::S3Express::AccessPoint resources.
+
+S3 Express Access Point
+
+AWS::S3Express::AccessPoint
+
+Amazon S3
+
+Amazon S3 object-level API activity (for example, GetObject, DeleteObject, and PutObject API operations) on objects in directory buckets. For more information, see Amazon S3.
+
+S3 Express
+
+AWS::S3Express::Object
+
+Amazon S3
+
+Amazon S3 Object Lambda access points API activity, such as calls to CompleteMultipartUpload and GetObject. For more information, see Amazon S3.
+
+S3 Object Lambda
+
+AWS::S3ObjectLambda::AccessPoint
+
+Amazon S3 on Outposts
+
+Amazon S3 on Outposts object-level API activity. For more information, see Amazon S3 on Outposts.
+
+S3 Outposts
+
+AWS::S3Outposts::Object
+
+Amazon S3 Tables
+
+Amazon S3 API activity on tables. For more information, see Amazon S3 Tables.
+
+S3 table
+
+AWS::S3Tables::Table
+
+Amazon S3 Tables
+
+Amazon S3 API activity on table buckets. For more information, see Amazon S3 Tables.
+
+S3 table bucket
+
+AWS::S3Tables::TableBucket
+
+Amazon S3 Vectors
+
+Amazon S3 API activity on vector indexes. For more information, see Amazon S3 Vectors.
+
+S3 vector index
+
+AWS::S3Vectors::Index
+
+Amazon S3 Vectors
+
+Amazon S3 API activity on vector buckets. For more information, see Amazon S3 Vectors.
+
+S3 vector bucket
+
+AWS::S3Vectors::VectorBucket
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI InvokeEndpointWithResponseStream activity on endpoints. For more information, see Amazon SageMaker AI.
+
+SageMaker endpoint
+
+AWS::SageMaker::Endpoint
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI API activity on experiment trial components. For more information, see Amazon SageMaker AI.
+
+SageMaker metrics experiment trial component
+
+AWS::SageMaker::ExperimentTrialComponent
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI API activity on feature stores.
+
+SageMaker Feature Store
+
+AWS::SageMaker::FeatureGroup
+
+SageMaker hub
+
+API activity on AWS::SageMaker::Hub resources.
+
+SageMaker hub
+
+AWS::SageMaker::Hub
+
+SageMaker jobs
+
+API activity on AWS::SageMaker::Job resources.
+
+SageMaker jobs
+
+AWS::SageMaker::Job
+
+AWS SageMaker MlflowApp
+
+API activity on AWS::SageMaker::MlflowApp resources.
+
+AWS SageMaker MlflowApp
+
+AWS::SageMaker::MlflowApp
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI MLflow API activity.
+
+SageMaker MLflow
+
+AWS::SageMaker::MlflowTrackingServer
+
+SageMaker training session
+
+API activity on AWS::SageMaker::TrainingSession resources.
+
+SageMaker training session
+
+AWS::SageMaker::TrainingSession
+
+AWS Supply Chain
+
+API activity on AWS::SCN::BusinessRule resources.
+
+AWS::SCN::BusinessRule
+
+AWS::SCN::BusinessRule
+
+AWS Supply Chain
+
+API activity on AWS::SCN::DataLakeException resources.
+
+AWS::SCN::DataLakeException
+
+AWS::SCN::DataLakeException
+
+AWS Supply Chain
+
+API activity on AWS::SCN::ExceptionInvestigation resources.
+
+AWS::SCN::ExceptionInvestigation
+
+AWS::SCN::ExceptionInvestigation
+
+AWS Supply Chain
+
+API activity on AWS::SCN::ExceptionRule resources.
+
+AWS::SCN::ExceptionRule
+
+AWS::SCN::ExceptionRule
+
+AWS Supply Chain
+
+Supply Chain API activity on an instance.
+
+Amazon Connect Decisions
+
+AWS::SCN::Instance
+
+AWS Supply Chain
+
+API activity on AWS::SCN::Metric resources.
+
+AWS::SCN::Metric
+
+AWS::SCN::Metric
+
+AWS Supply Chain
+
+API activity on AWS::SCN::MetricEvaluation resources.
+
+AWS::SCN::MetricEvaluation
+
+AWS::SCN::MetricEvaluation
+
+AWS Supply Chain
+
+API activity on AWS::SCN::Outcome resources.
+
+AWS::SCN::Outcome
+
+AWS::SCN::Outcome
+
+AWS Supply Chain
+
+API activity on AWS::SCN::OutcomeTemplate resources.
+
+AWS::SCN::OutcomeTemplate
+
+AWS::SCN::OutcomeTemplate
+
+Amazon SimpleDB
+
+Amazon SimpleDB API activity on domains.
+
+SimpleDB domain
+
+AWS::SDB::Domain
+
+AWS Cloud Map
+
+AWS Cloud Map API activity on a namespace. For more information, see AWS Cloud Map.
+
+AWS Cloud Map namespace
+
+AWS::ServiceDiscovery::Namespace
+
+AWS Cloud Map
+
+AWS Cloud Map API activity on a service. For more information, see AWS Cloud Map.
+
+AWS Cloud Map service
+
+AWS::ServiceDiscovery::Service
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on configuration sets.
+
+SES configuration set
+
+AWS::SES::ConfigurationSet
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on email identities.
+
+SES identity
+
+AWS::SES::EmailIdentity
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on templates.
+
+SES template
+
+AWS::SES::Template
+
+AWS Signer
+
+Signer API activity on signing jobs.
+
+Signer signing job
+
+AWS::Signer::SigningJob
+
+AWS Signer
+
+Signer API activity on signing profiles.
+
+Signer signing profile
+
+AWS::Signer::SigningProfile
+
+AWS IoT SiteWise Assistant
+
+Sitewise Assistant API activity on conversations.
+
+Sitewise Assistant conversation
+
+AWS::SitewiseAssistant::Conversation
+
+Carrier Lookup
+
+API activity on AWS::SMSVoice::CarrierLookup resources.
+
+Carrier Lookup
+
+AWS::SMSVoice::CarrierLookup
+
+Configuration Set
+
+API activity on AWS::SMSVoice::ConfigurationSet resources.
+
+Configuration Set
+
+AWS::SMSVoice::ConfigurationSet
+
+AWS End User Messaging SMS
+
+AWS End User Messaging SMS API activity on messages. For more information, see AWS End User Messaging SMS.
+
+SMS Voice message
+
+AWS::SMSVoice::Message
+
+Notify Configuration
+
+API activity on AWS::SMSVoice::NotifyConfiguration resources.
+
+Notify Configuration
+
+AWS::SMSVoice::NotifyConfiguration
+
+AWS End User Messaging SMS
+
+AWS End User Messaging SMS API activity on origination identities. For more information, see AWS End User Messaging SMS.
+
+SMS Voice origination identity
+
+AWS::SMSVoice::OriginationIdentity
+
+Amazon SNS
+
+Amazon SNS Publish API operations on platform endpoints. For more information, see Amazon SNS.
+
+SNS platform endpoint
+
+AWS::SNS::PlatformEndpoint
+
+Amazon SNS
+
+Amazon SNS Publish and PublishBatch API operations on topics. For more information, see Amazon SNS.
+
+SNS topic
+
+AWS::SNS::Topic
+
+AWS End User Messaging Social
+
+AWS End User Messaging Social API activity on phone number IDs. For more information, see AWS End User Messaging Social.
+
+Social-Messaging Phone Number ID
+
+AWS::SocialMessaging::PhoneNumberId
+
+AWS End User Messaging Social
+
+AWS End User Messaging Social API activity on Waba IDs.
+
+Social-Messaging Waba ID
+
+AWS::SocialMessaging::WabaId
+
+Amazon SQS
+
+Amazon SQS API activity on messages. For more information, see Amazon SQS.
+
+SQS
+
+AWS::SQS::Queue
+
+AWS Systems Manager
+
+Systems Manager API activity on impact assessments.
+
+SSM Impact Assessment
+
+AWS::SSM::ExecutionPreview
+
+AWS Systems Manager
+
+Systems Manager API activity on managed nodes. For more information, see AWS Systems Manager.
+
+Systems Manager managed node
+
+AWS::SSM::ManagedNode
+
+AWS Systems Manager
+
+Systems Manager API activity on control channels. For more information, see AWS Systems Manager.
+
+Systems Manager
+
+AWS::SSMMessages::ControlChannel
+
+AWS Step Functions
+
+Step Functions API activity on activities. For more information, see AWS Step Functions.
+
+Step Functions activity
+
+AWS::StepFunctions::Activity
+
+AWS Step Functions
+
+Step Functions API activity on state machines. For more information, see AWS Step Functions.
+
+Step Functions state machine
+
+AWS::StepFunctions::StateMachine
+
+Amazon Support
+
+SupportAccess API activity on tenants.
+
+SupportAccess tenant
+
+AWS::SupportAccess::Tenant
+
+Amazon Support
+
+SupportAccess API activity on trusting accounts.
+
+SupportAccess trusting account
+
+AWS::SupportAccess::TrustingAccount
+
+Amazon Support
+
+SupportAccess API activity on trusting roles.
+
+SupportAccess trusting role
+
+AWS::SupportAccess::TrustingRole
+
+Amazon SWF
+
+Amazon SWF API activity on domains. For more information, see Amazon SWF.
+
+SWF domain
+
+AWS::SWF::Domain
+
+Amazon WorkSpaces Thin Client
+
+WorkSpaces Thin Client API activity on a Device.
+
+Thin Client Device
+
+AWS::ThinClient::Device
+
+Amazon WorkSpaces Thin Client
+
+WorkSpaces Thin Client API activity on an Environment.
+
+Thin Client Environment
+
+AWS::ThinClient::Environment
+
+Amazon Timestream
+
+Amazon Timestream Query API activity on databases. For more information, see Amazon Timestream.
+
+Timestream database
+
+AWS::Timestream::Database
+
+Amazon Timestream
+
+Amazon Timestream API activity on regional endpoints.
+
+Timestream regional endpoint
+
+AWS::Timestream::RegionalEndpoint
+
+Amazon Timestream
+
+Amazon Timestream Query API activity on tables. For more information, see Amazon Timestream.
+
+Timestream table
+
+AWS::Timestream::Table
+
+Amazon Transform
+
+Transform API activity on agent instances.
+
+Transform agent instance
+
+AWS::Transform::AgentInstance
+
+Amazon Q Transform AKA AWS Transform
+
+API activity on AWS::Transform::Profile resources.
+
+transform
+
+AWS::Transform::Profile
+
+Amazon Transform Custom
+
+Transform Custom API activity on campaigns.
+
+Transform-Custom campaign
+
+AWS::TransformCustom::Campaign
+
+Amazon Transform Custom
+
+Transform Custom API activity on conversations.
+
+Transform-Custom conversation
+
+AWS::TransformCustom::Conversation
+
+Amazon Transform Custom
+
+Transform Custom API activity on knowledge items.
+
+Transform-Custom knowledge item
+
+AWS::TransformCustom::KnowledgeItem
+
+Amazon Transform Custom
+
+Transform Custom API activity on packages.
+
+Transform-Custom package
+
+AWS::TransformCustom::Package
+
+UXC account customization
+
+API activity on AWS::UXC::AccountCustomization resources.
+
+UXC account customization
+
+AWS::UXC::AccountCustomization
+
+Amazon Verified Permissions
+
+Amazon Verified Permissions API activity on a policy store.
+
+Amazon Verified Permissions
+
+AWS::VerifiedPermissions::PolicyStore
+
+Well-Architected agent recommendation
+
+API activity on AWS::WellArchitected::AgentRecommendation resources.
+
+Well-Architected agent recommendation
+
+AWS::WellArchitected::AgentRecommendation
+
+AWS X-Ray
+
+X-Ray API activity on traces. For more information, see AWS X-Ray.
+
+X-Ray trace
+
+AWS::XRay::Trace
+
+Data events are not logged by default when you create a trail or event data store.
+To record CloudTrail data events, you must explicitly add each resource type for which you want to collect activity. For more information about
+logging data events, see Logging data events.
+
+Additional charges apply for logging data events. For CloudTrail pricing, see AWS CloudTrail Pricing.
+
+### Network activity events
+
+CloudTrail network activity events enable VPC endpoint owners to record AWS API calls made using their VPC endpoints from a private VPC to the AWS service.
+Network activity events provide visibility into the resource operations performed within a VPC.
+
+You can log network activity events for the following services:
+
+- Amazon Aurora DSQL
+
+- Amazon Bedrock
+
+- Amazon Connect Voice ID
+
+- Amazon EventBridge Scheduler
+
+- Amazon Fraud Detector
+
+- Amazon HealthLake
+
+- Amazon Lookout for Equipment
+
+- Amazon Lookout for Vision
+
+- Amazon Q Subscriptions
+
+- Amazon QuickSight
+
+- Amazon Rekognition
+
+- Amazon SageMaker
+
+- Amazon Textract
+
+- Amazon Transcribe Streaming Service
+
+- Amazon Verified Permissions
+
+- Amazon WorkMail
+
+- Anthropic Claude Developer Platform on AWS
+
+- Athena
+
+- AWS Agent Registry
+
+- AWS AppConfig
+
+- aws assurance
+
+- AWS B2B Data Interchange
+
+- AWS BCM Pricing Calculator
+
+- AWS Billing
+
+- AWS Cloud Map
+
+- AWS Glue
+
+- AWS IdentityStore Service
+
+- AWS Invoicing
+
+- AWS IoT FleetWise
+
+- AWS IoT Secured Tunneling
+
+- AWS IoT SiteWise
+
+- AWS License Manager
+
+- AWS Partner Central Revenue Measurement
+
+- AWS Secrets Manager
+
+- AWS SSO
+
+- AWS Step Functions
+
+- AWS Transfer Family
+
+- AWS Transform
+
+- AWSBillingAndCostManagementDataExports
+
+- AWSLakeFormation
+
+- Backup Gateway
+
+- Bedrock Agent Core
+
+- Cloud Control API
+
+- CloudFormation
+
+- CloudHSM
+
+- CloudTrail
+
+- CodeDeploy
+
+- Comprehend medical
+
+- Compute Optimizer Automation
+
+- DynamoDB
+
+- EC2 Auto Scaling
+
+- Elastic Compute Cloud (EC2)
+
+- Elastic File System (EFS)
+
+- IoT
+
+- Key Management Service (KMS)
+
+- Lambda
+
+- Relational Database Service (RDS) Core Control Plane
+
+- Route 53 Public DNS
+
+- S3 Vectors
+
+- Security Token Service (STS)
+
+- Sign-In Portal
+
+- Simple Email Service (SES)
+
+- Simple Notification Service (SNS)
+
+- Simple Queue Service (SQS)
+
+- Simple Storage Service (S3)
+
+- Simple Workflow Service (SWF)
+
+- SSM Contacts
+
+- Storage Gateway
+
+Network activity events are not logged by default when you create a trail or event data store. To record CloudTrail network activity
+events, you must explicitly set the event source for which you
+want to collect activity. For more information, see Logging network activity events.
+
+Additional charges apply for logging network activity events. For CloudTrail pricing, see AWS CloudTrail Pricing.
+
+### Insights events
+
+CloudTrail Insights events capture unusual API call rate or error rate activity in your AWS
+account by analyzing CloudTrail management activity. Insights events provide relevant information, such as the
+associated API, error code, incident time, and statistics, that help you understand
+and act on unusual activity. Unlike other types of events captured in a CloudTrail trail or event data store,
+Insights events are logged only when CloudTrail detects changes in your account's API usage or
+error rate logging that differ significantly from the account's typical usage
+patterns. For more information, see Working with CloudTrail Insights.
+
+Examples of activity that might generate Insights events include:
+
+- Your account typically logs no more than 20 Amazon S3 deleteBucket
+API calls per minute, but your account starts to log an average of 100
+deleteBucket API calls per minute. An Insights event is
+logged at the start of the unusual activity, and another Insights event is
+logged to mark the end of the unusual activity.
+
+- Your account typically logs 20 calls per minute to the Amazon EC2
+AuthorizeSecurityGroupIngress API, but your account starts
+to log zero calls to AuthorizeSecurityGroupIngress. An Insights
+event is logged at the start of the unusual activity, and ten minutes later,
+when the unusual activity ends, another Insights event is logged to mark the
+end of the unusual activity.
+
+- Your account typically logs less than one
+AccessDeniedException error in a seven-day period on the
+AWS Identity and Access Management API, DeleteInstanceProfile. Your account starts to
+log an average of 12 AccessDeniedException errors per minute on
+the DeleteInstanceProfile API call. An Insights event is logged
+at the start of the unusual error rate activity, and another Insights event
+is logged to mark the end of the unusual activity.
+
+These examples are provided for illustration purposes only. Your results may vary
+depending on your use case.
+
+To log CloudTrail Insights events,
+you must explicitly enable Insights events on a new or existing trail or event data store. For
+more information about creating a trail, see Creating a trail with the CloudTrail console. For more information about creating
+an event data store, see Create an event data store for Insights events with the console.
+
+Additional charges apply for Insights events. You will be charged separately if you enable Insights for both trails and event data stores. For more information, see AWS CloudTrail Pricing.
+
+## Event history
+
+CloudTrail event history provides a viewable, searchable, downloadable, and immutable record
+of the past 90 days of CloudTrail management events in an AWS Region. You can use this
+history to gain visibility into actions taken in your AWS account in the AWS Management Console,
+AWS SDKs, command line tools, and other AWS services. You can customize your view of
+event history in the CloudTrail console by selecting which columns are displayed. For more
+information, see Working with CloudTrail event history.
+
+## Trails
+
+A trail is a configuration that enables delivery of CloudTrail events to an S3 bucket, with
+optional delivery to CloudWatch Logs and Amazon EventBridge. You can use a trail to choose the CloudTrail events you want delivered,
+encrypt your CloudTrail event log files with an AWS KMS key, and set up Amazon SNS notifications for
+log file delivery. For more information about how to create and manage a trail, see
+Creating a trail for your AWS account.
+
+### Multi-Region and single-Region trails
+
+You can create both multi-Region and single-Region trails for your AWS account.
+
+Multi-Region trails
+
+When you create a multi-Region trail, CloudTrail records events
+in all AWS Regions that are enabled in your AWS account and delivers the CloudTrail event log files to an
+S3 bucket that you specify. As a best practice, we recommend creating a
+multi-Region trail because it captures activity in all enabled Regions. All trails created
+using the CloudTrail console are multi-Region trails. You can convert a single-Region trail
+to a multi-Region trail by using the AWS CLI. For
+more information, see Understanding multi-Region trails and opt-in Regions, Creating a trail with the console, and Converting a single-Region trail to a multi-Region trail.
+
+Single-Region trails
+
+When you create a single-Region trail, CloudTrail records the
+events in that Region only. It then delivers the CloudTrail event log files to an
+Amazon S3 bucket that you specify. You can only create a single-Region trail by
+using the AWS CLI. If you create additional single trails, you can have those
+trails deliver CloudTrail event log files to the same S3 bucket or to separate
+buckets. This is the default option when you create a trail using the AWS CLI
+or the CloudTrail API. For more information, see Creating, updating, and managing trails with the AWS CLI.
+
+Note
+
+For both types of trails, you can specify an Amazon S3 bucket from any Region.
+
+A multi-Region trail has the following advantages:
+
+- The configuration settings for the trail apply consistently across all
+enabled AWS Regions.
+
+- You receive CloudTrail events from all enabled AWS Regions in a single Amazon S3 bucket
+and, optionally, in a CloudWatch Logs log group.
+
+- You manage trail configurations for all enabled AWS Regions from one location.
+
+Creating a multi-Region trail, has the following effects:
+
+- CloudTrail delivers log files for account activity from all enabled AWS Regions to the
+single Amazon S3 bucket that you specify, and, optionally, to a CloudWatch Logs log
+group.
+
+- If you configured an Amazon SNS topic for the trail, SNS notifications about
+log file deliveries in all enabled AWS Regions are sent to that single SNS
+topic.
+
+- You can see the multi-Region trail in all enabled AWS Regions, but you can only modify the trail in the home Region where it was created.
+
+Regardless of whether a trail is multi-Region or single-Region, events sent to
+Amazon EventBridge are received in each Region's event bus, rather
+than in one single event bus.
+
+#### Multiple trails per Region
+
+If you have different but related user groups, such as developers, security
+personnel, and IT auditors, you can create multiple trails per Region. This
+allows each group to receive its own copy of the log files.
+
+CloudTrail supports five trails per Region. A multi-Region trail counts as one trail per Region.
+
+The following is an example of a Region with five trails:
+
+- You create two trails in the US West (N. California) Region that apply to this Region
+only.
+
+- You create two more multi-Region trails in US West (N. California) Region.
+
+- You create another multi-Region trail in the Asia Pacific (Sydney) Region. This trail also exists as a trail in the
+US West (N. California) Region.
+
+You can view a list of trails in an
+AWS Region in the Trails page of the CloudTrail console. For
+more information, see Updating a trail with the CloudTrail console. For CloudTrail pricing, see
+AWS CloudTrail
+Pricing.
+
+## Organization trails
+
+An organization trail is a configuration that enables delivery of CloudTrail events in the
+management account and all member accounts in an AWS Organizations organization to the same Amazon S3
+bucket, CloudWatch Logs, and Amazon EventBridge. Creating an organization trail helps you define a uniform
+event logging strategy for your organization.
+
+All organization trails created using the console are multi-Region organization trails
+that log events from the enabled AWS Regions in each member account in the organization. To log
+events in all AWS partitions in your organization, create a multi-Region organization
+trail in each partition. You can create either a single-Region or multi-Region
+organization trail by using the AWS CLI. If you create a single-Region trail, you log
+activity only in the trail's AWS Region (also referred to as the
+Home Region).
+
+Although most AWS Regions are enabled by default for your AWS account, you must
+manually enable certain Regions (also referred to as opt-in
+Regions). For information about which Regions are enabled by default, see
+Considerations before enabling and disabling Regions in the
+AWS Account Management Reference Guide. For the list of Regions CloudTrail
+supports, see CloudTrail supported Regions.
+
+When you create an organization trail, a copy of the trail with the name that you give
+it is created in the member accounts that belongs to your organization.
+
+- If the organization trail is for a single-Region and the trail's home Region is not an opt-in Region, a copy of the trail is created in the
+organization trail's home Region in each member account.
+
+- If the organization trail is for a single-Region and the trail's home Region is an opt-in Region, a copy of the trail is created in the
+organization trail's home Region in the member accounts that have enabled that
+Region.
+
+- If the organization trail is multi-Region and
+the trail's home Region is
+not an opt-in Region, a copy of the trail is
+created in each enabled AWS Region in each member account. When a member
+account enables an opt-in Region, a copy of the multi-Region trail is created in
+the newly opted in Region for the member account after activation of that Region
+is complete.
+
+- If the organization trail is multi-Region and
+the home Region is
+an opt-in Region, member accounts will not send
+activity to the organization trail unless they opt into the AWS Region where
+the multi-Region trail was created. For example, if you create a multi-Region
+trail and choose the Europe (Spain) Region as the home Region for the
+trail, only member accounts that enabled the Europe (Spain) Region for
+their account will send their account activity to the organization trail.
+
+Note
+
+CloudTrail creates organization trails in member accounts even if a resource validation
+fails. Examples of validation failures include:
+
+- an incorrect Amazon S3 bucket policy
+
+- an incorrect Amazon SNS topic policy
+
+- inability to deliver to a CloudWatch Logs log group
+
+- insufficient permission to encrypt using a KMS key
+
+A member account with CloudTrail permissions can see any validation failures for an
+organization trail by viewing the trail's details page on the CloudTrail console, or by
+running the AWS CLI get-trail-status command.
+
+Users with CloudTrail permissions in member accounts will be able to see organization trails
+(including the trail ARN) when they log into the CloudTrail console from their AWS
+accounts, or when they run AWS CLI commands such as describe-trails (although
+member accounts must use the ARN for the organization trail, and not the name, when
+using the AWS CLI). However, users in member accounts will not have sufficient permissions
+to delete organization trails, turn logging on or off, change what types of events are
+logged, or otherwise alter organization trails in any way. For more information about
+AWS Organizations, see Organizations
+Terminology and Concepts. For more information about creating and working
+with organization trails, see Creating a trail for an organization.
+
+## CloudTrail Lake and event data stores
+
+CloudTrail Lake lets you run fine-grained SQL-based queries on your events, and log events
+from sources outside AWS, including from your own applications, and from partners who
+are integrated with CloudTrail. You do not need to have a trail configured in your account to
+use CloudTrail Lake.
+
+Events are aggregated into event data stores, which are immutable collections of
+events based on criteria that you select by applying advanced event selectors.
+You can keep the event data in an event data store for up to 3,653 days (about 10 years) if you choose the One-year extendable retention pricing option,
+or up to 2,557 days (about 7 years) if you choose the Seven-year retention pricing option. You can save Lake queries for future use, and view results of
+queries for up to seven days. You can also save query results to an S3 bucket.
+CloudTrail Lake can also store events from an organization in AWS Organizations in an event data store,
+or events from multiple Regions and accounts. CloudTrail Lake is part of an auditing solution
+that helps you perform security investigations and troubleshooting. For more
+information, see Working with AWS CloudTrail Lake and
+CloudTrail Lake concepts and terminology.
+
+## CloudTrail Insights
+
+CloudTrail Insights help AWS users identify and respond to unusual volumes of API calls or
+errors logged on API calls by continuously analyzing CloudTrail management events. An Insights
+event is a record of unusual levels of write management API activity, or
+unusual levels of errors returned on management API activity. By default, trails and
+event data stores don't log CloudTrail Insights events. In the console, you can choose to log Insights events
+when you create or update a trail or event data store. When you use the CloudTrail API, you
+can log Insights events by editing the settings of an existing trail or event data store with the
+PutInsightSelectors API. Additional charges apply for
+logging CloudTrail Insights events. You will be charged separately if you enable Insights for both
+trails and event data stores. For more information, see Working with CloudTrail Insights and AWS CloudTrail Pricing.
+
+## Tags
+
+A tag is a customer-defined key and optional value that can be assigned to AWS
+resources, such as CloudTrail trails, event data stores, and channels, S3 buckets used to
+store CloudTrail log files, AWS Organizations organizations and organizational units, and many more. By
+adding the same tags to trails and to the S3 buckets you use to store log files for
+trails, you can make it easier to manage, search for, and filter these resources with
+AWS Resource Groups. You can implement tagging strategies
+to help you consistently, effectively, and easily find and manage your resources. For
+more information, see Best Practices for Tagging AWS Resources.
+
+## AWS Security Token Service and CloudTrail
+
+AWS Security Token Service (AWS STS) is a service that has a global endpoint and also supports
+Region-specific endpoints. An endpoint is a URL that is the entry point for web service
+requests. For example, https://cloudtrail.us-west-2.amazonaws.com is the
+US West (Oregon) regional entry point for the AWS CloudTrail service. Regional endpoints
+help reduce latency in your applications.
+
+When you use an AWS STS Region-specific endpoint, the trail in that Region delivers only
+the AWS STS events that occur in that Region. For example, if you are using the endpoint
+sts.us-west-2.amazonaws.com, the trail in us-west-2 delivers only the
+AWS STS events that originate from us-west-2. For more information about AWS STS regional
+endpoints, see Activating and Deactivating AWS STS in an AWS Region in the
+IAM User Guide.
+
+For a complete list of AWS regional endpoints, see AWS Regions and Endpoints in the
+AWS General Reference. For details about events from the global AWS STS
+endpoint, see Global service events.
+
+## Global service events
+
+Important
+
+As of November 22, 2021, AWS CloudTrail changed how trails
+capture global service events. Now, events created by Amazon CloudFront, AWS Identity and Access Management, and
+AWS STS are recorded in the Region in which they were created, the US East (N. Virginia)
+Region, us-east-1. This makes how CloudTrail treats these services consistent with
+that of other AWS global services. To continue receiving global service events outside of
+US East (N. Virginia), be sure to convert single-Region trails using global
+service events outside of US East (N. Virginia) into multi-Region trails.
+For more information about capturing global service events, see Enabling and disabling global service event logging
+later in this section.
+
+In contrast, the Event history in the CloudTrail console and the aws cloudtrail lookup-events command will show these events
+in the AWS Region where they occurred.
+
+For most services, events are recorded in the Region where the action occurred. For
+global services such as AWS Identity and Access Management (IAM), AWS STS, and Amazon CloudFront, events are delivered to
+any trail that includes global services.
+
+For most global services, events are logged as occurring in
+US East (N. Virginia) Region, but some global service events are logged as occurring in other Regions,
+such as US East (Ohio) Region or US West (Oregon) Region.
+
+To avoid receiving duplicate global service events, remember the following:
+
+- Global service events are delivered by default to trails that are created
+using the CloudTrail console. Events are delivered to the bucket for the trail.
+
+- If you have multiple single Region trails, consider configuring your trails so
+that global service events are delivered in only one of the trails. For more
+information, see Enabling and disabling global service event logging.
+
+- When IncludeGlobalServiceEvents is true,
+CloudTrail delivers global service events only to single-Region trails in
+US East (N. Virginia). For multi-Region trails,
+IncludeGlobalServiceEvents must be
+true.
+
+For more information about changing global service event logging for a trail,
+see Enabling and disabling global service event logging.
+
+Example:
+
+- You create a trail in the CloudTrail console. By default, this trail logs global
+service events.
+
+- You have multiple single Region trails.
+
+- You do not need to include global services for the single Region trails.
+Global service events are delivered for the first trail. For more information,
+see Creating, updating, and managing trails with the AWS CLI.
+
+Note
+
+When you create or update a trail with the AWS CLI, AWS SDKs, or CloudTrail API, you can
+specify whether to include or exclude global service events for trails. You cannot
+configure global service event logging from the CloudTrail console.

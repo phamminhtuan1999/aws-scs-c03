@@ -1,0 +1,244 @@
+{
+  "question_id": "Q018",
+  "question_content_hash": "a5d0839375ae01aeee4625ddb78d936147564494b8cdfdc3c225bf2243440ed4",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:00Z",
+  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_record_sha256": "cb2f62193fee1145a517202151a1940ad875b10ae246d83c999a13612a036cfb",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Khôi phục RDS DB cluster về phiên bản tốt cuối cùng trước tấn công (ngay trước 3:15 PM cách đây 5 ngày).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Automated backups đang bật với retention 14 ngày (thời điểm cần khôi phục nằm trong khoảng này).",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Khôi phục đúng database cluster bị ảnh hưởng.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q018:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Point-in-time restore cho phép khôi phục tới bất kỳ thời điểm nào trong backup retention (14 ngày) thành cluster mới; chọn 3:14 PM 5 ngày trước là thời điểm tốt cuối cùng ngay trước tấn công.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q018:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Snapshot tự động chỉ tạo mỗi ngày một lần trong backup window, nên snapshot 'gần nhất' có thể sau thời điểm tấn công (đã bị xâm nhập) hoặc sớm hơn nhiều giờ; không bảo đảm đúng phiên bản tốt cuối cùng.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q018:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Liệt kê snapshot của mọi RDS database có thể chọn nhầm database khác, và vẫn có vấn đề độ chi tiết snapshot hằng ngày như B.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q018:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Khôi phục về 14 ngày trước làm mất 9 ngày dữ liệu hợp lệ trước tấn công và nằm sát giới hạn earliest restorable time; không phải phiên bản tốt cuối cùng.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q018:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu Aurora và RDS Multi-AZ DB cluster đều nêu có thể restore tới bất kỳ thời điểm nào trong retention; A là lựa chọn duy nhất khôi phục đúng thời điểm ngay trước tấn công.",
+      "open_issues": [
+        "Đề không nói rõ Aurora hay RDS Multi-AZ DB cluster; cả hai đều hỗ trợ restore to point in time nên không ảnh hưởng kết luận."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:46:00Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-pitr.html",
+      "title": "Restoring a DB cluster to a specified time - Amazon Aurora",
+      "section": "Introduction",
+      "snapshot_id": "8ee040bde708",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can restore to any point in time within your backup retention period.",
+      "supports": "Thời điểm 5 ngày trước nằm trong retention 14 ngày nên PITR khôi phục được chính xác.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIT.MultiAZDBCluster.html",
+      "title": "Restoring a Multi-AZ DB cluster to a specified time - Amazon RDS",
+      "section": "Introduction",
+      "snapshot_id": "1b14b14295ad",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can restore a Multi-AZ DB cluster to a specific point in time, creating a new Multi-AZ DB cluster.",
+      "supports": "PITR cũng áp dụng cho RDS Multi-AZ DB cluster (nếu cluster không phải Aurora).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html",
+      "title": "Overview of backing up and restoring an Aurora DB cluster",
+      "section": "Backups",
+      "snapshot_id": "55af09714c7b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Aurora automated backups are continuous and incremental, so you can quickly restore to any point within the backup retention period.",
+      "supports": "Automated backup liên tục cho phép chọn chính xác 3:14 PM.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html",
+      "title": "Overview of backing up and restoring an Aurora DB cluster",
+      "section": "Backup window",
+      "snapshot_id": "55af09714c7b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the backup window is used to create a daily system backup that is preserved within the backup retention period.",
+      "supports": "Snapshot/system backup chỉ có một lần mỗi ngày nên restore từ snapshot (B, C) không chính xác tới thời điểm trước tấn công.",
+      "kind": "inference"
+    }
+  ],
+  "source_answer": [
+    "Q018:A"
+  ],
+  "researched_answer": [
+    "Q018:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu Aurora và RDS Multi-AZ DB cluster nêu có thể restore tới bất kỳ thời điểm nào trong backup retention; 5 ngày trước nằm trong 14 ngày, và A là lựa chọn duy nhất khôi phục đúng thời điểm ngay trước tấn công.",
+    "open_issues": [
+      "Đề không nói rõ Aurora hay RDS Multi-AZ DB cluster; cả hai đều hỗ trợ restore to point in time. PITR tạo cluster mới, cần chuyển ứng dụng sang cluster đó."
+    ]
+  },
+  "reconciliation_vi": "Blind (A) trùng khóa nguồn (A). Đã kiểm tra lại đối thủ mạnh nhất là B (restore từ snapshot gần 3:14 PM): automated backup chỉ tạo system backup một lần mỗi ngày trong backup window, nên snapshot gần nhất có thể sau thời điểm tấn công hoặc sớm hơn nhiều giờ; PITR dựa trên backup liên tục chọn được đúng 3:14 PM. D quay về 14 ngày trước làm mất 9 ngày dữ liệu hợp lệ. Giữ A.",
+  "explanation_vi": {
+    "why_correct": "Automated backups với retention 14 ngày cho phép Restore to point in time tới bất kỳ thời điểm nào trong 14 ngày; chọn 3:14 PM của 5 ngày trước là trạng thái tốt cuối cùng ngay trước khi tấn công bắt đầu lúc 3:15 PM.",
+    "others": {
+      "Q018:B": "Snapshot chỉ có theo mốc (hằng ngày), snapshot gần 3:14 PM có thể đã chứa dữ liệu bị tấn công hoặc thiếu nhiều giờ dữ liệu hợp lệ.",
+      "Q018:C": "Liệt kê snapshot của mọi database có thể chọn nhầm database khác và vẫn mắc vấn đề độ chi tiết theo mốc snapshot như B.",
+      "Q018:D": "Quay về 14 ngày trước bỏ mất 9 ngày dữ liệu hợp lệ trước tấn công, không phải phiên bản tốt cuối cùng."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "last known good version",
+      "meaning_vi": "Trạng thái sạch gần nhất ngay trước thời điểm bị tấn công."
+    },
+    {
+      "phrase": "retention period of 14 days",
+      "meaning_vi": "Có thể point-in-time restore tới bất kỳ lúc nào trong 14 ngày."
+    },
+    {
+      "phrase": "5 days ago at exactly 3:15 PM",
+      "meaning_vi": "Mốc tấn công chính xác: đặt target time ngay trước đó (3:14 PM)."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần khôi phục RDS/Aurora về đúng thời điểm ngay trước sự cố và thời điểm đó nằm trong backup retention -> nghĩ đến Restore to point in time; kiểm tra snapshot chỉ có theo mốc và PITR tạo cluster mới.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon RDS",
+      "Amazon Aurora"
+    ],
+    "reason_vi": "Bước recovery trong ứng phó sự cố: khôi phục cơ sở dữ liệu từ automated backup bằng point-in-time restore."
+  },
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q018:A",
+      "detail_vi": "'Regional duster ARN' là lỗi gõ của 'Regional cluster ARN'."
+    },
+    {
+      "type": "typo",
+      "location": "Q018:stem:0",
+      "detail_vi": "Thiếu dấu chấm sau 'eradicated the attack' và '3:15 PM'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:46:00Z",
+      "change": "blind verdict A (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:10Z",
+      "change": "reconciliation: blind A trùng khóa nguồn A; đã kiểm tra lại B/C/D; giữ nguyên, status verified.",
+      "previous_answer": [
+        "Q018:A"
+      ]
+    }
+  ],
+  "notes_vi": "PITR tạo cluster mới; sau đó chuyển ứng dụng sang cluster đã khôi phục."
+}

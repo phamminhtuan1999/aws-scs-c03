@@ -1,0 +1,558 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-s3.html
+TITLE: GuardDuty S3 Protection finding types - Amazon GuardDuty
+
+# GuardDuty S3 Protection finding types
+
+The following findings are specific to Amazon S3 resources and will have a Resource
+Type of S3Bucket if the data source is CloudTrail data events for S3, or AccessKey if the data source is
+CloudTrail management events. The severity and details of the
+findings will differ based on the finding type and the permission associated with the
+bucket.
+
+The findings listed here include the data sources and models used to generate that finding
+type. For more information data sources and models, see GuardDuty foundational data sources.
+
+Important
+
+Findings with a data source of CloudTrail data events for
+S3 are only generated if you have enabled S3 Protection. By default, after July
+31, 2020, S3 Protection is enabled when an account enables GuardDuty for the first time, or when a
+delegated GuardDuty administrator account enables GuardDuty in an existing member account. However, when a new member joins
+the GuardDuty organization, the organization's auto-enable preferences will apply. For
+information about auto-enable preferences, see Setting organization auto-enable preferences. For information about how
+to enable S3 Protection, see GuardDuty S3 Protection
+
+For all S3Bucket type findings, it is recommended that you examine the
+permissions on the bucket in question and the permissions of any users involved in the
+finding, if the activity is unexpected see the remediation recommendations detailed in Remediating a potentially compromised S3 bucket.
+
+Topics
+
+- Discovery:S3/AnomalousBehavior
+
+- Discovery:S3/MaliciousIPCaller
+
+- Discovery:S3/MaliciousIPCaller.Custom
+
+- Discovery:S3/TorIPCaller
+
+- Exfiltration:S3/AnomalousBehavior
+
+- Exfiltration:S3/MaliciousIPCaller
+
+- Impact:S3/AnomalousBehavior.Delete
+
+- Impact:S3/AnomalousBehavior.Permission
+
+- Impact:S3/AnomalousBehavior.Write
+
+- Impact:S3/MaliciousIPCaller
+
+- PenTest:S3/KaliLinux
+
+- PenTest:S3/ParrotLinux
+
+- PenTest:S3/PentooLinux
+
+- Policy:S3/AccountBlockPublicAccessDisabled
+
+- Policy:S3/BucketAnonymousAccessGranted
+
+- Policy:S3/BucketBlockPublicAccessDisabled
+
+- Policy:S3/BucketPublicAccessGranted
+
+- Stealth:S3/ServerAccessLoggingDisabled
+
+- UnauthorizedAccess:S3/MaliciousIPCaller.Custom
+
+- UnauthorizedAccess:S3/TorIPCaller
+
+## Discovery:S3/AnomalousBehavior
+
+### An API commonly used to discover S3 objects was invoked in an anomalous way.
+
+Default severity: Low
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an IAM entity has invoked an S3 API to
+discover S3 buckets in your environment, such as ListObjects. This
+type of activity is associated with the discovery stage of an attack wherein an
+attacker gathers information to determine if your AWS environment is
+susceptible to a broader attack. This activity is suspicious because the IAM
+entity invoked the API in an unusual way. For example, an IAM entity with no
+previous history invokes an S3 API, or an IAM entity invokes an S3 API from an
+unusual location.
+
+This API was identified as anomalous by GuardDuty's anomaly detection machine
+learning (ML) model. The ML model evaluates all the API requests in your account
+and identifies anomalous events that are associated with techniques used by
+adversaries. It tracks various factors of the API requests, such as the user who
+made the request, the location from which the request was made, the specific API
+that was requested, the bucket that was requested, and the number of API calls
+made. For more information on which factors of the API request are unusual for
+the user identity that invoked the request, see Finding details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Discovery:S3/MaliciousIPCaller
+
+### An S3 API commonly used to discover resources in an AWS environment was invoked from a known malicious IP address.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API operation was invoked from an IP
+address that is associated with known malicious activity. The observed API is
+commonly associated with the discovery stage of an attack when an adversary is
+gathering information about your AWS environment. Examples include
+GetObjectAcl and ListObjects.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Discovery:S3/MaliciousIPCaller.Custom
+
+### An S3 API was invoked from an IP address on a custom threat list.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API, such as GetObjectAcl or
+ListObjects, was invoked from an IP address that is included on
+a threat list that you uploaded. The threat list associated with this finding is
+listed in the Additional information section of a finding's
+details. This type of activity is associated with the discovery stage of an
+attack wherein an attacker is gathering information to determine if your AWS
+environment is susceptible to a broader attack.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Discovery:S3/TorIPCaller
+
+### An S3 API was invoked from a Tor exit node IP address.
+
+Default severity: Medium
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API, such as GetObjectAcl or
+ListObjects, was invoked from a Tor exit node IP address. This
+type of activity is associated with the discovery stage of an attack wherein an
+attacker is gathering information to determine if your AWS environment is
+susceptible to a broader attack. Tor is software for enabling anonymous
+communication. It encrypts and randomly bounces communications through relays
+between a series of network nodes. The last Tor node is called the exit node.
+This can indicate unauthorized access to your AWS resources with the intent of
+hiding the attacker's true identity.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Exfiltration:S3/AnomalousBehavior
+
+### An IAM entity invoked an S3 API in a suspicious way.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an IAM entity is making API calls that involve
+an S3 bucket and this activity differs from that entity's established baseline.
+The API call used in this activity is associated with the exfiltration stage of
+an attack, wherein an attacker attempts to collect data. This activity is
+suspicious because the IAM entity invoked the API in an unusual way. For
+example, an IAM entity with no previous history invokes an S3 API, or an IAM
+entity invokes an S3 API from an unusual location.
+
+This API was identified as anomalous by GuardDuty's anomaly detection machine
+learning (ML) model. The ML model evaluates all the API requests in your account
+and identifies anomalous events that are associated with techniques used by
+adversaries. It tracks various factors of the API requests, such as the user who
+made the request, the location from which the request was made, the specific API
+that was requested, the bucket that was requested, and the number of API calls
+made. For more information on which factors of the API request are unusual for
+the user identity that invoked the request, see Finding details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Exfiltration:S3/MaliciousIPCaller
+
+### An S3 API commonly used to collect data from an AWS environment was invoked from a known malicious IP address.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API operation was invoked from an IP
+address that is associated with known malicious activity. The observed API is
+commonly associated with exfiltration tactics where an adversary is trying to
+collect data from your network. Examples include GetObject and
+CopyObject.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Impact:S3/AnomalousBehavior.Delete
+
+### An IAM entity invoked an S3 API that attempts to delete data in a suspicious way.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an IAM entity in your AWS environment is
+making API calls that involve an S3 bucket, and this behavior differs from that
+entity's established baseline. The API call used in this activity is associated
+with an attack that attempts to delete data. This activity is suspicious because
+the IAM entity invoked the API in an unusual way. For example, an IAM entity
+with no previous history invokes an S3 API, or an IAM entity invokes an S3 API
+from an unusual location.
+
+This API was identified as anomalous by GuardDuty's anomaly detection machine
+learning (ML) model. The ML model evaluates all the API requests in your account
+and identifies anomalous events that are associated with techniques used by
+adversaries. It tracks various factors of the API requests, such as the user who
+made the request, the location from which the request was made, the specific API
+that was requested, the bucket that was requested, and the number of API calls
+made. For more information on which factors of the API request are unusual for
+the user identity that invoked the request, see Finding details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+We recommend an audit of your S3 bucket's contents to determine if you the
+previous object version can or should be restored.
+
+## Impact:S3/AnomalousBehavior.Permission
+
+### An API commonly used to set the access control list (ACL) permissions was invoked in an anomalous way.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an IAM entity in your AWS environment has
+updated a bucket policy or ACL on the listed S3 buckets. This change may
+publicly expose your S3 buckets to all the authenticated AWS users.
+
+This API was identified as anomalous by GuardDuty's anomaly detection machine
+learning (ML) model. The ML model evaluates all the API requests in your account
+and identifies anomalous events that are associated with techniques used by
+adversaries. It tracks various factors of the API requests, such as the user who
+made the request, the location from which the request was made, the specific API
+that was requested, the bucket that was requested, and the number of API calls
+made. For more information on which factors of the API request are unusual for
+the user identity that invoked the request, see Finding details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+We recommend an audit of your S3 bucket's contents to ensure that no objects
+were unexpectedly allowed to be accessed publicly.
+
+## Impact:S3/AnomalousBehavior.Write
+
+### An IAM entity invoked an S3 API that attempts to write data in a suspicious way.
+
+Default severity: Medium
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an IAM entity in your AWS environment is
+making API calls that involve an S3 bucket, and this behavior differs from that
+entity's established baseline. The API call used in this activity is associated
+with an attack that attempts to write data. This activity is suspicious because
+the IAM entity invoked the API in an unusual way. For example, an IAM entity
+with no previous history invokes an S3 API, or an IAM entity invokes an S3 API
+from an unusual location.
+
+This API was identified as anomalous by GuardDuty's anomaly detection machine
+learning (ML) model. The ML model evaluates all the API requests in your account
+and identifies anomalous events that are associated with techniques used by
+adversaries. It tracks various factors of the API requests, such as the user who
+made the request, the location from which the request was made, the specific API
+that was requested, the bucket that was requested, and the number of API calls
+made. For more information on which factors of the API request are unusual for
+the user identity that invoked the request, see Finding details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+We recommend an audit of your S3 bucket's contents to ensure that this API
+call didn't write malicious or unauthorized data.
+
+## Impact:S3/MaliciousIPCaller
+
+### An S3 API commonly used to tamper with data or processes in an AWS environment was invoked from a known malicious IP address.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API operation was invoked from an IP
+address that is associated with known malicious activity. The observed API is
+commonly associated with impact tactics where an adversary is trying manipulate,
+interrupt, or destroy data within your AWS environment. Examples include
+PutObject and PutObjectAcl.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## PenTest:S3/KaliLinux
+
+### An S3 API was invoked from a Kali Linux machine.
+
+Default severity: Medium
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that a machine running Kali Linux is making S3 API
+calls using credentials that belong to your AWS account. Your credentials
+might be compromised. Kali Linux is a popular penetration testing tool that
+security professionals use to identify weaknesses in EC2 instances that require
+patching. Attackers also use this tool to find EC2 configuration weaknesses and
+gain unauthorized access to your AWS environment.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## PenTest:S3/ParrotLinux
+
+### An S3 API was invoked from a Parrot Security Linux machine.
+
+Default severity: Medium
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that a machine running Parrot Security Linux is
+making S3 API calls using credentials that belong to your AWS account. Your
+credentials might be compromised. Parrot Security Linux is a popular penetration
+testing tool that security professionals use to identify weaknesses in EC2
+instances that require patching. Attackers also use this tool to find EC2
+configuration weaknesses and gain unauthorized access to your AWS
+environment.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## PenTest:S3/PentooLinux
+
+### An S3 API was invoked from a Pentoo Linux machine.
+
+Default severity: Medium
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that a machine running Pentoo Linux is making S3 API
+calls using credentials that belong to your AWS account. Your credentials
+might be compromised. Pentoo Linux is a popular penetration testing tool that
+security professionals use to identify weaknesses in EC2 instances that require
+patching. Attackers also use this tool to find EC2 configuration weaknesses and
+gain unauthorized access to your AWS environment.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Policy:S3/AccountBlockPublicAccessDisabled
+
+### An IAM entity invoked an API used to disable S3 Block Public Access on an account.
+
+Default severity: Low
+
+- Data source: CloudTrail management
+events
+
+This finding informs you that Amazon S3 Block Public Access was disabled at
+the account level. When S3 Block Public Access settings are enabled, they are
+used to filter the policies or access control lists (ACLs) on buckets as a
+security measure to prevent inadvertent public exposure of data.
+
+Typically, S3 Block Public Access is turned off in an account to allow public
+access to a bucket or to the objects in the bucket. When S3 Block Public Access
+is disabled for an account, access to your buckets is controlled by the
+policies, ACLs, or bucket-level Block Public Access settings applied to your
+individual buckets. This does not necessarily mean that the buckets are shared
+publicly, but that you should audit the permissions applied to the buckets to
+confirm that they provide the appropriate level of access.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Policy:S3/BucketAnonymousAccessGranted
+
+### An IAM principal has granted access to an S3 bucket to the internet by changing bucket policies or ACLs.
+
+Default severity: High
+
+- Data source: CloudTrail management
+events
+
+This finding informs you that the listed S3 bucket has been made publicly
+accessible on the internet because an IAM entity has changed a bucket policy or
+ACL on that bucket.
+
+After a policy or ACL change is detected, GuardDuty uses
+automated reasoning powered by Zelkova, to determine if the bucket is publicly accessible.
+
+Note
+
+If a bucket's ACLs or bucket policies are configured to explicitly deny or
+to deny all, this finding may not reflect the current state of the bucket.
+This finding will not reflect any S3 Block Public Access settings that may have been enabled for
+your S3 bucket. In such cases, the effectivePermission value in
+the finding will be marked as UNKNOWN.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Policy:S3/BucketBlockPublicAccessDisabled
+
+### An IAM entity invoked an API used to disable S3 Block Public Access on a bucket.
+
+Default severity: Low
+
+- Data source: CloudTrail management
+events
+
+This finding informs you that Block Public Access was disabled for the listed
+S3 bucket. When enabled, S3 Block Public Access settings are used to filter the
+policies or access control lists (ACLs) applied to buckets as a security measure
+to prevent inadvertent public exposure of data.
+
+Typically, S3 Block Public Access is turned off on a bucket to allow public
+access to the bucket or to the objects within. When S3 Block Public Access is
+disabled for a bucket, access to the bucket is controlled by the policies or
+ACLs applied to it. This does not mean that the bucket is shared publicly, but
+you should audit the policies and ACLs applied to the bucket to confirm that
+appropriate permissions are applied.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Policy:S3/BucketPublicAccessGranted
+
+### An IAM principal has granted public access to an S3 bucket to all AWS users by changing bucket policies or ACLs.
+
+Default severity: High
+
+- Data source: CloudTrail management
+events
+
+This finding informs you that the listed S3 bucket has been publicly exposed
+to all authenticated AWS users because an IAM entity has changed a bucket
+policy or ACL on that S3 bucket.
+
+After a policy or ACL change is detected, GuardDuty uses
+automated reasoning powered by Zelkova, to determine if the bucket is publicly accessible.
+
+Note
+
+If a bucket's ACLs or bucket policies are configured to explicitly deny or
+to deny all, this finding may not reflect the current state of the bucket.
+This finding will not reflect any S3 Block Public Access settings that may have been enabled for
+your S3 bucket. In such cases, the effectivePermission value in
+the finding will be marked as UNKNOWN.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## Stealth:S3/ServerAccessLoggingDisabled
+
+### S3 server access logging was disabled for a bucket.
+
+Default severity: Low
+
+- Data source: CloudTrail management
+events
+
+This finding informs you that S3 server access logging is disabled for a
+bucket within your AWS environment. If disabled, no web request logs are
+created for any attempts to access the identified S3 bucket, however, S3
+management API calls to the bucket, such as DeleteBucket, are
+still tracked. If S3 data event logging is enabled through CloudTrail for this bucket,
+web requests for objects within the bucket will still be tracked. Disabling
+logging is a technique used by unauthorized users in order to evade detection.
+To learn more about S3 logs, see S3 Server Access Logging
+and S3 Logging Options
+.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## UnauthorizedAccess:S3/MaliciousIPCaller.Custom
+
+### An S3 API was invoked from an IP address on a custom threat list.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API operation, for example,
+PutObject or PutObjectAcl, was invoked from an IP
+address that is included on a threat list that you uploaded. The threat list
+associated with this finding is listed in the Additional
+information section of a finding's details.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.
+
+## UnauthorizedAccess:S3/TorIPCaller
+
+### An S3 API was invoked from a Tor exit node IP address.
+
+Default severity: High
+
+- Data source: CloudTrail data events for
+S3
+
+This finding informs you that an S3 API operation, such as
+PutObject or PutObjectAcl, was invoked from a Tor
+exit node IP address. Tor is software for enabling anonymous communication. It
+encrypts and randomly bounces communications through relays between a series of
+network nodes. The last Tor node is called the exit node. This finding can
+indicate unauthorized access to your AWS resources with the intent of hiding
+the attacker's true identity.
+
+Remediation recommendations:
+
+If this activity is unexpected for the associated principal, it may indicate that the credentials have been exposed or your S3 permissions are not restrictive enough. For more information, see Remediating a potentially compromised S3 bucket.

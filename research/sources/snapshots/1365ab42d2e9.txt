@@ -1,0 +1,70 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerSideEncryptionCustomerKeys.html
+TITLE: Using server-side encryption with customer-provided keys (SSE-C) - Amazon Simple Storage Service
+
+# Using server-side encryption with customer-provided keys (SSE-C)
+
+Server-side encryption is about protecting data at rest. Server-side encryption encrypts only
+the object data, not the object metadata. You can use server-side encryption with
+customer-provided keys (SSE-C) in your general purpose buckets to encrypt your data with your own encryption keys. With the encryption
+key that you provide as part of your request, Amazon S3 manages data encryption as it writes to
+disks and data decryption when you access your objects. Therefore, you don't need to
+maintain any code to perform data encryption and decryption. The only thing that you need to
+do is manage the encryption keys that you provide.
+
+Starting April 2026, SSE-C is disabled by default for all new general purpose buckets and existing buckets in accounts with no SSE-C encrypted objects. Most modern workloads use server-side encryption with Amazon S3 managed keys (SSE-S3) or AWS KMS keys (SSE-KMS) instead, because SSE-C requires you to provide the encryption key with every request, making it impractical to share access with other users, roles, or AWS services that operate on your data. To learn more about SSE-KMS, see Using server-side encryption with AWS KMS keys (SSE-KMS).
+
+If your workload requires SSE-C, you must explicitly enable it by setting BlockedEncryptionTypes to NONE in your bucket's default encryption configuration using the PutBucketEncryption API. While SSE-C is blocked, any PutObject, CopyObject, PostObject, Multipart Upload, or replication request that specifies SSE-C encryption is rejected with an HTTP 403 AccessDenied error. To learn more, see Blocking or unblocking SSE-C for a general purpose bucket.
+
+There are no additional charges for using SSE-C. However, requests to configure and use SSE-C
+incur standard Amazon S3 request charges. For information about pricing, see Amazon S3 pricing.
+
+Important
+
+Amazon Simple Storage Service now applies a new default bucket security setting that automatically disables server-side encryption with customer-provided keys (SSE-C) for all new general purpose buckets. In April 2026, Amazon S3 deployed an update so all new general purpose buckets have SSE-C encryption disabled for all new write requests. For existing buckets in AWS accounts with no SSE-C encrypted objects, Amazon S3 also disabled SSE-C for all new write requests. With this change, applications that need SSE-C encryption must deliberately enable SSE-C by using the PutBucketEncryption API operation after creating a new bucket. For more information about this change, see Default SSE-C setting for new buckets FAQ.
+
+## Considerations before using SSE-C
+
+- S3 never stores the encryption key when you use SSE-C. You must supply the encryption key
+every time you want anyone to download your SSE-C encrypted data from S3.
+
+- You manage a mapping of which encryption key was used to encrypt which object. You are
+responsible for tracking which encryption key you provided for which
+object. That also means if you lose the encryption key, you lose the
+object.
+
+- Because you manage encryption keys on the client side, you manage any additional
+safeguards, such as key rotation, on the client side.
+
+- This design can make it difficult to share your SSE-C key with other
+users, roles, or AWS services that need to operate on your data. Due to the widespread
+support for SSE-KMS across AWS, most modern workloads do not use SSE-C
+because it lacks the flexibility of SSE-KMS. To learn more about
+SSE-KMS, see Using server-side encryption with AWS KMS keys (SSE-KMS).
+
+- This means that objects encrypted with SSE-C cannot be natively decrypted by AWS
+managed services.
+
+- You must use HTTPS when specifying SSE-C headers on your requests.
+
+- Amazon S3 rejects any requests made over HTTP when using SSE-C. For security considerations,
+we recommend that you consider any key that you erroneously send over
+HTTP to be compromised. Discard the key and rotate as appropriate.
+
+- If your bucket is versioning-enabled, each object version that you upload can have its own
+encryption key. You are responsible for tracking which encryption key was used
+for which object version.
+
+- SSE-C is not supported in the Amazon S3 Console. You cannot use the Amazon S3 console to upload an
+object and specify SSE-C encryption. You also cannot use the console to update
+(for example, change the storage class or add metadata) an existing object
+stored using SSE-C.
+
+- SSE-C is blocked by default for new buckets. You must explicitly enable SSE-C using the PutBucketEncryption API before you can upload objects with SSE-C encryption. For more information, see Blocking or unblocking SSE-C for a general purpose bucket.
+
+Topics
+
+- Specifying server-side encryption with customer-provided keys (SSE-C)
+
+- Blocking or unblocking SSE-C for a general purpose bucket
+
+- Default SSE-C setting for new buckets FAQ

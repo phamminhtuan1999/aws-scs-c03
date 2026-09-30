@@ -1,0 +1,55 @@
+{
+  "question_id": "Q020",
+  "question_content_hash": "b0780b00a5ccdf1bbdd08cdac078f9ad1c588d9f717448a579dc3036db79c530",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "PHÁT HIỆN lỗ hổng phần mềm (software vulnerabilities) trên EC2.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "KHẮC PHỤC (mitigate) các lỗ hổng đó trên EC2.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Phạm vi: fleet EC2 chạy workload nhạy cảm trong VPC.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q020:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng, tự động quét EC2 để tìm software vulnerabilities; Patch Manager tự động vá bản cập nhật bảo mật cho managed node, tức khắc phục lỗ hổng.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q020:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Firewall và antivirus trên host không phát hiện lỗ hổng phần mềm (CVE) của OS/ứng dụng; Run Command chỉ cập nhật chính firewall/antivirus chứ không vá phần mềm có lỗ hổng.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q020:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "CloudWatch agent thu thập metric/log để giám sát, không kiểm kê gói phần mềm để đối chiếu lỗ hổng; phương án cũng không có bước khắc phục.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q020:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "GuardDuty Malware Protection for EC2 quét EBS volume để phát hiện malware, không phải quét lỗ hổng phần mềm; nửa Patch Manager đúng nhưng phần phát hiện sai mục tiêu.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q020:A"],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu nêu trực tiếp Inspector quét EC2 tìm software vulnerabilities và Patch Manager vá bảo mật; GuardDuty Malware Protection chỉ phát hiện malware.",
+      "open_issues": []
+    },
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html", "title": "What is Amazon Inspector?", "section": "Overview", "snapshot_id": "6ead4370c770", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon Inspector is a vulnerability management service that automatically discovers workloads and continually scans them for software vulnerabilities and unintended network exposure.",
+     "supports": "Inspector phát hiện lỗ hổng phần mềm trên EC2 (R1).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager.html", "title": "AWS Systems Manager Patch Manager", "section": "Overview", "snapshot_id": "a410359670bf", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Patch Manager automates the process of patching managed nodes with both security-related updates and other types of updates.",
+     "supports": "Patch Manager khắc phục lỗ hổng bằng cách vá (R2).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html", "title": "GuardDuty Malware Protection for EC2", "section": "Overview", "snapshot_id": "ecbeed9f13a5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Malware Protection for EC2 helps you detect the potential presence of malware by scanning the Amazon Elastic Block Store (Amazon EBS) volumes",
+     "supports": "GuardDuty Malware Protection phát hiện malware, không phải lỗ hổng phần mềm (D).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html", "title": "Collect metrics, logs, and traces using the CloudWatch agent", "section": "Overview", "snapshot_id": "6bc3ac9e9368", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The CloudWatch agent is a software component that collects metrics, logs, and traces from your Amazon EC2 instances",
+     "supports": "CloudWatch agent là công cụ giám sát, không phải công cụ quét lỗ hổng (C).", "kind": "inference"}
+  ],
+  "source_issues": []
+}

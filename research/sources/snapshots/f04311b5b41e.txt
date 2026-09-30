@@ -1,0 +1,955 @@
+URL: https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html
+TITLE: AWS WAF Bot Control rule group - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director
+
+Introducing a new console experience for AWS WAF
+
+You can now use the updated experience to access AWS WAF functionality anywhere in the console.
+For more details, see Working with the console.
+
+# AWS WAF Bot Control rule group
+
+This section explains what the Bot Control managed rule group does.
+
+VendorName: AWS, Name: AWSManagedRulesBotControlRuleSet, WCU: 50
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need to request a new bot classification for Bot Control or require additional information not covered here, contact the AWS Support Center.
+
+The Bot Control managed rule group provides rules that manage requests from bots. Bots can
+consume excess resources, skew business metrics, cause downtime, and perform
+malicious activities.
+
+## Protection levels
+
+The Bot Control managed rule group provides two levels of protection that
+you can choose from:
+
+- Common – Detects a variety of
+self-identifying bots, such as web scraping frameworks, search
+engines, and automated browsers. Bot Control protections at this level
+identify common bots using traditional bot detection techniques,
+such as static request data analysis. The rules label traffic from
+these bots and block the ones that they cannot verify.
+
+- Targeted – Includes the
+common-level protections and adds targeted detection for sophisticated bots that
+do not self identify. Targeted protections mitigate bot activity using a combination
+of rate limiting and CAPTCHA and background browser challenges.
+
+- TGT_ – Rules that provide targeted protection have names that begin with
+TGT_. All targeted protections use detection
+techniques such as browser interrogation, fingerprinting, and behavior heuristics
+to identify bad bot traffic.
+
+- TGT_ML_ – Targeted protection rules that use machine learning have names that begin with
+TGT_ML_. These rules use automated, machine-learning analysis of website traffic statistics to detect anomalous behavior indicative of distributed, coordinated bot activity. AWS WAF analyzes statistics about your website traffic such as timestamps, browser characteristics, and previous URL visited, to improve the Bot Control machine learning model. Machine learning capabilities are enabled by default, but you can disable them in your rule group configuration. When machine learning is disabled, AWS WAF does not evaluate these rules.
+
+The targeted protection level and the AWS WAF rate-based rule statement both provide rate
+limiting. For a comparison of the two options, see Options for rate limiting in rate-based rules and targeted Bot Control rules.
+
+## Considerations for using this rule group
+
+This rule group is part of the intelligent
+threat mitigation protections in AWS WAF. For information, see Intelligent threat mitigation in AWS WAF.
+
+Note
+
+You are charged additional fees when you use this managed rule group. For more information, see AWS WAF Pricing.
+
+To keep your costs down and to be sure you're managing your web
+traffic as you want, use this rule group in accordance with the guidance
+at Best practices for intelligent threat mitigation in AWS WAF.
+
+We periodically update our machine learning (ML) models for the targeted protection level ML-based rules,
+to improve bot predictions. The ML-based rules have names that start with TGT_ML_. If you notice a
+sudden and substantial change in the bot predictions made by these rules, contact us through
+your account manager or open a case at AWS Support Center.
+
+## Labels added by this rule group
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+### Token labels
+
+This rule group uses AWS WAF token management to inspect and label web
+requests according to the status of their AWS WAF tokens. AWS WAF uses
+tokens for client session tracking and verification.
+
+For information about tokens and token management, see Token use in AWS WAF intelligent threat mitigation.
+
+For information
+about the label components described here, see Label syntax and naming requirements in AWS WAF.
+
+Client session label
+
+The label awswaf:managed:token:id:identifier contains a unique identifier that AWS WAF token management uses to identify the client session. The identifier can change if the client acquires a new token, for example after discarding the token it was using.
+
+Note
+
+AWS WAF doesn't report Amazon CloudWatch metrics for this label.
+
+Browser fingerprint label
+
+The label awswaf:managed:token:fingerprint:fingerprint-identifier contains a
+robust browser fingerprint identifier that AWS WAF token management computes from various client browser signals.
+This identifier stays the same across multiple token acquisition attempts. The fingerprint identifier is not unique to a single client.
+
+Note
+
+AWS WAF doesn't report Amazon CloudWatch metrics for this label.
+
+Token status labels: Label namespace prefixes
+
+Token status labels report on the status of the token and of the challenge and CAPTCHA information that it contains.
+
+Each token status label begins with one of the following namespace prefixes:
+
+- awswaf:managed:token: – Used to report the general status of the token and to report on the status of the token's challenge information.
+
+- awswaf:managed:captcha: – Used to report on the status of the token's CAPTCHA information.
+
+Token status labels: Label names
+
+Following the prefix, the rest of the label provides detailed token status information:
+
+- accepted – The request token is present and contains the following:
+
+- A valid challenge or CAPTCHA solution.
+
+- An unexpired challenge or CAPTCHA timestamp.
+
+- A domain specification that's valid for the protection pack (web ACL).
+
+Example: The label awswaf:managed:token:accepted indicates that the web requests's token has a valid challenge solution, an unexpired challenge timestamp, and a valid domain.
+
+- rejected – The request token is present but doesn't meet the acceptance criteria.
+
+Along with the rejected label, token management adds a custom label namespace and name to indicate the reason.
+
+- rejected:not_solved – The token is missing the challenge or CAPTCHA solution.
+
+- rejected:expired – The token's challenge or CAPTCHA timestamp has expired, according to your protection pack (web ACL)'s configured token immunity times.
+
+- rejected:domain_mismatch – The token's domain isn't a match for your protection pack (web ACL)'s token domain configuration.
+
+- rejected:invalid – AWS WAF couldn't read the indicated token.
+
+Example: The labels awswaf:managed:captcha:rejected and awswaf:managed:captcha:rejected:expired together indicate that the request didn't have a valid CAPTCHA solve because the CAPTCHA timestamp in the token has exceeded the CAPTCHA token immunity time that's configured in the protection pack (web ACL).
+
+- absent – The request doesn't have the token or the token manager couldn't read it.
+
+Example: The label awswaf:managed:captcha:absent indicates that the request doesn't have the token.
+
+### Bot Control labels
+
+The Bot Control managed rule group generates labels with the namespace prefix
+awswaf:managed:aws:bot-control: followed by the custom
+namespace and label name. The rule group might add more than one label
+to a request.
+
+Each label reflects the Bot Control rule findings:
+
+- awswaf:managed:aws:bot-control:bot: – Information about
+the bot associated with the request.
+
+- awswaf:managed:aws:bot-control:bot:name:<name>
+– The bot name, if one is available, for example, the
+custom namespaces bot:name:slurp,
+bot:name:googlebot, and
+bot:name:pocket_parser.
+
+- awswaf:managed:aws:bot-control:bot:name:<rfc_name>
+– Identifies the specific bot using the RFC product token from the WBA signature.
+This is used to create granular custom rules for specific bots. For example, allow GoogleBot but rate-limit other crawlers.
+
+- awswaf:managed:aws:bot-control:bot:category:<category>
+– The category of bot, as defined by AWS WAF, for
+example, bot:category:search_engine and
+bot:category:content_fetcher.
+
+- awswaf:managed:aws:bot-control:bot:account:<hash>
+–For bots using Amazon Bedrock Agent Core only.
+This label contains an opaque hash uniquely
+identifying the AWS account that owns the agent.
+Use this label to create custom rules that allow,
+block, or rate-limit bots from specific AWS
+accounts without exposing account IDs in
+logs.
+
+- awswaf:managed:aws:bot-control:bot:web_bot_auth:<status>
+– Applied when Web Bot Authentication (WBA)
+validation is performed on a request. The status
+suffix indicates the verification outcome:
+
+- web_bot_auth:verified –
+Signature successfully validated against public
+key directory
+
+- web_bot_auth:invalid –
+Signature present but cryptograpic validation
+failed
+
+- web_bot_auth:expired –
+Signature used an expired cryptograpic key
+
+- web_bot_auth:unknown_bot – Key ID not found in the key
+directory
+
+Note
+
+When the web_bot_auth:verified
+label is present, the Category<category_name> and
+TGT_TokenAbsent rules do not match,
+allowing verified WBA hosts to proceed.
+
+- awswaf:managed:aws:bot-control:bot:organization:<organization>
+– The bot's publisher, for example,
+bot:organization:google.
+
+- awswaf:managed:aws:bot-control:bot:verified
+– Used to indicate a bot that identifies
+itself and that Bot Control has been able to verify. This
+is used for common desirable bots, and can be useful
+when combined with category labels like
+bot:category:search_engine or name
+labels like bot:name:googlebot.
+
+Note
+
+Bot Control uses the IP address from the web request
+origin to help determine whether a bot is
+verified. You can’t configure it to use the
+AWS WAF forwarded IP configuration, to inspect a
+different IP address source. If you have verified
+bots that route through a proxy or load balancer,
+you can add a rule that runs before the Bot Control rule
+group to help with this. Configure your new rule
+to use the forwarded IP address and explicitly
+allow requests from the verified bots. For
+information about using forwarded IP addresses,
+see Using forwarded IP addresses in AWS WAF.
+
+- awswaf:managed:aws:bot-control:bot:vendor:<vendor_name>
+– Identifies the vendor or operator of a
+verified bot. Currently available only for
+Agentcore. Use to create custom rules that allow or
+block specific bot vendors regardless of individual
+bot names.
+
+- awswaf:managed:aws:bot-control:bot:user_triggered:verified
+– Used to indicate a bot that is similar to a
+verified bot, but that might be directly invoked by end
+users. This category of bot is treated by the Bot Control rules
+like an unverified bot.
+
+- awswaf:managed:aws:bot-control:bot:developer_platform:verified
+– Used to indicate a bot that is similar to a
+verified bot, but that is used by developer platforms for
+scripting, for example Google Apps Script. This category of
+bot is treated by the Bot Control rules like an unverified bot.
+
+- awswaf:managed:aws:bot-control:bot:unverified –
+Used to indicate a bot that identifies itself, so it can be named and categorized, but that
+doesn't publish information that can be used to independently verify
+its identify. These types of bot
+signatures can be falsified, and so are treated as unverified.
+
+- awswaf:managed:aws:bot-control:targeted:<additional-details>
+– Used for labels that are specific to the Bot Control
+targeted protections.
+
+- awswaf:managed:aws:bot-control:signal:<signal-details>
+and awswaf:managed:aws:bot-control:targeted:signal:<signal-details>
+– Used to provide additional information about the request in some situations.
+
+The following are examples of signal labels. This is not an
+exhaustive list:
+
+- awswaf:managed:aws:bot-control:signal:cloud_service_provider:<CSP>
+– Indicates a cloud service provider (CSP) for the
+request. Examples of CSPs include aws for Amazon Web Services infrastructure,
+gcp for Google Cloud Platform (GCP) infrastructure,
+azure for Microsoft Azure cloud services,
+and oracle for Oracle Cloud services.
+
+- awswaf:managed:aws:bot-control:targeted:signal:browser_automation_extension –
+Indicates the detection of a browser extension that
+assists in automation, such as Selenium IDE.
+
+This label is added whenever a user has this type of extension installed, even if
+they're not actively using it. If you implement a
+label match rule for this, be aware of this
+possibility of false positives in your rule logic
+and action settings. For example, you might use a
+CAPTCHA action instead of Block or
+you might combine this label match with other label
+matches, to increase your confidence that automation
+is in use.
+
+- awswaf:managed:aws:bot-control:signal:automated_browser
+– Indicates that the request contains indicators that
+the client browser might be automated.
+
+- awswaf:managed:aws:bot-control:targeted:signal:automated_browser
+– Indicates that the request's AWS WAF token contains
+indicators that the client browser might be
+automated.
+
+You can retrieve all labels for a rule group through the API by calling
+DescribeManagedRuleGroup. The labels are listed in the
+AvailableLabels property in the response.
+
+The Bot Control managed rule group applies labels to a set of verifiable bots that are commonly
+allowed. The rule group doesn't block these verified bots. If you want, you can block them, or a
+subset of them by writing a custom rule that uses the labels applied by the
+Bot Control managed rule group. For more information about this and examples, see
+AWS WAF Bot Control.
+
+## Bot Control rules listing
+
+This section lists the Bot Control rules.
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need to request a new bot classification for Bot Control or require additional information not covered here, contact the AWS Support Center.
+
+Rule name
+
+Description
+
+CategoryAdvertising
+
+Inspects for bots that are used for advertising
+purposes. For example, you might use third-party advertising
+services that need to programmatically access your website.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels: awswaf:managed:aws:bot-control:bot:category:advertising and
+awswaf:managed:aws:bot-control:CategoryAdvertising
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryArchiver
+
+Inspects for bots that are used for archiving
+purposes. These bots crawl the web and capture content for the purposes of creating archives.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:archiver and
+awswaf:managed:aws:bot-control:CategoryArchiver
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryContentFetcher
+
+Inspects for bots that visit the application's website on behalf of a user, to fetch content like RSS feeds or to verify or validate your content.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:content_fetcher and
+awswaf:managed:aws:bot-control:CategoryContentFetcher
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryEmailClient
+
+Inspects for bots that check links within emails that point to the application's website. This can include
+bots run by businesses and email providers, to verify links in emails and flag suspicious emails.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:email_client and
+awswaf:managed:aws:bot-control:CategoryEmailClient
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryHttpLibrary
+
+Inspects for requests that are generated by bots from the HTTP libraries of various programming languages. These may include API requests that you choose to allow or monitor.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:http_library and
+awswaf:managed:aws:bot-control:CategoryHttpLibrary
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryLinkChecker
+
+Inspects for bots that check for broken links.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:link_checker and
+awswaf:managed:aws:bot-control:CategoryLinkChecker
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryMiscellaneous
+
+Inspects for miscellaneous bots that don't match other categories.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:miscellaneous and
+awswaf:managed:aws:bot-control:CategoryMiscellaneous
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryMonitoring
+
+Inspects for bots that are used for monitoring
+purposes. For example, you might use bot monitoring services that periodically
+ping your application website to monitor things like performance and uptime.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:monitoring and
+awswaf:managed:aws:bot-control:CategoryMonitoring
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryPagePreview
+
+Inspects for bots that generate page previews and link previews when content is shared on messaging platforms, social media, or collaboration tools.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:page_preview and
+awswaf:managed:aws:bot-control:CategoryPagePreview
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryScrapingFramework
+
+Inspects for bots from web scraping frameworks, which
+are used to automate crawling and extracting content from websites.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels: awswaf:managed:aws:bot-control:bot:category:scraping_framework and
+awswaf:managed:aws:bot-control:CategoryScrapingFramework
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategorySearchEngine
+
+Inspects for search engine bots, which crawl websites to index content and make the information available for search engine results.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:search_engine and
+awswaf:managed:aws:bot-control:CategorySearchEngine
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategorySecurity
+
+Inspects for bots that scan web applications for vulnerabilities or that perform security audits.
+For example, you might use a third-party security vendor that scans, monitors, or audits your web application’s security.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:security and
+awswaf:managed:aws:bot-control:CategorySecurity
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategorySeo
+
+Inspects for bots that are used for search engine
+optimization. For example, you might use search engine tools that crawl your site to help you improve your search engine rankings.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:seo and
+awswaf:managed:aws:bot-control:CategorySeo
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategorySocialMedia
+
+Inspects for bots that are used by social media
+platforms to provide content summaries when users share your content.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:social_media and
+awswaf:managed:aws:bot-control:CategorySocialMedia
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryWebhooks
+
+Inspects for bots that deliver automated notifications and data updates from one application to another through HTTP callbacks.
+
+Rule action, applied only to unverified bots:
+Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:webhooks and
+awswaf:managed:aws:bot-control:CategoryWebhooks
+
+For verified bots, the rule group does not match this rule and takes no action, but it adds
+the bot name and category labeling plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+CategoryAI
+
+Inspects for artificial intelligence (AI) bots.
+
+Note
+
+This rule
+applies the action to all matches, regardless of whether the bots are verified or unverified.
+
+Rule action: Block
+
+Labels:
+awswaf:managed:aws:bot-control:bot:category:ai and
+awswaf:managed:aws:bot-control:CategoryAI
+
+For verified bots, the rule group matches this rule and takes an action. It additionally adds the bot name and category labeling, the rule labeling,
+plus the label
+awswaf:managed:aws:bot-control:bot:verified.
+
+SignalAutomatedBrowser
+
+Inspects requests that are not from verified bots for indicators that the client browser might be
+automated. Automated browsers can be used for testing or scraping.
+For example, you might use these types of browsers to monitor or verify your
+application website.
+
+Rule action: Block
+
+Labels:
+awswaf:managed:aws:bot-control:signal:automated_browser and
+awswaf:managed:aws:bot-control:SignalAutomatedBrowser
+
+For verified bots, the rule group does not match this rule and does not apply any signal or rule labels.
+
+SignalKnownBotDataCenter
+
+Inspects requests that are not from verified bots for indicators of data centers that are typically used by
+bots.
+
+Rule action: Block
+
+Labels:
+awswaf:managed:aws:bot-control:signal:known_bot_data_center and
+awswaf:managed:aws:bot-control:SignalKnownBotDataCenter
+
+For verified bots, the rule group does not match this rule and does not apply any signal or rule labels.
+
+SignalNonBrowserUserAgent
+
+Inspects requests that are not from verified bots for user agent strings that don't seem to be
+from a web browser. This category can include API requests.
+
+Rule action: Block
+
+Labels:
+awswaf:managed:aws:bot-control:signal:non_browser_user_agent and
+awswaf:managed:aws:bot-control:SignalNonBrowserUserAgent
+
+For verified bots, the rule group does not match this rule and does not apply any signal or rule labels.
+
+TGT_VolumetricIpTokenAbsent
+
+Inspects requests that are not from verified bots
+with 5 or more requests from a single client in the last 5 minutes
+that don't include a valid challenge token. For information
+about tokens, see Token use in AWS WAF intelligent threat mitigation.
+
+Note
+
+It's possible for this rule to
+match on a request that has a token if requests from the same
+client have recently been missing tokens.
+
+The threshold that this rule applies can vary
+slightly due to latency.
+
+This rule handles missing tokens differently from the
+token labeling: awswaf:managed:token:absent. The token
+labeling labels individual requests that don't have a token.
+This rule maintains a count of
+requests that are missing their token for each client IP, and it matches against
+clients that go over the limit.
+
+Rule action: Challenge
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:ip:token_absent and
+awswaf:managed:aws:bot-control:TGT_VolumetricIpTokenAbsent
+
+TGT_TokenAbsent
+
+Inspects requests that are not from verified bots that don't include a valid challenge token. For information
+about tokens, see Token use in AWS WAF intelligent threat mitigation.
+
+Rule action: Count
+
+Labels: awswaf:managed:aws:bot-control:TGT_TokenAbsent
+
+TGT_VolumetricSession
+
+Inspects for an abnormally high number of requests that are not from verified bots
+that come from a single client session in a 5 minute window. The
+evaluation is based on a comparison to
+standard volumetric baselines that AWS WAF maintains
+using historic traffic patterns.
+
+This inspection only applies when the web request has
+a token. Tokens are added to requests by the application
+integration SDKs and by the rule actions CAPTCHA
+and Challenge. For more information, see Token use in AWS WAF intelligent threat mitigation.
+
+Note
+
+This rule can take 5 minutes to go into
+effect after you enable it. Bot Control identifies
+anomalous behavior in your web traffic by
+comparing the current traffic to traffic baselines
+that AWS WAF computes.
+
+Rule action: CAPTCHA
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:high and
+awswaf:managed:aws:bot-control:TGT_VolumetricSession
+
+The rule group applies the following labels to
+medium volume and lower volume requests that are
+above a minimum threshold. For these levels, the
+rule takes no action, regardless of whether the
+client is verified:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:medium
+and
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:low.
+
+TGT_VolumetricSessionMaximum
+
+Inspects for an abnormally high number of requests that are not from verified bots
+that come from a single client session in a 5 minute window. The
+evaluation is based on a comparison to
+standard volumetric baselines that AWS WAF maintains
+using historic traffic patterns.
+
+This rule indicates the maximum confidence in the assessment.
+
+This inspection only applies when the web request has
+a token. Tokens are added to requests by the application
+integration SDKs and by the rule actions CAPTCHA
+and Challenge. For more information, see Token use in AWS WAF intelligent threat mitigation.
+
+Note
+
+This rule can take 5 minutes to go into
+effect after you enable it. Bot Control identifies
+anomalous behavior in your web traffic by
+comparing the current traffic to traffic baselines
+that AWS WAF computes.
+
+Rule action: Block
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:maximum and
+awswaf:managed:aws:bot-control:TGT_VolumetricSessionMaximum
+
+TGT_SignalAutomatedBrowser
+
+Inspects the tokens of requests that are not from verified bots for
+indicators that the client browser might be automated. For more
+information, see AWS WAF token characteristics.
+
+This inspection only applies when the web request has
+a token. Tokens are added to requests by the application
+integration SDKs and by the rule actions CAPTCHA
+and Challenge. For more information, see Token use in AWS WAF intelligent threat mitigation.
+
+Rule action: CAPTCHA
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:signal:automated_browser and
+awswaf:managed:aws:bot-control:TGT_SignalAutomatedBrowser
+
+TGT_SignalBrowserAutomationExtension
+
+Inspects requests that are not from verified bots that indicate the presence
+of a browser extension that assists in automation,
+such as Selenium IDE. This rule matches whenever a user has this type of extension
+installed, even if they're not actively using it.
+
+This inspection only applies when the web request has
+a token. Tokens are added to requests by the application
+integration SDKs and by the rule actions CAPTCHA
+and Challenge. For more information, see Token use in AWS WAF intelligent threat mitigation.
+
+Rule action: CAPTCHA
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:signal:browser_automation_extension
+and awswaf:managed:aws:bot-control:TGT_SignalBrowserAutomationExtension
+
+TGT_SignalBrowserInconsistency
+
+Inspects requests that are not from verified bots for inconsistent browser
+interrogation data. For more information, see
+AWS WAF token characteristics.
+
+This inspection only applies when the web request has
+a token. Tokens are added to requests by the application
+integration SDKs and by the rule actions CAPTCHA
+and Challenge. For more information, see Token use in AWS WAF intelligent threat mitigation.
+
+Rule action: CAPTCHA
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:signal:browser_inconsistency and
+awswaf:managed:aws:bot-control:TGT_SignalBrowserInconsistency
+
+TGT_ML_CoordinatedActivityLow,
+TGT_ML_CoordinatedActivityMedium,
+TGT_ML_CoordinatedActivityHigh
+
+Inspects requests that are not from verified bots for
+anomalous behavior that’s consistent with distributed,
+coordinated bot activity. The rule levels indicate the level of confidence
+that a group of requests are participants in a coordinated attack.
+
+Note
+
+These rules only run if the rule group is
+configured to use machine learning (ML). For
+information about configuring this choice, see
+Adding the AWS WAF Bot Control managed rule group to your web ACL.
+
+Note
+
+The thresholds that these rules apply can vary
+slightly due to latency. A few requests might make
+it through beyond the limit before the rule action
+is applied.
+
+AWS WAF performs this inspection through machine
+learning analysis of website traffic
+statistics. AWS WAF analyzes web traffic every
+few minutes and optimizes the analysis for the
+detection of low intensity, long-duration bots that
+are distributed across many IP addresses.
+
+These rules might match on a very small number of
+requests before determining that a coordinated
+attack is not underway. So if you see just a match
+or two, the results might be false positives. If you
+see a lot of matches coming out of these rules
+however, then you're probably experiencing a
+coordinated attack.
+
+Note
+
+These rules can take up to 24 hours to go into
+effect after you enable the Bot Control targeted rules
+with the ML option. Bot Control identifies anomalous
+behavior in your web traffic by comparing the
+current traffic to traffic baselines that AWS WAF
+has computed. AWS WAF only computes the baselines
+while you're using the Bot Control targeted rules with
+the ML option, and it can take up to 24 hours to
+establish meaningful baselines.
+
+We periodically update our machine learning models for these rules,
+to improve bot predictions. If you notice a
+sudden and substantial change in the bot predictions that these rules make,
+contact your account manager or open a case at AWS Support Center.
+
+Rule actions:
+
+- Low: Challenge
+
+- Medium: CAPTCHA
+
+- High: CAPTCHA
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:coordinated_activity:low|medium|high and
+awswaf:managed:aws:bot-control:TGT_ML_CoordinatedActivityLow|Medium|High
+
+TGT_TokenReuseIpLow,
+TGT_TokenReuseIpMedium,
+TGT_TokenReuseIpHigh
+
+Inspects requests that are not from verified bots for the use
+of a single token among multiple IPs in the last 5 minutes.
+Each level has a limit on the number of distinct IPs:
+
+- Low: more than 2
+
+- Medium: more than 5
+
+- High: more than 8
+
+Note
+
+The thresholds that these rules apply can vary
+slightly due to latency. A few requests might make
+it through beyond the limit before the rule action
+is applied.
+
+Rule actions:
+
+- Low: Count
+
+- Medium: CAPTCHA
+
+- High: Block
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:token_reuse:ip:low|medium|high and
+awswaf:managed:aws:bot-control:TGT_TokenReuseIpLow|Medium|High
+
+TGT_TokenReuseCountryLow,
+TGT_TokenReuseCountryMedium,
+TGT_TokenReuseCountryHigh
+
+Inspects requests that are not from verified bots for the use of
+a single token across multiple countries in the last 5 minutes.
+Each level has a limit on the number of distinct countries:
+
+- Low: more than 1
+
+- Medium: more than 2
+
+- High: more than 3
+
+Note
+
+The thresholds that these rules apply can vary
+slightly due to latency. A few requests might make
+it through beyond the limit before the rule action
+is applied.
+
+Rule actions:
+
+- Low: Count
+
+- Medium: CAPTCHA
+
+- High: Block
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:token_reuse:country:low|medium|high and
+awswaf:managed:aws:bot-control:TGT_TokenReuseCountryLow|Medium|High
+
+TGT_TokenReuseAsnLow,
+TGT_TokenReuseAsnMedium,
+TGT_TokenReuseAsnHigh
+
+Inspects requests that are not from verified bots for the use of
+a single token across multiple networking autonomous system numbers (ASNs)
+in the last 5 minutes.
+Each level has a limit on the number of distinct ASNs:
+
+- Low: more than 1
+
+- Medium: more than 2
+
+- High: more than 3
+
+Note
+
+The thresholds that these rules apply can vary
+slightly due to latency. A few requests might make
+it through beyond the limit before the rule action
+is applied.
+
+Rule actions:
+
+- Low: Count
+
+- Medium: CAPTCHA
+
+- High: Block
+
+Labels:
+awswaf:managed:aws:bot-control:targeted:aggregate:volumetric:session:token_reuse:asn:low|medium|high and
+awswaf:managed:aws:bot-control:TGT_TokenReuseAsnLow|Medium|High

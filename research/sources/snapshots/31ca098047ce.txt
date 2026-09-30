@@ -1,0 +1,143 @@
+URL: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html
+TITLE: Revoke IAM role temporary security credentials - AWS Identity and Access Management
+
+# Revoke IAM role temporary security credentials
+
+Warning
+
+If you follow the steps on this page, all users with current sessions created by assuming
+the role are denied access to all AWS actions and resources. This can result in users losing
+unsaved work.
+
+When you permit users to access the AWS Management Console with a long session duration time (such as 12
+hours), their temporary credentials do not expire as quickly. If users inadvertently expose
+their credentials to an unauthorized third-party, that party has access for the duration of the
+session. However, you can immediately revoke all permissions to the role's credentials issued
+before a certain point in time if you need to. All temporary credentials for that role issued
+before the specified time become invalid. This forces all users to re-authenticate and request
+new credentials.
+
+Note
+
+You cannot revoke the session for a service-linked role.
+
+When you revoke permissions for a role using the procedure in this topic, AWS attaches a
+new inline policy to the role that denies all permissions to all actions. It includes a
+condition that applies the restrictions only if the user assumed the role
+before the point in time when you revoke the permissions. If the user
+assumes the role after you revoked the permissions, then the deny policy
+does not apply to that user.
+
+For more information on denying access, see Disabling permissions for temporary security credentials.
+
+Important
+
+This deny policy applies to all users of the specified role, not just those with longer
+duration console sessions.
+
+## Minimum permissions to revoke session permissions from a role
+
+To successfully revoke session permissions from a role, you must have the
+PutRolePolicy permission for the role. This allows you to attach the
+AWSRevokeOlderSessions inline policy to the role.
+
+## Revoking session permissions
+
+You can revoke the session permissions from a role to deny all permissions to any user who
+assumed the role.
+
+Note
+
+You can't edit roles in IAM that were created from IAM Identity Center permission sets. You must
+revoke the active permission set session for a user in IAM Identity Center. For more information, see
+Revoke active
+IAM role sessions created by permission sets in the IAM Identity Center User
+Guide.
+
+To immediately deny all permissions to any current user of role credentials
+
+- Sign in to the AWS Management Console and open the IAM console at https://console.aws.amazon.com/iam/.
+
+- In the navigation pane, choose Roles, and then choose the name
+(not the checkbox) of the role whose permissions you want to revoke.
+
+- On the Summary page for the selected role, choose the
+Revoke sessions tab.
+
+- On the Revoke sessions tab, choose Revoke active
+sessions.
+
+- AWS asks you to confirm the action. Select the I acknowledge that I am
+revoking all active sessions for this role. checkbox and choose
+Revoke active sessions on the dialog box.
+
+IAM then attaches a policy named AWSRevokeOlderSessions to the role.
+After you choose Revoke active sessions, the policy denies all access
+to users who assumed the role in the past as well as approximately 30 seconds into the
+future. This future time choice takes into account the propagation delay of the policy in
+order to deal with a new session that was acquired or renewed before the updated policy is
+in effect in a given region. Any user who assumes the role more than approximately 30
+seconds after you choose Revoke active sessions is not affected. To learn why changes are
+not always immediately visible, see Changes that I make are not always immediately visible.
+
+Note
+
+If you choose to Revoke active sessions again later, the date and
+time stamp in the policy is refreshed and it again denies all permissions to any user who
+assumed the role before the new specified time.
+
+Valid users whose sessions are revoked in this way must acquire temporary credentials for
+a new session to continue working. The AWS CLI caches credentials until they expire. To force
+the CLI to delete and refresh cached credentials that are no longer valid, run one of the
+following commands:
+
+Linux, macOS, or Unix
+
+$ rm -r ~/.aws/cli/cache
+
+Windows
+
+C:\> del /s /q %UserProfile%\.aws\cli\cache
+
+## Revoking session permissions before a specified time
+
+You can also revoke session permissions at any time of your choice using the AWS CLI or SDK
+to specify a value for the aws:TokenIssueTime key in the Condition element of a policy.
+
+This policy denies all permissions when the value of aws:TokenIssueTime is
+earlier than the specified date and time. The value of aws:TokenIssueTime
+corresponds to the exact time at which the temporary security credentials were created. The
+aws:TokenIssueTime value is only present in the context of AWS requests that
+are signed with temporary security credentials, so the Deny statement in the policy does not
+affect requests that are signed with the long-term credentials of the IAM user.
+
+This policy can also be attached to a role. In that case, the policy affects only the
+temporary security credentials that were created by the role before the specified date and
+time.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Effect": "Deny",
+"Action": "*",
+"Resource": "*",
+"Condition": {
+"DateLessThan": {"aws:TokenIssueTime": "2014-05-07T23:47:00Z"}
+}
+}
+}
+
+Valid users whose sessions are revoked in this way must acquire temporary credentials for
+a new session to continue working. The AWS CLI caches credentials until they expire. To force
+the CLI to delete and refresh cached credentials that are no longer valid, run one of the
+following commands:
+
+Linux, macOS, or Unix
+
+$ rm -r ~/.aws/cli/cache
+
+Windows
+
+C:\> del /s /q %UserProfile%\.aws\cli\cache

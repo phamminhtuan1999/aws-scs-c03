@@ -1,0 +1,331 @@
+URL: https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager.html
+TITLE: AWS Systems Manager Patch Manager - AWS Systems Manager
+
+# AWS Systems Manager Patch Manager
+
+Patch Manager automates the process of patching managed nodes with both
+security-related updates and other types of updates.
+
+This section includes the following topics.
+
+- Troubleshooting Patch Manager
+
+- Tutorial: Update application dependencies, patch a managed node, and perform an application-specific health check using the console
+
+- Working with patch baselines
+
+- Remediating noncompliant managed nodes with Patch Manager
+
+- Applying kernel live patches using Run Command
+
+- AWS Systems Manager Patch Manager tutorials
+
+- Turning on Kernel Live Patching using Run Command
+
+- Patching applications released by Microsoft on Windows Server
+
+- Working with Patch Manager resources and compliance using the console
+
+- Using Kernel Live Patching on Amazon Linux 2 managed nodes
+
+- Viewing available patches
+
+- Patching operation differences between Linux and Windows Server
+
+- Creating a patch policy
+
+- How Patch Manager operations work
+
+- Updating or deleting a custom patch baseline
+
+Note
+
+Systems Manager provides support for patch policies in Quick Setup, a tool in
+AWS Systems Manager. Using patch policies is the recommended method for configuring your patching
+operations. Using a single patch policy configuration, you can define patching for all
+accounts in all Regions in your organization; for only the accounts and Regions you
+choose; or for a single account-Region pair. For more information, see Patch policy configurations in Quick Setup.
+
+You can use Patch Manager to apply patches for both operating systems and applications. (On
+Windows Server, application support is limited to updates for applications released by Microsoft.)
+You can use Patch Manager to install Service Packs on Windows nodes and perform minor version
+upgrades on Linux nodes. You can patch fleets of Amazon Elastic Compute Cloud (Amazon EC2) instances, edge devices,
+on-premises servers, and virtual machines (VMs) by operating system type. This includes
+supported versions of several operating systems, as listed in Patch Manager prerequisites. You
+can scan instances to see only a report of missing patches, or you can scan and
+automatically install all missing patches. To get started with Patch Manager, open the Systems Manager console. In the
+navigation pane, choose Patch Manager.
+
+AWS doesn't test patches before making them available in Patch Manager. Also, Patch Manager
+doesn't support upgrading major versions of operating systems, such as Windows Server 2016 to
+Windows Server 2019, or Red Hat Enterprise Linux (RHEL) 7.0 to RHEL 8.0.
+
+For Linux-based operating system types that report a severity level for patches, Patch Manager
+uses the severity level reported by the software publisher for the update notice or
+individual patch. Patch Manager doesn't derive severity levels from third-party sources, such as
+the Common Vulnerability Scoring System
+(CVSS), or from metrics released by the National
+Vulnerability Database (NVD).
+
+## How can Patch Manager benefit my organization?
+
+Patch Manager automates the process of patching managed nodes with both security-related
+updates and other types of updates. It provides several key benefits:
+
+- Centralized patching control –Using
+patch policies, you can set up recurring patching operations for all accounts in
+all Regions in your organization, specific accounts and Regions, or a single
+account-Region pair.
+
+- Flexible patching operations – You can
+choose to scan instances to see only a report of missing patches, or scan and
+automatically install all missing patches.
+
+- Comprehensive compliance reporting –
+After scanning operations, you can view detailed information about which managed
+nodes are out of patch compliance and which patches are missing.
+
+- Cross-platform support – Patch Manager
+supports multiple operating systems including various Linux distributions,
+macOS, and Windows Server.
+
+- Custom patch baselines – You can
+define what constitutes patch compliance for your organization through custom
+patch baselines that specify which patches are approved for installation.
+
+- Integration with other AWS services
+– Patch Manager integrates with AWS Organizations, AWS Security Hub CSPM, AWS CloudTrail, and AWS Config
+for enhanced management and security.
+
+- Deterministic upgrades – Support for
+deterministic upgrades through versioned repositories for operating systems like
+Amazon Linux 2023.
+
+## Who should use Patch Manager?
+
+Patch Manager is designed for the following:
+
+- IT administrators who need to maintain patch compliance across their fleet of
+managed nodes
+
+- Operations managers who need visibility into patch compliance status across
+their infrastructure
+
+- Cloud architects who want to implement automated patching solutions at
+scale
+
+- DevOps engineers who need to integrate patching into their operational
+workflows
+
+- Organizations with multi-account/multi-Region deployments who need centralized
+patch management
+
+- Anyone responsible for maintaining the security posture and operational health
+of AWS managed nodes, edge devices, on-premises servers, and virtual
+machines
+
+## What are the main features of Patch Manager?
+
+Patch Manager offers several key features:
+
+- Patch policies – Configure patching
+operations across multiple AWS accounts and Regions using a single policy
+through integration with AWS Organizations.
+
+- Custom patch baselines – Define rules
+for auto-approving patches within days of their release, along with approved and
+rejected patch lists.
+
+- Multiple patching methods – Choose
+from patch policies, maintenance windows, or on-demand "Patch now" operations to
+meet your specific needs.
+
+- Compliance reporting – Generate
+detailed reports on patch compliance status that can be sent to an Amazon S3 bucket
+in CSV format.
+
+- Cross-platform support – Patch both
+operating systems and applications across Windows Server, various Linux distributions,
+and macOS.
+
+- Scheduling flexibility – Set different
+schedules for scanning and installing patches using custom CRON or Rate
+expressions.
+
+- Lifecycle hooks – Run custom scripts
+before and after patching operations using Systems Manager documents.
+
+- Security focus – By default, Patch Manager
+focuses on security-related updates rather than installing all available
+patches.
+
+- Rate control – Configure concurrency
+and error thresholds for patching operations to minimize operational
+impact.
+
+## What is compliance in Patch Manager?
+
+The benchmark for what constitutes patch compliance
+for the managed nodes in your Systems Manager fleets is not defined by AWS, by operating system
+(OS) vendors, or by third parties such as security consulting firms.
+
+Instead, you define what patch compliance means for managed nodes in your organization
+or account in a patch baseline. A patch baseline is a
+configuration that specifies rules for which patches must be installed on a managed
+node. A managed node is patch compliant when it is up to date with all the patches that
+meet the approval criteria that you specify in the patch baseline.
+
+Note that being compliant with a patch baseline
+doesn't mean that a managed node is necessarily secure. Compliant means that the patches defined by the patch baseline
+that are both available and approved have been installed on the node. The overall security of a
+managed node is determined by many factors outside the scope of Patch Manager. For more
+information, see Security in AWS Systems Manager.
+
+Each patch baseline is a configuration for a specific supported operating system (OS)
+type, such as Red Hat Enterprise Linux (RHEL), macOS, or Windows Server. A patch baseline can define
+patching rules for all supported versions of an OS or be limited to only those you
+specify, such as RHEL 7.8. and RHEL 9.3.
+
+In a patch baseline, you could specify that all patches of certain classifications and
+severity levels are approved for installation. For example, you might include all
+patches classified as Security but exclude other classifications, such as
+Bugfix or Enhancement. And you could include all patches
+with a severity of Critical and exclude others, such as
+Important and Moderate.
+
+You can also define patches explicitly in a patch baseline by adding their IDs to
+lists of specific patches to approve or reject, such as KB2736693
+for Windows Server or dbus.x86_64:1:1.12.28-1.amzn2023.0.1 for
+Amazon Linux 2023 (AL2023). You can optionally specify a certain number of days to wait for
+patching after a patch becomes available. For Linux and macOS, you have the option of
+specifying an external list of patches for compliance (an Install Override list) instead
+of those defined by the patch baseline rules.
+
+When a patching operation runs, Patch Manager compares the patches currently applied to a
+managed node to those that should be applied according to the rules set up in the patch
+baseline or an Install Override list. You can choose for Patch Manager to show you only a
+report of missing patches (a Scan operation), or you can choose for
+Patch Manager to automatically install all patches it find are missing from a managed node (a
+Scan and install operation).
+
+Note
+
+Patch compliance data represents a point-in-time snapshot from the latest
+successful patching operation. Each compliance report contains a capture time that
+identifies when the compliance status was calculated. When reviewing compliance
+data, consider the capture time to determine if the operation was executed as
+expected.
+
+Patch Manager provides predefined patch baselines that you can use for your patching
+operations; however, these predefined configurations are provided as examples and not as
+recommended best practices. We recommend that you create custom patch baselines of your
+own to exercise greater control over what constitutes patch compliance for your
+fleet.
+
+For more information about patch baselines, see the following topics:
+
+- Predefined and custom patch baselines
+
+- Package name formats for approved and rejected patch lists
+
+- Viewing AWS predefined patch baselines
+
+- Working with custom patch baselines
+
+- Working with patch compliance reports
+
+## Primary components
+
+Before you start working with the Patch Manager tool, you should familiarize yourself with
+some major components and features of the tool's patching operations.
+
+Patch baselines
+
+Patch Manager uses patch baselines, which include rules for
+auto-approving patches within days of their release, besides optional lists
+of approved and rejected patches. When a patching operation runs, Patch Manager compares
+the patches currently applied to a managed node to those that should be applied
+according to the rules set up in the patch baseline. You can choose for Patch Manager to
+show you only a report of missing patches (a Scan operation), or you
+can choose for Patch Manager to automatically install all patches it find are missing
+from a managed node (a Scan and install operation).
+
+Patching operation methods
+
+Patch Manager currently offers four methods for running Scan and
+Scan and install operations:
+
+- (Recommended) A patch policy configured in
+Quick Setup – Based on integration with AWS Organizations, a single
+patch policy can define patching schedules and patch baselines for an entire
+organization, including multiple AWS accounts and all AWS Regions those
+accounts operate in. A patch policy can also target only some organizational
+units (OUs) in an organization. You can use a single patch policy to scan and
+install on different schedules. For more information, see Configure patching for instances in an organization using a Quick Setup patch policy and Patch policy configurations in Quick Setup.
+
+- A Host Management option configured in
+Quick Setup – Host Management configurations are also
+supported by integration with AWS Organizations, making it possible to run a patching
+operation for up to an entire Organization. However, this option is limited to
+scanning for missing patches using the current default patch baseline and
+providing results in compliance reports. This operation method can't install
+patches. For more information, see Set up Amazon EC2 host management using Quick Setup.
+
+- A maintenance window to run a patch Scan or
+Install task – A maintenance window,
+which you set up in the Systems Manager tool called Maintenance Windows, can be configured to run
+different types of tasks on a schedule you define. A Run Command-type task can be
+used to run Scan or Scan and install tasks a set of
+managed nodes that you choose. Each maintenance window task can target managed
+nodes in only a single AWS account-AWS Region pair. For more information,
+see Tutorial: Create a maintenance window for patching using the console.
+
+- An on-demand Patch now operation in
+Patch Manager – The Patch now
+option lets you bypass schedule setups when you need to patch managed nodes as
+quickly as possible. Using Patch now, you
+specify whether to run Scan or Scan and install
+operation and which managed nodes to run the operation on. You can also choose
+to running Systems Manager documents (SSM documents) as lifecycle hooks during the
+patching operation. Each Patch now operation
+can target managed nodes in only a single AWS account-AWS Region pair. For
+more information, see Patching managed nodes on demand.
+
+Compliance reporting
+
+After a Scan operation, you can use the Systems Manager console to view
+information about which of your managed nodes are out of patch compliance, and which
+patches are missing from each of those nodes. You can also generate patch compliance
+reports in .csv format that are sent to an Amazon Simple Storage Service (Amazon S3) bucket of your choice.
+You can generate one-time reports, or generate reports on a regular schedule. For a
+single managed node, reports include details of all patches for the node. For a
+report on all managed nodes, only a summary of how many patches are missing is
+provided. After a report is generated, you can use a tool like Amazon Quick to import
+and analyze the data. For more information, see Working with patch compliance reports.
+
+Note
+
+A compliance item generated through the use of a patch policy has an execution
+type of PatchPolicy. A compliance item not generated in a patch policy
+operation has an execution type of Command.
+
+Integrations
+
+Patch Manager integrates with the following other AWS services:
+
+- AWS Identity and Access Management (IAM) – Use IAM to
+control which users, groups, and roles have access to Patch Manager operations. For
+more information, see How AWS Systems Manager works with IAM and Configure instance permissions required for Systems Manager.
+
+- AWS CloudTrail – Use CloudTrail to record an
+auditable history of patching operation events initiated by users, roles, or
+groups. For more information, see Logging AWS Systems Manager API calls with AWS CloudTrail.
+
+- AWS Security Hub CSPM – Patch compliance data from
+Patch Manager can be sent to AWS Security Hub CSPM. Security Hub CSPM gives you a comprehensive view of your
+high-priority security alerts and compliance status. It also monitors the
+patching status of your fleet. For more information, see Integrating Patch Manager with AWS Security Hub CSPM.
+
+- AWS Config – Set up recording in AWS Config to
+view Amazon EC2 instance management data in the Patch Manager Dashboard. For more
+information, see Viewing patch Dashboard summaries.

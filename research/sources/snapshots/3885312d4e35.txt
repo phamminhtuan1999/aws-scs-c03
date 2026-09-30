@@ -1,0 +1,34 @@
+URL: https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-caveats.html
+TITLE: Rate-based rule caveats in AWS WAF - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director
+
+Introducing a new console experience for AWS WAF
+
+You can now use the updated experience to access AWS WAF functionality anywhere in the console.
+For more details, see Working with the console.
+
+# Rate-based rule caveats in AWS WAF
+
+This section lists the caveats for using rate-based rules.
+
+AWS WAF rate limiting is designed to control high request rates and protect your
+application's availability in the most efficient and effective way possible.
+It's not intended for precise request-rate limiting.
+
+- AWS WAF estimates the current request rate using an algorithm that gives
+more importance to more recent requests. Because of this, AWS WAF will apply
+rate limiting near the limit that you set, but does not guarantee an exact
+limit match.
+
+- Each time that AWS WAF estimates the rate of requests,
+AWS WAF looks back at the number of requests that came in during the
+configured evaluation window. Due to this and other factors such as propagation
+delays, it's possible for requests to be coming in at too high a rate for
+up to several minutes before AWS WAF detects and rate limits them. Similarly. the
+request rate can be below the limit for a period of time before AWS WAF
+detects the decrease and discontinues the rate limiting action. Usually,
+this delay is below 30 seconds.
+
+- If you change any of the rate limit settings in a rule that's in use,
+the change resets the rule's rate limiting counts. This can pause the rule's rate limiting activities
+for up to a minute. The rate limit settings
+are the evaluation window, rate limit, request aggregation settings, forwarded IP configuration, and scope of inspection.

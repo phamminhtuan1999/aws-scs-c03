@@ -16,15 +16,15 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 ## Batches
 | Batch | IDs | Blind | Reconcile |
 |---|---|---|---|
-| 1 | Q001–Q006 | running (2026-09-30) | queued |
-| 2 | Q007–Q012 | running (2026-09-30) | queued |
-| 3 | Q013–Q018 | running (2026-09-30) | queued |
-| 4 | Q019–Q024 | running (2026-09-30) | queued |
-| 5 | Q025–Q030 | queued | queued |
-| 6 | Q031–Q036 | queued | queued |
-| 7 | Q037–Q042 | queued | queued |
-| 8 | Q043–Q048 | queued | queued |
-| 9 | Q049–Q054 | queued | queued |
+| 1 | Q001–Q006 | done 6/6 valid | running |
+| 2 | Q007–Q012 | done 6/6 valid | running |
+| 3 | Q013–Q018 | done 6/6 valid | done 6/6 valid (6 verified, 0 differ) |
+| 4 | Q019–Q024 | done 6/6 valid | running |
+| 5 | Q025–Q030 | running (2026-09-30) | queued |
+| 6 | Q031–Q036 | running (2026-09-30) | queued |
+| 7 | Q037–Q042 | running (2026-09-30) | queued |
+| 8 | Q043–Q048 | running (2026-09-30) | queued |
+| 9 | Q049–Q054 | running (2026-09-30) | queued |
 | 10 | Q055–Q060 | queued | queued |
 | 11 | Q061–Q066 | queued | queued |
 | 12 | Q067–Q072 | queued | queued |

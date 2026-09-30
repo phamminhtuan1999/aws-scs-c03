@@ -1,0 +1,53 @@
+{
+  "question_id": "Q006",
+  "question_content_hash": "4ae79429003ddc3c1cf0b17155fcd69e931635197ad998783ee37e244fbaf73d",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:02:00Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, tools/fetch_doc.py, tools/validate_research.py, research/sources and AWS documentation pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Diễn giải đúng tác dụng của statement key policy gắn vào customer managed key: Principal ExampleRole, các action KMS, Resource \"*\", điều kiện kms:ViaService.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Phạm vi: Resource \"*\" trong key policy chỉ là chính KMS key đó; điều kiện giới hạn theo service và Region us-west-2.", "kind": "scope"}
+  ],
+  "image_transcriptions": [
+    {"image": "images/Q006_image_01.png", "text": "{\n  \"Effect\": \"Allow\",\n  \"Principal\": {\n    \"AWS\": \"arn:aws:iam::111122223333:role/ExampleRole\"\n  },\n  \"Action\": [\n    \"kms:Encrypt\",\n    \"kms:Decrypt\",\n    \"kms:GenerateDataKey*\",\n    \"kms:CreateGrant\",\n    \"kms:ListGrants\"\n  ],\n  \"Resource\": \"*\",\n  \"Condition\": {\n    \"StringEquals\": {\n      \"kms:ViaService\": [\n        \"workmail.us-west-2.amazonaws.com\",\n        \"ses.us-west-2.amazonaws.com\"\n      ]\n    }\n  }\n}", "notes_vi": "Một statement Allow; đọc rõ, không có ký tự không chắc chắn."}
+  ],
+  "option_reviews": [
+    {"unit_id": "Q006:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đảo ngược chiều ủy quyền: key policy cấp quyền cho ExampleRole, và kms:ViaService chỉ cho phép dùng khi WorkMail/SES gọi thay mặt role; không phải WorkMail/SES ủy quyền cho role.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q006:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Policy không nói gì về mã hóa 'email exchanges giữa ExampleRole và AWS'; nó chỉ giới hạn việc dùng key qua WorkMail/SES ở us-west-2. Mô tả này sai bản chất và bỏ qua giới hạn Region/service.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q006:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Đúng với ví dụ chính thức của kms:ViaService: key chỉ được dùng cho các action nêu khi principal là ExampleRole và request đến từ WorkMail hoặc SES tại us-west-2.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q006:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Trong key policy, Resource \"*\" nghĩa là 'chính KMS key này', không phải mọi customer managed key trong account.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref2"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q006:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high",
+      "reason_vi": "Tài liệu KMS có ví dụ gần như y hệt (ExampleRole, kms:ViaService với service.us-west-2) và mô tả đúng như phương án C; tài liệu key policy xác nhận Resource \"*\" là chính key đó.",
+      "open_issues": []},
+    "reference_ids": ["ref1", "ref2"],
+    "recorded_at": "2026-09-30T20:02:00Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/conditions-kms.html", "title": "AWS KMS condition keys", "section": "kms:ViaService",
+     "snapshot_id": "69d6ef1dc2b1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "allow a customer managed key to be used for the specified actions only when the request comes from Amazon EC2 or Amazon RDS in the US West (Oregon) region on behalf of ExampleRole.",
+     "supports": "Ý nghĩa của statement: key chỉ được dùng khi request đến từ service chỉ định ở Region chỉ định, thay mặt ExampleRole (khớp phương án C).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-overview.html", "title": "Creating a key policy", "section": "Resource",
+     "snapshot_id": "eba4d05e2794", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "In a key policy, the value of the Resource element is \"*\", which means \"this KMS key.\"",
+     "supports": "Resource \"*\" chỉ áp dụng cho key gắn policy, bác bỏ phương án D.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q006:stem:0", "detail_vi": "'(AWS KMS}' dùng sai dấu ngoặc đóng '}'."}
+  ],
+  "notes_vi": "kms:ViaService = giới hạn dùng key qua service + Region cụ thể thay mặt principal; Resource \"*\" trong key policy = chính key đó."
+}

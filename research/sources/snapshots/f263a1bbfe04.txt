@@ -1,0 +1,98 @@
+URL: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-metadata-security-credentials.html
+TITLE: Retrieve security credentials from instance metadata - Amazon Elastic Compute Cloud
+
+# Retrieve security credentials from instance metadata
+
+An application on the instance retrieves the security credentials provided by the
+role from the instance metadata item
+iam/security-credentials/role-name. The
+application is granted the permissions for the actions and resources that you've
+defined for the role through the security credentials associated with the role.
+These security credentials are temporary and we rotate them automatically. We make
+new credentials available at least five minutes before the expiration of the old
+credentials.
+
+For more information about instance metadata, see Use instance metadata to manage your EC2 instance.
+
+Warning
+
+If you use services that use instance metadata with IAM roles, ensure that
+you don't expose your credentials when the services make HTTP calls on your
+behalf. The types of services that could expose your credentials include HTTP
+proxies, HTML/CSS validator services, and XML processors that support XML
+inclusion.
+
+For your Amazon EC2 workloads, we recommend that you retrieve session credentials using
+the method described below. These credentials should enable your workload to make
+AWS API requests, without needing to use sts:AssumeRole to assume the
+same role that is already associated with the instance. Unless you need to pass session
+tags for attribute-based access control (ABAC) or pass a session policy to further
+restrict permissions of the role, such role assumption calls are unnecessary as they
+create a new set of the same temporary role session credentials.
+
+If your workload uses a role to assume itself, you must create a trust policy that
+explicitly allows that role to assume itself. If you do not create the trust policy,
+you get an AccessDenied error. For more information, see
+Update a role trust policy in the IAM User Guide.
+
+IMDSv2
+
+Linux
+
+Run the following command from your Linux instance to retrieve
+the security credentials for an IAM role.
+
+TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` \
+&& curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name
+
+Windows
+
+Run the following cmdlet from your Windows instance to retrieve
+the security credentials for an IAM role.
+
+[string]$token = Invoke-RestMethod `
+-Headers @{"X-aws-ec2-metadata-token-ttl-seconds" = "21600"} `
+-Method PUT -Uri http://169.254.169.254/latest/api/token
+
+Invoke-RestMethod `
+-Headers @{"X-aws-ec2-metadata-token" = $token} `
+-Method GET -Uri http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name
+
+IMDSv1
+
+Linux
+
+Run the following command from your Linux instance to retrieve
+the security credentials for an IAM role.
+
+curl http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name
+
+Windows
+
+Run the following cmdlet from your Windows instance to retrieve
+the security credentials for an IAM role.
+
+Invoke-RestMethod -uri http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name
+
+The following is example output. If you are not able to retrieve the security credentials, see
+I can't access the temporary security credentials on my EC2 instance
+in the IAM User Guide.
+
+{
+"Code" : "Success",
+"LastUpdated" : "2012-04-26T16:39:16Z",
+"Type" : "AWS-HMAC",
+"AccessKeyId" : "ASIAIOSFODNN7EXAMPLE",
+"SecretAccessKey" : "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+"Token" : "token",
+"Expiration" : "2017-05-17T15:09:54Z"
+}
+
+For applications, AWS CLI, and Tools for Windows PowerShell commands that run on the instance, you do not
+have to explicitly get the temporary security credentials—the AWS SDKs,
+AWS CLI, and Tools for Windows PowerShell automatically get the credentials from the EC2 instance metadata
+service and use them. To make a call outside of the instance using temporary
+security credentials (for example, to test IAM policies), you must provide the
+access key, secret key, and the session token. For more information, see Using Temporary
+Security Credentials to Request Access to AWS Resources in the
+IAM User Guide.

@@ -1,0 +1,115 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html
+TITLE: GuardDuty Malware Protection for EC2 - Amazon GuardDuty
+
+# GuardDuty Malware Protection for EC2
+
+Malware Protection for EC2 helps you detect the potential presence of malware by scanning the Amazon Elastic Block Store (Amazon EBS)
+volumes that are attached to Amazon Elastic Compute Cloud (Amazon EC2) instances and container workloads
+running on Amazon EC2. Malware Protection for EC2 provides scan options where you can decide if you want to include or
+exclude specific Amazon EC2 instances at the time of scanning. It also provides an option to retain
+the snapshots of Amazon EBS volumes attached to the Amazon EC2 instances or container workloads, in your
+GuardDuty accounts. The snapshots get retained only when malware is found and Malware Protection for EC2 findings are
+generated.
+
+Malware Protection for EC2 is designed in a way that it won't affect the performance of your resources. For
+information about how Malware Protection for EC2 works within GuardDuty, see How GuardDuty scans EBS volumes for malware detection. For information about
+availability of Malware Protection for EC2 in different AWS Regions, see Regions and endpoints.
+
+Notes
+
+Malware Protection for EC2 supports malware scans on managed instances for Amazon EKS Auto Mode. For more see Managed Instances support in Guardduty.
+
+Malware Protection for EC2 doesn't support malware scans for AWS Fargate workloads
+running on with either Amazon EKS or Amazon ECS.
+
+For information about these Amazon EKS features, see What is Amazon EKS? in the Amazon EKS User Guide.
+
+Topics
+
+- Comparing GuardDuty-initiated malware scan and On-demand malware scan
+
+- How GuardDuty scans EBS volumes for malware detection
+
+- Supported EBS volumes
+
+- Set up snapshot retention and EC2 scan coverage
+
+- GuardDuty-initiated malware scan
+
+- On-demand malware scan
+
+- Monitoring malware scan statuses and
+results
+
+- GuardDuty service
+account
+
+- Quotas in Malware Protection for EC2
+
+## Comparing GuardDuty-initiated malware scan and On-demand malware scan
+
+Malware Protection for EC2 offers two types of scans to detect potentially malicious activity in your Amazon EC2
+instances and container workloads – GuardDuty-initiated malware scan and On-demand malware scan. The following
+table shows the comparison between both the scan types.
+
+Factor
+
+GuardDuty-initiated malware scan
+
+On-demand malware scan
+
+How the scan gets invoked
+
+After you enable GuardDuty-initiated malware scan, whenever GuardDuty generates a finding
+that indicates the potential presence of malware in an Amazon EC2 instance or a container
+workload, GuardDuty automatically initiates an agentless malware scan on the Amazon EBS volumes
+attached to your potentially impacted resource. For more information, see GuardDuty-initiated malware scan.
+
+You can initiate an On-demand malware scan by providing the Amazon Resource Name (ARN)
+of your Amazon EC2 instance. You can initiate an On-demand malware scan even when no GuardDuty finding is
+generated for your resource. For more information, see On-demand malware scan in GuardDuty.
+
+Configuration needed
+
+To use GuardDuty-initiated malware scan, you must enable it for your account. To manage
+multiple accounts by using AWS Organizations or invitation based method, see Enabling GuardDuty-initiated malware scan in multiple-account environments. To
+enable GuardDuty-initiated malware scan in your own account, see Enabling GuardDuty-initiated malware scan for a standalone account.
+
+Your account must have GuardDuty enabled. To use On-demand malware scan, there is no
+configuration required at the feature-level.
+
+Wait time to initiate a new scan
+
+Whenever GuardDuty generates one of the Findings that invoke GuardDuty-initiated malware scan, a malware scan
+initiates automatically only once every 24 hours.
+
+You can initiate an On-demand malware scan on the same resource any time after 1 hour
+from the start time of the previous scan.
+
+Availability of the 30-day free trial period
+1
+
+When you enable GuardDuty-initiated malware scan for the first time in your account,
+you can use a 30-day free trial period.
+
+For more information, see 30-day free trial in GuardDuty-initiated malware scan.
+
+There is no free trial period with On-demand malware scan for new or existing GuardDuty
+accounts.
+
+Scan options2
+
+After you've configured GuardDuty-initiated malware scan, Malware Protection for EC2 provides the option
+to scan or skip specific Amazon EC2 resources by using tags. Malware Protection for EC2 will not initiate an
+automatic scan on the resources that you choose to exclude from scanning. For more
+information, see Scan options with user-defined tags.
+
+Because you provide the resource ARN to start an on-demand malware scan manually,
+using Scan options with user-defined tags is not
+applicable.
+
+1You will incur usage cost for creating EBS volume snapshots and retaining snapshots. For more
+information about configuring your account to retain snapshots, see Snapshots retention.
+
+2Both GuardDuty-initiated malware scan and On-demand malware scan support using a global tag to
+exclude Amazon EC2 resources from malware scans. For more information, see Global GuardDutyExcluded tag.

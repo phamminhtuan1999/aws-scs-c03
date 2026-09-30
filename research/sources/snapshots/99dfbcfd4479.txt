@@ -1,0 +1,410 @@
+URL: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_disable-perms.html
+TITLE: Disabling permissions for temporary security credentials - AWS Identity and Access Management
+
+# Disabling permissions for temporary security credentials
+
+Temporary security credentials are valid until they expire. These credentials are valid for
+the specified duration, from 900 seconds (15 minutes) up to a maximum of 129,600 seconds (36
+hours). The default session duration is 43,200 seconds (12 hours). You can revoke these
+credentials, but you must also change permissions for the IAM user or role to stop the use of
+compromised credentials for malicious account activity. Permissions assigned to temporary
+security credentials are evaluated each time they are used to make an AWS request. Once you
+remove all permissions from the credentials, AWS requests that use them fail.
+
+It might take a few minutes for policy updates to take effect. For IAM role sessions, you
+can revoke the role’s temporary security credentials to force all users assuming the role to
+reauthenticate and request new credentials. For more information, see Revoke the
+role’s temporary security credentials.
+
+You cannot change the permissions for an AWS account root user. Likewise, you cannot change the
+permissions for the temporary security credentials that were created by calling
+GetFederationToken or GetSessionToken while signed in as the root
+user. For this reason, we recommend that you do not call GetFederationToken or
+GetSessionToken as a root user.
+
+For procedures on how to change the permissions for an IAM user, see Change permissions for an IAM user.
+
+For procedures on how to change the permissions for an IAM role, see Update permissions for a role.
+
+Important
+
+You can't edit roles in IAM that were created from IAM Identity Center permission sets. You must
+revoke the active permission set session for a user in IAM Identity Center. For more information, see Revoke active
+IAM role sessions created by permission sets in the IAM Identity Center User
+Guide.
+
+Topics
+
+- Deny access to all IAM role sessions associated with a role
+
+- Deny access to a specific IAM role session
+
+- Deny access to temporary security credentials sessions with condition context keys
+
+- Deny access to a specific principal with resource-based policies
+
+## Deny access to all IAM role sessions associated with a role
+
+This procedure denies permissions to all IAM role
+sessions associated with a role. Use this approach when you are concerned about suspicious
+access by:
+
+- Principals from another account using cross-account access
+
+- External user identities with permissions to access AWS resources in your
+account
+
+- Users who have been authenticated in a mobile or web application with an OIDC
+provider
+
+To change or remove the permissions assigned to the temporary security credentials
+obtained by calling AssumeRole, AssumeRoleWithSAML, or
+AssumeRoleWithWebIdentity, GetFederationToken, or
+GetSessionToken, you can edit or delete the identity-based policy that defines
+the permissions for the role.
+
+Important
+
+If there's a resource-based policy that allows the principal access, you must also add
+an explicit deny for that resource. See Deny access to a specific principal with resource-based policies for details.
+
+To deny access to all IAM role sessions associated with a role
+
+- Sign in to the AWS Management Console and open the IAM console.
+
+- In the navigation pane, choose Roles..
+
+- Choose the name of the role to edit. You can use the search box to filter the
+list.
+
+- Choose the Permissions tab.
+
+- Select the relevant policy to edit. Before you edit a customer managed policy, review
+the Entities attached tab to avoid disrupting access to other
+identities that may have the same policy attached.
+
+- Choose the JSON tab and update the policy to deny all resources
+and actions.
+
+Note
+
+These permissions are the same as those in the AWS managed policy AWSDenyAll. You can attach this AWS managed policy to any IAM user or
+role you want to deny all access to.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "DenyAll",
+"Effect": "Deny",
+"Action": [
+"*"
+],
+"Resource": "*"
+}
+]
+}
+
+- On the Review page, review the policy
+Summary and then choose Save changes to save
+your work.
+
+When you update the policy, the changes affect the permissions of all temporary security
+credentials associated with the role, including credentials that were issued before you
+changed the role's permissions policy.
+
+After you update the policy, you can revoke the role’s temporary
+security credentials to immediately revoke all permissions to the role's issued
+credentials.
+
+## Deny access to a specific IAM role session
+
+When you update IAM roles with a deny-all policy or delete the role entirely, all users
+that have access to the role are disrupted. You can deny access without impacting the
+permissions of all other sessions associated with the role.
+
+The Principal can be denied permissions using condition context keys or
+resource-based policies.
+
+Tip
+
+You can find the ARNs of federated users using AWS CloudTrail logs. For more information, see
+How to
+Easily Identify Your Federated Users by Using AWS CloudTrail.
+
+## Deny access to temporary security credentials sessions with condition context keys
+
+You can use condition context keys in identity-based policies in situations where you want
+to deny access to specific temporary security credential sessions without affecting the
+permissions of the IAM user or role that created the credentials. For IAM roles, after you
+update the policy, you can also revoke the role’s temporary
+security credentials sessions to immediately revoke all issued credentials.
+
+For more information about condition context keys, see AWS global condition context keys.
+
+### aws:PrincipalArn
+
+You can use condition context key aws:PrincipalArn in an identity-based policy to deny access to a
+specific principal by their Amazon Resource Name (ARN). You do this by specifying the ARN of
+the IAM user, role, or AWS STS federated user session the temporary security credentials are
+associated with in the Condition element of a policy.
+
+To deny access to a specific principal by their ARN
+
+- In the IAM console navigation pane, choose Users or
+Roles.
+
+- Choose the name of the IAM user or role to edit. You can use the search box to
+filter the list.
+
+- Choose the Permissions tab.
+
+- Select the relevant policy to edit. Before you edit a customer managed policy,
+review the Entities attached tab to avoid disrupting access to
+other identities that may have the same policy attached.
+
+- Choose the JSON tab and add a deny statement for the principal
+ARN as shown in the following example.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": "*",
+"Resource": "*",
+"Condition": {
+"ArnEquals": {
+"aws:PrincipalArn": [
+"arn:aws:iam::222222222222:role/ROLENAME",
+"arn:aws:iam::222222222222:user/USERNAME",
+"arn:aws:iam::222222222222:federated-user/USERNAME"
+]
+}
+}
+}
+]
+}
+
+- On the Review page, review the policy
+Summary and then choose Save changes to save
+your work.
+
+### aws:SourceIdentity
+
+You can use condition context key aws:SourceIdentity in an identity-based policy to deny access to a
+specific source identity associated with an IAM role session. This applies as long as the
+role session was issued by setting the SourceIdentity request parameter when
+the principal assumed a role using any AWS STS assume-role* CLI commands, or
+AWS STS AssumeRole* API operations. You do this by specifying the source
+identity that the temporary security credentials are associated with in the
+Condition element of a policy.
+
+Unlike context key sts:RoleSessionName, after the source identity is set, the value
+cannot be changed. The aws:SourceIdentity key is present in the request context
+for all actions taken by the role. The source identity persists into subsequent role
+sessions when you use the session credentials to assume another role. Assuming one role from
+another is called role chaining.
+
+The following policy shows an example of how you can deny access to temporary security
+credential sessions using condition context key aws:SourceIdentity. If you
+specify the source identity associated with a role session, it will deny role sessions with
+the named source identity without affecting the permissions of the role that created the
+credentials. For this example, the source identity set by the principal when the role
+session was issued is nikki_wolf@example.com. Any request made by a role
+session with the source identity nikki_wolf@example.com will be denied because
+the source identity is included in the policy condition and the policy Effect is set to
+Deny.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": "*",
+"Resource": "*",
+"Condition": {
+"StringLike": {
+"aws:SourceIdentity": [
+"nikki_wolf@example.com",
+"<source identity value>"
+]
+}
+}
+}
+]
+}
+
+### aws:userid
+
+You can use condition context key aws:userid in an identity-based policy to deny access to all or
+specific temporary security credential sessions associated with the IAM user or role. You
+do this by specifying the unique identifier (ID) of the IAM user, role, or AWS STS federated
+user session the temporary security credentials are associated with in the
+Condition element of a policy.
+
+The following policy shows an example of how you can deny access to temporary security
+credential sessions using condition context key aws:userid.
+
+- AIDAXUSER1 represents the unique ID for an IAM user. Specifying the
+unique ID of an IAM user as a value for context key aws:userid will deny
+access to the IAM user. This includes any temporary security credential sessions that
+were created by calling the GetSessionToken API.
+
+- AROAXROLE1:* represents the unique ID for all sessions associated
+with the IAM role. Specifying the unique ID of an IAM role and a wildcard (*)
+character in the caller-specified-role-session-name portion as a value for context key
+aws:userid will deny all sessions associated with the role.
+
+- AROAXROLE2:<caller-specified-role-session-name> represents the
+unique ID for an assumed-role session. In the caller-specified-role-session-name portion
+of the assumed-role unique ID you can specify a role session name or a wildcard
+character if the StringLike condition operator is used. If you specify the role session
+name, it will deny the named role session without affecting the permissions of the role
+that created the credentials. If you specify a wildcard character for the role session
+name, it will deny all sessions associated with the role.
+
+Note
+
+The caller-specified role session name, which is part of the unique identifier for
+an assumed-role session, can change during role chaining. Role chaining occurs when
+one role assumes another role. The role session name is set using the
+RoleSessionName request parameter when the principal assumes a role
+using the AWS STS AssumeRole API operation.
+
+- account-id:<federated-user-caller-specified-name> represents the
+unique ID for an AWS STS federated user session. An IAM user creates this session by
+calling the GetFederationToken API. Specifying the unique ID for an AWS STS
+federated user session denies the named federated session without affecting the
+permissions of the IAM user that created the credentials.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": "*",
+"Resource": "*",
+"Condition": {
+"StringLike": {
+"aws:userId": [
+"AIDAXUSER1",
+"AROAXROLE1:*",
+"AROAXROLE2:<caller-specified-role-session-name>",
+"123456789012:<federated-user-caller-specified-name>"
+]
+}
+}
+}
+]
+}
+
+For specific examples of principal key values, see Principal key values. For information about IAM unique identifiers and how to get
+them, see Unique identifiers.
+
+## Deny access to a specific principal with resource-based policies
+
+To restrict access to a specific principal with a resource-based policy, you can use
+condition context keys aws:PrincipalArn or aws:SourceIdentity in
+the Condition element. A resource-based policy is a permission policy attached to
+a resource and controls who can access the resource and what actions they can perform on it.
+
+When you use the aws:PrincipalARN context key, specify the ARN of the
+IAM user, role, or AWS STS federated user session associated with the temporary security
+credentials in the Condition element of a policy. The following example policy demonstrates
+how to use the aws:PrincipalARN context key in a resource-based policy:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Principal": "*",
+"Effect": "Deny",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"ArnEquals": {
+"aws:PrincipalArn": [
+"arn:aws:iam::222222222222:role/ROLENAME",
+"arn:aws:iam::222222222222:user/USERNAME",
+"arn:aws:sts::222222222222:federated-user/USERNAME"
+]
+}
+}
+}
+}
+
+When you use the aws:SourceIdentity context key, specify the source identity
+value associated with the role's temporary security credentials in the Condition
+element of a policy. This applies as long as the role session was issued by setting the
+SourceIdentity request parameter when the principal assumed a role using any
+AWS STS assume-role* CLI commands, or AWS STS AssumeRole* API
+operations. The following example demonstrates how to use the aws:SourceIdentity
+context key in a resource-based policy:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Principal": "*",
+"Effect": "Deny",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"StringLike": {
+"aws:SourceIdentity": [
+"nikki_wolf@example.com",
+"<source identity value>"
+]
+}
+}
+}
+}
+
+If you only update the identity-based policy for a principal, they can still perform
+actions allowed in the resource-based policy, except when those actions are explicitly denied
+in the identity-based policy.
+
+To deny access to a specific principal in a resource-based policy
+
+- Refer to AWS services that work with IAM to see if the service supports
+resource-based policies.
+
+- Sign in to the AWS Management Console and open the console for the service. Each service has a
+different location in the console for attaching policies.
+
+- Edit the resource-based policy. Add a deny policy statement to specify the identifying
+information of the credential:
+
+- In the Principal element, enter wildcard (*). The principal will be
+restricted in the Condition element.
+
+- In the Effect element, enter “Deny.”
+
+- In Action, enter the service namespace and the name of the action to
+deny. To deny all actions, use the wildcard (*) character. For example:
+"s3:*".
+
+- In the Resource element, enter the ARN of the target resource. For
+example: "arn:aws:s3:::amzn-s3-demo-bucket".
+
+- In the Condition element, specify either the
+aws:PrincipalARN or aws:SourceIdentity context key.
+
+If you use the aws:PrincipalARN context key, enter the ARN of the
+principal to deny access for.
+
+If you use the aws:SourceIdentity context key, enter the source
+identity value set in the role session to deny access for.
+
+- Save your work.

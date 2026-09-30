@@ -1,0 +1,236 @@
+URL: https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
+TITLE: Security group rules - Amazon Virtual Private Cloud
+
+# Security group rules
+
+The rules of a security group control the inbound traffic that's allowed to reach the
+resources that are associated with the security group. The rules also control the
+outbound traffic that's allowed to leave them.
+
+You can add or remove rules for a security group (also referred to as
+authorizing or revoking inbound or
+outbound access). A rule applies either to inbound traffic (ingress) or outbound traffic
+(egress). You can grant access to a specific source or destination.
+
+Contents
+
+- Security group rule basics
+
+- Components of a security group rule
+
+- Security group referencing
+
+- Security group size
+
+- Stale security group rules
+
+## Security group rule basics
+
+The following are the characteristics of security group rules:
+
+- You can specify allow rules, but not deny rules.
+
+- When you first create a security group, it has no inbound rules. Therefore, no
+inbound traffic is allowed until you add inbound rules to the security group.
+
+- When you first create a security group, it has an outbound rule that allows
+all outbound traffic from the resource. You can remove the rule and add outbound
+rules that allow specific outbound traffic only. If your security group has no
+outbound rules, no outbound traffic is allowed.
+
+- When you associate multiple security groups with a resource, the rules from
+each security group are aggregated to form a single set of rules that are used
+to determine whether to allow access.
+
+- When you add, update, or remove rules, your changes are automatically applied to all
+resources associated with the security group. For instructions, see Configure security group rules.
+
+- The effect of some rule changes can depend on how the traffic is tracked. For more
+information, see Connection tracking in the Amazon EC2 User Guide.
+
+- When you create a security group rule, AWS assigns a unique ID to the rule. You can use
+the ID of a rule when you use the API or CLI to modify or delete the rule.
+
+Limitation
+
+Security groups cannot block DNS requests to or from the Route 53 Resolver, sometimes referred
+to as the 'VPC+2 IP address' (see Amazon Route 53 Resolver in the
+Amazon Route 53 Developer Guide), or as AmazonProvidedDNS. To filter DNS requests through the Route 53 Resolver, use
+Route 53 Resolver DNS
+Firewall.
+
+## Components of a security group rule
+
+The following are the components of inbound and outbound security group rules:
+
+- Protocol: The protocol to allow. The most
+common protocols are 6 (TCP), 17 (UDP), and 1 (ICMP).
+
+- Port range: For TCP, UDP, or a custom
+protocol, the range of ports to allow. You can specify a single port number (for
+example, 22), or range of port numbers (for example,
+7000-8000).
+
+- ICMP type and code: For ICMP, the ICMP type and code. For
+example, use type 8 for ICMP Echo Request or type 128 for ICMPv6 Echo
+Request. For more information, see Rules for ping/ICMP in the Amazon EC2 User Guide.
+
+- Source or destination: The source (inbound rules) or
+destination (outbound rules) for the traffic to allow. Specify one of the
+following:
+
+- A single IPv4 address. You must use the /32 prefix length. For example,
+203.0.113.1/32.
+
+- A single IPv6 address. You must use the /128 prefix length. For example,
+2001:db8:1234:1a00::123/128.
+
+- A range of IPv4 addresses, in CIDR block notation. For example,
+203.0.113.0/24.
+
+- A range of IPv6 addresses, in CIDR block notation. For example,
+2001:db8:1234:1a00::/64.
+
+- The ID of a prefix list. For example, pl-1234abc1234abc123. For more
+information, see Managed prefix lists.
+
+- The ID of a security group. For example, sg-1234567890abcdef0. For more
+information, see Security group referencing.
+
+- (Optional) Description: You can add a
+description for the rule, which can help you identify it later. A description
+can be up to 255 characters in length. Allowed characters are a-z, A-Z, 0-9,
+spaces, and ._-:/()#,@[]+=;{}!$*.
+
+For examples, see Security group rules for different use cases in the Amazon EC2 User Guide.
+
+## Security group referencing
+
+When you specify a security group as the source or destination for a rule, the rule
+affects all instances that are associated with the security groups. The instances
+can communicate in the specified direction, using the private IP addresses of the
+instances, over the specified protocol and port.
+
+For example, the following represents an inbound rule for a security group that
+references security group sg-0abcdef1234567890. This rule allows inbound SSH traffic
+from the instances associated with sg-0abcdef1234567890.
+
+Source
+
+Protocol
+
+Port range
+
+sg-0abcdef1234567890
+
+TCP
+
+22
+
+When referencing a security group in a security group rule, note the following:
+
+- You can reference a security group in the inbound rule of another security group if any
+of the following is true:
+
+- The security groups are associated with the same VPC.
+
+- There is a peering connection between the VPCs that the security groups are associated
+with.
+
+- There is a transit gateway between the VPCs that the security groups are associated
+with.
+
+- You can reference a security group in the outbound rule if any of the following is
+true:
+
+- The security groups are associated with the same VPC.
+
+- There is a peering connection between the VPCs that the security groups are associated
+with.
+
+- No rules from the referenced security group are added to the security
+group that references it.
+
+- For inbound rules, the EC2 instances associated with a security group can
+receive inbound traffic from the private IP addresses from the network interfaces
+for the EC2 instances associated with the referenced security group.
+
+- For outbound rules, the EC2 instances associated with a security group can
+send outbound traffic to the private IP addresses from the network interfaces
+for the EC2 instances associated with the referenced security group.
+
+- We do not authorize against referenced security groups in the following
+actions: AuthorizeSecurityGroupIngress,
+AuthorizeSecurityGroupEgress,
+RevokeSecurityGroupIngress, and
+RevokeSecurityGroupEgress. We only check whether
+the security group exists. This results in the following:
+
+- Specifying the referenced security group in IAM policies for
+these actions has no effect.
+
+- When a referenced security group is owned by another account, the
+owner account does not receive CloudTrail events for these actions.
+
+Limitation
+
+If you configure routes to forward the traffic between two instances in
+different subnets through a middlebox appliance, you must ensure that the
+security groups for both instances allow traffic to flow between the
+instances. The security group for each instance must reference the private
+IP address of the other instance or the CIDR range of the subnet that
+contains the other instance as the source. If you reference the security
+group of the other instance as the source, this does not allow traffic to
+flow between the instances.
+
+Example
+
+The following diagram shows a VPC with subnets in two Availability Zones, an internet
+gateway, and an Application Load Balancer. Each Availability Zone has a public subnet for web servers and a
+private subnet for database servers. There are separate security groups for the load
+balancer, the web servers, and the database servers. Create the following security
+group rules to allow traffic.
+
+- Add rules to the load balancer security group to allow HTTP and HTTPS traffic
+from the internet. The source is 0.0.0.0/0.
+
+- Add rules to the security group for the web servers to allow HTTP and HTTPS
+traffic only from the load balancer. The source is the security group for the
+load balancer.
+
+- Add rules to the security group for the database servers to allow database
+requests from the web servers. The source is the security group for the web
+servers.
+
+## Security group size
+
+The type of source or destination determines how each rule counts toward the
+maximum number of rules that you can have per security group.
+
+- A rule that references a CIDR block counts as one rule.
+
+- A rule that references another security group counts as one rule, no matter
+the size of the referenced security group.
+
+- A rule that references a customer-managed prefix list counts as the maximum size
+of the prefix list. For example, if the maximum size of your prefix list is 20,
+a rule that references this prefix list counts as 20 rules.
+
+- A rule that references an AWS-managed prefix list counts as the weight of the
+prefix list. For example, if the weight of the prefix list is 10, a rule
+that references this prefix list counts as 10 rules. For more information,
+see Available AWS-managed prefix lists.
+
+## Stale security group rules
+
+If your VPC has a VPC peering connection with another VPC, or if it uses a VPC shared by
+another account, a security group rule in your VPC can reference a security group in that
+peer VPC or shared VPC. This allows resources that are associated with the referenced security
+group and those that are associated with the referencing security group to communicate with
+each other. For more information, see Update your security groups to reference peer security groups in the
+Amazon VPC Peering Guide.
+
+If you have a security group rule that references a security group in a peer VPC or shared VPC,
+the rule is marked as stale when the referenced security group is deleted or the VPC peering
+connection is deleted. You can delete stale security group rules as you
+would any other security group rule.

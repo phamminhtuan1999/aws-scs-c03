@@ -1,0 +1,54 @@
+{
+  "question_id": "Q021",
+  "question_content_hash": "617410fda15b991320779357405350659ae19326f9207759714b1ec448c74f2e",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Xác định các S3 bucket có dữ liệu nhạy cảm trong số rất nhiều bucket/object.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Quét bổ sung (sâu hơn) trên những bucket đã xác định có dữ liệu nhạy cảm.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "LEAST administrative overhead.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q021:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Sao chép toàn bộ dữ liệu sang Region khác bằng CRR chỉ để quét là thừa, tăng chi phí/overhead và nhân bản dữ liệu nhạy cảm; quét toàn bộ hằng ngày cũng không có bước xác định bucket rồi quét bổ sung.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q021:B", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Có thể dùng Lambda gọi Macie tạo job cho object mới, nhưng chỉ phủ object được upload sau này (bỏ qua dữ liệu hiện có), phải tự xây và vận hành code, và tạo job theo từng object là overhead lớn.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q021:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Automated sensitive data discovery là tính năng managed: liên tục lấy mẫu object đại diện ở mọi bucket để chỉ ra nơi có dữ liệu nhạy cảm, rồi chạy sensitive data discovery job để phân tích sâu các bucket đó.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q021:D", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Chạy job Macie trên tất cả bucket rồi tự tổng hợp kết quả vào DynamoDB là quét đầy đủ tốn kém và phải tự xây pipeline lưu trữ/truy vấn, trong khi Macie đã có sẵn thống kê và findings.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref2", "ref1"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q021:C"],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu Macie mô tả đúng quy trình: automated sensitive data discovery để có tầm nhìn rộng, sau đó chạy sensitive data discovery job để phân tích sâu các bucket đáng chú ý.",
+      "open_issues": []
+    },
+    "reference_ids": ["ref1", "ref3"],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-asdd.html", "title": "Performing automated sensitive data discovery - Amazon Macie", "section": "Overview", "snapshot_id": "fadc31a6b344", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Macie continually evaluates your S3 bucket inventory and uses sampling techniques to identify and select representative S3 objects in your buckets.",
+     "supports": "Automated discovery lấy mẫu liên tục trên toàn bộ bucket để xác định nơi có dữ liệu nhạy cảm (R1, R3).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-asdd.html", "title": "Performing automated sensitive data discovery - Amazon Macie", "section": "Overview", "snapshot_id": "fadc31a6b344", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "They can also help you determine where to perform deeper, more immediate analysis by running sensitive data discovery jobs.",
+     "supports": "Sau automated discovery, chạy job để quét bổ sung các bucket có dữ liệu nhạy cảm (R2).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-jobs.html", "title": "Running sensitive data discovery jobs - Amazon Macie", "section": "Overview", "snapshot_id": "b5fa4dd44984", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can configure a job to run only once for on-demand analysis and assessment, or on a recurring basis for periodic analysis, assessment, and monitoring.",
+     "supports": "Job là cơ chế quét sâu/toàn phần; dùng cho mọi bucket (D) hay theo từng object qua Lambda (B) tốn công hơn automated discovery.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q021:stem:0", "detail_vi": "Ký tự lỗi mã hóa trong 'company�s' (dấu nháy đơn)."}
+  ]
+}

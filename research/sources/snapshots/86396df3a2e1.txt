@@ -1,0 +1,2603 @@
+URL: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_iam-condition-keys.html
+TITLE: IAM and AWS STS condition context keys - AWS Identity and Access Management
+
+# IAM and AWS STS condition context keys
+
+You can use the Condition element in a JSON policy to test the value of keys
+that are included in the request context of all AWS requests. These keys provide information
+about the request itself or the resources that the request references. You can check that keys
+have specified values before allowing the action requested by the user. This gives you
+granular control over when your JSON policy statements match or don't match an incoming
+request. For information about how to use the Condition element in a JSON policy,
+see IAM JSON policy elements: Condition.
+
+This topic describes the keys defined and provided by the IAM service (with an
+iam: prefix) and the AWS Security Token Service (AWS STS) service (with an sts:
+prefix). Several other AWS services also provide service-specific keys that are relevant to
+the actions and resources defined by that service. For more information, see Actions, Resources, and
+Condition Keys for AWS Services. The documentation for a service that supports
+condition keys often has additional information. For example, for information about keys that
+you can use in policies for Amazon S3 resources, see Amazon S3 Policy Keys
+in the Amazon Simple Storage Service User Guide.
+
+Topics
+
+- Available keys for IAM
+
+- Available keys for AWS OIDC federation
+
+- Available keys for SAML-based AWS STS federation
+
+- Cross-service SAML-based AWS STS federation context keys
+
+- Available keys for AWS STS
+
+## Available keys for IAM
+
+You can use the following condition keys in policies that control access to IAM
+resources:
+
+iam:AccountPropertyNamespaces
+
+Works with string operators.
+
+Specifies the account property namespaces being read or modified in the
+request. Account properties are organized into namespaces (for example,
+RoleManager). When you call PutAccountProperties or
+GetAccountProperties, use this condition key to restrict which
+property namespaces a principal can access.
+
+iam:AssociatedResourceArn
+
+Works with ARN operators.
+
+Specifies the ARN of the resource to which this role will be associated at the
+destination service. The resource usually belongs to the service to which the
+principal is passing the role. Sometimes, the resource might belong to a third
+service. For example, you might pass a role to Amazon EC2 Auto Scaling that they use on an Amazon EC2
+instance. In this case, the condition would match the ARN of the Amazon EC2 instance.
+
+This condition key applies to only the PassRole action in a policy. It can't be used to limit any other
+action.
+
+Important
+
+When using the iam:AssociatedResourceArn condition in a policy
+to restrict the PassRole action,
+special considerations apply if the policy is intended to define access for the
+AddRoleToInstanceProfile action. In this case, you cannot specify a
+Region or instance ID in the EC2 instance ARN. The ARN value must be
+arn:aws:ec2:*:CallerAccountId:instance/*. Using any
+other ARN value might lead to unexpected evaluation results.
+
+Use this condition key in an identity-based policy to allow an entity to pass a
+role, but only if that role is associated with the specified resource. For
+example, you can allow an IAM user or role to pass any role to the Amazon EC2 service
+to be used with instances in the AWS account. The IAM user or role would not
+be allowed to pass roles to other services.
+
+{
+"Effect": "Allow",
+"Action": "iam:PassRole",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:PassedToService": "ec2.amazonaws.com"
+},
+"ArnLike": {
+"iam:AssociatedResourceARN": [
+"arn:aws:ec2:*:111122223333:instance/*"
+]
+}
+}
+}
+
+Note
+
+AWS services that support iam:PassedToService also support this condition key.
+
+iam:AWSServiceName
+
+Works with string operators.
+
+Specifies the AWS service to which this role is attached.
+
+This condition key is supported by the CreateServiceLinkedRole API operation.
+
+Tip
+
+For information about which services support using service-linked roles, see
+AWS services that work with IAM and look for the
+services that have Yes in the Service-Linked Role column. Choose a Yes with a link to view the service-linked role
+documentation for that service.
+
+In this example, you allow an entity to create a service-linked role using the
+CreateServiceLinkedRole API operation if the service
+name is access-analyzer.amazonaws.com.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:CreateServiceLinkedRole",
+"Resource": "*",
+"Condition": {
+"StringLike": {
+"iam:AWSServiceName": "access-analyzer.amazonaws.com"
+}
+}
+}]
+}
+
+iam:FIDO-certification
+
+Works with string operators.
+
+Checks the MFA device FIDO certification level at the time of registration of a
+FIDO security key. The device certification is retrieved from the FIDO Alliance Metadata Service
+(MDS). If the certification status or level of your FIDO security key
+changes, it will not be updated unless the device is unregistered and registered
+again to fetch the updated certification information.
+
+Possible values of L1, L1plus, L2, L2plus, L3, L3plus
+
+In this example, you register a security key and retrieve the FIDO Level 1 plus
+certification for your device.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Create"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Activate",
+"iam:FIDO-certification": "L1plus"
+}
+}
+}
+]
+
+}
+
+iam:FIDO-FIPS-140-2-certification
+
+Works with string operators.
+
+Checks the MFA device FIPS-140-2 validation certification level at the time of
+registration of a FIDO security key. The device certification is retrieved from
+the FIDO Alliance Metadata Service
+(MDS). If the certification status or level of your FIDO security key
+changes, it will not be updated unless the device is unregistered and registered
+again to fetch the updated certification information.
+
+Possible values of L1, L2, L3, L4
+
+In this example, you register a security key and retrieve the FIPS-140-2 Level
+2 certification for your device.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Create"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Activate",
+"iam:FIDO-FIPS-140-2-certification": "L2"
+}
+}
+}
+]
+
+}
+
+iam:FIDO-FIPS-140-3-certification
+
+Works with string operators.
+
+Checks the MFA device FIPS-140-3 validation certification level at the time of
+registration of a FIDO security key. The device certification is retrieved from
+the FIDO Alliance Metadata Service
+(MDS). If the certification status or level of your FIDO security key
+changes, it will not be updated unless the device is unregistered and registered
+again to fetch the updated certification information.
+
+Possible values of L1, L2, L3, L4
+
+In this example, you register a security key and retrieve the FIPS-140-3 Level
+3 certification for your device.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Create"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Activate",
+"iam:FIDO-FIPS-140-3-certification": "L3"
+}
+}
+}
+]
+
+}
+
+iam:OrganizationsPolicyId
+
+Works with string operators.
+
+Checks that the policy with the specified AWS Organizations ID matches the policy used
+in the request. To view an example IAM policy that uses this condition key, see
+IAM: View service last accessed information for an AWS Organizations policy.
+
+iam:PassedToService
+
+Works with string operators.
+
+Specifies the service principal of the service to which a role can be passed.
+This condition key applies to only the PassRole action in a policy. It can't be used to limit any other
+action.
+
+When you use this condition key in a policy, specify the service using a
+service principal. A service principal is the name of a service that can be
+specified in the Principal element of a policy. This is the usual
+format: SERVICE_NAME_URL.amazonaws.com.
+
+You can use iam:PassedToService to restrict your users so that
+they can pass roles only to specific services. For example, a user might create a
+service role that trusts CloudWatch to
+write log data to an Amazon S3 bucket on their behalf. Then the user must attach a
+permissions policy and a trust policy to the new service role. In this case, the
+trust policy must specify cloudwatch.amazonaws.com in the
+Principal element. To view a policy that allows the user to pass
+the role to CloudWatch, see IAM: Pass an IAM role to a specific AWS service.
+
+By using this condition key, you can make sure that users create service roles
+only for the services that you specify. For example, if a user with the preceding
+policy attempts to create a service role for Amazon EC2, the operation will fail. The
+failure occurs because the user does not have permission to pass the role to
+Amazon EC2.
+
+Sometimes you pass a role to a service that then passes the role to a different
+service. iam:PassedToService includes only the final service that
+assumes the role, not the intermediate service that passes the role.
+
+Note
+
+Some services do not support this condition key.
+
+iam:PermissionsBoundary
+
+Works with ARN operators.
+
+Checks that the specified policy is attached as permissions boundary on the
+IAM principal resource. For more information, see Permissions boundaries for IAM entities
+
+iam:PolicyARN
+
+Works with ARN operators.
+
+Checks the Amazon Resource Name (ARN) of a managed policy in requests that
+involve a managed policy. For more information, see Controlling access to policies.
+
+iam:RoleTemplateARN
+
+Works with ARN operators.
+
+Specifies the ARN of the role template used to create or manage a role. When
+an AWS service acquires a role from a role template, the role template ARN is
+included as a context key in the authorization checks for
+CreateRole, TagRole, PutRolePolicy,
+AttachRolePolicy, PutRolePermissionsBoundary, and
+GetRole.
+
+iam:RegisterSecurityKey
+
+Works with string operators.
+
+Checks the current state of MFA device enablement.
+
+Possible values of Create or Activate.
+
+In this example, you register a security key and retrieve the FIPS-140-3 Level
+1 certification for your device.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Create"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iam:EnableMFADevice",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:RegisterSecurityKey" : "Activate",
+"iam:FIDO-FIPS-140-3-certification": "L1"
+}
+}
+}
+]
+
+}
+
+iam:ResourceTag/key-name
+
+Works with string operators.
+
+Checks that the tag attached to the identity resource (user or role) matches
+the specified key name and value.
+
+Note
+
+IAM and AWS STS support both the iam:ResourceTag IAM
+condition key and the aws:ResourceTag global condition key.
+
+You can add custom attributes to IAM resources in the form of a key-value
+pair. For more information about tags for IAM resources, see Tags for AWS Identity and Access Management resources. You can use ResourceTag to control access to AWS
+resources, including IAM resources. However, because IAM does not support tags
+for groups, you cannot use tags to control access to groups.
+
+This example shows how you might create an identity-based policy that allows deleting users with the
+status=terminated tag. To use this policy, replace the italicized placeholder text in the example policy with your own information.
+Then, follow the directions in create a policy or edit a policy.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": "iam:DeleteUser",
+"Resource": "*",
+"Condition": {"StringEquals": {"iam:ResourceTag/status": "terminated"}}
+}]
+}
+
+iam:ServiceSpecificCredentialAgeDays
+
+Works with numeric operators.
+
+This condition key limits the creation of service-specific credentials based on
+their expiration settings. It allows you to control the maximum age, in days, of
+service-specific credentials that can be created.
+
+The valid range for days is 1 to 36600 (minimum 1 day, maximum 36600
+days).
+
+This condition key is supported by the CreateServiceSpecificCredential API operation.
+
+In this example, you allow a user to create service-specific credentials for
+the Amazon Bedrock service only if they expire within 90 days.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "iam:CreateServiceSpecificCredential",
+"Resource": "arn:aws:iam::111122223333:user/username",
+"Condition": {
+"StringEquals": {
+"iam:ServiceSpecificCredentialServiceName": "bedrock.amazonaws.com"
+},
+"NumericLessThanEquals": {
+"iam:ServiceSpecificCredentialAgeDays": "90"
+}
+}
+}
+]
+}
+
+iam:ServiceSpecificCredentialServiceName
+
+Works with string operators.
+
+Specifies which AWS services can be used when managing service-specific
+credentials. This condition key allows you to restrict which AWS services are
+permitted when managing service-specific credentials.
+
+This condition key is supported by the following API operations:
+
+- CreateServiceSpecificCredential
+
+- DeleteServiceSpecificCredential
+
+- ResetServiceSpecificCredential
+
+- UpdateServiceSpecificCredential
+
+The following services are supported for service-specific credentials with
+their exact value formatting:
+
+- bedrock.amazonaws.com
+
+- cassandra.amazonaws.com
+
+- codecommit.amazonaws.com
+
+In this example, you allow a user to create service-specific credentials using
+the CreateServiceSpecificCredential API operation only for
+the Amazon Bedrock service.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "iam:CreateServiceSpecificCredential",
+"Resource": "arn:aws:iam::111122223333:user/username",
+"Condition": {
+"StringEquals": {
+"iam:ServiceSpecificCredentialServiceName": "bedrock.amazonaws.com"
+}
+}
+}
+]
+}
+
+iam:DelegationDuration
+
+Works with numeric operators.
+
+Filters access based on the duration of temporary access requested in a
+delegation request.
+
+Product providers can use this condition key to control the maximum duration
+they allow in delegation requests sent to customers. The duration is specified in
+seconds and determines how long temporary credentials remain valid after the
+customer releases the exchange token. This helps product providers enforce
+internal policies around access duration limits based on their use case.
+
+This condition key is supported by the CreateDelegationRequest API
+operation.
+
+In this example, you allow creating delegation requests only if the requested
+duration is 7200 seconds (2 hours) or less.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "iam:CreateDelegationRequest",
+"Resource": "*",
+"Condition": {
+"NumericLessThanEquals": {
+"iam:DelegationDuration": "7200"
+}
+}
+}
+]
+}
+
+iam:NotificationChannel
+
+Works with ARN operators.
+
+Filters access based on the Amazon SNS topic ARN specified for receiving
+delegation request notifications.
+
+Product providers can use this condition key to restrict which SNS topics can
+be used for delegation request notifications in the CreateDelegationRequest API
+call. Product providers must specify an SNS topic to receive state change
+notifications and exchange tokens. This ensures that notifications are sent only
+to approved channels within the product provider's organization.
+
+This condition key is supported by the CreateDelegationRequest API
+operation.
+
+In this example, you allow creating delegation requests only if they use a
+specific SNS topic for notifications.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "iam:CreateDelegationRequest",
+"Resource": "*",
+"Condition": {
+"ArnEquals": {
+"iam:NotificationChannel": "arn:aws:sns:us-east-1:123456789012:delegation-notifications"
+}
+}
+}
+]
+}
+
+iam:TemplateArn
+
+Works with ARN operators.
+
+Filters access based on the policy template ARN used to define permissions in a
+delegation request.
+
+Product providers can use this condition key to control which policy templates
+can be used in the CreateDelegationRequest API call. Policy templates define the
+temporary permissions that product providers request in customer accounts. This
+allows product providers to restrict which registered policy templates can be used
+when creating delegation requests.
+
+This condition key is supported by the CreateDelegationRequest API
+operation.
+
+In this example, you allow creating delegation requests only if they use a
+policy template from a specific partner domain.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "iam:CreateDelegationRequest",
+"Resource": "*",
+"Condition": {
+"ArnLike": {
+"iam:TemplateArn": "arn:aws:iam::*:delegation-template/partner_*"
+}
+}
+}
+]
+}
+
+iam:DelegationRequestOwner
+
+Works with ARN operators.
+
+Filters access based on the AWS identity or principal that owns the delegation
+request.
+
+Customers can use this condition key to control who can perform actions on
+delegation requests based on ownership. The owner of a delegation request is the
+AWS identity or principal in the customer account that initiated or received the
+delegation request.
+
+This condition key is supported by the following API operations:
+
+- GetDelegationRequest
+
+- AcceptDelegationRequest
+
+- RejectDelegationRequest
+
+- SendDelegationToken
+
+- ListDelegationRequests
+
+- UpdateDelegationRequest
+
+In this example, you allow users to manage only delegation requests that they
+own.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iam:GetDelegationRequest",
+"iam:AcceptDelegationRequest",
+"iam:RejectDelegationRequest",
+"iam:SendDelegationToken",
+"iam:UpdateDelegationRequest",
+"iam:ListDelegationRequests"
+],
+"Resource": "*",
+"Condition": {
+"ArnEquals": {
+"iam:DelegationRequestOwner": "${aws:PrincipalArn}"
+}
+}
+}
+]
+}
+
+## Available keys for AWS OIDC federation
+
+You can use OIDC federation to give temporary security credentials to users who have
+been authenticated through an OpenID Connect compatible identity provider (IdP) to an IAM
+OpenID Connect (OIDC) identity provider in your AWS account. Examples of such providers
+include GitHub, Amazon Cognito, Login with Amazon, and Google. Identity tokens and access tokens
+from your own IdP might be used, as well as service account
+tokens granted to Amazon Elastic Kubernetes Service workloads.
+
+You can use AWS OIDC condition context keys to write policies that limit the access of
+federated principals to resources that are associated with a specific provider, app, or
+user. These keys are typically used in the trust policy for a role. Define condition keys
+using the name of the OIDC provider (token.actions.githubusercontent.com)
+followed by a claim (:aud): token.actions.githubusercontent.com:aud.
+
+Some OIDC federation condition keys can be used in the role session to authorize
+resource access. If the value is Yes in the Available in session column, you can use these condition keys in
+policies to define what users are allowed to access in other AWS services. When a claim
+is not available in session, the OIDC condition context key can only be used in a role
+trust policy for the initial AssumeRoleWithWebIdentity authentication.
+
+Select your IdP to see how claims from your IdP map to IAM condition context keys in
+AWS. More information on keys for GitHub and Google can be found under the
+Default tab.
+
+Default
+
+Default lists the standard OIDC claims and how they map to AWS STS condition
+context keys in AWS. You can use these keys to control access to a role. To do
+that, compare the AWS STS condition keys to the
+values in the IdP JWT claim column. Use this
+mapping if your IdP is not listed in the tab options.
+
+GitHub Actions workflows and Google are some examples of IdPs that use the
+default implementation in their OIDC JWT ID token.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+amr
+
+amr
+
+Yes
+
+aud
+
+azp
+
+If no value is set for azp, the aud
+condition key maps to the aud claim.
+
+Yes
+
+email
+
+email
+
+No
+
+oaud
+
+aud
+
+No
+
+sub
+
+sub
+
+Yes
+
+For more information about using OIDC condition context keys with GitHub, see
+Configuring a role for GitHub OIDC identity provider. For more information about Google aud and azp
+fields, see the Google
+Identity Platform OpenID Connect Guide.
+
+amr
+
+Works with string operators.
+The key is multivalued, meaning that you test it in a policy using condition set operators.
+
+Example:
+token.actions.githubusercontent.com:amr
+
+Authentication Methods Reference includes login information about the
+user. The key can contain the following values:
+
+- If the user is unauthenticated, the key contains only
+unauthenticated.
+
+- If the user is authenticated, the key contains the value
+authenticated and the name of the login provider
+used in the call (accounts.google.com).
+
+aud
+
+Works with string
+operators.
+
+Examples:
+
+- accounts.google.com:aud
+
+- token.actions.githubusercontent.com:aud
+
+Use the aud condition key to verify that the audience
+matches the one you specify in the policy. You can use the aud key with
+the sub key for the same identity provider.
+
+This condition key is set from the following token fields:
+
+- aud for OAuth 2.0 Google client IDs of your
+application, when the azp field is not set. When the
+azp field is set, the aud field
+matches the accounts.google.com:oaud condition
+key.
+
+- azp when the azp field is set. This
+can happen for hybrid apps where a web application and Android app
+have a different OAuth 2.0 Google client ID but share the same
+Google APIs project.
+
+When you write a policy using the accounts.google.com:aud
+condition key, you must know whether the app is a hybrid app that sets
+the azp field.
+
+azp Field Not Set
+
+The following example policy works for non-hybrid apps that do not set
+the azp field. In this case the Google ID Token
+aud field value matches both the
+accounts.google.com:aud and the
+accounts.google.com:oaud condition key values.
+
+JSON
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {"Federated": "accounts.google.com"},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"accounts.google.com:aud": "aud-value",
+"accounts.google.com:oaud": "aud-value",
+"accounts.google.com:sub": "sub-value"
+}
+}
+}
+]
+}
+
+azp Field Set
+
+The following example policy works for hybrid apps that do set the
+azp field. In this case, the Google ID Token
+aud field value matches only the
+accounts.google.com:oaud condition key value. The
+azp field value matches the
+accounts.google.com:aud condition key value.
+
+JSON
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {"Federated": "accounts.google.com"},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"accounts.google.com:aud": "azp-value",
+"accounts.google.com:oaud": "aud-value",
+"accounts.google.com:sub": "sub-value"
+}
+}
+}
+]
+}
+
+email
+
+Works with string
+operators.
+
+Example:
+accounts.google.com:email
+
+This condition key validates the user's email address. The value of
+this claim might not be unique to this account and could change over time,
+therefore you should not use this value as the primary identifier to
+verify your user record.
+
+oaud
+
+Works with string
+operators.
+
+Example:
+accounts.google.com:oaud
+
+This key specifies the other audience (aud) that this ID
+token is intended for. It must be one of the OAuth 2.0 client IDs of your
+application.
+
+sub
+
+Works with string
+operators.
+
+Examples:
+
+- accounts.google.com:sub
+
+- token.actions.githubusercontent.com:sub
+
+Use these keys to verify that the subject matches the one that you
+specify in the policy. You can use the sub key with the
+aud key for the same identity provider.
+
+In the following role trust policy, the sub condition key
+limits the role to the GitHub branch named demo.
+
+JSON
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::111122223333:oidc-provider/token.actions.githubusercontent.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+"token.actions.githubusercontent.com:sub": "repo:org-name/repo-name:ref:refs/heads/demo"
+}
+}
+}
+]
+}
+
+Amazon Cognito
+
+This tab explains how Amazon Cognito maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+For roles used by Amazon Cognito, keys are defined using
+cognito-identity.amazonaws.com followed by the claim.
+
+For more information about identity pool claim mapping, see Default provider mappings in the Amazon Cognito Developer
+Guide. For more information about user pool claim mapping see Using the ID token in the Amazon Cognito Developer
+Guide.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+amr
+
+amr
+
+Yes
+
+aud
+
+aud
+
+Yes
+
+oaud
+
+aud
+
+No
+
+sub
+
+sub
+
+Yes
+
+amr
+
+Works with string operators.
+The key is multivalued, meaning that you test it in a policy using condition set operators.
+
+Example –
+cognito-identity.amazonaws.com:amr
+
+Authentication Methods Reference includes login information about the
+user. The key can contain the following values:
+
+- If the user is unauthenticated, the key contains only
+unauthenticated.
+
+- If the user is authenticated, the key contains the value
+authenticated and the name of the login provider
+used in the call
+(cognito-identity.amazonaws.com).
+
+As an example, the following condition in the trust policy for an
+Amazon Cognito role tests whether the user is unauthenticated.
+
+"Condition": {
+"StringEquals":
+{ "cognito-identity.amazonaws.com:aud": "us-east-2:identity-pool-id" },
+"ForAnyValue:StringLike":
+{ "cognito-identity.amazonaws.com:amr": "unauthenticated" }
+}
+
+aud
+
+Works with string
+operators.
+
+Example –
+cognito-identity.amazonaws.com:aud
+
+The user pool app client that authenticated your user. Amazon Cognito renders
+the same value in the access token client_id claim.
+
+oaud
+
+Works with string
+operators.
+
+Example –
+cognito-identity.amazonaws.com:oaud
+
+The user pool app client that authenticated your user. Amazon Cognito renders
+the same value in the access token client_id claim.
+
+sub
+
+Works with string
+operators.
+
+Example –
+cognito-identity.amazonaws.com:sub
+
+A unique identifier (UUID), or subject, for the authenticated user.
+The username might not be unique in your user pool. The sub claim is the
+best way to identify a given user. You can use the sub key
+with the aud key for the same identity provider.
+
+"Condition": {
+"StringEquals": {
+"cognito-identity.amazonaws.com:aud": "us-east-1:12345678-abcd-abcd-abcd-123456790ab",
+"cognito-identity.amazonaws.com:sub": [
+"us-east-1:12345678-1234-1234-1234-123456790ab",
+"us-east-1:98765432-1234-1234-1243-123456790ab"
+]
+}
+}
+
+Login with Amazon
+
+This tab explains how Login with Amazon maps OIDC claims to AWS STS condition
+context keys in AWS. You can use these keys to control access to a role. To do
+that, compare the AWS STS condition keys to the
+values in the IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+app_id
+
+Application ID
+
+Yes
+
+sub
+
+User ID
+
+Yes
+
+user_id
+
+User ID
+
+Yes
+
+app_id
+
+Works with string
+operators.
+
+Example –
+www.amazon.com:app_id
+
+This key specifies the audience context that matches the
+aud field used by other identity providers.
+
+sub
+
+Works with string
+operators.
+
+Example –
+www.amazon.com:sub
+
+This key verifies that the user ID matches the one that you specify in
+the policy. You can use the sub key with the
+aud key for the same identity provider.
+
+user_id
+
+Works with string
+operators.
+
+Example –
+www.amazon.com:user_id
+
+This key specifies the audience context that matches the
+aud field used by other identity providers.You can use
+the user_id key with the id key for the same
+identity provider.
+
+Facebook
+
+This tab explains how Facebook maps OIDC claims to AWS STS condition context keys
+in AWS. You can use these keys to control access to a role. To do that, compare
+the AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+app_id
+
+Application ID
+
+Yes
+
+id
+
+id
+
+Yes
+
+app_id
+
+Works with string
+operators.
+
+Example –
+graph.facebook.com:app_id
+
+This key verifies that the audience context matches the
+aud field used by other identity providers.
+
+id
+
+Works with string
+operators.
+
+Example –
+graph.facebook.com:id
+
+This key verified that the application (or site) ID matches the one
+that you specify in the policy.
+
+GitHub
+
+This tab explains how GitHub Actions maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+actor
+
+actor
+
+No
+
+actor_id
+
+actor_id
+
+No
+
+job_workflow_ref
+
+job_workflow_ref
+
+No
+
+repository
+
+repository
+
+No
+
+repository_id
+
+repository_id
+
+No
+
+repository_owner_id
+
+repository_owner_id
+
+No
+
+workflow
+
+workflow
+
+No
+
+ref
+
+ref
+
+No
+
+environment
+
+environment
+
+No
+
+enterprise_id
+
+enterprise_id
+
+No
+
+actor
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:actor
+
+This key identifies the personal account that initiated the workflow run. Use this to restrict access to specific actors.
+
+actor_id
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:actor_id
+
+This key verifies the ID of the personal account that initiated the workflow run. Actor IDs are generated by GitHub and are immutable.
+
+job_workflow_ref
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:job_workflow_ref
+
+This key contains the reference path to the reusable workflow for jobs using a reusable workflow. Use this to restrict access to specific workflows and to make sure only approved workflows can assume roles.
+
+repository
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:repository
+
+This key identifies the repository from where the workflow is running. Use this to limit access to specific GitHub repositories.
+
+repository_id
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:repository_id
+
+This key verifies the ID of the repository from where the workflow is running. Repository IDs are immutable and don't change even if the repository is renamed.
+
+repository_owner_id
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:repository_owner_id
+
+This key verifies the ID of the organization in which the repository is stored. The repository owner ID is a stable, unique identifier that does not change.
+
+workflow
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:workflow
+
+This key contains the name of the workflow. Use this to restrict access to specific workflows within your repositories.
+
+ref
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:ref
+
+This key identifies the git ref (branch or tag) that triggered the workflow run. Use this to limit access based on specific branches, such as allowing only main or production branches.
+
+environment
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:environment
+
+This key contains the name of the environment used by the job. Use this to implement environment-based access controls, such as separate permissions for development, staging, and production environments.
+
+Note
+
+If the environment claim is included in your trust policy, an environment must be configured and provided in the GitHub workflow.
+
+enterprise_id
+
+Works with string
+operators.
+
+Example –
+token.actions.githubusercontent.com:enterprise_id
+
+This key verifies the ID of the enterprise that contains the repository from where the workflow is running. Use this to make sure access is limited to repositories within your GitHub Enterprise organization.
+
+Use immutable identifiers, not names
+
+On GitHub, repository, organization, and user names can change. A name that is freed by renaming or deletion can be claimed by a different account. Policies that rely solely on mutable name-based claims (such as repository or actor) could grant access to unintended identities. To help protect against this, use the immutable identifiers that GitHub provides, such as repository_id, repository_owner_id, or actor_id, in your role trust policies or resource control policies.
+
+The following example trust policy uses custom claims in GitHub OIDC token to limit access to a role.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::111122223333:oidc-provider/token.actions.githubusercontent.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+"token.actions.githubusercontent.com:repository_owner_id": "123456",
+"token.actions.githubusercontent.com:repository_id": "1296269",
+"token.actions.githubusercontent.com:actor_id": "1",
+"token.actions.githubusercontent.com:ref": "refs/heads/main",
+"token.actions.githubusercontent.com:enterprise_id": "345"
+}
+}
+}
+]
+}
+
+Google
+
+This tab explains how Google maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+google/organization_number
+
+google:organization_number
+
+No
+
+google/organization_number
+
+Works with numeric
+operators.
+
+Example –
+accounts.google.com:google/organization_number
+
+This key verifies that a token represents a Google identity belonging to a specific Google Cloud or Google Workspace organization. Use this to restrict access to users from specific organizations, ensuring that only identities from your organization can assume the role.
+
+The following example trust policy uses the google/organization_number claim to limit access to a role.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "accounts.google.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"NumericEquals": {
+"accounts.google.com:google/organization_number": "123456"
+}
+}
+}
+]
+}
+
+CircleCI
+
+This tab explains how CircleCI maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+oidc.circleci.com/project-id
+
+oidc.circleci.com/project-id
+
+No
+
+oidc.circleci.com/project-id
+
+Works with string
+operators.
+
+Example –
+circleci-issuer-url:oidc.circleci.com/project-id
+
+This key identifies the CircleCI project in which the job is running. Its value is a string containing a UUID that uniquely identifies the CircleCI project. Use this to restrict access to specific CircleCI projects.
+
+The following example trust policy uses the oidc.circleci.com/project-id claim to limit access to a role.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::123456789012:oidc-provider/oidc.circleci.com/org/12345"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"oidc.circleci.com/org/12345:aud": "sts.amazonaws.com",
+"oidc.circleci.com/org/12345:oidc.circleci.com/project-id": "76543210-ba98-fedc-3210-edcba0987654"
+}
+}
+}
+]
+}
+
+Oracle Cloud Infrastructure (OCI)
+
+This tab explains how Oracle Cloud Infrastructure maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+rpst_id
+
+rpst_id
+
+No
+
+rpst_id
+
+Works with string
+operators.
+
+Example –
+oci-issuer-url:rpst_id
+
+This key uniquely identifies the resource principal in OCI. Use this to restrict access to specific OCI resource principals. The rpst_id (Resource Principal Session Token ID) provides a stable identifier for OCI resource-based authentication.
+
+The following example trust policy uses the rpst_id claim to limit access to a role.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::123456789012:oidc-provider/idcs-abc123ef5678901234abcd.identity.oraclecloud.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"idcs-abc123ef5678901234abcd.identity.oraclecloud.com:aud": "sts.amazonaws.com",
+"idcs-abc123ef5678901234abcd.identity.oraclecloud.com:rpst_id": "your-rpst-id"
+}
+}
+}
+]
+}
+
+GitLab.com
+
+This tab explains how GitLab.com CI/CD maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+Note
+
+These custom condition keys are only supported when using the GitLab.com
+multi-tenant SaaS instance as an OIDC identity provider. You cannot use these
+condition keys with GitLab Dedicated or GitLab Self-Managed instances.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+namespace_id
+
+namespace_id
+
+No
+
+project_id
+
+project_id
+
+No
+
+user_id
+
+user_id
+
+No
+
+user_login
+
+user_login
+
+No
+
+user_email
+
+user_email
+
+No
+
+user_access_level
+
+user_access_level
+
+No
+
+ref_protected
+
+ref_protected
+
+No
+
+pipeline_source
+
+pipeline_source
+
+No
+
+runner_environment
+
+runner_environment
+
+No
+
+namespace_id
+
+Works with string
+operators.
+
+Example –
+gitlab.com:namespace_id
+
+This key identifies the namespace (group) ID of the project running the
+CI/CD job. The namespace ID is a stable, unique identifier that does not
+change if the group is renamed.
+
+project_id
+
+Works with string
+operators.
+
+Example –
+gitlab.com:project_id
+
+This key identifies the ID of the project running the CI/CD job. The
+project ID is a stable, unique identifier that does not change if the
+project is renamed or moved.
+
+user_id
+
+Works with string
+operators.
+
+Example –
+gitlab.com:user_id
+
+This key identifies the ID of the user executing the CI/CD job. The
+user ID is a stable, unique identifier.
+
+user_login
+
+Works with string
+operators.
+
+Example –
+gitlab.com:user_login
+
+This key identifies the username of the user executing the CI/CD job.
+Usernames can be changed; for a stable identifier, use
+user_id instead.
+
+user_email
+
+Works with string
+operators.
+
+Example –
+gitlab.com:user_email
+
+This key identifies the email address of the user executing the CI/CD
+job. The value of this claim might change over time; for a stable
+identifier, use user_id instead.
+
+user_access_level
+
+Works with string
+operators.
+
+Example –
+gitlab.com:user_access_level
+
+This key identifies the access level of the user within the project
+(for example, maintainer, developer,
+owner).
+
+ref_protected
+
+Works with string
+operators.
+
+Example –
+gitlab.com:ref_protected
+
+This key indicates whether the Git ref that triggered the job is
+protected. The value is true if protected, false
+otherwise.
+
+pipeline_source
+
+Works with string
+operators.
+
+Example –
+gitlab.com:pipeline_source
+
+This key identifies the source that triggered the pipeline (for
+example, push, web, schedule,
+api, merge_request_event).
+
+runner_environment
+
+Works with string
+operators.
+
+Example –
+gitlab.com:runner_environment
+
+This key identifies the type of runner used by the CI/CD job.
+
+Important
+
+On GitLab.com SaaS, deleted group or project paths could previously be
+recreated by different users, which could cause policies relying solely on
+path-based claims (such as sub) to grant access to unintended
+identities. As of June 1, 2026, GitLab has deployed a platform-side update that
+prevents new CI ID tokens from being issued for project paths that previously
+issued tokens, reducing this risk going forward. As an additional layer of
+protection, AWS and GitLab recommend including conditions on stable, unique
+identifiers — such as namespace_id or
+project_id — in your role trust policies or resource
+control policies.
+
+The following example trust policy uses the namespace_id claim
+together with sub to limit access to a specific GitLab.com project
+and branch.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::123456789012:oidc-provider/gitlab.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"gitlab.com:sub": "project_path:mygroup/myproject:ref_type:branch:ref:main",
+"gitlab.com:namespace_id": "12345"
+}
+}
+}
+]
+}
+
+Buildkite
+
+This tab explains how Buildkite maps OIDC claims to AWS STS condition context keys in
+AWS. You can use these keys to control access to a role. To do that, compare the
+AWS STS condition keys to the values in the
+IdP JWT claim column.
+
+AWS STS condition key
+
+IdP JWT claim
+
+Available in session
+
+organization_slug
+
+organization_slug
+
+No
+
+organization_id
+
+organization_id
+
+No
+
+pipeline_slug
+
+pipeline_slug
+
+No
+
+pipeline_id
+
+pipeline_id
+
+No
+
+cluster_name
+
+cluster_name
+
+No
+
+cluster_id
+
+cluster_id
+
+No
+
+build_branch
+
+build_branch
+
+No
+
+organization_slug
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:organization_slug
+
+This key identifies the Buildkite organization from which the job is
+running. Use this to restrict access to specific organizations.
+
+organization_id
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:organization_id
+
+This key verifies the ID of the Buildkite organization from which the
+job is running. Organization IDs are generated by Buildkite and are
+immutable.
+
+pipeline_slug
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:pipeline_slug
+
+This key identifies the pipeline in which the job is running. Use this
+to restrict access to specific Buildkite pipelines.
+
+pipeline_id
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:pipeline_id
+
+This key verifies the ID of the pipeline in which the job is running.
+Pipeline IDs are generated by Buildkite and are immutable.
+
+cluster_name
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:cluster_name
+
+This key identifies the cluster on which the job is running. Use this
+to restrict access to specific Buildkite clusters.
+
+cluster_id
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:cluster_id
+
+This key verifies the ID of the cluster on which the job is running.
+Cluster IDs are generated by Buildkite and are immutable.
+
+build_branch
+
+Works with string
+operators.
+
+Example –
+agent.buildkite.com:build_branch
+
+This key identifies the git branch that triggered the build. Use this
+to limit access based on specific branches, such as allowing only
+main or production branches.
+
+Use immutable identifiers, not slugs
+
+On Buildkite, a deleted organization or pipeline slug can be immediately re-registered by a different organization or pipeline. Buildkite issues OIDC tokens for these slugs from the same issuer (agent.buildkite.com). As a result, policies that rely solely on slug-based claims (such as organization_slug or pipeline_slug) could grant access to unintended identities. To help protect against this, use stable, immutable identifiers, such as organization_id or pipeline_id, in your role trust policies or resource control policies.
+
+The following example trust policy uses custom claims in the Buildkite OIDC token to limit access to a role.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::123456789012:oidc-provider/agent.buildkite.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": {
+"agent.buildkite.com:aud": "sts.amazonaws.com",
+"agent.buildkite.com:organization_id": "0191e7a0-1234-7abc-def0-123456789abc",
+"agent.buildkite.com:pipeline_id": "0191e7a1-5678-7abc-def0-123456789abc",
+"agent.buildkite.com:build_branch": "main"
+}
+}
+}
+]
+}
+
+### More information about OIDC federation
+
+- Amazon Cognito User
+Guide
+
+- OIDC federation
+
+## Available keys for SAML-based AWS STS federation
+
+If you are working with SAML-based
+federation using AWS Security Token Service (AWS STS), you can include additional condition keys in
+the policy.
+
+### SAML role trust policies
+
+In the trust policy of a role, you can include the following keys, which help you
+establish whether the caller is allowed to assume the role. Except for
+saml:doc, all the values are derived from the SAML assertion. All items
+in the list are available in the IAM console visual editor when you create or edit a
+policy with conditions. Items marked with []
+can have a value that is a list of the specified
+type.
+
+saml:aud
+
+Works with string operators.
+
+An endpoint URL to which SAML assertions are presented. The value for this
+key comes from the SAML Recipient field in the assertion,
+not the Audience
+field.
+
+saml:commonName[]
+
+Works with string operators.
+
+This is a commonName attribute.
+
+saml:cn[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:doc
+
+Works with string operators.
+
+This represents the principal that was used to assume the role. The format
+is
+account-ID/provider-friendly-name,
+such as 123456789012/SAMLProviderName. The account-ID value refers to the account that owns
+the SAML provider.
+
+saml:edupersonaffiliation[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonassurance[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonentitlement[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonnickname[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonorgdn
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonorgunitdn[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonprimaryaffiliation
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonprimaryorgunitdn
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonprincipalname
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersonscopedaffiliation[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:edupersontargetedid[]
+
+Works with string operators.
+
+This is an eduPerson attribute.
+
+saml:eduorghomepageuri[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:eduorgidentityauthnpolicyuri[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:eduorglegalname[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:eduorgsuperioruri[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:eduorgwhitepagesuri[]
+
+Works with string operators.
+
+This is an eduOrg attribute.
+
+saml:givenName[]
+
+Works with string operators.
+
+This is a givenName attribute.
+
+saml:iss
+
+Works with string operators.
+
+The issuer, which is represented by a URN.
+
+saml:mail[]
+
+Works with string operators.
+
+This is a mail attribute.
+
+saml:name[]
+
+Works with string operators.
+
+This is a name attribute.
+
+saml:namequalifier
+
+Works with string operators.
+
+A hash value based on the friendly name of the SAML provider. The value is
+the concatenation of the following values, in order and separated by a '/'
+character:
+
+- The Issuer response value (saml:iss)
+
+- The AWS account ID
+
+- The friendly name (the last part of the ARN) of the SAML provider in
+IAM
+
+The concatenation of the account ID and friendly name of the SAML provider
+is available to IAM policies as the key saml:doc. For more
+information, see Uniquely identifying users in SAML-based federation.
+
+saml:organizationStatus[]
+
+Works with string operators.
+
+This is an organizationStatus attribute.
+
+saml:primaryGroupSID[]
+
+Works with string operators.
+
+This is a primaryGroupSID attribute.
+
+saml:sub
+
+Works with string operators.
+
+This is the subject of the claim, which includes a value that uniquely
+identifies an individual user within an organization (for example,
+_cbb88bf52c2510eabe00c1642d4643f41430fe25e3).
+
+saml:sub_type
+
+Works with string operators.
+
+This key can have the value persistent, transient,
+or consist of the full Format URI from the Subject
+and NameID elements used in your SAML assertion. A value of
+persistent indicates that the value in saml:sub is
+the same for a user between sessions. If the value is transient,
+the user has a different saml:sub value for each session. For
+information about the NameID element's Format
+attribute, see Configure SAML assertions for the authentication response.
+
+saml:surname[]
+
+Works with string operators.
+
+This is a surnameuid attribute.
+
+saml:uid[]
+
+Works with string operators.
+
+This is a uid attribute.
+
+saml:x500UniqueIdentifier[]
+
+Works with string operators.
+
+This is an x500UniqueIdentifier attribute.
+
+For general information about eduPerson and eduOrg
+attributes, see the REFEDS
+Wiki website. For a list of eduPerson attributes, see eduPerson Object Class Specification (201602).
+
+Condition keys whose type is a list can include multiple values. To create conditions
+in the policy for list values, you can use set operators
+(ForAllValues, ForAnyValue). For example, to allow any user
+whose affiliation is "faculty" or "staff" (but not "student"), you might use a condition
+like the following:
+
+"Condition": {
+"ForAllValues:StringLike": {
+"saml:edupersonaffiliation":[ "faculty", "staff"]
+}
+}
+
+## Cross-service SAML-based AWS STS federation context keys
+
+Some SAML-based federation condition keys can be used in subsequent requests to
+authorize AWS operations in other services and AssumeRole calls. These are
+the following condition keys that can be used in role trust policies when federated
+principals assume another role, and in resource policies from other AWS services to
+authorize resource access by federated principals. For more information about using these
+keys, see About SAML
+2.0-based federation.
+
+Select a condition key to see the description.
+
+- saml:namequalifier
+
+- saml:sub
+
+- saml:sub_type
+
+Note
+
+No other SAML-based federation condition keys are available for use after the initial
+external identity provider (IdP) authentication response.
+
+## Available keys for AWS STS
+
+You can use the following condition keys in IAM role trust policies for roles that are
+assumed using AWS Security Token Service (AWS STS) operations.
+
+saml:sub
+
+Works with string operators.
+
+This is the subject of the claim, which includes a value that uniquely
+identifies an individual user within an organization (for example,
+_cbb88bf52c2510eabe00c1642d4643f41430fe25e3).
+
+sts:AWSServiceName
+
+Works with string operators.
+
+Use this key to specify a service where a bearer token can be used. When you
+use this condition key in a policy, specify the service using a service principal.
+A service principal is the name of a service that can be specified in the
+Principal element of a policy. For example,
+codeartifact.amazonaws.com is the AWS CodeArtifact service
+principal.
+
+Availability – This key is present in
+requests that get a bearer token. You cannot make a direct call to AWS STS to get a
+bearer token. When you perform some operations in other services, the service
+requests the bearer token on your behalf.
+
+Some AWS services require that you have permission to get an AWS STS service
+bearer token before you can access their resources programmatically. For example,
+AWS CodeArtifact requires principals to use bearer tokens to perform some operations. The
+aws codeartifact get-authorization-token command returns a bearer
+token. You can then use the bearer token to perform AWS CodeArtifact operations. For more
+information about bearer tokens, see Service bearer tokens.
+
+You can use this condition key to allow principals to get a bearer token for
+use with a specific service.
+
+sts:DurationSeconds
+
+Works with numeric operators.
+
+Use this key to specify the duration (in seconds) that a principal can use when
+getting an AWS AWS STS bearer token or a JSON Web Token from the GetWebIdentityToken API.
+
+Availability – This key is present in
+requests that get a bearer token or a JSON Web Token from the GetWebIdentityToken API. You cannot make a direct call to AWS STS to get a
+bearer token. When you perform some operations in other services, the service
+requests the bearer token on your behalf. The key is not applicable for AWS STS
+assume-role operations.
+
+Some AWS services require that you have permission to get an AWS STS service
+bearer token before you can access their resources programmatically. For example,
+AWS CodeArtifact requires principals to use bearer tokens to perform some operations. The
+aws codeartifact get-authorization-token command returns a bearer
+token. You can then use the bearer token to perform AWS CodeArtifact operations. For more
+information about bearer tokens, see Service bearer tokens.
+
+sts:IdentityTokenAudience
+
+Works with string operators.
+
+Use this key to specify the audience for which an IAM principal can request JSON Web Tokens (JWTs) using the GetWebIdentityToken API. When this condition key is present in an IAM policy, IAM principals can only request tokens for the audiences specified in the policy. External services validate the audience ("aud") claim in the JSON Web Token to make sure the token was intended for them.
+
+Availability – This key is present in requests to the GetWebIdentityToken API which is used to obtain JSON Web Tokens (JWTs) for authentication with external services.
+
+When you use this condition key in a policy, specify the audience value that matches the intended recipient's identifier (for example, https://api.example.com).
+
+The following example policy allows a principal to request tokens for the specified external services:
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "sts:GetWebIdentityToken",
+"Resource": "*",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"sts:IdentityTokenAudience": [
+"https://api2.example.com",
+"https://api1.example.com"
+]
+}
+}
+}
+]
+}
+
+sts:SigningAlgorithm
+
+Works with string operators.
+
+Use this key to specify the cryptographic algorithm AWS AWS STS uses to sign JSON Web Tokens (JWTs) generated by the GetWebIdentityToken API. When you use this condition key in a policy, specify either ES384 (ECDSA with P-384 curve and SHA-384) or RS256 (RSA with SHA-256).
+
+Availability – This key is present in requests to the GetWebIdentityToken API which is used to obtain JSON Web Tokens (JWTs) for authentication with external services.
+
+You can use this condition key to enforce that IAM principals request tokens using signing algorithms compatible with your security requirements or the external services you integrate with. ES384 provides optimal security and performance, while RS256 offers broader compatibility with systems that do not support ECDSA.
+
+The following example policy requires principals to use the ES384 signing algorithm:
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": "sts:GetWebIdentityToken",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"sts:SigningAlgorithm": "ES384"
+}
+}
+}
+]
+}
+
+sts:ExternalId
+
+Works with string operators.
+
+Use this key to require that a principal provide a specific identifier when
+assuming an IAM role.
+
+Availability – This key is present in
+the request when the principal provides an external ID while assuming a role using
+the AWS CLI or AWS API.
+
+A unique identifier that might be required when you assume a role in another
+account. If the administrator of the account to which the role belongs provided
+you with an external ID, then provide that value in the ExternalId
+parameter. This value can be any string, such as a passphrase or account number.
+The primary function of the external ID is to address and prevent the confused
+deputy problem. For more information about the external ID and the confused deputy
+problem, see Access to AWS accounts owned by third parties.
+
+The ExternalId value must have a minimum of 2 characters and a
+maximum of 1,224 characters. The value must be alphanumeric without white space.
+It can also include the following symbols: plus (+), equal (=), comma (,), period
+(.), at (@), colon (:), forward slash (/), and hyphen (-).
+
+sts:RequestContext/context-key
+
+Works with string operators.
+
+Use this key to compare the session context key-value pairs that are embedded
+in the trusted token issuer signed context assertion passed in the request with
+the context key-values specified in the role trust policy.
+
+Availability – This key is present in
+the request when a context assertion is provided in the
+ProvidedContexts request parameter while assuming a role using the
+AWS STS AssumeRole API
+operation.
+
+This context key is formatted as
+"sts:RequestContext/context-key":"context-value" where
+context-key and context-value are a context key-value
+pair. When multiple context keys are embedded in the signed context assertion
+passed in the request, there is one context key for each key-value pair. You must
+grant permission for the sts:SetContext action in the role trust
+policy to allow a principal to set context keys within the resulting session
+token. To learn more about the supported IAM Identity Center context keys that can be used with
+this key, see AWS STS
+condition keys for IAM Identity Center in the
+AWS IAM Identity Center User Guide.
+
+You can use this key in a role trust policy to enforce fine-grained access
+control based on the user or their attributes when they assume a role. After the
+role is assumed, activity appears in the AWS CloudTrail logs within the
+AdditionalEventData attribute, containing the session context
+key-value pairs that were set by the context provider in the assume role request.
+This makes it easier for administrators to differentiate between role sessions
+when a role is used by different principals. The key-value pairs are set by the
+specified context provider, not by AWS CloudTrail or AWS STS. This gives the context
+provider control over what context is included in the CloudTrail logs and session
+information.
+
+sts:RequestContextProviders
+
+Works with ARN operators.
+
+Use this key to compare the context provider ARN in the request with the
+context provider ARN specified in the role trust policy.
+
+Availability – This key is present in
+the request when a context assertion is provided in the
+ProvidedContexts request parameter while assuming a role using the
+AWS STS AssumeRole API
+operation.
+
+The following example condition checks that the context provider ARN passed in
+the request matches the ARN specified in the role trust policy condition. We
+recommend you add a null check with ForAllValues to prevent missing
+context keys or context keys with empty values from evaluating to true. For
+details, see Condition operator to check existence of condition keys.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Action": "sts:SetContext",
+"Effect": "Allow",
+"Resource": "*",
+"Condition": {
+"ForAllValues:ArnEquals": {
+"sts:RequestContextProviders": [
+"arn:aws:iam::aws:contextProvider/IdentityCenter"
+]
+},
+"Null": {
+"sts:RequestContextProviders": "false"
+}
+}
+}
+}
+
+sts:RoleAuthorizedByIdp
+
+Works with Boolean operators.
+
+Use this key to verify that the identity provider (IdP) explicitly authorized
+the requested role through the https://aws.amazon.com/roles claim in
+the OIDC token. The roles claim contains the
+IAM role ARNs that the token is allowed to assume. AWS STS supports two formats
+for the claim value:
+
+JSON array (recommended):
+
+"https://aws.amazon.com/roles": [
+"arn:aws:iam::111122223333:role/RoleA",
+"arn:aws:iam::111122223333:role/RoleB"
+]
+
+Semicolon-delimited string:
+
+"https://aws.amazon.com/roles": "arn:aws:iam::111122223333:role/RoleA;arn:aws:iam::111122223333:role/RoleB"
+
+Availability – This key is present in
+requests that use the AssumeRoleWithWebIdentity operation. The value
+is true when the token includes the
+https://aws.amazon.com/roles claim and the requested role ARN
+matches a value in the claim. The value is false when the token does
+not include the claim. Because the key is always present in
+AssumeRoleWithWebIdentity requests, use the Bool
+condition operator rather than BoolIfExists.
+
+When the token includes the claim but the requested role ARN does not match a
+value in the claim, the AssumeRoleWithWebIdentity call returns an
+InvalidIdentityToken error.
+
+You can use this condition key in role trust policies, resource control
+policies (RCPs), and VPC endpoint policies to require that an IdP authorize the
+role before it can be assumed.
+
+The following role trust policy allows
+AssumeRoleWithWebIdentity only when the IdP authorized the
+requested role in the token.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Federated": "arn:aws:iam::111122223333:oidc-provider/idp.example.com"
+},
+"Action": "sts:AssumeRoleWithWebIdentity",
+"Condition": {
+"StringEquals": { "idp.example.com:aud": "my-app-id" },
+"Bool": { "sts:RoleAuthorizedByIdp": "true" }
+}
+}
+]
+}
+
+sts:RoleSessionName
+
+Works with string operators.
+
+Use this key to compare the session name that a principal specifies when
+assuming a role with the value that is specified in the policy.
+
+Availability – This key is present in
+the request when the principal assumes the role using the AWS Management Console, any
+assume-role CLI command, or any AWS STS AssumeRole API
+operation.
+
+You can use this key in a role trust policy to require that your users provide
+a specific session name when they assume a role. For example, you can require that
+IAM users specify their own user name as their session name. After the IAM
+user assumes the role, activity appears in AWS CloudTrail logs with the
+session name that matches their user name. This makes it easier for administrators
+to differentiate between role sessions when a role is used by different
+principals.
+
+The following role trust policy requires that IAM users in account
+111122223333 provide their IAM user name as the
+session name when they assume the role. This requirement is enforced using the
+aws:username
+condition variable in the
+condition key. This policy allows IAM users to assume the role to which the
+policy is attached. This policy does not allow anyone using temporary credentials
+to assume the role because the username variable is present for only
+IAM users.
+
+Important
+
+You can use any single-valued condition key as a variable. You can't use a
+multivalued condition key as a variable.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "RoleTrustPolicyRequireUsernameForSessionName",
+"Effect": "Allow",
+"Action": "sts:AssumeRole",
+"Principal": {"AWS": "arn:aws:iam::111122223333:root"},
+"Condition": {
+"StringLike": {"sts:RoleSessionName": "prefix-${aws:username}"}
+}
+}
+]
+}
+
+When an administrator views the AWS CloudTrail log for an action, they can compare
+the session name to the user names in their account. In the following example, the
+user named matjac performed the operation using the role named
+MateoRole. The administrator can then contact Mateo Jackson, who
+has the user named matjac.
+
+"assumedRoleUser": {
+"assumedRoleId": "AROACQRSTUVWRAOEXAMPLE:matjac",
+"arn": "arn:aws:sts::111122223333:assumed-role/MateoRole/matjac"
+}
+
+If you allow cross-account access using roles, then users in one account can assume
+a role in another account. The ARN of the assumed role user listed in CloudTrail
+includes the account where the role exists. It
+does not include the account of the user that assumed the role. Users are unique
+only within an account. Therefore, we recommend that you use this method for
+checking CloudTrail logs only for roles that are assumed by users in accounts that you
+administer. Your users might use the same user name in multiple accounts.
+
+sts:SourceIdentity
+
+Works with string operators.
+
+Use this key to compare the source identity that a principal specifies when
+assuming a role with the value that is specified in the policy.
+
+Availability – This key is present in
+the request when the principal provides a source identity while assuming a role
+using any AWS STS assume-role CLI command, or AWS STS AssumeRole API
+operation.
+
+You can use this key in a role trust policy to require that your users set a
+specific source identity when they assume a role. For example, you can require
+your workforce or federated identities to specify a value for source identity. You
+can configure your identity provider (IdP) to use one of the attributes that are
+associated with your users, like a user name or email as the source identity. The
+IdP then passes the source identity as an attribute in the assertions or claims
+that it sends to AWS. The value of the source identity attribute identifies the
+user or application who is assuming the role.
+
+After the user assumes the role, activity appears in AWS CloudTrail logs with the
+source identity value that was set. This makes it easier for administrators to
+determine who or what performed actions with a role in AWS. You must grant
+permissions for the sts:SetSourceIdentity action to allow an identity
+to set a source identity.
+
+Unlike sts:RoleSessionName, after the source identity is set, the
+value cannot be changed. It is present in the request context for all actions
+taken with the role by the source identity. The value persists into subsequent
+role sessions when you use the session credentials to assume another role.
+Assuming one role from another is called role chaining.
+
+You can use the aws:SourceIdentity global condition key to further
+control access to AWS resources based on the value of source identity in
+subsequent requests.
+
+The following role trust policy allows the IAM user AdminUser to
+assume a role in account 111122223333. It also grants
+permission to the AdminUser to set a source identity, as long as the
+source identity set is DiegoRamirez.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowAdminUserAssumeRole",
+"Effect": "Allow",
+"Principal": {"AWS": " arn:aws:iam::111122223333:user/AdminUser"},
+"Action": [
+"sts:AssumeRole",
+"sts:SetSourceIdentity"
+],
+"Condition": {
+"StringEquals": {"sts:SourceIdentity": "DiegoRamirez"}
+}
+}
+]
+}
+
+To learn more about using source identity information, see Monitor and control actions taken with assumed roles.
+
+sts:TaskPolicyArn
+
+Works with ARN operators.
+
+Use this key to compare the policy ARN in an sts:AssumeRoot
+request with the policy ARN specified in the policy.
+
+Availability – This key is present in
+the request when you make a request using sts:AssumeRoot.
+
+Administrators can use this condition key in IAM policies to restrict
+specific roles or users within the management account or delegated administrator
+account from performing certain actions when assuming root credentials. For more
+information, see Perform a privileged task on an AWS Organizations member account.
+
+sts:TransitiveTagKeys
+
+Works with string operators.
+
+Use this key to compare the transitive session tag keys in the request with
+those specified in the policy.
+
+Availability – This key is present in
+the request when you make a request using temporary security credentials. These
+include credentials created using any assume-role operation, or the
+GetFederationToken operation.
+
+When you make a request using temporary security credentials, the request context includes
+the aws:PrincipalTag context key. This key includes a list of session tags, transitive session tags, and
+role tags. Transitive session tags are tags that persist into all subsequent
+sessions when you use the session credentials to assume another role. Assuming one
+role from another is called role
+chaining.
+
+You can use this condition key in a policy to require setting specific session
+tags as transitive when assuming a role or federating a user.

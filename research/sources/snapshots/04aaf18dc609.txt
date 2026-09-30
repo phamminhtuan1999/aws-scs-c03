@@ -1,0 +1,104 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/s3-protection.html
+TITLE: GuardDuty S3 Protection - Amazon GuardDuty
+
+# GuardDuty S3 Protection
+
+Note
+
+You can configure S3 Protection along with all other protection plans from a single page
+in the GuardDuty console. For more information, see Configuring protection plans.
+
+S3 Protection helps you detect potential security risks for data, such as data exfiltration and
+destruction, in your Amazon Simple Storage Service (Amazon S3) buckets. GuardDuty monitors AWS CloudTrail data events for Amazon S3,
+that includes object-level API operations to identify these risks in all the Amazon S3 buckets in
+your account.
+
+When GuardDuty detects a potential threat based on S3 data event monitoring, it generates a
+security finding. For information about the finding types that GuardDuty may generate when you
+enable S3 Protection, see GuardDuty S3 Protection finding types.
+
+By default, foundational threat detection includes monitoring AWS CloudTrail management events to identify
+potential threats in your Amazon S3 resources. This data source is different from the AWS CloudTrail
+data events for S3 as they both monitor different kinds of activities in your environment.
+
+You can enable S3 Protection in an account in any Region where GuardDuty supports this feature. This
+will help you monitor CloudTrail data events for S3 in that account and Region. After you enable
+S3 Protection, GuardDuty will be able to fully monitor your Amazon S3 buckets and generate findings for
+suspicious access to the data stored in your S3 buckets.
+
+To use S3 Protection, you don't need to explicitly enable or configure S3 data event logging in
+AWS CloudTrail.
+
+30-day free trial
+
+The following list explains how the 30-day free trial would work for your
+account:
+
+- When you enable GuardDuty in an AWS account in a new Region for the
+first time, you get a 30-day free trial. In this case, GuardDuty will also
+enable S3 Protection, which is included in the free trial.
+
+- When you are already using GuardDuty and decide to enable S3 Protection for the
+first time, your account in this Region will get a 30-day free trial for
+S3 Protection.
+
+- You can choose to disable S3 Protection in any Region at any time.
+
+- During the 30-day free trial, you can get an estimate of your usage
+costs in that account and Region. After the 30-day free trial ends,
+S3 Protection doesn't get disabled automatically. Your account in this
+Region will start incurring usage cost. For more information, see Monitoring GuardDuty Usage and Estimating Costs.
+
+## AWS CloudTrail data events for S3
+
+Data events, also known as data plane operations, provide insight into the resource
+operations performed on or within a resource. They are often high-volume activities.
+
+The following are examples of CloudTrail data events for S3 that GuardDuty can
+monitor:
+
+- GetObject API operations
+
+- PutObject API operations
+
+- ListObjects API operations
+
+- DeleteObject API operations
+
+For more information about these APIs, see Amazon Simple Storage Service API Reference.
+
+## How GuardDuty uses CloudTrail data events for S3
+
+When you enable S3 Protection, GuardDuty begins to analyze CloudTrail data events for S3 from all of
+your S3 buckets, and monitors them for malicious and suspicious activity. For more
+information, see AWS CloudTrail management events.
+
+When an unauthenticated user accesses an S3 object, it means that the S3 object is
+publicly accessible. Therefore, GuardDuty doesn't process such requests. GuardDuty processes the
+requests made to the S3 objects by using valid IAM (AWS Identity and Access Management) or AWS STS (AWS Security Token Service)
+credentials.
+
+Note
+
+After enabling S3 Protection, GuardDuty monitors the data events from those Amazon S3 buckets
+that reside in the same Region where you enabled GuardDuty.
+
+If you disable S3 Protection in your account in a specific Region, GuardDuty stops S3 data event
+monitoring of the data stored in your S3 buckets. GuardDuty will no longer generate S3 Protection
+finding types for your account in that Region.
+
+### GuardDuty using CloudTrail data events for S3 for attack sequences
+
+GuardDuty Extended Threat Detection
+detects multi-stage attack sequences that span foundational data sources, AWS resources, and timeline,
+in an account. When GuardDuty observes a sequence of events that is indicative of a recent or an in-progress
+suspicious activity in your account, GuardDuty generates associated attack sequence finding.
+
+By default, when you enable GuardDuty, Extended Threat Detection also gets enabled in your account.
+This capability covers the threat scenario associated with CloudTrail management events at no additional cost.
+However, to use Extended Threat Detection at its full potential, GuardDuty recommends enabling S3 Protection to cover
+threat scenarios associated with CloudTrail data events for S3.
+
+After you enable S3 Protection, GuardDuty will automatically cover the attack sequence threat scenarios,
+such as compromise or destruction of data, where your Amazon S3
+resources might be involved.

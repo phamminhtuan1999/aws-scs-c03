@@ -1,0 +1,291 @@
+{
+  "question_id": "Q007",
+  "question_content_hash": "b240f9c584d7bc1890ca1e551b3f8e8a68c36d524424c828a1b9fae27e18f79a",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "85d7d4304a324c5ecfe17e449f6769989d5fa2ea419f68ff1ff4001acbf086e4",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phải TỪ CHỐI (Deny) quyền truy cập bucket DOC-EXAMPLE-BUCKET, không phải cho phép.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Đối tượng là federated user tên Bob (phiên AWS STS federated user), phải dùng đúng định dạng ARN của principal này trong bucket policy.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Dùng bucket policy (resource-based policy); chỉ ảnh hưởng quyền S3 của Bob, các quyền khác của Bob giữ nguyên.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q007_image_01.png",
+      "text": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Principal\": {\"AWS\": \"arn:aws:sts::account-id:federated-user/Bob\"},\n    \"Effect\": \"Allow\",\n    \"Action\": \"s3:*\",\n    \"Resource\": \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\"\n  }\n}",
+      "notes_vi": "Dấu đóng của Statement trong ảnh trông giống ')' nhưng hiểu là '}'. account-id là placeholder."
+    },
+    {
+      "image": "images/Q007_image_02.png",
+      "text": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Principal\": {\"AWS\": \"arn:aws:sts::account-id:federated-user/Bob\"},\n    \"Effect\": \"Deny\",\n    \"Action\": \"s3:*\",\n    \"Resource\": \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\"\n  }\n}",
+      "notes_vi": "Giống A nhưng Effect là Deny."
+    },
+    {
+      "image": "images/Q007_image_03.png",
+      "text": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Principal\": {\"AWS\": \"arn:aws:iam::account-id:user/Bob\"},\n    \"Effect\": \"Deny\",\n    \"Action\": \"s3:*\",\n    \"Resource\": \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\"\n  }\n}",
+      "notes_vi": "Principal là IAM user ARN."
+    },
+    {
+      "image": "images/Q007_image_04.png",
+      "text": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": {\n    \"Principal\": {\"AWS\": \"arn:aws:sts::account-id:assumed-role/Bob/role-session-name\"},\n    \"Effect\": \"Deny\",\n    \"Action\": \"s3:[?]\",\n    \"Resource\": \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\"\n  }\n}",
+      "notes_vi": "Ký tự sau 's3:' bị mờ, rất có thể là '*'. Principal là role session ARN (role tên Bob, session tên role-session-name)."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q007:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Effect là Allow nên policy này cấp thêm quyền S3 cho Bob thay vì từ chối; ngược với yêu cầu deny.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q007:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Dùng đúng định dạng ARN của AWS STS federated user session (arn:aws:sts::acct:federated-user/Bob) với Effect Deny; explicit deny trong resource-based policy ghi đè mọi allow, và chỉ tác động tới bucket này nên quyền khác của Bob không đổi.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q007:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Principal arn:aws:iam::acct:user/Bob là IAM user principal, khác với federated user session principal (arn:aws:sts::...:federated-user/...); policy này nhắm sai loại principal nên không chắc chặn được phiên federated user Bob và có thể chặn nhầm một IAM user tên Bob.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q007:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "assumed-role/Bob/role-session-name là role session principal của một role tên Bob với session name cố định, không phải federated user Bob (GetFederationToken); chỉ khớp đúng một phiên role đó.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q007:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu IAM nêu rõ định dạng ARN của federated user principal và role session principal; chỉ B vừa Deny vừa đúng principal.",
+      "open_issues": [
+        "Resource ở mọi phương án chỉ là bucket ARN (không có /*) nên thực tế chỉ chặn các action cấp bucket, không chặn action cấp object; lỗi chung của cả 4 phương án, không làm thay đổi lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "source_answer": [
+    "Q007:B"
+  ],
+  "researched_answer": [
+    "Q007:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Trang IAM Principal nêu rõ ba định dạng ARN khác nhau cho AWS STS federated user session, IAM user và role session; chỉ B vừa Deny vừa đúng principal federated user.",
+    "open_issues": [
+      "Resource ở mọi phương án chỉ là bucket ARN (thiếu /*) nên thực tế chỉ chặn action cấp bucket; lỗi chung của cả 4 phương án, không làm đổi lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn B. Đã kiểm tra lại các phương án cạnh tranh mạnh nhất: C (arn:aws:iam::...:user/Bob) và D (arn:aws:sts::...:assumed-role/Bob/...) đều là loại principal khác với federated user session theo trang IAM Principal (ref1, ref2, ref5); A dùng Allow nên không từ chối. Đã xem lại ảnh D: ký tự Action mờ ('s3:*'), không ảnh hưởng. Không tìm thấy cách đọc nào khiến phương án khác đúng; giữ B.",
+  "explanation_vi": {
+    "why_correct": "B dùng Effect Deny với principal đúng định dạng AWS STS federated user session (arn:aws:sts::account-id:federated-user/Bob); explicit deny trong bucket policy ghi đè mọi Allow, và vì chỉ gắn trên bucket này nên chỉ ảnh hưởng quyền S3 trên bucket, các quyền khác của Bob giữ nguyên.",
+    "others": {
+      "Q007:A": "Effect là Allow nên policy cấp thêm quyền S3 cho Bob thay vì từ chối truy cập.",
+      "Q007:C": "arn:aws:iam::account-id:user/Bob là IAM user principal, không phải phiên federated user Bob, nên nhắm sai principal (và có thể chặn nhầm một IAM user tên Bob).",
+      "Q007:D": "assumed-role/Bob/role-session-name là role session của một IAM role tên Bob với session name cố định, không phải federated user Bob."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "federated user named Bob",
+      "meaning_vi": "Phiên AWS STS federated user (GetFederationToken) — principal có ARN dạng arn:aws:sts::account-id:federated-user/Bob."
+    },
+    {
+      "phrase": "by using a bucket policy",
+      "meaning_vi": "Dùng resource-based policy gắn trên bucket, có thể chỉ định trực tiếp ARN của phiên làm Principal."
+    },
+    {
+      "phrase": "Any other permissions that Bob has must remain intact",
+      "meaning_vi": "Chỉ thêm một Deny phạm vi hẹp trên bucket, không sửa identity policy của Bob."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần chặn một principal cụ thể bằng bucket policy -> nghĩ đến Effect Deny + đúng định dạng ARN principal (sts federated-user/, sts assumed-role/, iam user/); kiểm tra loại principal và Resource có cả bucket lẫn bucket/*.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management",
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon S3",
+      "AWS IAM",
+      "AWS STS"
+    ],
+    "reason_vi": "Câu hỏi về định dạng Principal trong resource-based policy và logic explicit deny để kiểm soát truy cập dữ liệu S3."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal",
+      "section": "AWS STS federated user principals",
+      "snapshot_id": "879eb6158f92",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "\"Principal\": { \"AWS\": \"arn:aws:sts::AWS-account-ID:federated-user/user-name\" }",
+      "supports": "Định dạng ARN đúng cho federated user session trong Principal là arn:aws:sts::acct:federated-user/<name> (khớp B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal",
+      "section": "IAM user principals",
+      "snapshot_id": "879eb6158f92",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "\"Principal\": { \"AWS\": \"arn:aws:iam::AWS-account-ID:user/user-name\" }",
+      "supports": "arn:aws:iam::...:user/... là IAM user principal, một loại principal khác với federated user session (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html",
+      "title": "Policy evaluation logic",
+      "section": "Evaluating identity-based policies with resource-based policies",
+      "snapshot_id": "76d60163edfe",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An explicit deny in either of these policies overrides the allow.",
+      "supports": "Deny trong bucket policy ghi đè allow từ identity-based policy; Allow (A) không từ chối được.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html",
+      "title": "Policies and permissions in IAM",
+      "section": "Session policies",
+      "snapshot_id": "7bc720d1b825",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A resource-based policy can specify the ARN of the session as a principal.",
+      "supports": "Resource-based policy có thể chỉ định trực tiếp ARN của phiên (session) làm principal, như B làm với federated user session.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal",
+      "section": "Role session principals",
+      "snapshot_id": "879eb6158f92",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "\"Principal\": { \"AWS\": \"arn:aws:sts::AWS-account-ID:assumed-role/role-name/role-session-name\" }",
+      "supports": "assumed-role/<role-name>/<session-name> là role session principal: trong D, 'Bob' là tên role, không phải federated user.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+      "title": "How Amazon S3 works with IAM",
+      "section": "Resources - object operations",
+      "snapshot_id": "cb82fb547892",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The object ARN must contain a forward slash after the bucket name",
+      "supports": "Resource chỉ là bucket ARN (không /*) thì không bao phủ các action cấp object — lỗi chung của mọi phương án.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q007:A",
+      "detail_vi": "Mọi phương án chỉ ghi Resource arn:aws:s3:::DOC-EXAMPLE-BUCKET, thiếu arn:aws:s3:::DOC-EXAMPLE-BUCKET/*; policy thực tế sẽ không chặn GetObject/PutObject. Không ảnh hưởng việc chọn principal."
+    },
+    {
+      "type": "layout",
+      "location": "Q007:D",
+      "detail_vi": "Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ)."
+    }
+  ],
+  "notes_vi": "Điểm phân biệt duy nhất là Effect và định dạng Principal ARN.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q007:B\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key B khớp blind; giữ B, status verified",
+      "previous_answer": null
+    }
+  ]
+}

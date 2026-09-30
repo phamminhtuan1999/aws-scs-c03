@@ -1,0 +1,612 @@
+URL: https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-use-case.html
+TITLE: Use-case specific rule groups - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director
+
+Introducing a new console experience for AWS WAF
+
+You can now use the updated experience to access AWS WAF functionality anywhere in the console.
+For more details, see Working with the console.
+
+# Use-case specific rule groups
+
+Use-case specific rule groups provide incremental protection for many
+diverse AWS WAF use cases. Choose the rule groups that apply to your
+application.
+
+## SQL database managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesSQLiRuleSet, WCU: 200
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The SQL database rule group contains rules to block request patterns
+associated with exploitation of SQL databases, like SQL injection attacks.
+This can help prevent remote injection of unauthorized queries. Evaluate
+this rule group for use if your application interfaces with an SQL
+database.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+SQLi_QUERYARGUMENTS
+
+Uses the built-in AWS WAF SQL injection attack rule statement, with
+sensitivity level set to Low, to
+inspect the values of all query parameters for
+patterns that match malicious SQL code.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLi_QueryArguments
+
+SQLiExtendedPatterns_QUERYARGUMENTS
+
+Inspects the values of all query parameters for
+patterns that match malicious SQL code. The patterns
+this rule inspects for aren't covered by the
+rule SQLi_QUERYARGUMENTS.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLiExtendedPatterns_QueryArguments
+
+SQLi_BODY
+
+Uses the built-in AWS WAF SQL injection attack rule statement, with sensitivity level set to
+Low, to inspect the request body for
+patterns that match malicious SQL code.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLi_Body
+
+SQLiExtendedPatterns_BODY
+
+Inspects the request body for patterns that match
+malicious SQL code. The patterns this rule inspects
+for aren't covered by the rule
+SQLi_BODY.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLiExtendedPatterns_Body
+
+SQLiExtendedPatterns_HEADER
+
+Inspects the request headers for patterns that match
+malicious SQL code.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLiExtendedPatterns_Header
+
+SQLiExtendedPatterns_URIPATH
+
+Inspects the request path for patterns that match
+malicious SQL code. The patterns this rule inspects
+for aren't covered by the rule
+SQLi_URIPATH.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLiExtendedPatterns_UriPath
+
+SQLi_COOKIE
+
+Uses the built-in AWS WAF SQL injection attack rule statement, with sensitivity level set to
+Low, to inspect the request cookie
+headers for patterns that match malicious SQL code.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLi_Cookie
+
+SQLi_URIPATH
+
+Uses the built-in AWS WAF SQL injection attack rule statement, with sensitivity level set to
+Low, to inspect the request cookie
+headers for patterns that match malicious SQL code.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:sql-database:SQLi_URIPath
+
+## Linux operating system managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesLinuxRuleSet, WCU: 200
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The Linux operating system rule group contains rules that block request patterns
+associated with the exploitation of vulnerabilities specific to Linux,
+including Linux-specific Local File Inclusion (LFI) attacks. This can
+help prevent attacks that expose file contents or run code for which the
+attacker should not have had access. You should evaluate this rule group
+if any part of your application runs on Linux. You should use this rule
+group in conjunction with the
+POSIX operating system
+rule group.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+LFI_URIPATH
+
+Inspects the request path for attempts to exploit
+Local File Inclusion (LFI) vulnerabilities in web
+applications. Example patterns include files like
+/proc/version, which could provide
+operating system information to attackers.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:linux-os:LFI_URIPath
+
+LFI_QUERYSTRING
+
+Inspects the values of querystring for attempts to
+exploit Local File Inclusion (LFI) vulnerabilities
+in web applications. Example patterns include files
+like /proc/version, which could provide
+operating system information to attackers.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:linux-os:LFI_QueryString
+
+LFI_HEADER
+
+Inspects request headers for attempts to exploit Local File Inclusion
+(LFI) vulnerabilities in web applications. Example
+patterns include files like
+/proc/version, which could provide
+operating system information to attackers.
+
+Warning
+
+This rule only inspects the first 8 KB of the request headers or the first 200 headers, whichever limit is reached first, and it uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:linux-os:LFI_Header
+
+## POSIX operating system managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesUnixRuleSet, WCU: 100
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The POSIX operating system rule group contains rules that block request
+patterns associated with the exploitation of vulnerabilities specific to
+POSIX and POSIX-like operating systems, including Local File Inclusion (LFI)
+attacks. This can help prevent attacks that expose file contents or run code
+for which the attacker should not have had access. You should evaluate this
+rule group if any part of your application runs on a POSIX or POSIX-like
+operating system, including Linux, AIX, HP-UX, macOS, Solaris, FreeBSD, and
+OpenBSD.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+UNIXShellCommandsVariables_QUERYSTRING
+
+Inspects the values of the query string for
+attempts to exploit command injection, LFI, and path
+traversal vulnerabilities in web applications that
+run on Unix systems. Examples include patterns like
+echo $HOME and echo
+$PATH.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:posix-os:UNIXShellCommandsVariables_QueryString
+
+UNIXShellCommandsVariables_BODY
+
+Inspects the request body for attempts to exploit
+command injection, LFI, and path traversal
+vulnerabilities in web applications that run on Unix
+systems. Examples include patterns like echo
+$HOME and echo $PATH.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:posix-os:UNIXShellCommandsVariables_Body
+
+UNIXShellCommandsVariables_HEADER
+
+Inspects all request headers for attempts to exploit
+command injection, LFI, and path traversal
+vulnerabilities in web applications that run on Unix
+systems. Examples include patterns like echo
+$HOME and echo $PATH.
+
+Warning
+
+This rule only inspects the first 8 KB of the request headers or the first 200 headers, whichever limit is reached first, and it uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:posix-os:UNIXShellCommandsVariables_Header
+
+## Windows operating system managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesWindowsRuleSet, WCU: 200
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The Windows operating system rule group contains rules that block request patterns
+associated with the exploitation of vulnerabilities specific to Windows,
+like remote execution of PowerShell commands. This can help prevent
+exploitation of vulnerabilities that permit an attacker to run
+unauthorized commands or run malicious code. Evaluate this rule group if
+any part of your application runs on a Windows operating system.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+WindowsShellCommands_HEADER
+
+Inspects all request headers and blocks WindowsShell command injection attempts in
+web applications. The match patterns represent
+WindowsShell commands. Example patterns include
+||nslookup and ;cmd.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:WindowsShellCommands_Header
+
+WindowsShellCommands_QUERYARGUMENTS
+
+Inspects the values of all query parameters for
+WindowsShell command injection attempts in web
+applications. The match patterns represent
+WindowsShell commands. Example patterns include
+||nslookup and ;cmd.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:WindowsShellCommands_QueryArguments
+
+WindowsShellCommands_QUERYSTRING
+
+Inspects the query string and blocks WindowsShell command injection attempts in
+web applications. The match patterns represent
+WindowsShell commands. Example patterns include
+||nslookup and ;cmd.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:WindowsShellCommands_QueryString
+
+WindowsShellCommands_URIPATH
+
+Inspects the request path and blocks WindowsShell command injection attempts in
+web applications. The match patterns represent
+WindowsShell commands. Example patterns include
+||nslookup and ;cmd.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:WindowsShellCommands_UriPath
+
+WindowsShellCommands_BODY
+
+Inspects the request body for WindowsShell command
+injection attempts in web applications. The match
+patterns represent WindowsShell commands. Example
+patterns include ||nslookup and
+;cmd.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:WindowsShellCommands_Body
+
+PowerShellCommands_COOKIE
+
+Inspects the request cookie headers for PowerShell command injection attempts in
+web applications. The match patterns represent
+PowerShell commands. For example,
+Invoke-Expression.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:PowerShellCommands_Cookie
+
+PowerShellCommands_QUERYARGUMENTS
+
+Inspects the values of all query parameters for
+PowerShell command injection attempts in web
+applications. The match patterns represent
+PowerShell commands. For example,
+Invoke-Expression.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:PowerShellCommands_QueryArguments
+
+PowerShellCommands_BODY
+
+Inspects the request body for PowerShell command
+injection attempts in web applications. The match
+patterns represent PowerShell commands. For example,
+Invoke-Expression.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:windows-os:PowerShellCommands_Body
+
+## PHP application managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesPHPRuleSet, WCU: 100
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The PHP application rule group contains rules that block request patterns associated with
+the exploitation of vulnerabilities specific to the use of the PHP
+programming language, including injection of unsafe PHP functions. This
+can help prevent exploitation of vulnerabilities that permit an attacker
+to remotely run code or commands for which they are not authorized.
+Evaluate this rule group if PHP is installed on any server with which
+your application interfaces.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+PHPHighRiskMethodsVariables_HEADER
+
+Inspects all headers for
+PHP script code injection attempts.
+Example patterns
+include functions like fsockopen and
+the $_GET superglobal variable.
+
+Warning
+
+This rule only inspects the first 8 KB of the request headers or the first 200 headers, whichever limit is reached first, and it uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:php-app:PHPHighRiskMethodsVariables_Header
+
+PHPHighRiskMethodsVariables_QUERYSTRING
+
+Inspects everything after the first
+? in the request URL, looking for
+PHP script code injection attempts.
+Example patterns
+include functions like fsockopen and
+the $_GET superglobal variable.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:php-app:PHPHighRiskMethodsVariables_QueryString
+
+PHPHighRiskMethodsVariables_BODY
+
+Inspects the values of the request body for PHP
+script code injection attempts. Example patterns
+include functions like fsockopen and
+the $_GET superglobal variable.
+
+Warning
+
+This rule only inspects the request body up to the body size limit for the protection pack (web ACL) and resource type. For Application Load Balancer and AWS AppSync, the limit is fixed at 8 KB. For CloudFront, API Gateway, Amazon Cognito, App Runner, Verified Access, and Amazon Bedrock AgentCore Gateway, the default limit is 16 KB and you can increase the limit up to 64 KB in your protection pack (web ACL) configuration. This rule uses the Continue option for oversize content handling. For more information, see
+Oversize web request components in AWS WAF.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:php-app:PHPHighRiskMethodsVariables_Body
+
+PHPHighRiskMethodsVariables_URIPATH
+
+Inspects the request path for PHP script code
+injection attempts. Example patterns include
+functions like fsockopen and the
+$_GET superglobal variable.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:php-app:PHPHighRiskMethodsVariables_URIPath
+
+## WordPress application managed rule group
+
+VendorName: AWS, Name:
+AWSManagedRulesWordPressRuleSet, WCU: 100
+
+Note
+
+This documentation covers the most recent static version release of this managed rule group. We report
+version changes in the changelog log at AWS Managed Rules changelog.
+For information about other versions, use the API command
+DescribeManagedRuleGroup.
+
+The information that we publish for the rules in the AWS Managed Rules rule groups is intended to provide you
+with what you need to use the rules without giving
+bad actors what they need to circumvent the rules.
+
+If you need more information than you find here, contact the AWS Support Center.
+
+The WordPress application rule group contains rules that block request
+patterns associated with the exploitation of vulnerabilities specific to
+WordPress sites. You should evaluate this rule group if you are running
+WordPress. This rule group should be used in conjunction with the
+SQL database
+and PHP application
+rule groups.
+
+This managed rule group adds labels to the web requests that
+it evaluates, which are available to rules that run after this rule group in your protection pack (web ACL). AWS WAF
+also records the labels to Amazon CloudWatch metrics. For general information about labels and label metrics, see Web request labeling
+and Label metrics and dimensions.
+
+Rule name
+
+Description and label
+
+WordPressExploitableCommands_QUERYSTRING
+
+Inspects the request query string for high risk
+WordPress commands that can be exploited in
+vulnerable installations or plugins. Examples
+patterns include commands like
+do-reset-wordpress.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:wordpress-app:WordPressExploitableCommands_QUERYSTRING
+
+WordPressExploitablePaths_URIPATH
+
+Inspects the request URI path for WordPress files
+like xmlrpc.php, which are known to
+have easily exploitable vulnerabilities.
+
+Rule action: Block
+
+Label:
+awswaf:managed:aws:wordpress-app:WordPressExploitablePaths_URIPATH

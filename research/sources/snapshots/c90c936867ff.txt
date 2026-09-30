@@ -1,0 +1,481 @@
+URL: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL.html
+TITLE: Using SSL/TLS to encrypt a connection to a DB cluster - Amazon Aurora
+
+# Using SSL/TLS to encrypt a connection to a DB cluster
+
+You can use Secure Socket Layer (SSL) or Transport Layer
+Security (TLS) from your application to encrypt a connection to a DB cluster
+running Aurora MySQL or Aurora PostgreSQL.
+
+SSL/TLS connections provide a layer of security by
+encrypting data that moves between your client and DB
+cluster. Optionally, your SSL/TLS connection can perform server
+identity verification by validating the server certificate installed on your
+database. To require server identity verification, follow this general
+process:
+
+- Choose the certificate authority (CA)
+that signs the DB server certificate,
+for your database. For more information about certificate
+authorities, see Certificate authorities
+.
+
+- Download a certificate bundle to use when you are connecting to the
+database. To download a certificate bundle, see
+
+Certificate bundles by AWS Region
+.
+
+Note
+
+All certificates are only available for download using SSL/TLS
+connections.
+
+- Connect to the database using your DB engine's process for
+implementing SSL/TLS connections. Each DB engine has its own process for
+implementing SSL/TLS. To learn how to implement SSL/TLS for your
+database, follow the link that corresponds to your DB engine:
+
+- Security with Amazon Aurora MySQL
+
+- Security with Amazon Aurora PostgreSQL
+
+## Certificate authorities
+
+The certificate authority (CA) is the
+certificate that identifies the root CA at the top of the certificate chain.
+The CA signs the DB server certificate,
+which is installed on each DB instance. The DB server certificate identifies
+the DB instance as a trusted server.
+
+Amazon RDS provides the following CAs to sign the DB server certificate for a
+database.
+
+Certificate authority (CA)
+
+Description
+
+Common name (CN)
+
+rds-ca-rsa2048-g1
+
+Uses a certificate authority with RSA 2048 private key
+algorithm and SHA256 signing algorithm in most
+AWS Regions.
+
+In the AWS GovCloud (US) Regions, this CA uses a
+certificate authority with RSA 2048 private key
+algorithm and SHA384 signing algorithm.
+
+This CA supports automatic server certificate
+rotation.
+
+Amazon RDS region-identifier Root CA RSA2048 G1
+
+rds-ca-rsa4096-g1
+
+Uses a certificate authority with RSA 4096 private key
+algorithm and SHA384 signing algorithm. This CA supports
+automatic server certificate rotation.
+
+Amazon RDS region-identifier Root CA RSA4096 G1
+
+rds-ca-ecc384-g1
+
+Uses a certificate authority with ECC 384 private key
+algorithm and SHA384 signing algorithm. This CA supports
+automatic server certificate rotation.
+
+Amazon RDS region-identifier Root CA ECC384 G1
+
+Note
+
+If you are using the AWS CLI, you can see the validities of the
+certificate authorities listed above by using describe-certificates.
+
+These CA certificates are included in the regional and global certificate
+bundle. When you use the rds-ca-rsa2048-g1,
+rds-ca-rsa4096-g1, or rds-ca-ecc384-g1 CA with a database, RDS
+manages the DB server certificate on the database. RDS rotates the DB server
+certificate automatically before it expires.
+
+### Setting the CA for your database
+
+You can set the CA for a database when you perform the following
+tasks:
+
+- Create an Aurora DB cluster – You can set the CA for a
+DB instance in an Aurora cluster when you create the first DB
+instance in the DB cluster using the AWS CLI or RDS API.
+Currently, you can't set the CA for the DB instances in a DB
+cluster when you create the DB cluster using the RDS console.
+For instructions, see Creating an Amazon Aurora DB cluster
+.
+
+- Modify a DB instance – You can set the CA for a DB
+instance in a DB cluster by modifying it. For instructions, see
+Modifying a DB instance in a DB cluster
+.
+
+Note
+
+The default CA is set to
+rds-ca-rsa2048-g1.
+You can override the default CA for your AWS account by
+using the modify-certificates command.
+
+The available CAs depend on the DB engine and DB engine version. When
+you use the AWS Management Console, you can choose the CA using the
+Certificate authority setting, as shown in the
+following image.
+
+The console only shows the CAs that are available for the DB engine
+and DB engine version. If you're using the AWS CLI, you can set the CA for
+a DB instance using the create-db-instance or modify-db-instance command.
+
+If you're using the AWS CLI, you can see the available CAs for your
+account by using the describe-certificates command. This command also shows the
+expiration date for each CA in ValidTill in the output. You
+can find the CAs that are available for a specific DB engine and DB
+engine version using the describe-db-engine-versions command.
+
+The following example shows the CAs available for the default
+RDS for PostgreSQL DB engine version.
+
+aws rds describe-db-engine-versions --default-only --engine postgres
+
+Your output is similar to the following. The available CAs are listed
+in SupportedCACertificateIdentifiers. The output also shows
+whether the DB engine version supports rotating the certificate without
+restart in
+SupportsCertificateRotationWithoutRestart.
+
+{
+"DBEngineVersions": [
+{
+"Engine": "postgres",
+"MajorEngineVersion": "13",
+"EngineVersion": "13.4",
+"DBParameterGroupFamily": "postgres13",
+"DBEngineDescription": "PostgreSQL",
+"DBEngineVersionDescription": "PostgreSQL 13.4-R1",
+"ValidUpgradeTarget": [],
+"SupportsLogExportsToCloudwatchLogs": false,
+"SupportsReadReplica": true,
+"SupportedFeatureNames": [
+"Lambda"
+],
+"Status": "available",
+"SupportsParallelQuery": false,
+"SupportsGlobalDatabases": false,
+"SupportsBabelfish": false,
+"SupportsCertificateRotationWithoutRestart": true,
+"SupportedCACertificateIdentifiers": [
+"rds-ca-rsa2048-g1",
+"rds-ca-ecc384-g1",
+"rds-ca-rsa4096-g1"
+]
+}
+]
+}
+
+### DB server certificate validities
+
+The validity of DB server certificate depends on the DB engine and DB
+engine version. If the DB engine version supports rotating the
+certificate without restart, the validity of the DB server certificate
+is 1 year. Otherwise the validity is 3 years.
+
+For more information about DB server certificate rotation, see Automatic server certificate rotation
+.
+
+### Viewing the CA for your DB instance
+
+You can view the details about the CA for a database by viewing the
+Connectivity & security tab in the console,
+as in the following image.
+
+If you're using the AWS CLI, you can view the details about the CA for a
+DB instance by using the describe-db-instances command.
+
+## Download certificate bundles for Aurora
+
+When you connect to your database with SSL or TLS, the database instance
+requires a trust certificate from Amazon RDS. Select the appropriate link in the
+following table to download the bundle that corresponds with the
+AWS Region where you host your database.
+
+### Certificate bundles by AWS Region
+
+The certificate bundles for all AWS Regions and GovCloud (US)
+Regions contain the following root CA certificates:
+
+- rds-ca-rsa2048-g1
+
+- rds-ca-rsa4096-g1
+
+- rds-ca-ecc384-g1
+
+The rds-ca-rsa4096-g1 and rds-ca-ecc384-g1
+certificates are not available in the following Regions:
+
+- Asia Pacific (Mumbai)
+
+- Asia Pacific (Melbourne)
+
+- Canada West (Calgary)
+
+- Europe (Zurich)
+
+- Europe (Spain)
+
+- Israel (Tel Aviv)
+
+Your application trust store needs to only register the root CA certificate. Do not register the intermediate
+CA certificates to your trust store as this might cause connection issues when RDS automatically rotates your DB server certificate.
+
+Note
+
+Amazon RDS Proxy
+uses
+
+certificates from the AWS Certificate Manager (ACM). If you're using RDS Proxy, you
+don't need to download Amazon RDS certificates or update
+applications that use RDS Proxy connections. For more information, see
+Using TLS/SSL with RDS Proxy
+.
+
+To download a certificate bundle for an AWS Region, select the link
+for the AWS Region that hosts your database in the following
+table.
+
+AWS Region
+
+Certificate bundle
+(PEM)
+
+Certificate bundle
+(PKCS7)
+
+Any commercial AWS Region
+
+global-bundle.pem
+
+global-bundle.p7b
+
+US East (N. Virginia)
+
+us-east-1-bundle.pem
+
+us-east-1-bundle.p7b
+
+US East (Ohio)
+
+us-east-2-bundle.pem
+
+us-east-2-bundle.p7b
+
+US West (N. California)
+
+us-west-1-bundle.pem
+
+us-west-1-bundle.p7b
+
+US West (Oregon)
+
+us-west-2-bundle.pem
+
+us-west-2-bundle.p7b
+
+Africa (Cape Town)
+
+af-south-1-bundle.pem
+
+af-south-1-bundle.p7b
+
+Asia Pacific (Hong Kong)
+
+ap-east-1-bundle.pem
+
+ap-east-1-bundle.p7b
+
+Asia Pacific (Hyderabad)
+
+ap-south-2-bundle.pem
+
+ap-south-2-bundle.p7b
+
+Asia Pacific (Jakarta)
+
+ap-southeast-3-bundle.pem
+
+ap-southeast-3-bundle.p7b
+
+Asia Pacific (Malaysia)
+
+ap-southeast-5-bundle.pem
+
+ap-southeast-5-bundle.p7b
+
+Asia Pacific (Melbourne)
+
+ap-southeast-4-bundle.pem
+
+ap-southeast-4-bundle.p7b
+
+Asia Pacific (Mumbai)
+
+ap-south-1-bundle.pem
+
+ap-south-1-bundle.p7b
+
+Asia Pacific (Osaka)
+
+ap-northeast-3-bundle.pem
+
+ap-northeast-3-bundle.p7b
+
+Asia Pacific (Thailand)
+
+ap-southeast-7-bundle.pem
+
+ap-southeast-7-bundle.p7b
+
+Asia Pacific (Tokyo)
+
+ap-northeast-1-bundle.pem
+
+ap-northeast-1-bundle.p7b
+
+Asia Pacific (Seoul)
+
+ap-northeast-2-bundle.pem
+
+ap-northeast-2-bundle.p7b
+
+Asia Pacific (Singapore)
+
+ap-southeast-1-bundle.pem
+
+ap-southeast-1-bundle.p7b
+
+Asia Pacific (Sydney)
+
+ap-southeast-2-bundle.pem
+
+ap-southeast-2-bundle.p7b
+
+Canada (Central)
+
+ca-central-1-bundle.pem
+
+ca-central-1-bundle.p7b
+
+Canada West (Calgary)
+
+ca-west-1-bundle.pem
+
+ca-west-1-bundle.p7b
+
+Europe (Frankfurt)
+
+eu-central-1-bundle.pem
+
+eu-central-1-bundle.p7b
+
+Europe (Ireland)
+
+eu-west-1-bundle.pem
+
+eu-west-1-bundle.p7b
+
+Europe (London)
+
+eu-west-2-bundle.pem
+
+eu-west-2-bundle.p7b
+
+Europe (Milan)
+
+eu-south-1-bundle.pem
+
+eu-south-1-bundle.p7b
+
+Europe (Paris)
+
+eu-west-3-bundle.pem
+
+eu-west-3-bundle.p7b
+
+Europe (Spain)
+
+eu-south-2-bundle.pem
+
+eu-south-2-bundle.p7b
+
+Europe (Stockholm)
+
+eu-north-1-bundle.pem
+
+eu-north-1-bundle.p7b
+
+Europe (Zurich)
+
+eu-central-2-bundle.pem
+
+eu-central-2-bundle.p7b
+
+Israel (Tel Aviv)
+
+il-central-1-bundle.pem
+
+il-central-1-bundle.p7b
+
+Mexico (Central)
+
+mx-central-1-bundle.pem
+
+mx-central-1-bundle.p7b
+
+Middle East (Bahrain)
+
+me-south-1-bundle.pem
+
+me-south-1-bundle.p7b
+
+Middle East (UAE)
+
+me-central-1-bundle.pem
+
+me-central-1-bundle.p7b
+
+South America (São Paulo)
+
+sa-east-1-bundle.pem
+
+sa-east-1-bundle.p7b
+
+Any AWS GovCloud (US) Regions
+
+global-bundle.pem
+
+global-bundle.p7b
+
+AWS GovCloud (US-East)
+
+us-gov-east-1-bundle.pem
+
+us-gov-east-1-bundle.p7b
+
+AWS GovCloud (US-West)
+
+us-gov-west-1-bundle.pem
+
+us-gov-west-1-bundle.p7b
+
+### Viewing the contents of your CA certificate
+
+To check the contents of your CA certificate bundle, use the following
+command:
+
+keytool -printcert -v -file global-bundle.pem
