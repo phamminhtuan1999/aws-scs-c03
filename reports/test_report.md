@@ -1,7 +1,7 @@
 # Test report: SCS-C03 practice web app
 
 Run on 2026-09-30, Windows 11, Node 24.14, Microsoft Edge 154 (Playwright `channel: "msedge"`, no browser downloaded).
-Research data at the time of the run: `research_version r1`, 143 questions = 52 verified (52 gradable by research), 2 ambiguous, 89 pending.
+Research data at the time of the FINAL re-run (2026-09-30, after the audit pass): `research_version r1`, 143 questions = 135 verified (135 gradable by research; 2 of them differ from the source key: Q056, Q107), 8 ambiguous, 0 disputed/outdated/unresolved/pending. Final re-run by the main agent after syncing this data: `npm test` 125/125 passed, `npm run e2e` (Edge, production build) 21/21 passed. Changes made in the final pass: source links de-duplicated by URL; the answer line of a non-verified question now reads "Source key (not verified): X" instead of "Answer: X" (3 unit-test and 1 e2e expectations updated accordingly); `aria-keyshortcuts` added to exam navigation buttons. The first run described below was made while research was partial (52 verified, 2 ambiguous, 89 pending).
 The research agents keep regenerating `research/question_reviews.json`; the tests were written to pass for any mix of statuses
 (unit/UI tests use their own data: all-pending or a clearly test-only fixture; e2e tests read the served research file to compute expectations).
 

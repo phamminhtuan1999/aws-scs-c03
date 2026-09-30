@@ -130,7 +130,7 @@ export function ExamRun() {
           aria-pressed={flagged}
           onClick={() => update((s, t) => toggleFlag(s, qid, t))}
           disabled={paused || reviewing}
-          title="Alt+F"
+          title="Alt+F" aria-keyshortcuts="Alt+F"
         >
           <span aria-hidden="true">{flagged ? '⚑' : '⚐'}</span> Flag for review
         </button>
@@ -189,13 +189,13 @@ export function ExamRun() {
           </button>
         </div>
         <div className="nav-right">
-          <button type="button" onClick={() => navigate(reviewing ? '/exam/run' : '/exam/review')} disabled={paused} title="Alt+R" aria-pressed={reviewing}>
+          <button type="button" onClick={() => navigate(reviewing ? '/exam/run' : '/exam/review')} disabled={paused} title="Alt+R" aria-keyshortcuts="Alt+R" aria-pressed={reviewing}>
             Review screen
           </button>
-          <button type="button" onClick={() => go(idx - 1)} disabled={paused || idx === 0} title="Alt+P">
+          <button type="button" onClick={() => go(idx - 1)} disabled={paused || idx === 0} title="Alt+P" aria-keyshortcuts="Alt+P">
             Previous
           </button>
-          <button type="button" onClick={() => go(idx + 1)} disabled={paused || idx >= n - 1} title="Alt+N">
+          <button type="button" onClick={() => go(idx + 1)} disabled={paused || idx >= n - 1} title="Alt+N" aria-keyshortcuts="Alt+N">
             Next
           </button>
         </div>

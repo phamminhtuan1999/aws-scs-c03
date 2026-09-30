@@ -8,7 +8,22 @@ with no backend, no login, no LLM calls and no network requests other than loadi
 - Explanations (Vietnamese), keywords, tips, research details, source keys and answer images are **never mounted** before you press
   *Check answer* (study) or finish the exam (results).
 - Everything the app knows about answers comes from two separate layers: the immutable **source keys** copied from the supplied HTML,
-  and the **research** (`research/question_reviews.json`), which is produced independently and may still be incomplete.
+  and the **research** (`research/question_reviews.json`), which is produced independently and versioned (see Research status below).
+
+## Research status (research_version r1, 2026-09-30)
+
+All 143 questions and all 628 units (572 choices, 17 ordering steps, 39 matching rows/responses) have a blind record
+(`research/blind/`, written without access to any key) and a final record (`research/reviews/`), checked by
+`python tools/validate_research.py blind|final` (0 errors), plus an independent audit of 61 high-risk / sampled questions (`research/audit_log.md`).
+
+| status | questions | graded "By research" |
+|---|---|---|
+| verified | 135 (Q056, Q107 differ from the source key) | yes |
+| ambiguous | 8 — Q005, Q008, Q024, Q077, Q087, Q118, Q122, Q133 | no |
+| disputed / outdated / unresolved / pending | 0 | — |
+
+Details: `research/discrepancies.md`, `research/progress.md` (method, limitations, incidents), `research/coverage.csv`.
+Verified ≠ "100 % certain": see confidence and open issues per question; no claim of being bias-free is made.
 
 ## Requirements (Windows)
 

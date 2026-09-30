@@ -106,7 +106,9 @@ export function Feedback({ data, outcome: o, response }: { data: AppData; outcom
         {verdict.text}
       </p>
       <p className="answer-line">
-        <strong>Answer:</strong> {shownKey ? describeInline(data, o.qid, keyValue(shownKey)) : 'not available'} &nbsp;|&nbsp;{' '}
+        {/* Only a verified research answer is presented as "the" answer; otherwise label the key for what it is. */}
+        <strong>{verified ? 'Answer:' : 'Source key (not verified):'}</strong>{' '}
+        {shownKey ? describeInline(data, o.qid, keyValue(shownKey)) : 'not available'} &nbsp;|&nbsp;{' '}
         <strong>You chose:</strong> {youChose}
       </p>
       <p className="basis-line">

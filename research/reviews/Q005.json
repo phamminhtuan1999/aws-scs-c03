@@ -1,400 +1,457 @@
 {
-  "question_id": "Q005",
-  "question_content_hash": "b3d369923fd6ac290d6bc166fe045473a073d1093cbc1b2443833a2d30904862",
-  "stage": "final",
-  "research_version": "r1",
-  "researched_at": "2026-09-30T19:56:00Z",
-  "last_reviewed_at": "2026-09-30T19:42:11Z",
-  "performed_by": {
-    "agent": "scs-reconciler",
-    "model": "claude-opus-5-5",
-    "blind_performed_by": {
-      "agent": "scs-researcher (blind)",
-      "model": "claude-opus-5-5"
-    }
-  },
-  "blind_record_sha256": "5b961e290bb43ea461d674f8917754e932af586df0c4aa4a3da415904cb0d454",
-  "requirements": [
-    {
-      "id": "R1",
-      "text_vi": "Triển khai AWS IAM Identity Center dùng external identity provider (IdP) làm nguồn danh tính.",
-      "kind": "constraint"
-    },
-    {
-      "id": "R2",
-      "text_vi": "Chọn và sắp xếp đúng 3 bước theo thứ tự thực hiện, mỗi bước tối đa một lần.",
-      "kind": "condition"
-    },
-    {
-      "id": "R3",
-      "text_vi": "Người dùng/nhóm phải được provision vào IAM Identity Center (SAML không cho phép truy vấn IdP) trước khi gán quyền.",
-      "kind": "condition"
-    }
-  ],
-  "image_transcriptions": [
-    {
-      "image": "images/Q005_image_01.png",
-      "text": "Step 1: / Step 2: / Step 3: — mỗi ô là dropdown gồm 6 lựa chọn giống nhau: Configure the external IdP as the identity source in IAM Identity Center. | Create an IAM role that has a trust policy that specifics the IdP's API endpoint. | Enable automatic provisioning in IAM Identity Center settings | Enable automatic provisioning in the external IdP. | Obtain the SAML metadata from IAM Identity Center. | Obtain the SAML metadata from the external IdP.",
-      "notes_vi": "Giữ nguyên lỗi chính tả 'specifics' (ý là 'specifies'); lựa chọn thứ 3 không có dấu chấm cuối."
-    }
-  ],
-  "option_reviews": [
-    {
-      "unit_id": "Q005:S1",
-      "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "Bước cốt lõi: trong Settings > Identity source chọn External identity provider và tải lên metadata của IdP; cần metadata IdP có sẵn trước đó.",
-      "requirement_ids": [
-        "R1"
-      ],
-      "reference_ids": [
-        "ref2",
-        "ref3"
-      ],
-      "evidence_kind": "direct",
-      "position": 2
-    },
-    {
-      "unit_id": "Q005:S2",
-      "unit_type": "step",
-      "verdict": "does_not_meet",
-      "reason_vi": "IAM Identity Center không cần tự tạo IAM role tin cậy IdP; đó là mô hình IAM SAML federation trực tiếp, và trust policy SAML chỉ định ARN của SAML provider chứ không phải 'API endpoint' của IdP.",
-      "requirement_ids": [
-        "R1"
-      ],
-      "reference_ids": [
-        "ref6"
-      ],
-      "evidence_kind": "direct",
-      "position": null
-    },
-    {
-      "unit_id": "Q005:S3",
-      "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "Sau khi đổi identity source, bật Automatic provisioning trong Settings của IAM Identity Center để lấy SCIM endpoint và access token cho việc đồng bộ user/group.",
-      "requirement_ids": [
-        "R1",
-        "R3"
-      ],
-      "reference_ids": [
-        "ref4",
-        "ref1",
-        "ref8",
-        "ref7"
-      ],
-      "evidence_kind": "direct",
-      "position": 3
-    },
-    {
-      "unit_id": "Q005:S4",
-      "unit_type": "step",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Là bước thật (cấu hình SCIM endpoint/token trong IdP) nhưng chỉ làm được sau S3; muốn đưa vào 3 ô phải bỏ S6 hoặc S1 – cả hai là điều kiện tiên quyết – nên không thuộc 3 bước đầu theo tutorial chính thức.",
-      "requirement_ids": [
-        "R2",
-        "R3"
-      ],
-      "reference_ids": [
-        "ref4",
-        "ref8",
-        "ref7"
-      ],
-      "evidence_kind": "direct",
-      "position": null
-    },
-    {
-      "unit_id": "Q005:S5",
-      "unit_type": "step",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "IdP cần ACS URL/metadata của IAM Identity Center, nhưng tài liệu đặt thao tác này bên trong wizard Change identity source (cùng trang upload metadata IdP) và tutorial Okta gộp nó vào Step 2, nên không phải một bước riêng trong 3 ô.",
-      "requirement_ids": [
-        "R1",
-        "R2"
-      ],
-      "reference_ids": [
-        "ref3",
-        "ref9"
-      ],
-      "evidence_kind": "direct",
-      "position": null
-    },
-    {
-      "unit_id": "Q005:S6",
-      "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "Metadata SAML của IdP (chứa chứng chỉ x509) phải có trước để tải lên khi cấu hình identity source; tutorial Okta đặt đây là Step 1.",
-      "requirement_ids": [
-        "R1"
-      ],
-      "reference_ids": [
-        "ref2",
-        "ref3"
-      ],
-      "evidence_kind": "direct",
-      "position": 1
-    }
-  ],
-  "independent_verdict": {
-    "answer": [
-      "Q005:S6",
-      "Q005:S1",
-      "Q005:S3"
-    ],
-    "proposed_status": "ambiguous",
-    "confidence": {
-      "level": "medium",
-      "reason_vi": "Chuỗi S6 -> S1 -> S3 trùng tiêu đề Step 1-3 của tutorial Okta chính thức. Tuy nhiên quy trình đầy đủ có ít nhất 4-5 bước hợp lệ (S5, S4 cũng là bước thật), nên chuỗi khác như S1 -> S3 -> S4 cũng bảo vệ được.",
-      "open_issues": [
-        "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng không có chỗ trong 3 ô.",
-        "S5 (metadata của IAM Identity Center) cũng cần cho IdP; đề không xác định phạm vi 3 bước."
-      ]
-    },
-    "reference_ids": [
-      "ref1",
-      "ref2",
-      "ref3",
-      "ref4"
-    ],
-    "recorded_at": "2026-09-30T19:35:09Z"
-  },
-  "references": [
-    {
-      "id": "ref1",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-idp.html",
-      "title": "External identity providers - AWS IAM Identity Center",
-      "section": "Note / Provisioning when users come from an external IdP",
-      "snapshot_id": "0d65935a9f94",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "you must provision all applicable users and groups into IAM Identity Center before you can make any assignments to AWS accounts or applications.",
-      "supports": "Provisioning (SCIM hoặc thủ công) là phần bắt buộc khi dùng external IdP.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref2",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
-      "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
-      "section": "Step headings 1-3",
-      "snapshot_id": "fb6cdd3ec250",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "Step 1: Okta: Obtain the SAML metadata from your Okta account",
-      "supports": "Thứ tự tutorial: Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi cấu hình ở IdP.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref3",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
-      "title": "How to connect to an external identity provider",
-      "section": "To connect to an external identity provider",
-      "snapshot_id": "45d93dc66f60",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "The IAM Identity Center SAML metadata file is required by your external identity provider.",
-      "supports": "Trong wizard Change identity source: tải metadata của IAM Identity Center cho IdP và tải lên metadata của IdP; cả S5 và S6 đều là bước thật.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref4",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-with-scim.html",
-      "title": "Enable automatic provisioning",
-      "section": "To enable automatic provisioning in IAM Identity Center",
-      "snapshot_id": "2b8b74a0aac5",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "After you complete this procedure, you must configure automatic provisioning in your IdP.",
-      "supports": "Bật provisioning ở IAM Identity Center (S3) trước, sau đó cấu hình ở IdP (S4).",
-      "kind": "direct"
-    },
-    {
-      "id": "ref5",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
-      "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
-      "section": "Step 2 heading",
-      "snapshot_id": "fb6cdd3ec250",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "Step 2: IAM Identity Center: Configure Okta as the identity source for IAM Identity Center",
-      "supports": "Cấu hình IdP làm identity source là bước thứ hai sau khi có metadata.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref6",
-      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_saml.html",
-      "title": "Create a role for SAML 2.0 federation (console)",
-      "section": "Prerequisites",
-      "snapshot_id": "28ea97393c47",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "For the Principal element, use the string {\"Federated\":ARNofIdentityProvider}.",
-      "supports": "Trust policy SAML chỉ định ARN của IAM SAML identity provider (mô hình IAM federation), không phải API endpoint của IdP.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref7",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-gwp.html",
-      "title": "Configure SAML and SCIM with Google Workspace and IAM Identity Center",
-      "section": "Step 4 heading",
-      "snapshot_id": "2985c8ec7c89",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "Step 4: IAM Identity Center: Set up IAM Identity Center automatic provisioning",
-      "supports": "Tutorial Google Workspace cũng đi theo thứ tự: cấu hình SAML app/metadata ở IdP -> đổi identity source -> bật automatic provisioning trong IAM Identity Center -> cấu hình provisioning ở IdP.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref8",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
-      "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
-      "section": "Step 3: IAM Identity Center and Okta: Provision Okta users",
-      "snapshot_id": "fb6cdd3ec250",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "choose Enable. This enables automatic provisioning in IAM Identity Center and displays the necessary SCIM endpoint and access token information.",
-      "supports": "Bước 3 bắt đầu bằng việc bật automatic provisioning trong IAM Identity Center (S3); cấu hình ở IdP (S4) đến sau, dùng SCIM endpoint/token vừa tạo.",
-      "kind": "direct"
-    },
-    {
-      "id": "ref9",
-      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
-      "title": "How to connect to an external identity provider",
-      "section": "To connect to an external identity provider",
-      "snapshot_id": "45d93dc66f60",
-      "read_via": "tools/fetch_doc.py",
-      "accessed_at": "2026-09-30",
-      "page_last_updated": null,
-      "quote": "Under Service provider metadata, choose Download metadata file to download the metadata file and save it on your system.",
-      "supports": "Metadata của IAM Identity Center (S5) được tải trong chính trang Configure external identity provider của wizard Change identity source, tức là một thao tác con của S1, không phải bước riêng đứng trước.",
-      "kind": "direct"
-    }
-  ],
-  "source_issues": [
-    {
-      "type": "typo",
-      "location": "Q005:stem:1",
-      "detail_vi": "'exlemai' là lỗi chính tả của 'external'."
-    },
-    {
-      "type": "typo",
-      "location": "Q005:S2",
-      "detail_vi": "'specifics' là lỗi chính tả của 'specifies'."
-    },
-    {
-      "type": "ambiguous",
-      "location": "Q005:stem:2",
-      "detail_vi": "Quy trình đầy đủ gồm ít nhất 4-5 bước hợp lệ (S6, S5, S1, S3, S4) nhưng chỉ có 3 ô; đề không nói phạm vi (chỉ SAML hay cả SCIM), nên nhiều chuỗi 3 bước có thể bảo vệ được."
-    }
-  ],
-  "source_answer": [
-    "Q005:S6",
-    "Q005:S1",
-    "Q005:S3"
-  ],
-  "researched_answer": [
-    "Q005:S6",
-    "Q005:S1",
-    "Q005:S3"
-  ],
-  "comparison": "match",
-  "status": "verified",
-  "differs_from_source": false,
-  "confidence": {
-    "level": "medium",
-    "reason_vi": "Chuỗi S6 -> S1 -> S3 trùng gần nguyên văn tiêu đề Step 1–3 của tutorial Okta chính thức (và cùng thứ tự tương đối trong tutorial Google Workspace). S5 là thao tác con trong wizard của S1, S4 luôn đi sau S3, nên các chuỗi thay thế đều phải bỏ một điều kiện tiên quyết. Chỉ để medium vì quy trình thực tế có hơn 3 bước và đề không nói rõ phạm vi.",
-    "open_issues": [
-      "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng nằm sau 3 ô.",
-      "Quy trình chung (how-to-connect-idp) liệt kê tải metadata IAM Identity Center trước khi upload metadata IdP; nếu đề chỉ xét SAML thì có người chọn S5 -> S6 -> S1."
-    ]
-  },
-  "reconciliation_vi": "Blind đề xuất ambiguous với cùng chuỗi S6 -> S1 -> S3 như source key. Pass đối chiếu đã đọc lại tutorial Okta (Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi mới cấu hình ở Okta), tutorial Google Workspace (cùng thứ tự tương đối) và quy trình chung. Chuỗi thay thế S5 -> S6 -> S1 không đứng vững vì tài liệu đặt việc tải metadata IAM Identity Center trong cùng trang wizard của S1; S1 -> S3 -> S4 bỏ mất S6, là đầu vào bắt buộc của S1. Vì vậy các chuỗi khác không có giá trị ngang bằng; nâng lên verified mức medium, giữ ghi chú về tính thiếu phạm vi của đề.",
-  "explanation_vi": {
-    "why_correct": "Trước hết lấy SAML metadata từ external IdP (S6) vì nó chứa chứng chỉ để IAM Identity Center tin IdP; sau đó đổi identity source sang External identity provider và upload metadata đó (S1); cuối cùng bật Automatic provisioning trong IAM Identity Center (S3) để có SCIM endpoint/token cho việc đồng bộ user/group – đúng Step 1–3 trong tutorial chính thức.",
-    "others": {
-      "Q005:S2": "IAM Identity Center không cần tự tạo IAM role tin cậy IdP; trust policy SAML (mô hình IAM federation) chỉ định ARN SAML provider, không có khái niệm 'API endpoint của IdP'.",
-      "Q005:S4": "Bước thật nhưng làm sau S3 (dùng SCIM endpoint/token từ S3), nên nằm ngoài 3 bước đầu.",
-      "Q005:S5": "Metadata/ACS URL của IAM Identity Center được lấy ngay trong wizard của S1, không phải bước riêng trong 3 ô."
-    }
-  },
-  "keywords": [
-    {
-      "phrase": "AWS IAM Identity Center",
-      "meaning_vi": "Dịch vụ SSO cho workforce; external IdP kết nối bằng SAML 2.0 (đăng nhập) + SCIM (provisioning)."
-    },
-    {
-      "phrase": "identity provider (IdP)",
-      "meaning_vi": "Nguồn danh tính bên ngoài (Okta, Entra ID…) – cần trao đổi metadata SAML."
-    },
-    {
-      "phrase": "Select and order the correct steps",
-      "meaning_vi": "Chọn 3 bước đầu theo đúng thứ tự phụ thuộc: metadata IdP -> identity source -> provisioning."
-    }
-  ],
-  "memory_tip_vi": "Nếu đề hỏi thứ tự kết nối external IdP với IAM Identity Center -> nghĩ đến: metadata IdP -> đổi identity source -> bật automatic provisioning (SCIM) ở IAM Identity Center rồi mới ở IdP; kiểm tra: tạo IAM role SAML là mô hình IAM federation cũ, không cần ở đây.",
-  "tags": {
-    "domains": [
-      "4 Identity and Access Management"
-    ],
-    "services": [
-      "AWS IAM Identity Center"
-    ],
-    "reason_vi": "Federation workforce: kết nối external IdP bằng SAML và SCIM với IAM Identity Center."
-  },
-  "history": [
-    {
-      "version": "r1",
-      "date": "2026-09-30T19:56:00Z",
-      "change": "blind verdict ['Q005:S6', 'Q005:S1', 'Q005:S3'] (proposed_status=ambiguous)",
-      "previous_answer": null
-    },
-    {
-      "version": "r1",
-      "date": "2026-09-30T21:10:00Z",
-      "change": "status: blind proposed ambiguous -> final verified (tutorial Okta/Google Workspace cho thứ tự duy nhất; S5 là thao tác con của S1, S4 đi sau S3)",
-      "previous_answer": [
-        "Q005:S6",
-        "Q005:S1",
-        "Q005:S3"
-      ]
-    },
-    {
-      "version": "r1",
-      "date": "2026-09-30T21:10:00Z",
-      "change": "reconciliation: source=['Q005:S6', 'Q005:S1', 'Q005:S3'], final=['Q005:S6', 'Q005:S1', 'Q005:S3'], status=verified",
-      "previous_answer": [
-        "Q005:S6",
-        "Q005:S1",
-        "Q005:S3"
-      ]
-    },
-    {
-      "version": "r1",
-      "date": "2026-09-30T19:53:14+00:00",
-      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha c17f9d4427→5b961e290b; last_reviewed_at: 2026-09-30T21:10:00Z → 2026-09-30T19:42:11Z",
-      "previous_answer": [
-        "Q005:S6",
-        "Q005:S1",
-        "Q005:S3"
-      ]
-    }
-  ],
-  "notes_vi": "Chuỗi đề xuất bám theo tiêu đề tutorial Okta: lấy metadata IdP -> đặt IdP làm identity source -> bật automatic provisioning trong IAM Identity Center.",
-  "timestamp_correction": {
-    "corrected_at": "2026-09-30T19:53:14+00:00",
-    "by": "main agent (tools/fix_timestamps.py)",
-    "fields": {
-      "last_reviewed_at": {
-        "original": "2026-09-30T21:10:00Z",
-        "corrected": "2026-09-30T19:42:11Z"
-      }
-    }
+ "question_id": "Q005",
+ "question_content_hash": "b3d369923fd6ac290d6bc166fe045473a073d1093cbc1b2443833a2d30904862",
+ "stage": "final",
+ "research_version": "r1",
+ "researched_at": "2026-09-30T19:56:00Z",
+ "last_reviewed_at": "2026-09-30T20:42:42+00:00",
+ "performed_by": {
+  "agent": "scs-reconciler",
+  "model": "claude-opus-5-5",
+  "blind_performed_by": {
+   "agent": "scs-researcher (blind)",
+   "model": "claude-opus-5-5"
   }
+ },
+ "blind_record_sha256": "5b961e290bb43ea461d674f8917754e932af586df0c4aa4a3da415904cb0d454",
+ "requirements": [
+  {
+   "id": "R1",
+   "text_vi": "Triển khai AWS IAM Identity Center dùng external identity provider (IdP) làm nguồn danh tính.",
+   "kind": "constraint"
+  },
+  {
+   "id": "R2",
+   "text_vi": "Chọn và sắp xếp đúng 3 bước theo thứ tự thực hiện, mỗi bước tối đa một lần.",
+   "kind": "condition"
+  },
+  {
+   "id": "R3",
+   "text_vi": "Người dùng/nhóm phải được provision vào IAM Identity Center (SAML không cho phép truy vấn IdP) trước khi gán quyền.",
+   "kind": "condition"
+  }
+ ],
+ "image_transcriptions": [
+  {
+   "image": "images/Q005_image_01.png",
+   "text": "Step 1: / Step 2: / Step 3: — mỗi ô là dropdown gồm 6 lựa chọn giống nhau: Configure the external IdP as the identity source in IAM Identity Center. | Create an IAM role that has a trust policy that specifics the IdP's API endpoint. | Enable automatic provisioning in IAM Identity Center settings | Enable automatic provisioning in the external IdP. | Obtain the SAML metadata from IAM Identity Center. | Obtain the SAML metadata from the external IdP.",
+   "notes_vi": "Giữ nguyên lỗi chính tả 'specifics' (ý là 'specifies'); lựa chọn thứ 3 không có dấu chấm cuối."
+  }
+ ],
+ "option_reviews": [
+  {
+   "unit_id": "Q005:S1",
+   "unit_type": "step",
+   "verdict": "meets",
+   "reason_vi": "Bước cốt lõi: trong Settings > Identity source chọn External identity provider và tải lên metadata của IdP; cần metadata IdP có sẵn trước đó.",
+   "requirement_ids": [
+    "R1"
+   ],
+   "reference_ids": [
+    "ref2",
+    "ref3"
+   ],
+   "evidence_kind": "direct",
+   "position": 2
+  },
+  {
+   "unit_id": "Q005:S2",
+   "unit_type": "step",
+   "verdict": "does_not_meet",
+   "reason_vi": "IAM Identity Center không cần tự tạo IAM role tin cậy IdP; đó là mô hình IAM SAML federation trực tiếp, và trust policy SAML chỉ định ARN của SAML provider chứ không phải 'API endpoint' của IdP.",
+   "requirement_ids": [
+    "R1"
+   ],
+   "reference_ids": [
+    "ref6"
+   ],
+   "evidence_kind": "direct",
+   "position": null
+  },
+  {
+   "unit_id": "Q005:S3",
+   "unit_type": "step",
+   "verdict": "meets",
+   "reason_vi": "Sau khi đổi identity source, bật Automatic provisioning trong Settings của IAM Identity Center để lấy SCIM endpoint và access token cho việc đồng bộ user/group.",
+   "requirement_ids": [
+    "R1",
+    "R3"
+   ],
+   "reference_ids": [
+    "ref4",
+    "ref1",
+    "ref8",
+    "ref7"
+   ],
+   "evidence_kind": "direct",
+   "position": 3
+  },
+  {
+   "unit_id": "Q005:S4",
+   "unit_type": "step",
+   "verdict": "meets_but_suboptimal",
+   "reason_vi": "Bước thật và bắt buộc để SCIM chạy (cấu hình SCIM endpoint/token trong IdP), luôn đi sau S3. Đề không nói phải chọn '3 bước đầu', và các tutorial JumpCloud/OneLogin/PingOne/CyberArk coi SAML là tiền đề rồi làm S3 -> S4, nên chuỗi S1 -> S3 -> S4 cũng có cơ sở; không nằm trong chuỗi source key.",
+   "requirement_ids": [
+    "R2",
+    "R3"
+   ],
+   "reference_ids": [
+    "ref4",
+    "ref8",
+    "ref7",
+    "ref12"
+   ],
+   "evidence_kind": "direct",
+   "position": null
+  },
+  {
+   "unit_id": "Q005:S5",
+   "unit_type": "step",
+   "verdict": "meets_but_suboptimal",
+   "reason_vi": "Bước thật: IdP cần metadata/ACS URL của IAM Identity Center. Tutorial Okta gộp việc này vào Step 2, nhưng tutorial Entra ID tách thành bước riêng có tiêu đề (Step 3.1) làm trước cả việc lấy metadata IdP, nên 'chỉ là thao tác con của S1' không đứng vững; không nằm trong chuỗi source key nhưng là nguồn gây mơ hồ.",
+   "requirement_ids": [
+    "R1",
+    "R2"
+   ],
+   "reference_ids": [
+    "ref3",
+    "ref9",
+    "ref10",
+    "ref11"
+   ],
+   "evidence_kind": "direct",
+   "position": null
+  },
+  {
+   "unit_id": "Q005:S6",
+   "unit_type": "step",
+   "verdict": "meets",
+   "reason_vi": "Metadata SAML của IdP (chứa chứng chỉ x509) phải có trước để tải lên khi cấu hình identity source; tutorial Okta đặt đây là Step 1.",
+   "requirement_ids": [
+    "R1"
+   ],
+   "reference_ids": [
+    "ref2",
+    "ref3"
+   ],
+   "evidence_kind": "direct",
+   "position": 1
+  }
+ ],
+ "independent_verdict": {
+  "answer": [
+   "Q005:S6",
+   "Q005:S1",
+   "Q005:S3"
+  ],
+  "proposed_status": "ambiguous",
+  "confidence": {
+   "level": "medium",
+   "reason_vi": "Chuỗi S6 -> S1 -> S3 trùng tiêu đề Step 1-3 của tutorial Okta chính thức. Tuy nhiên quy trình đầy đủ có ít nhất 4-5 bước hợp lệ (S5, S4 cũng là bước thật), nên chuỗi khác như S1 -> S3 -> S4 cũng bảo vệ được.",
+   "open_issues": [
+    "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng không có chỗ trong 3 ô.",
+    "S5 (metadata của IAM Identity Center) cũng cần cho IdP; đề không xác định phạm vi 3 bước."
+   ]
+  },
+  "reference_ids": [
+   "ref1",
+   "ref2",
+   "ref3",
+   "ref4"
+  ],
+  "recorded_at": "2026-09-30T19:35:09Z"
+ },
+ "references": [
+  {
+   "id": "ref1",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-idp.html",
+   "title": "External identity providers - AWS IAM Identity Center",
+   "section": "Note / Provisioning when users come from an external IdP",
+   "snapshot_id": "0d65935a9f94",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "you must provision all applicable users and groups into IAM Identity Center before you can make any assignments to AWS accounts or applications.",
+   "supports": "Provisioning (SCIM hoặc thủ công) là phần bắt buộc khi dùng external IdP.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref2",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
+   "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
+   "section": "Step headings 1-3",
+   "snapshot_id": "fb6cdd3ec250",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Step 1: Okta: Obtain the SAML metadata from your Okta account",
+   "supports": "Thứ tự tutorial: Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi cấu hình ở IdP.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref3",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
+   "title": "How to connect to an external identity provider",
+   "section": "To connect to an external identity provider",
+   "snapshot_id": "45d93dc66f60",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "The IAM Identity Center SAML metadata file is required by your external identity provider.",
+   "supports": "Trong wizard Change identity source: tải metadata của IAM Identity Center cho IdP và tải lên metadata của IdP; cả S5 và S6 đều là bước thật.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref4",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-with-scim.html",
+   "title": "Enable automatic provisioning",
+   "section": "To enable automatic provisioning in IAM Identity Center",
+   "snapshot_id": "2b8b74a0aac5",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "After you complete this procedure, you must configure automatic provisioning in your IdP.",
+   "supports": "Bật provisioning ở IAM Identity Center (S3) trước, sau đó cấu hình ở IdP (S4).",
+   "kind": "direct"
+  },
+  {
+   "id": "ref5",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
+   "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
+   "section": "Step 2 heading",
+   "snapshot_id": "fb6cdd3ec250",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Step 2: IAM Identity Center: Configure Okta as the identity source for IAM Identity Center",
+   "supports": "Cấu hình IdP làm identity source là bước thứ hai sau khi có metadata.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref6",
+   "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_saml.html",
+   "title": "Create a role for SAML 2.0 federation (console)",
+   "section": "Prerequisites",
+   "snapshot_id": "28ea97393c47",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "For the Principal element, use the string {\"Federated\":ARNofIdentityProvider}.",
+   "supports": "Trust policy SAML chỉ định ARN của IAM SAML identity provider (mô hình IAM federation), không phải API endpoint của IdP.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref7",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-gwp.html",
+   "title": "Configure SAML and SCIM with Google Workspace and IAM Identity Center",
+   "section": "Step 4 heading",
+   "snapshot_id": "2985c8ec7c89",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Step 4: IAM Identity Center: Set up IAM Identity Center automatic provisioning",
+   "supports": "Tutorial Google Workspace cũng đi theo thứ tự: cấu hình SAML app/metadata ở IdP -> đổi identity source -> bật automatic provisioning trong IAM Identity Center -> cấu hình provisioning ở IdP.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref8",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/gs-okta.html",
+   "title": "Configure SAML and SCIM with Okta and IAM Identity Center",
+   "section": "Step 3: IAM Identity Center and Okta: Provision Okta users",
+   "snapshot_id": "fb6cdd3ec250",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "choose Enable. This enables automatic provisioning in IAM Identity Center and displays the necessary SCIM endpoint and access token information.",
+   "supports": "Bước 3 bắt đầu bằng việc bật automatic provisioning trong IAM Identity Center (S3); cấu hình ở IdP (S4) đến sau, dùng SCIM endpoint/token vừa tạo.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref9",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
+   "title": "How to connect to an external identity provider",
+   "section": "To connect to an external identity provider",
+   "snapshot_id": "45d93dc66f60",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Under Service provider metadata, choose Download metadata file to download the metadata file and save it on your system.",
+   "supports": "Metadata của IAM Identity Center (S5) được tải trong chính trang Configure external identity provider của wizard Change identity source, tức là một thao tác con của S1, không phải bước riêng đứng trước.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref10",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/idp-microsoft-entra.html",
+   "title": "Configure SAML and SCIM with Microsoft Entra ID and IAM Identity Center",
+   "section": "Step 3.1",
+   "snapshot_id": "484e8a542753",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Step 3.1: Collect required service provider metadata from IAM Identity Center",
+   "supports": "Tutorial Entra ID chính thức tách việc lấy metadata của IAM Identity Center (S5) thành một bước có tiêu đề riêng, làm TRƯỚC khi lấy metadata IdP (Step 3.2) và trước khi cấu hình IdP làm identity source (Step 3.3).",
+   "kind": "direct"
+  },
+  {
+   "id": "ref11",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/idp-microsoft-entra.html",
+   "title": "Configure SAML and SCIM with Microsoft Entra ID and IAM Identity Center",
+   "section": "Step 3.3 / Step 4.3",
+   "snapshot_id": "484e8a542753",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "Step 3.3: Configure the Microsoft Entra ID external IdP in AWS IAM Identity Center",
+   "supports": "Thứ tự Entra: S5 (3.1) -> S6 (3.2, tải Federation Metadata XML) -> S1 (3.3) -> S3 (4.2) -> S4 (4.3); nên chuỗi 3 bước đầu theo tutorial này là S5 -> S6 -> S1, khác chuỗi của tutorial Okta.",
+   "kind": "direct"
+  },
+  {
+   "id": "ref12",
+   "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/jumpcloud-idp.html",
+   "title": "Using IAM Identity Center to connect with your JumpCloud Directory Platform",
+   "section": "Prerequisites / Step 1-2",
+   "snapshot_id": "a8ccc8568a5a",
+   "read_via": "tools/fetch_doc.py",
+   "accessed_at": "2026-09-30",
+   "page_last_updated": null,
+   "quote": "A SAML connection from your JumpCloud account to IAM Identity Center",
+   "supports": "Các tutorial JumpCloud/OneLogin/PingOne/CyberArk coi kết nối SAML là điều kiện tiên quyết rồi đặt Step 1 = bật provisioning trong IAM Identity Center (S3), Step 2 = cấu hình provisioning ở IdP (S4) – hỗ trợ cách đọc S1 -> S3 -> S4.",
+   "kind": "direct"
+  }
+ ],
+ "source_issues": [
+  {
+   "type": "typo",
+   "location": "Q005:stem:1",
+   "detail_vi": "'exlemai' là lỗi chính tả của 'external'."
+  },
+  {
+   "type": "typo",
+   "location": "Q005:S2",
+   "detail_vi": "'specifics' là lỗi chính tả của 'specifies'."
+  },
+  {
+   "type": "ambiguous",
+   "location": "Q005:stem:2",
+   "detail_vi": "Quy trình đầy đủ gồm ít nhất 4-5 bước hợp lệ (S6, S5, S1, S3, S4) nhưng chỉ có 3 ô; đề không nói phạm vi (chỉ SAML hay cả SCIM), nên nhiều chuỗi 3 bước có thể bảo vệ được."
+  },
+  {
+   "type": "ambiguous",
+   "location": "Q005:stem:2",
+   "detail_vi": "AUDIT: 3 ô cho 5 bước hợp lệ; tutorial Okta cho S6->S1->S3, tutorial Entra ID cho S5->S6->S1, các tutorial SCIM (JumpCloud/OneLogin/PingOne/CyberArk) cho (SAML) S1->S3->S4. Đề không nói chọn 3 bước nào."
+  }
+ ],
+ "source_answer": [
+  "Q005:S6",
+  "Q005:S1",
+  "Q005:S3"
+ ],
+ "researched_answer": [
+  "Q005:S6",
+  "Q005:S1",
+  "Q005:S3"
+ ],
+ "comparison": "match",
+ "status": "ambiguous",
+ "differs_from_source": false,
+ "confidence": {
+  "level": "medium",
+  "reason_vi": "S6 -> S1 -> S3 khớp thứ tự tutorial Okta (và thứ tự tương đối của Google Workspace) và là đáp án của source key, nên được giữ làm đáp án tham khảo. Nhưng quy trình thật có 5 bước hợp lệ (S5, S6, S1, S3, S4) cho 3 ô, đề không nói phạm vi (chỉ SAML, SAML+SCIM, hay '3 bước đầu'), và tài liệu AWS chính thức hỗ trợ ít nhất hai chuỗi khác với cùng mức trực tiếp: S5 -> S6 -> S1 (tutorial Entra ID, Step 3.1–3.3) và S1 -> S3 -> S4 (các tutorial SCIM của JumpCloud/OneLogin/PingOne/CyberArk). Vì vậy không có đáp án duy nhất bảo vệ được.",
+  "open_issues": [
+   "Đề có 3 ô nhưng 5 bước hợp lệ; nhiều chuỗi 3 bước có tài liệu chính thức hỗ trợ trực tiếp.",
+   "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng không có trong chuỗi source key."
+  ]
+ },
+ "reconciliation_vi": "Blind đề xuất ambiguous với cùng chuỗi S6 -> S1 -> S3 như source key. Pass đối chiếu đã đọc lại tutorial Okta (Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi mới cấu hình ở Okta), tutorial Google Workspace (cùng thứ tự tương đối) và quy trình chung. Chuỗi thay thế S5 -> S6 -> S1 không đứng vững vì tài liệu đặt việc tải metadata IAM Identity Center trong cùng trang wizard của S1; S1 -> S3 -> S4 bỏ mất S6, là đầu vào bắt buộc của S1. Vì vậy các chuỗi khác không có giá trị ngang bằng; nâng lên verified mức medium, giữ ghi chú về tính thiếu phạm vi của đề. | AUDIT (r1-audit): Kiểm tra độc lập lại lý do nâng blind 'ambiguous' lên 'verified' sau khi đã xem key. Lý do 'S5 là thao tác con trong wizard của S1' bị tutorial Entra ID bác bỏ (Step 3.1 'Collect required service provider metadata from IAM Identity Center' là bước riêng, làm trước khi lấy metadata IdP); lý do 'S4 luôn sau S3 nên bị loại' chỉ đúng nếu đề yêu cầu '3 bước đầu', điều đề không nói, và 4 tutorial SCIM đặt S3 -> S4 sau tiền đề SAML. Khẳng định 'trùng gần nguyên văn Step 1–3 của Okta' cũng chỉ đúng một phần: tiêu đề Step 3 của Okta là 'Provision Okta users' và bao gồm cả S3 lẫn S4. Kết luận: trả về ambiguous (đúng như blind), giữ S6 -> S1 -> S3 làm đáp án tham khảo, không chấm điểm.",
+ "explanation_vi": {
+  "why_correct": "Câu này bị thiếu phạm vi nên không chấm điểm. Đáp án tham khảo (source key, trùng tutorial Okta): lấy SAML metadata từ external IdP (S6) -> đổi identity source sang External identity provider và upload metadata đó (S1) -> bật Automatic provisioning trong IAM Identity Center (S3) để có SCIM endpoint/token. Lưu ý: quy trình đầy đủ còn có S5 (tải metadata IAM Identity Center cho IdP; tutorial Entra ID làm bước này đầu tiên) và S4 (cấu hình SCIM trong IdP sau S3).",
+  "others": {
+   "Q005:S2": "IAM Identity Center không cần tự tạo IAM role tin cậy IdP; trust policy SAML (mô hình IAM federation) chỉ định ARN SAML provider, không có khái niệm 'API endpoint của IdP'.",
+   "Q005:S4": "Bước thật, làm sau S3; không có trong đáp án tham khảo, nhưng chuỗi S1 -> S3 -> S4 cũng được tài liệu hỗ trợ nên câu bị đánh giá mơ hồ.",
+   "Q005:S5": "Bước thật (IdP cần metadata/ACS URL của IAM Identity Center); tutorial Okta gộp vào bước cấu hình identity source, còn tutorial Entra ID tách thành Step 3.1 làm đầu tiên."
+  }
+ },
+ "keywords": [
+  {
+   "phrase": "AWS IAM Identity Center",
+   "meaning_vi": "Dịch vụ SSO cho workforce; external IdP kết nối bằng SAML 2.0 (đăng nhập) + SCIM (provisioning)."
+  },
+  {
+   "phrase": "identity provider (IdP)",
+   "meaning_vi": "Nguồn danh tính bên ngoài (Okta, Entra ID…) – cần trao đổi metadata SAML."
+  },
+  {
+   "phrase": "Select and order the correct steps",
+   "meaning_vi": "Chọn 3 bước đầu theo đúng thứ tự phụ thuộc: metadata IdP -> identity source -> provisioning."
+  }
+ ],
+ "memory_tip_vi": "Nếu đề hỏi thứ tự kết nối external IdP với IAM Identity Center -> nghĩ đến: metadata IdP -> đổi identity source -> bật automatic provisioning (SCIM) ở IAM Identity Center rồi mới ở IdP; kiểm tra: tạo IAM role SAML là mô hình IAM federation cũ, không cần ở đây.",
+ "tags": {
+  "domains": [
+   "4 Identity and Access Management"
+  ],
+  "services": [
+   "AWS IAM Identity Center"
+  ],
+  "reason_vi": "Federation workforce: kết nối external IdP bằng SAML và SCIM với IAM Identity Center."
+ },
+ "history": [
+  {
+   "version": "r1",
+   "date": "2026-09-30T19:56:00Z",
+   "change": "blind verdict ['Q005:S6', 'Q005:S1', 'Q005:S3'] (proposed_status=ambiguous)",
+   "previous_answer": null
+  },
+  {
+   "version": "r1",
+   "date": "2026-09-30T21:10:00Z",
+   "change": "status: blind proposed ambiguous -> final verified (tutorial Okta/Google Workspace cho thứ tự duy nhất; S5 là thao tác con của S1, S4 đi sau S3)",
+   "previous_answer": [
+    "Q005:S6",
+    "Q005:S1",
+    "Q005:S3"
+   ]
+  },
+  {
+   "version": "r1",
+   "date": "2026-09-30T21:10:00Z",
+   "change": "reconciliation: source=['Q005:S6', 'Q005:S1', 'Q005:S3'], final=['Q005:S6', 'Q005:S1', 'Q005:S3'], status=verified",
+   "previous_answer": [
+    "Q005:S6",
+    "Q005:S1",
+    "Q005:S3"
+   ]
+  },
+  {
+   "version": "r1",
+   "date": "2026-09-30T19:53:14+00:00",
+   "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha c17f9d4427→5b961e290b; last_reviewed_at: 2026-09-30T21:10:00Z → 2026-09-30T19:42:11Z",
+   "previous_answer": [
+    "Q005:S6",
+    "Q005:S1",
+    "Q005:S3"
+   ]
+  },
+  {
+   "version": "r1-audit",
+   "date": "2026-09-30T20:42:42+00:00",
+   "change": "AUDIT: key-direction change reviewed — status verified -> ambiguous (reverted to blind proposal). Evidence: Entra ID tutorial makes S5 a separate first step (S5->S6->S1) and JumpCloud/OneLogin/PingOne/CyberArk SCIM tutorials support S1->S3->S4; the reconciler's argument that S5 is only a sub-step of S1 does not hold. Answer S6->S1->S3 kept as reference only; resolved: not graded.",
+   "previous_answer": [
+    "Q005:S6",
+    "Q005:S1",
+    "Q005:S3"
+   ]
+  }
+ ],
+ "notes_vi": "Chuỗi đề xuất bám theo tiêu đề tutorial Okta: lấy metadata IdP -> đặt IdP làm identity source -> bật automatic provisioning trong IAM Identity Center.",
+ "timestamp_correction": {
+  "corrected_at": "2026-09-30T19:53:14+00:00",
+  "by": "main agent (tools/fix_timestamps.py)",
+  "fields": {
+   "last_reviewed_at": {
+    "original": "2026-09-30T21:10:00Z",
+    "corrected": "2026-09-30T19:42:11Z"
+   }
+  }
+ }
 }

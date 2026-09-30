@@ -172,7 +172,7 @@ describe('exam flow: answer, flag, review, end, results, per-question review', (
     });
     await screen.findByText(/question 5 of 5/);
     expect(body()).toContain('✗ Differs from the source key (scored against the source key)');
-    expect(body()).toMatch(/Answer:\s*C/);
+    expect(body()).toMatch(/(?:Answer|Source key \(not verified\)):\s*C/);
     expect(body()).toMatch(/You chose:\s*A/);
   });
 
@@ -287,7 +287,7 @@ describe('leak tests: nothing about answers/research before submission', () => {
     });
     await screen.findByText(/question 2 of 2/);
     expect(body()).toContain(MARK.why('Q003'));
-    expect(body()).toMatch(/Source key:\s*B\s*\(differs — see research\)|Answer:/);
+    expect(body()).toMatch(/Source key:\s*B\s*\(differs — see research\)|Answer:|Source key \(not verified\):/);
   });
 });
 

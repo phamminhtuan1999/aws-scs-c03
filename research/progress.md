@@ -74,3 +74,14 @@ Rule: any question whose final status/answer moved TOWARD the source key after t
 ## Audit pass (lượt 3) — started 2026-09-30
 Selection: `research/audit_selection.json` (48 risk questions by rule: non-verified, differs, confidence<high, blind→final change, time-dependent, policy/code image choices; + random sample of 10 high-confidence verified, seed 20260930). Q121–Q126 added after their reconciliation. 5 fresh auditor agents (`.claude/agents/scs-auditor.md`), none of which wrote the records.
 - ALL 143 FINAL RECORDS COMPLETE (2026-09-30) before audit.
+- Audit group 2 (Q024–Q062, 12 questions): all confirmed, no changes. Known cosmetic issue: some final-record history entries (e.g. Q046, Q047) still carry the originally estimated blind timestamps; authoritative times are the corrected researched_at/recorded_at + research/mtime_snapshots.jsonl + git history.
+- Audit group 5 (Q128–Q143, 11 questions): all confirmed; Q133 AUDIT flag resolved (stays ambiguous).
+- Audit group 6 (Q122, Q124, Q126): all confirmed, no changes.
+- Audit group 4 (Q092–Q118, 11): 9 confirmed; Q094 confidence medium→high (KC evidence); Q107 disputed→verified high, DIFFERS from source (AWS Security Blog builds the exact scenario: customer managed permission write-only + aws:PrincipalTag; RAM docs confirm).
+- Audit group 3 (Q067–Q088, 12): 11 confirmed (Q077 SAR claim re-verified on list_ec2: no CIDR/port/protocol key among 145 ec2 condition keys); Q087 verified→ambiguous (option C also meets all stated requirements; B preferred only by an unstated best-practice criterion).
+
+## FINAL CHECKPOINT — 2026-09-30 (research_version r1)
+- Blind: 143/143. Final: 143/143. Units: 628/628. Audit: 61 questions (48 risk + 10 random + 3 of Q121–Q126), 57 confirmed, 4 changed (Q005 verified→ambiguous; Q087 verified→ambiguous; Q094 confidence medium→high; Q107 disputed→verified, differs from source).
+- Final status: verified 135 (graded by research; Q056 and Q107 differ from the source key), ambiguous 8 (Q005, Q008, Q024, Q077, Q087, Q118, Q122, Q133), disputed 0, outdated 0, unresolved 0, pending 0.
+- Research task: COMPLETE for r1. Web task: COMPLETE (tests 125/125 unit, 21/21 e2e on final data). Baseline hashes unchanged.
+- Remaining limitations: blindness enforced by instructions not sandbox; model may have seen public discussions of these questions; no live AWS experiments; per-agent effort setting not applied (model only); several "verified" at medium confidence with documented open issues.

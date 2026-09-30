@@ -117,7 +117,7 @@ describe('Study: check answer, by status', () => {
     await pick(user, ['C']);
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
     expect(await screen.findByText('Research pending — showing source key only (not verified)')).toBeInTheDocument();
-    expect(body()).toMatch(/Answer:\s*C/);
+    expect(body()).toMatch(/(?:Answer|Source key \(not verified\)):\s*C/);
     expect(body()).toContain('Source key — not technically verified');
     expect(body()).not.toMatch(/verified by research/i);
     expect(body()).toContain('chưa được research');

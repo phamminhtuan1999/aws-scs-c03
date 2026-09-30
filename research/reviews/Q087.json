@@ -4,7 +4,7 @@
   "stage": "final",
   "research_version": "r1",
   "researched_at": "2026-09-30T19:55:57Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T20:42:04+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -34,7 +34,7 @@
     },
     {
       "id": "R5",
-      "text_vi": "Tiêu chí ngầm: theo best practice, ủy quyền công việc ra khỏi management account khi có thể (delegated administrator).",
+      "text_vi": "KHÔNG nêu trong đề (không phải ràng buộc): best practice của AWS Organizations là ủy quyền công việc ra khỏi management account khi có thể. Đề chỉ hỏi \"Which combination of steps will meet these requirements?\" không có tiêu chí MOST secure/best practice/least privilege.",
       "kind": "optimization"
     }
   ],
@@ -76,14 +76,17 @@
     {
       "unit_id": "Q087:C",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Management account cũng gọi được PutOrganizationConformancePack nên về kỹ thuật vẫn deploy được 10 rules tới account hiện có và tương lai; nhưng công ty đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị ủy quyền công việc ra khỏi management account.",
+      "verdict": "meets",
+      "reason_vi": "Management account gọi được PutOrganizationConformancePack và tài liệu Config nói vẫn deploy được conformance pack tới member account từ management account kể cả khi có delegated admin; organization conformance pack tự áp cho account mới -> C+E đáp ứng đủ R1, R2. Điểm kém duy nhất so với B là không theo khuyến nghị ủy quyền ra khỏi management account (R5), nhưng đề không nêu tiêu chí đó.",
       "requirement_ids": [
         "R1",
         "R5"
       ],
       "reference_ids": [
         "ref2",
+        "ref11",
+        "ref14",
+        "ref15",
         "ref9"
       ],
       "evidence_kind": "direct"
@@ -157,31 +160,31 @@
     "Q087:E"
   ],
   "comparison": "match",
-  "status": "verified",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "E là phương án duy nhất bật AWS Config tự động cho account mới (StackSets service-managed với automatic deployment chỉ tạo được từ management account hoặc StackSets delegated admin; security-01 chỉ là delegated admin của Config). Cho phần 10 rules, B và C đều khả thi kỹ thuật; B được chọn vì đề cố ý chỉ định security-01 làm delegated admin cho Config, tính năng delegated admin được AWS giới thiệu chính cho tài khoản security/compliance chuyên trách, và AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể.",
+    "reason_vi": "E là phương án duy nhất bật AWS Config tự động cho account mới (StackSets service-managed + automatic deployment từ management-01; security-01 không được nêu là delegated admin của StackSets). Nhưng cho phần 10 rules, cả B (từ delegated admin security-01) và C (từ management-01) đều đáp ứng mọi yêu cầu nêu trong đề: API PutOrganizationConformancePack cho phép cả hai, và tài liệu Config nói rõ vẫn deploy được từ management account khi đã có delegated admin. Đề không có tiêu chí best practice/least privilege để loại C, nên có 3 phương án bảo vệ được (B, C, E) cho Choose two -> ambiguous. researched_answer giữ B+E là tổ hợp khớp quy ước đề thi (dùng delegated admin đã chỉ định) và khuyến nghị của AWS Organizations.",
     "open_issues": [
-      "C (deploy organization conformance pack từ management-01) cũng hoạt động về kỹ thuật: PutOrganizationConformancePack gọi được từ management account và delegated admin; tổ hợp C+E đáp ứng yêu cầu chức năng. Đề không nêu tiêu chí 'best practice/least privilege', nên phân biệt B/C dựa trên khuyến nghị delegate ra khỏi management account và dữ kiện security-01 được chỉ định.",
-      "Trang AWS Config về organization conformance packs có câu 'Use the management account ... to enforce governance', cho thấy management account là cách hợp lệ (không làm C sai), chỉ kém hơn B theo best practice.",
-      "Giả định 'delegated administrator for AWS Config' bao gồm cả config-multiaccountsetup.amazonaws.com (như hướng dẫn đăng ký của AWS); nếu chỉ đăng ký config.amazonaws.com cho aggregator thì B cần thêm bước đăng ký.",
+      "C+E cũng đáp ứng toàn bộ yêu cầu chức năng; B chỉ hơn C theo khuyến nghị \"delegate responsibilities outside the management account\" — tiêu chí không có trong đề (cùng lý do Q133 được ghi ambiguous).",
+      "Nếu áp quy ước đề thi (chi tiết security-01 là delegated admin cho Config được nêu để dùng), đáp án dự kiến là B+E, trùng source key.",
+      "Giả định \"delegated administrator for AWS Config\" gồm cả config-multiaccountsetup.amazonaws.com (như hướng dẫn đăng ký của AWS); nếu chỉ đăng ký config.amazonaws.com cho aggregator thì B cần thêm bước đăng ký.",
       "Organization conformance pack chỉ retry 7 giờ cho account mới nếu chưa có recorder; StackSets automatic deployment (E) cần bật recorder trong khoảng này."
     ]
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phép cả management account lẫn delegated admin - nên C+E cũng chạy được về kỹ thuật; trang Config còn mô tả dùng management account để enforce governance. Phía ngược lại: blog AWS về tính năng delegated admin nêu lý do là khách hàng có tài khoản security/audit/compliance chuyên trách muốn quản lý Config từ đó thay vì management account, và trang best practice của AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể; đề cố ý nêu security-01 là delegated admin cho Config. Với E, dùng management-01 là bắt buộc vì security-01 không được nêu là delegated admin của StackSets (A, D không có automatic deployment từ account thường). Kết luận: B+E là tổ hợp duy nhất vừa đúng chức năng vừa đúng best practice; C là meets_but_suboptimal chứ không 'ngang bằng'. Giữ B+E, verified với confidence medium và ghi rõ C khả thi kỹ thuật trong open_issues.",
+  "reconciliation_vi": "Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phép cả management account lẫn delegated admin - nên C+E cũng chạy được về kỹ thuật; trang Config còn mô tả dùng management account để enforce governance. Phía ngược lại: blog AWS về tính năng delegated admin nêu lý do là khách hàng có tài khoản security/audit/compliance chuyên trách muốn quản lý Config từ đó thay vì management account, và trang best practice của AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể; đề cố ý nêu security-01 là delegated admin cho Config. Với E, dùng management-01 là bắt buộc vì security-01 không được nêu là delegated admin của StackSets (A, D không có automatic deployment từ account thường). Kết luận: B+E là tổ hợp duy nhất vừa đúng chức năng vừa đúng best practice; C là meets_but_suboptimal chứ không 'ngang bằng'. Giữ B+E, verified với confidence medium và ghi rõ C khả thi kỹ thuật trong open_issues. [AUDIT r1-audit 2026-09-30T20:42:04+00:00: status verified -> ambiguous; C nâng meets_but_suboptimal -> meets vì R5 là tiêu chí ngầm không có trong đề; xem history.]",
   "explanation_vi": {
-    "why_correct": "B: organization conformance pack deploy từ delegated admin security-01 tự áp 10 Config rules cho mọi account hiện có và account mới gia nhập, đúng best practice ủy quyền ra khỏi management account. E: StackSet service-managed từ management-01 (security-01 không phải delegated admin của StackSets) với automatic deployment sẽ bật AWS Config ngay khi account mới được thêm vào organization. Lưu ý: C cũng chạy được kỹ thuật, chỉ kém B về best practice.",
+    "why_correct": "CHƯA KẾT LUẬN CHẮC CHẮN (ambiguous): E là bước bắt buộc — StackSet service-managed từ management-01 với automatic deployment bật AWS Config khi account mới được thêm vào organization (security-01 không phải delegated admin của StackSets). Phần 10 rules: B (organization conformance pack từ delegated admin security-01) là lựa chọn theo khuyến nghị của AWS và là đáp án dự kiến, nhưng C (từ management-01) cũng chạy được và đáp ứng mọi yêu cầu nêu trong đề.",
     "others": {
       "Q087:A": "security-01 không phải delegated admin của StackSets nên không tạo được StackSet service-managed có automatic deployment cho account tương lai; conformance pack cũng là cách chuẩn hơn để deploy rules.",
-      "Q087:C": "Management account cũng gọi được PutOrganizationConformancePack nên C chạy được, nhưng đề đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị không dồn việc vào management account.",
+      "Q087:C": "Management account cũng deploy được organization conformance pack (kể cả khi đã có delegated admin) nên C+E đáp ứng yêu cầu; C chỉ kém B ở chỗ không dùng delegated admin security-01 đã được chỉ định — tiêu chí best practice mà đề không nêu, vì vậy câu hỏi ghi ambiguous.",
       "Q087:D": "Từ security-01 (không phải StackSets delegated admin) chỉ dùng được self-managed StackSets, không có automatic deployment nên không tự bật Config khi tạo account mới."
     }
   },
   "keywords": [
     {
       "phrase": "delegated administrator for AWS Config",
-      "meaning_vi": "security-01 được ủy quyền quản lý Config cho organization (rules, conformance packs, aggregator) - nên deploy conformance pack từ đây."
+      "meaning_vi": "security-01 được ủy quyền quản lý Config cho organization (rules, conformance packs, aggregator) - theo best practice nên deploy conformance pack từ đây, dù management account cũng làm được."
     },
     {
       "phrase": "all existing and future AWS accounts",
@@ -387,10 +390,29 @@
       "quote": "Use the management account in AWS Organizations to enforce governance",
       "supports": "Bằng chứng phía C: management account là cách hợp lệ để deploy conformance pack (C không 'does_not_meet').",
       "kind": "direct"
+    },
+    {
+      "id": "ref15",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+      "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+      "section": "Organization management accounts, delegated administrators, and service-linked roles",
+      "snapshot_id": "34826975d0b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You will still be able to deploy conformance packs to member accounts from management and delegated administrator accounts.",
+      "supports": "Tài liệu AWS Config nói thẳng: kể cả khi đã có delegated administrator, vẫn deploy được conformance pack tới member account từ management account -> C đáp ứng R1 như B.",
+      "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Kết hợp hợp lý: E (StackSets service-managed từ management-01 bật Config cho account mới) + B (organization conformance pack từ delegated admin security-01). C là phương án thay thế khả thi nhưng kém hơn theo best practice.",
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q087",
+      "detail_vi": "Choose two nhưng có 3 phương án bảo vệ được: E bắt buộc (bật Config cho account mới), còn phần deploy 10 rules thì B (delegated admin security-01) và C (management-01) đều đáp ứng mọi yêu cầu nêu trong đề; đề không có tiêu chí best practice/least privilege để phân định B với C."
+    }
+  ],
+  "notes_vi": "Kết hợp dự kiến: E (StackSets service-managed từ management-01 bật Config cho account mới) + B (organization conformance pack từ delegated admin security-01). C (conformance pack từ management-01) cũng đáp ứng mọi yêu cầu nêu trong đề -> audit ghi ambiguous.",
   "history": [
     {
       "version": "r1",
@@ -403,6 +425,15 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key BE khớp blind; nghiên cứu thêm C (What's New 2020, Config doc: management account hợp lệ) và phía B (blog delegated admin, Organizations best practice); giữ BE, verified (medium), C ghi là meets_but_suboptimal",
       "previous_answer": null
+    },
+    {
+      "version": "r1-audit",
+      "date": "2026-09-30T20:42:04+00:00",
+      "change": "AUDIT: status verified -> ambiguous (Choose-two uniqueness). Đề không có tiêu chí best practice/least privilege; tài liệu Config (ref15, direct) và API PutOrganizationConformancePack xác nhận management account vẫn deploy được organization conformance pack khi đã có delegated admin, nên C+E đáp ứng mọi yêu cầu như B+E. Q087:C đổi meets_but_suboptimal -> meets; R5 ghi rõ là tiêu chí không nêu trong đề; researched_answer giữ B+E (đáp án dự kiến, trùng source key); confidence medium giữ nguyên. Thay đổi này không theo hướng source key.",
+      "previous_answer": [
+        "Q087:B",
+        "Q087:E"
+      ]
     }
   ]
 }

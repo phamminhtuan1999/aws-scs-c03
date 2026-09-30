@@ -1,6 +1,6 @@
 {
   "research_version": "r1",
-  "generated_at": "2026-09-30T20:37:47.574911+00:00",
+  "generated_at": "2026-09-30T20:44:02.735197+00:00",
   "status_rule": "Graded in \"By research\" mode only when status == verified (confidence high/medium). All other statuses are shown as \"no settled conclusion\".",
   "questions": {
     "Q001": {
@@ -1187,7 +1187,7 @@
       "gradable_by_research": true
     },
     "Q005": {
-      "status": "verified",
+      "status": "ambiguous",
       "researched_answer": [
         "Q005:S6",
         "Q005:S1",
@@ -1202,10 +1202,10 @@
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "Chuỗi S6 -> S1 -> S3 trùng gần nguyên văn tiêu đề Step 1–3 của tutorial Okta chính thức (và cùng thứ tự tương đối trong tutorial Google Workspace). S5 là thao tác con trong wizard của S1, S4 luôn đi sau S3, nên các chuỗi thay thế đều phải bỏ một điều kiện tiên quyết. Chỉ để medium vì quy trình thực tế có hơn 3 bước và đề không nói rõ phạm vi.",
+        "reason_vi": "S6 -> S1 -> S3 khớp thứ tự tutorial Okta (và thứ tự tương đối của Google Workspace) và là đáp án của source key, nên được giữ làm đáp án tham khảo. Nhưng quy trình thật có 5 bước hợp lệ (S5, S6, S1, S3, S4) cho 3 ô, đề không nói phạm vi (chỉ SAML, SAML+SCIM, hay '3 bước đầu'), và tài liệu AWS chính thức hỗ trợ ít nhất hai chuỗi khác với cùng mức trực tiếp: S5 -> S6 -> S1 (tutorial Entra ID, Step 3.1–3.3) và S1 -> S3 -> S4 (các tutorial SCIM của JumpCloud/OneLogin/PingOne/CyberArk). Vì vậy không có đáp án duy nhất bảo vệ được.",
         "open_issues": [
-          "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng nằm sau 3 ô.",
-          "Quy trình chung (how-to-connect-idp) liệt kê tải metadata IAM Identity Center trước khi upload metadata IdP; nếu đề chỉ xét SAML thì có người chọn S5 -> S6 -> S1."
+          "Đề có 3 ô nhưng 5 bước hợp lệ; nhiều chuỗi 3 bước có tài liệu chính thức hỗ trợ trực tiếp.",
+          "S4 (bật provisioning ở IdP) là bước bắt buộc để SCIM hoạt động nhưng không có trong chuỗi source key."
         ]
       },
       "option_reviews": [
@@ -1260,7 +1260,7 @@
           "unit_id": "Q005:S4",
           "unit_type": "step",
           "verdict": "meets_but_suboptimal",
-          "reason_vi": "Là bước thật (cấu hình SCIM endpoint/token trong IdP) nhưng chỉ làm được sau S3; muốn đưa vào 3 ô phải bỏ S6 hoặc S1 – cả hai là điều kiện tiên quyết – nên không thuộc 3 bước đầu theo tutorial chính thức.",
+          "reason_vi": "Bước thật và bắt buộc để SCIM chạy (cấu hình SCIM endpoint/token trong IdP), luôn đi sau S3. Đề không nói phải chọn '3 bước đầu', và các tutorial JumpCloud/OneLogin/PingOne/CyberArk coi SAML là tiền đề rồi làm S3 -> S4, nên chuỗi S1 -> S3 -> S4 cũng có cơ sở; không nằm trong chuỗi source key.",
           "requirement_ids": [
             "R2",
             "R3"
@@ -1268,7 +1268,8 @@
           "reference_ids": [
             "ref4",
             "ref8",
-            "ref7"
+            "ref7",
+            "ref12"
           ],
           "evidence_kind": "direct",
           "position": null
@@ -1277,14 +1278,16 @@
           "unit_id": "Q005:S5",
           "unit_type": "step",
           "verdict": "meets_but_suboptimal",
-          "reason_vi": "IdP cần ACS URL/metadata của IAM Identity Center, nhưng tài liệu đặt thao tác này bên trong wizard Change identity source (cùng trang upload metadata IdP) và tutorial Okta gộp nó vào Step 2, nên không phải một bước riêng trong 3 ô.",
+          "reason_vi": "Bước thật: IdP cần metadata/ACS URL của IAM Identity Center. Tutorial Okta gộp việc này vào Step 2, nhưng tutorial Entra ID tách thành bước riêng có tiêu đề (Step 3.1) làm trước cả việc lấy metadata IdP, nên 'chỉ là thao tác con của S1' không đứng vững; không nằm trong chuỗi source key nhưng là nguồn gây mơ hồ.",
           "requirement_ids": [
             "R1",
             "R2"
           ],
           "reference_ids": [
             "ref3",
-            "ref9"
+            "ref9",
+            "ref10",
+            "ref11"
           ],
           "evidence_kind": "direct",
           "position": null
@@ -1422,14 +1425,53 @@
           "quote": "Under Service provider metadata, choose Download metadata file to download the metadata file and save it on your system.",
           "supports": "Metadata của IAM Identity Center (S5) được tải trong chính trang Configure external identity provider của wizard Change identity source, tức là một thao tác con của S1, không phải bước riêng đứng trước.",
           "kind": "direct"
+        },
+        {
+          "id": "ref10",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/idp-microsoft-entra.html",
+          "title": "Configure SAML and SCIM with Microsoft Entra ID and IAM Identity Center",
+          "section": "Step 3.1",
+          "snapshot_id": "484e8a542753",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "Step 3.1: Collect required service provider metadata from IAM Identity Center",
+          "supports": "Tutorial Entra ID chính thức tách việc lấy metadata của IAM Identity Center (S5) thành một bước có tiêu đề riêng, làm TRƯỚC khi lấy metadata IdP (Step 3.2) và trước khi cấu hình IdP làm identity source (Step 3.3).",
+          "kind": "direct"
+        },
+        {
+          "id": "ref11",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/idp-microsoft-entra.html",
+          "title": "Configure SAML and SCIM with Microsoft Entra ID and IAM Identity Center",
+          "section": "Step 3.3 / Step 4.3",
+          "snapshot_id": "484e8a542753",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "Step 3.3: Configure the Microsoft Entra ID external IdP in AWS IAM Identity Center",
+          "supports": "Thứ tự Entra: S5 (3.1) -> S6 (3.2, tải Federation Metadata XML) -> S1 (3.3) -> S3 (4.2) -> S4 (4.3); nên chuỗi 3 bước đầu theo tutorial này là S5 -> S6 -> S1, khác chuỗi của tutorial Okta.",
+          "kind": "direct"
+        },
+        {
+          "id": "ref12",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/jumpcloud-idp.html",
+          "title": "Using IAM Identity Center to connect with your JumpCloud Directory Platform",
+          "section": "Prerequisites / Step 1-2",
+          "snapshot_id": "a8ccc8568a5a",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "A SAML connection from your JumpCloud account to IAM Identity Center",
+          "supports": "Các tutorial JumpCloud/OneLogin/PingOne/CyberArk coi kết nối SAML là điều kiện tiên quyết rồi đặt Step 1 = bật provisioning trong IAM Identity Center (S3), Step 2 = cấu hình provisioning ở IdP (S4) – hỗ trợ cách đọc S1 -> S3 -> S4.",
+          "kind": "direct"
         }
       ],
       "explanation_vi": {
-        "why_correct": "Trước hết lấy SAML metadata từ external IdP (S6) vì nó chứa chứng chỉ để IAM Identity Center tin IdP; sau đó đổi identity source sang External identity provider và upload metadata đó (S1); cuối cùng bật Automatic provisioning trong IAM Identity Center (S3) để có SCIM endpoint/token cho việc đồng bộ user/group – đúng Step 1–3 trong tutorial chính thức.",
+        "why_correct": "Câu này bị thiếu phạm vi nên không chấm điểm. Đáp án tham khảo (source key, trùng tutorial Okta): lấy SAML metadata từ external IdP (S6) -> đổi identity source sang External identity provider và upload metadata đó (S1) -> bật Automatic provisioning trong IAM Identity Center (S3) để có SCIM endpoint/token. Lưu ý: quy trình đầy đủ còn có S5 (tải metadata IAM Identity Center cho IdP; tutorial Entra ID làm bước này đầu tiên) và S4 (cấu hình SCIM trong IdP sau S3).",
         "others": {
           "Q005:S2": "IAM Identity Center không cần tự tạo IAM role tin cậy IdP; trust policy SAML (mô hình IAM federation) chỉ định ARN SAML provider, không có khái niệm 'API endpoint của IdP'.",
-          "Q005:S4": "Bước thật nhưng làm sau S3 (dùng SCIM endpoint/token từ S3), nên nằm ngoài 3 bước đầu.",
-          "Q005:S5": "Metadata/ACS URL của IAM Identity Center được lấy ngay trong wizard của S1, không phải bước riêng trong 3 ô."
+          "Q005:S4": "Bước thật, làm sau S3; không có trong đáp án tham khảo, nhưng chuỗi S1 -> S3 -> S4 cũng được tài liệu hỗ trợ nên câu bị đánh giá mơ hồ.",
+          "Q005:S5": "Bước thật (IdP cần metadata/ACS URL của IAM Identity Center); tutorial Okta gộp vào bước cấu hình identity source, còn tutorial Entra ID tách thành Step 3.1 làm đầu tiên."
         }
       },
       "keywords": [
@@ -1471,6 +1513,11 @@
           "type": "ambiguous",
           "location": "Q005:stem:2",
           "detail_vi": "Quy trình đầy đủ gồm ít nhất 4-5 bước hợp lệ (S6, S5, S1, S3, S4) nhưng chỉ có 3 ô; đề không nói phạm vi (chỉ SAML hay cả SCIM), nên nhiều chuỗi 3 bước có thể bảo vệ được."
+        },
+        {
+          "type": "ambiguous",
+          "location": "Q005:stem:2",
+          "detail_vi": "AUDIT: 3 ô cho 5 bước hợp lệ; tutorial Okta cho S6->S1->S3, tutorial Entra ID cho S5->S6->S1, các tutorial SCIM (JumpCloud/OneLogin/PingOne/CyberArk) cho (SAML) S1->S3->S4. Đề không nói chọn 3 bước nào."
         }
       ],
       "requirements": [
@@ -1498,7 +1545,7 @@
         }
       ],
       "researched_at": "2026-09-30T19:56:00Z",
-      "last_reviewed_at": "2026-09-30T19:42:11Z",
+      "last_reviewed_at": "2026-09-30T20:42:42+00:00",
       "independent_verdict": {
         "answer": [
           "Q005:S6",
@@ -1522,7 +1569,7 @@
         ],
         "recorded_at": "2026-09-30T19:35:09Z"
       },
-      "reconciliation_vi": "Blind đề xuất ambiguous với cùng chuỗi S6 -> S1 -> S3 như source key. Pass đối chiếu đã đọc lại tutorial Okta (Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi mới cấu hình ở Okta), tutorial Google Workspace (cùng thứ tự tương đối) và quy trình chung. Chuỗi thay thế S5 -> S6 -> S1 không đứng vững vì tài liệu đặt việc tải metadata IAM Identity Center trong cùng trang wizard của S1; S1 -> S3 -> S4 bỏ mất S6, là đầu vào bắt buộc của S1. Vì vậy các chuỗi khác không có giá trị ngang bằng; nâng lên verified mức medium, giữ ghi chú về tính thiếu phạm vi của đề.",
+      "reconciliation_vi": "Blind đề xuất ambiguous với cùng chuỗi S6 -> S1 -> S3 như source key. Pass đối chiếu đã đọc lại tutorial Okta (Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi mới cấu hình ở Okta), tutorial Google Workspace (cùng thứ tự tương đối) và quy trình chung. Chuỗi thay thế S5 -> S6 -> S1 không đứng vững vì tài liệu đặt việc tải metadata IAM Identity Center trong cùng trang wizard của S1; S1 -> S3 -> S4 bỏ mất S6, là đầu vào bắt buộc của S1. Vì vậy các chuỗi khác không có giá trị ngang bằng; nâng lên verified mức medium, giữ ghi chú về tính thiếu phạm vi của đề. | AUDIT (r1-audit): Kiểm tra độc lập lại lý do nâng blind 'ambiguous' lên 'verified' sau khi đã xem key. Lý do 'S5 là thao tác con trong wizard của S1' bị tutorial Entra ID bác bỏ (Step 3.1 'Collect required service provider metadata from IAM Identity Center' là bước riêng, làm trước khi lấy metadata IdP); lý do 'S4 luôn sau S3 nên bị loại' chỉ đúng nếu đề yêu cầu '3 bước đầu', điều đề không nói, và 4 tutorial SCIM đặt S3 -> S4 sau tiền đề SAML. Khẳng định 'trùng gần nguyên văn Step 1–3 của Okta' cũng chỉ đúng một phần: tiêu đề Step 3 của Okta là 'Provision Okta users' và bao gồm cả S3 lẫn S4. Kết luận: trả về ambiguous (đúng như blind), giữ S6 -> S1 -> S3 làm đáp án tham khảo, không chấm điểm.",
       "history": [
         {
           "version": "r1",
@@ -1559,12 +1606,22 @@
             "Q005:S1",
             "Q005:S3"
           ]
+        },
+        {
+          "version": "r1-audit",
+          "date": "2026-09-30T20:42:42+00:00",
+          "change": "AUDIT: key-direction change reviewed — status verified -> ambiguous (reverted to blind proposal). Evidence: Entra ID tutorial makes S5 a separate first step (S5->S6->S1) and JumpCloud/OneLogin/PingOne/CyberArk SCIM tutorials support S1->S3->S4; the reconciler's argument that S5 is only a sub-step of S1 does not hold. Answer S6->S1->S3 kept as reference only; resolved: not graded.",
+          "previous_answer": [
+            "Q005:S6",
+            "Q005:S1",
+            "Q005:S3"
+          ]
         }
       ],
       "research_version": "r1",
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": true
+      "gradable_by_research": false
     },
     "Q006": {
       "status": "verified",
@@ -24907,7 +24964,7 @@
       "gradable_by_research": true
     },
     "Q087": {
-      "status": "verified",
+      "status": "ambiguous",
       "researched_answer": [
         "Q087:B",
         "Q087:E"
@@ -24920,11 +24977,11 @@
       "differs_from_source": false,
       "confidence": {
         "level": "medium",
-        "reason_vi": "E là phương án duy nhất bật AWS Config tự động cho account mới (StackSets service-managed với automatic deployment chỉ tạo được từ management account hoặc StackSets delegated admin; security-01 chỉ là delegated admin của Config). Cho phần 10 rules, B và C đều khả thi kỹ thuật; B được chọn vì đề cố ý chỉ định security-01 làm delegated admin cho Config, tính năng delegated admin được AWS giới thiệu chính cho tài khoản security/compliance chuyên trách, và AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể.",
+        "reason_vi": "E là phương án duy nhất bật AWS Config tự động cho account mới (StackSets service-managed + automatic deployment từ management-01; security-01 không được nêu là delegated admin của StackSets). Nhưng cho phần 10 rules, cả B (từ delegated admin security-01) và C (từ management-01) đều đáp ứng mọi yêu cầu nêu trong đề: API PutOrganizationConformancePack cho phép cả hai, và tài liệu Config nói rõ vẫn deploy được từ management account khi đã có delegated admin. Đề không có tiêu chí best practice/least privilege để loại C, nên có 3 phương án bảo vệ được (B, C, E) cho Choose two -> ambiguous. researched_answer giữ B+E là tổ hợp khớp quy ước đề thi (dùng delegated admin đã chỉ định) và khuyến nghị của AWS Organizations.",
         "open_issues": [
-          "C (deploy organization conformance pack từ management-01) cũng hoạt động về kỹ thuật: PutOrganizationConformancePack gọi được từ management account và delegated admin; tổ hợp C+E đáp ứng yêu cầu chức năng. Đề không nêu tiêu chí 'best practice/least privilege', nên phân biệt B/C dựa trên khuyến nghị delegate ra khỏi management account và dữ kiện security-01 được chỉ định.",
-          "Trang AWS Config về organization conformance packs có câu 'Use the management account ... to enforce governance', cho thấy management account là cách hợp lệ (không làm C sai), chỉ kém hơn B theo best practice.",
-          "Giả định 'delegated administrator for AWS Config' bao gồm cả config-multiaccountsetup.amazonaws.com (như hướng dẫn đăng ký của AWS); nếu chỉ đăng ký config.amazonaws.com cho aggregator thì B cần thêm bước đăng ký.",
+          "C+E cũng đáp ứng toàn bộ yêu cầu chức năng; B chỉ hơn C theo khuyến nghị \"delegate responsibilities outside the management account\" — tiêu chí không có trong đề (cùng lý do Q133 được ghi ambiguous).",
+          "Nếu áp quy ước đề thi (chi tiết security-01 là delegated admin cho Config được nêu để dùng), đáp án dự kiến là B+E, trùng source key.",
+          "Giả định \"delegated administrator for AWS Config\" gồm cả config-multiaccountsetup.amazonaws.com (như hướng dẫn đăng ký của AWS); nếu chỉ đăng ký config.amazonaws.com cho aggregator thì B cần thêm bước đăng ký.",
           "Organization conformance pack chỉ retry 7 giờ cho account mới nếu chưa có recorder; StackSets automatic deployment (E) cần bật recorder trong khoảng này."
         ]
       },
@@ -24965,14 +25022,17 @@
         {
           "unit_id": "Q087:C",
           "unit_type": "choice",
-          "verdict": "meets_but_suboptimal",
-          "reason_vi": "Management account cũng gọi được PutOrganizationConformancePack nên về kỹ thuật vẫn deploy được 10 rules tới account hiện có và tương lai; nhưng công ty đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị ủy quyền công việc ra khỏi management account.",
+          "verdict": "meets",
+          "reason_vi": "Management account gọi được PutOrganizationConformancePack và tài liệu Config nói vẫn deploy được conformance pack tới member account từ management account kể cả khi có delegated admin; organization conformance pack tự áp cho account mới -> C+E đáp ứng đủ R1, R2. Điểm kém duy nhất so với B là không theo khuyến nghị ủy quyền ra khỏi management account (R5), nhưng đề không nêu tiêu chí đó.",
           "requirement_ids": [
             "R1",
             "R5"
           ],
           "reference_ids": [
             "ref2",
+            "ref11",
+            "ref14",
+            "ref15",
             "ref9"
           ],
           "evidence_kind": "direct"
@@ -25192,20 +25252,33 @@
           "quote": "Use the management account in AWS Organizations to enforce governance",
           "supports": "Bằng chứng phía C: management account là cách hợp lệ để deploy conformance pack (C không 'does_not_meet').",
           "kind": "direct"
+        },
+        {
+          "id": "ref15",
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+          "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+          "section": "Organization management accounts, delegated administrators, and service-linked roles",
+          "snapshot_id": "34826975d0b0",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "You will still be able to deploy conformance packs to member accounts from management and delegated administrator accounts.",
+          "supports": "Tài liệu AWS Config nói thẳng: kể cả khi đã có delegated administrator, vẫn deploy được conformance pack tới member account từ management account -> C đáp ứng R1 như B.",
+          "kind": "direct"
         }
       ],
       "explanation_vi": {
-        "why_correct": "B: organization conformance pack deploy từ delegated admin security-01 tự áp 10 Config rules cho mọi account hiện có và account mới gia nhập, đúng best practice ủy quyền ra khỏi management account. E: StackSet service-managed từ management-01 (security-01 không phải delegated admin của StackSets) với automatic deployment sẽ bật AWS Config ngay khi account mới được thêm vào organization. Lưu ý: C cũng chạy được kỹ thuật, chỉ kém B về best practice.",
+        "why_correct": "CHƯA KẾT LUẬN CHẮC CHẮN (ambiguous): E là bước bắt buộc — StackSet service-managed từ management-01 với automatic deployment bật AWS Config khi account mới được thêm vào organization (security-01 không phải delegated admin của StackSets). Phần 10 rules: B (organization conformance pack từ delegated admin security-01) là lựa chọn theo khuyến nghị của AWS và là đáp án dự kiến, nhưng C (từ management-01) cũng chạy được và đáp ứng mọi yêu cầu nêu trong đề.",
         "others": {
           "Q087:A": "security-01 không phải delegated admin của StackSets nên không tạo được StackSet service-managed có automatic deployment cho account tương lai; conformance pack cũng là cách chuẩn hơn để deploy rules.",
-          "Q087:C": "Management account cũng gọi được PutOrganizationConformancePack nên C chạy được, nhưng đề đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị không dồn việc vào management account.",
+          "Q087:C": "Management account cũng deploy được organization conformance pack (kể cả khi đã có delegated admin) nên C+E đáp ứng yêu cầu; C chỉ kém B ở chỗ không dùng delegated admin security-01 đã được chỉ định — tiêu chí best practice mà đề không nêu, vì vậy câu hỏi ghi ambiguous.",
           "Q087:D": "Từ security-01 (không phải StackSets delegated admin) chỉ dùng được self-managed StackSets, không có automatic deployment nên không tự bật Config khi tạo account mới."
         }
       },
       "keywords": [
         {
           "phrase": "delegated administrator for AWS Config",
-          "meaning_vi": "security-01 được ủy quyền quản lý Config cho organization (rules, conformance packs, aggregator) - nên deploy conformance pack từ đây."
+          "meaning_vi": "security-01 được ủy quyền quản lý Config cho organization (rules, conformance packs, aggregator) - theo best practice nên deploy conformance pack từ đây, dù management account cũng làm được."
         },
         {
           "phrase": "all existing and future AWS accounts",
@@ -25229,7 +25302,13 @@
         ],
         "reason_vi": "Quản trị compliance đa account: tự động bật Config và deploy conformance pack cho account hiện có và tương lai."
       },
-      "source_issues": [],
+      "source_issues": [
+        {
+          "type": "ambiguous",
+          "location": "Q087",
+          "detail_vi": "Choose two nhưng có 3 phương án bảo vệ được: E bắt buộc (bật Config cho account mới), còn phần deploy 10 rules thì B (delegated admin security-01) và C (management-01) đều đáp ứng mọi yêu cầu nêu trong đề; đề không có tiêu chí best practice/least privilege để phân định B với C."
+        }
+      ],
       "requirements": [
         {
           "id": "R1",
@@ -25253,13 +25332,13 @@
         },
         {
           "id": "R5",
-          "text_vi": "Tiêu chí ngầm: theo best practice, ủy quyền công việc ra khỏi management account khi có thể (delegated administrator).",
+          "text_vi": "KHÔNG nêu trong đề (không phải ràng buộc): best practice của AWS Organizations là ủy quyền công việc ra khỏi management account khi có thể. Đề chỉ hỏi \"Which combination of steps will meet these requirements?\" không có tiêu chí MOST secure/best practice/least privilege.",
           "kind": "optimization"
         }
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:55:57Z",
-      "last_reviewed_at": "2026-09-30T20:06:17Z",
+      "last_reviewed_at": "2026-09-30T20:42:04+00:00",
       "independent_verdict": {
         "answer": [
           "Q087:B",
@@ -25287,7 +25366,7 @@
         ],
         "recorded_at": "2026-09-30T19:55:57Z"
       },
-      "reconciliation_vi": "Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phép cả management account lẫn delegated admin - nên C+E cũng chạy được về kỹ thuật; trang Config còn mô tả dùng management account để enforce governance. Phía ngược lại: blog AWS về tính năng delegated admin nêu lý do là khách hàng có tài khoản security/audit/compliance chuyên trách muốn quản lý Config từ đó thay vì management account, và trang best practice của AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể; đề cố ý nêu security-01 là delegated admin cho Config. Với E, dùng management-01 là bắt buộc vì security-01 không được nêu là delegated admin của StackSets (A, D không có automatic deployment từ account thường). Kết luận: B+E là tổ hợp duy nhất vừa đúng chức năng vừa đúng best practice; C là meets_but_suboptimal chứ không 'ngang bằng'. Giữ B+E, verified với confidence medium và ghi rõ C khả thi kỹ thuật trong open_issues.",
+      "reconciliation_vi": "Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phép cả management account lẫn delegated admin - nên C+E cũng chạy được về kỹ thuật; trang Config còn mô tả dùng management account để enforce governance. Phía ngược lại: blog AWS về tính năng delegated admin nêu lý do là khách hàng có tài khoản security/audit/compliance chuyên trách muốn quản lý Config từ đó thay vì management account, và trang best practice của AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể; đề cố ý nêu security-01 là delegated admin cho Config. Với E, dùng management-01 là bắt buộc vì security-01 không được nêu là delegated admin của StackSets (A, D không có automatic deployment từ account thường). Kết luận: B+E là tổ hợp duy nhất vừa đúng chức năng vừa đúng best practice; C là meets_but_suboptimal chứ không 'ngang bằng'. Giữ B+E, verified với confidence medium và ghi rõ C khả thi kỹ thuật trong open_issues. [AUDIT r1-audit 2026-09-30T20:42:04+00:00: status verified -> ambiguous; C nâng meets_but_suboptimal -> meets vì R5 là tiêu chí ngầm không có trong đề; xem history.]",
       "history": [
         {
           "version": "r1",
@@ -25300,12 +25379,21 @@
           "date": "2026-09-30T20:06:17Z",
           "change": "reconciliation: source key BE khớp blind; nghiên cứu thêm C (What's New 2020, Config doc: management account hợp lệ) và phía B (blog delegated admin, Organizations best practice); giữ BE, verified (medium), C ghi là meets_but_suboptimal",
           "previous_answer": null
+        },
+        {
+          "version": "r1-audit",
+          "date": "2026-09-30T20:42:04+00:00",
+          "change": "AUDIT: status verified -> ambiguous (Choose-two uniqueness). Đề không có tiêu chí best practice/least privilege; tài liệu Config (ref15, direct) và API PutOrganizationConformancePack xác nhận management account vẫn deploy được organization conformance pack khi đã có delegated admin, nên C+E đáp ứng mọi yêu cầu như B+E. Q087:C đổi meets_but_suboptimal -> meets; R5 ghi rõ là tiêu chí không nêu trong đề; researched_answer giữ B+E (đáp án dự kiến, trùng source key); confidence medium giữ nguyên. Thay đổi này không theo hướng source key.",
+          "previous_answer": [
+            "Q087:B",
+            "Q087:E"
+          ]
         }
       ],
       "research_version": "r1",
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": true
+      "gradable_by_research": false
     },
     "Q088": {
       "status": "verified",
@@ -26865,11 +26953,10 @@
       "comparison": "match",
       "differs_from_source": false,
       "confidence": {
-        "level": "medium",
-        "reason_vi": "Blind và source key cùng chọn B. Tài liệu docs.aws.amazon.com (AWS Security Incident Response Guide) xác nhận trực tiếp các bước của B: CloudTrail là nguồn log chính, eradication = xóa tài nguyên trái phép, rotate/xóa key. C bị bác trực tiếp bởi 'Do NOT remove this policy' và không rotate key. Giữ medium vì D chỉ khác B ở nguồn log (CloudWatch vs CloudTrail) và không có docs nói rõ thời điểm được gỡ quarantine policy.",
+        "level": "high",
+        "reason_vi": "Blind và source key cùng chọn B. Bằng chứng trực tiếp cho từng vế của B: AWS IR Guide (CloudTrail là nguồn log, eradication, rotate key) và Knowledge Center 'Manage IAM access keys securely' (xem CloudTrail logs để tìm API call trái phép; giữ AWSCompromisedKeyQuarantineV3 cho tới khi hoàn tất mọi bước khắc phục). C bị bác trực tiếp (gỡ policy trước, không rotate key). D dùng CloudWatch thay cho CloudTrail nên kém hơn.",
         "open_issues": [
-          "Không có tài liệu docs.aws.amazon.com nói rõ được gỡ AWSCompromisedKeyQuarantineV3 sau khi khắc phục; trang policy chỉ bảo làm theo support case. Knowledge Center (re:Post) chỉ liệt kê bước kiểm tra policy, update key, xem CloudTrail Event history.",
-          "D vẫn khả thi một phần nếu CloudTrail đã được gửi sang CloudWatch Logs; B được chọn vì dùng đúng nguồn ghi API call mà đề không cần giả định thêm."
+          "D vẫn khả thi một phần nếu CloudTrail đã được gửi sang CloudWatch Logs; B được chọn vì dùng đúng nguồn ghi API call mà AWS hướng dẫn (ref6, ref10), không cần giả định thêm."
         ]
       },
       "option_reviews": [
@@ -26885,7 +26972,8 @@
           "reference_ids": [
             "ref6",
             "ref7",
-            "ref4"
+            "ref4",
+            "ref10"
           ],
           "evidence_kind": "inference"
         },
@@ -26893,7 +26981,7 @@
           "unit_id": "Q094:B",
           "unit_type": "choice",
           "verdict": "meets",
-          "reason_vi": "Khớp quy trình AWS: xem CloudTrail để xác định phạm vi, xóa tài nguyên trái phép (eradication), rotate access key của user bị lộ; gỡ quarantine policy chỉ ở bước cuối sau khi đã khắc phục. Việc được gỡ policy sau khi khắc phục không có tài liệu docs nói rõ (trang policy bảo làm theo support case).",
+          "reason_vi": "Khớp quy trình AWS cho access key bị lộ: xem CloudTrail để xác định phạm vi, xóa tài nguyên trái phép (eradication), rotate access key của user bị lộ; gỡ quarantine policy chỉ ở bước cuối sau khi đã hoàn tất khắc phục - đúng hướng dẫn 'keep the policy in place until you complete all remediation steps' của AWS Knowledge Center.",
           "requirement_ids": [
             "R2",
             "R3"
@@ -26903,7 +26991,9 @@
             "ref4",
             "ref5",
             "ref2",
-            "ref1"
+            "ref1",
+            "ref9",
+            "ref10"
           ],
           "evidence_kind": "direct"
         },
@@ -26917,7 +27007,8 @@
           ],
           "reference_ids": [
             "ref1",
-            "ref5"
+            "ref5",
+            "ref9"
           ],
           "evidence_kind": "direct"
         },
@@ -26934,7 +27025,8 @@
             "ref6",
             "ref8",
             "ref5",
-            "ref2"
+            "ref2",
+            "ref10"
           ],
           "evidence_kind": "inference"
         }
@@ -27043,10 +27135,36 @@
           "quote": "through available logs or automated tooling such as CloudWatch Logs and Amazon GuardDuty.",
           "supports": "CloudWatch Logs có thể là nguồn log bổ trợ nếu đã được cấu hình, nên D không hoàn toàn vô hiệu mà chỉ kém hơn B.",
           "kind": "inference"
+        },
+        {
+          "id": "ref9",
+          "url": "https://repost.aws/knowledge-center/manage-iam-access-keys-securely",
+          "title": "Manage IAM access keys securely (AWS re:Post Knowledge Center)",
+          "section": "Respond to compromised IAM access keys",
+          "snapshot_id": "09b4c40c669c",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "Keep the AWSCompromisedKeyQuarantineV3 policy in place until you complete all remediation steps.",
+          "supports": "AWS hướng dẫn giữ quarantine policy cho tới khi hoàn tất mọi bước khắc phục rồi mới gỡ - khớp thứ tự của B (gỡ ở bước cuối), bác C (gỡ ngay đầu).",
+          "kind": "direct"
+        },
+        {
+          "id": "ref10",
+          "url": "https://repost.aws/knowledge-center/manage-iam-access-keys-securely",
+          "title": "Manage IAM access keys securely (AWS re:Post Knowledge Center)",
+          "section": "Respond to compromised IAM access keys",
+          "snapshot_id": "09b4c40c669c",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": null,
+          "quote": "Review your CloudTrail logs to identify unauthorized API calls that were made with the compromised key.",
+          "supports": "Xác định phạm vi hành động của key bị lộ bằng CloudTrail logs (B), không phải CloudWatch (A, D).",
+          "kind": "direct"
         }
       ],
       "explanation_vi": {
-        "why_correct": "B đi đúng quy trình ứng phó sự cố của AWS: xem CloudTrail để xác định phạm vi hành động của key bị lộ, xóa tài nguyên trái phép, rotate mọi access key của user bị gắn AWSCompromisedKeyQuarantineV3, và chỉ gỡ quarantine policy ở bước cuối khi key cũ đã vô hiệu. (Mức tin cậy medium: không có docs nói rõ thời điểm được gỡ policy.)",
+        "why_correct": "B đi đúng quy trình ứng phó access key bị lộ của AWS: xem CloudTrail để xác định phạm vi hành động của key, xóa tài nguyên trái phép, rotate mọi access key của user bị gắn AWSCompromisedKeyQuarantineV3, và chỉ gỡ quarantine policy ở bước cuối khi đã hoàn tất khắc phục (AWS khuyên giữ policy cho tới lúc đó).",
         "others": {
           "Q094:A": "Xóa user chỉ là containment; A không xác định phạm vi bằng CloudTrail và không xóa tài nguyên trái phép.",
           "Q094:C": "Gỡ quarantine policy trước khi rotate key (và không rotate key) mở lại quyền cho kẻ tấn công; AWS ghi 'Do NOT remove this policy'.",
@@ -27106,7 +27224,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:58:31Z",
-      "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+      "last_reviewed_at": "2026-09-30T20:41:41+00:00",
       "independent_verdict": {
         "answer": [
           "Q094:B"
@@ -27126,7 +27244,7 @@
         ],
         "recorded_at": "2026-09-30T19:58:31Z"
       },
-      "reconciliation_vi": "Source key = B, trùng blind. Blind chủ yếu dựa vào re:Post Knowledge Center nên đã tìm thêm bằng chứng docs.aws.amazon.com: AWS Security Incident Response Guide (PDF) nêu CloudTrail là nguồn log quan trọng ghi management API call, giai đoạn eradication là xóa tài nguyên trái phép và 'Rotate or delete keys', và xóa/tạo lại IAM user chỉ là kỹ thuật containment. Kiểm tra cả hai phía: (1) C gỡ policy trước khi rotate key – bị bác trực tiếp bởi trang AWSCompromisedKeyQuarantineV3 ('Do NOT remove this policy'). (2) Đối thủ mạnh nhất D: IR Guide có nhắc CloudWatch Logs như một nguồn log khả dụng, nên D không phải 'không hoạt động' mà là meets_but_suboptimal – nó dựa vào CloudWatch (chỉ có API activity nếu đã cấu hình trail → CloudWatch Logs) thay vì CloudTrail. (3) Thứ tự gỡ policy ở B: không có docs nói rõ, nhưng B gỡ ở bước CUỐI sau khi đã rotate key và xóa tài nguyên, nên không mâu thuẫn với mục đích quarantine. Giữ B, verified, medium.",
+      "reconciliation_vi": "Source key = B, trùng blind. Blind chủ yếu dựa vào re:Post Knowledge Center nên đã tìm thêm bằng chứng docs.aws.amazon.com: AWS Security Incident Response Guide (PDF) nêu CloudTrail là nguồn log quan trọng ghi management API call, giai đoạn eradication là xóa tài nguyên trái phép và 'Rotate or delete keys', và xóa/tạo lại IAM user chỉ là kỹ thuật containment. Kiểm tra cả hai phía: (1) C gỡ policy trước khi rotate key – bị bác trực tiếp bởi trang AWSCompromisedKeyQuarantineV3 ('Do NOT remove this policy'). (2) Đối thủ mạnh nhất D: IR Guide có nhắc CloudWatch Logs như một nguồn log khả dụng, nên D không phải 'không hoạt động' mà là meets_but_suboptimal – nó dựa vào CloudWatch (chỉ có API activity nếu đã cấu hình trail → CloudWatch Logs) thay vì CloudTrail. (3) Thứ tự gỡ policy ở B: không có docs nói rõ, nhưng B gỡ ở bước CUỐI sau khi đã rotate key và xóa tài nguyên, nên không mâu thuẫn với mục đích quarantine. Giữ B, verified, medium. | AUDIT (r1-audit, 2026-09-30T20:41:41+00:00): bổ sung Knowledge Center 'Manage IAM access keys securely' (snapshot 09b4c40c669c, ref9-ref10): 'Keep the AWSCompromisedKeyQuarantineV3 policy in place until you complete all remediation steps' và 'Review your CloudTrail logs...'. Điều này giải quyết open issue về thời điểm gỡ policy (sau khi khắc phục, đúng thứ tự B). Nâng confidence medium -> high, đáp án không đổi.",
       "history": [
         {
           "version": "r1",
@@ -27138,6 +27256,14 @@
           "version": "r1",
           "date": "2026-09-30T20:21:46+00:00",
           "change": "Reconciliation: khớp source key B. Bổ sung bằng chứng docs.aws.amazon.com (AWS Security Incident Response Guide: CloudTrail là nguồn log, eradication, rotate keys, xóa user là containment) thay cho việc chỉ dựa vào Knowledge Center. Giữ D ở meets_but_suboptimal với lý do rõ hơn (IR Guide có nhắc CloudWatch Logs như nguồn log khả dụng). Giữ verified (medium).",
+          "previous_answer": [
+            "Q094:B"
+          ]
+        },
+        {
+          "version": "r1-audit",
+          "date": "2026-09-30T20:41:41+00:00",
+          "change": "AUDIT: confirmed B (khớp source key); confidence medium -> high. Thêm ref9-ref10 (Knowledge Center: giữ quarantine policy cho tới khi hoàn tất mọi bước khắc phục; xem CloudTrail logs) giải quyết open issue về thời điểm gỡ policy; cập nhật reason B, reference_ids A-D, explanation.",
           "previous_answer": [
             "Q094:B"
           ]
@@ -30581,7 +30707,7 @@
       "gradable_by_research": true
     },
     "Q107": {
-      "status": "disputed",
+      "status": "verified",
       "researched_answer": [
         "Q107:A"
       ],
@@ -30591,13 +30717,11 @@
       "comparison": "mismatch",
       "differs_from_source": true,
       "confidence": {
-        "level": "medium",
-        "reason_vi": "Nghiêng về A: tài liệu RAM trình bày CMP là cơ chế least privilege với đúng ví dụ IPAM pool, IPAM pool hỗ trợ CMP và aws:PrincipalTag (không phải system tag) được phép. Nhưng B (source key) cũng đáp ứng cả hai yêu cầu nếu IAM policy ở development account viết chặt, và khác biệt least privilege giữa A và B phụ thuộc vào điều đề không nêu (principal có cần quyền xem CIDR/allocation không; giới hạn phải áp ở phía chủ sở hữu hay không). Chưa có tài liệu nào phân định dứt khoát.",
+        "level": "high",
+        "reason_vi": "Bằng chứng trực tiếp: blog AWS Security (ref14-ref17) trình bày đúng kịch bản của đề (share IPAM pool từ infrastructure account tới development account, least privilege, chỉ một số IAM principal) và giải pháp chính là A: customer managed permission write-only + condition aws:PrincipalTag; blog nói thẳng AWS managed permission (B) cấp cả đọc và ghi nên cần CMP. Tài liệu RAM (ref1, ref3, ref4, ref13) xác nhận cơ chế vẫn hiện hành. B hoạt động nhưng kém least privilege; C, D không đạt.",
         "open_issues": [
-          "Đề không nói principal ở development account có cần xem CIDR/allocation (GetIpamPoolCidrs = Read, GetIpamPoolAllocations = List) hay không; nếu cần thì CMP 'write-only' của A thiếu quyền và B hợp lý hơn.",
-          "A không nêu bước gán IAM identity-based policy ở development account (bắt buộc với mọi share tới account); B nêu rõ bước này.",
-          "aws:PrincipalTag do development account gán tag nên việc giới hạn principal ở A thực chất vẫn do account nhận kiểm soát, tương tự B.",
-          "IPAM pool có thể share trực tiếp tới IAM role/user (shareable.html) — cách least privilege khác không nằm trong phương án."
+          "A không nêu bước gán IAM identity-based policy ở development account; đây là yêu cầu chung của mọi share RAM tới account (ref11) và blog cũng không liệt kê nó như một bước riêng, nên không làm A sai.",
+          "Nguồn quyết định là blog AWS 2023 (không phải user guide); tài liệu RAM hiện hành (ref1, ref3, ref4) vẫn xác nhận các cơ chế tương ứng tính đến 2026-09-30."
         ]
       },
       "option_reviews": [
@@ -30605,7 +30729,7 @@
           "unit_id": "Q107:A",
           "unit_type": "choice",
           "verdict": "meets",
-          "reason_vi": "IPAM pool hỗ trợ customer managed permission (CMP); tài liệu RAM dùng chính ví dụ IPAM (cho developer cấp phát IP nhưng không xem dải IP) làm cách áp dụng least privilege. Chọn access level Write = AllocateIpamPoolCidr/ReleaseIpamPoolAllocation; aws:PrincipalTag (tag không phải system tag aws:) không bị loại trừ trong CMP nên giới hạn principal ngay ở resource-based policy. Điểm yếu: không nêu IAM policy bắt buộc ở development account, tag principal vẫn do development account quản lý, và 'write-only' có thể thiếu nếu cần xem CIDR/allocation.",
+          "reason_vi": "Blog AWS Security mô tả đúng giải pháp này cho đúng kịch bản (share IPAM pool từ account hạ tầng tới development account theo least privilege): tạo customer managed permission chỉ gồm write-only actions (Allocate/Release) rồi thêm condition aws:PrincipalTag để chỉ user/role có tag được thao tác trên pool. Tài liệu RAM xác nhận IPAM pool hỗ trợ CMP và aws:PrincipalTag (không phải system tag aws:) được phép trong CMP. Lưu ý chung: principal ở account nhận vẫn cần IAM policy (không riêng A).",
           "requirement_ids": [
             "R1",
             "R2",
@@ -30617,15 +30741,19 @@
             "ref3",
             "ref4",
             "ref12",
-            "ref13"
+            "ref13",
+            "ref14",
+            "ref15",
+            "ref16",
+            "ref17"
           ],
-          "evidence_kind": "inference"
+          "evidence_kind": "direct"
         },
         {
           "unit_id": "Q107:B",
           "unit_type": "choice",
           "verdict": "meets_but_suboptimal",
-          "reason_vi": "Chạy được và là cơ chế chuẩn: quyền hiệu lực = AWS managed permission (trần) giao với IAM identity-based policy do admin development account gán, nên chỉ principal được gán policy mới thao tác được và IAM policy cũng có thể thu hẹp action. Nhưng trần ở phía resource (AWSRAMDefaultPermissionsIpamPool: xem CIDR/allocation + allocate/release) rộng hơn CMP chỉ-ghi, và tài liệu RAM nói AWS managed permission có thể không đạt least privilege; mọi giới hạn phụ thuộc account nhận.",
+          "reason_vi": "Chạy được: quyền hiệu lực = AWS managed permission giao với IAM policy do admin development account gán, nên có thể giới hạn principal. Nhưng AWS nói rõ trong đúng kịch bản IPAM pool này rằng AWS managed permission cấp cả đọc lẫn ghi, vì vậy phải tạo customer managed permission để đạt least privilege; với B, trần quyền phía resource rộng hơn cần thiết và toàn bộ giới hạn phụ thuộc account nhận.",
           "requirement_ids": [
             "R2",
             "R3"
@@ -30634,7 +30762,9 @@
             "ref5",
             "ref6",
             "ref1",
-            "ref11"
+            "ref11",
+            "ref13",
+            "ref14"
           ],
           "evidence_kind": "inference"
         },
@@ -30837,12 +30967,64 @@
           "quote": "those managed permissions might not provide least privilege access for your sharing use case",
           "supports": "AWS managed permission (B) có thể không đạt least privilege; CMP (A) là cách khắc phục.",
           "kind": "direct"
+        },
+        {
+          "id": "ref14",
+          "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+          "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+          "section": "Configure customer managed permissions",
+          "snapshot_id": "007db9a554d3",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": "2023-08-03",
+          "quote": "The existing AWS managed permission grants both read and write permissions. Therefore, you need to create a customer managed permission to refine the resource access permissions",
+          "supports": "AWS nói thẳng: với kịch bản share IPAM pool tới development account theo least privilege, AWS managed permission (B) cấp cả đọc lẫn ghi nên KHÔNG đủ; phải dùng customer managed permission (A).",
+          "kind": "direct"
+        },
+        {
+          "id": "ref15",
+          "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+          "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+          "section": "Configure customer managed permissions",
+          "snapshot_id": "007db9a554d3",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": "2023-08-03",
+          "quote": "With a customer managed permission, you can select and tailor the actions that the development accounts can perform on the IPAM pool, such as write-only actions.",
+          "supports": "Vế \"customer-managed permission that includes write-only actions\" của A chính là cấu hình AWS mô tả cho development account.",
+          "kind": "direct"
+        },
+        {
+          "id": "ref16",
+          "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+          "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+          "section": "Update customer managed permissions",
+          "snapshot_id": "007db9a554d3",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": "2023-08-03",
+          "quote": "Add a condition with aws:PrincipalTag that allows only the users or roles tagged with team = networking to access the shared IPAM pool.",
+          "supports": "Vế \"condition that uses aws:PrincipalTag for allowed identities\" của A là cách AWS giới hạn chỉ các IAM principal cụ thể được thao tác trên IPAM pool đã share.",
+          "kind": "direct"
+        },
+        {
+          "id": "ref17",
+          "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+          "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+          "section": "Solution overview",
+          "snapshot_id": "007db9a554d3",
+          "read_via": "tools/fetch_doc.py",
+          "accessed_at": "2026-09-30",
+          "page_last_updated": "2023-08-03",
+          "quote": "The networking account in the infrastructure OU follows the best practice of least privilege and grants only the permissions that accounts receiving these resources, such as development accounts, require",
+          "supports": "Kịch bản của đề (infrastructure account share IPAM pool tới development account, least privilege) trùng kịch bản blog AWS dùng CMP.",
+          "kind": "direct"
         }
       ],
       "explanation_vi": {
-        "why_correct": "CHƯA KẾT LUẬN DỨT KHOÁT (disputed): nghiên cứu nghiêng về A vì customer managed permission cho IPAM pool là cơ chế least privilege được tài liệu RAM nêu (chỉ cho cấp phát, không cho xem) và condition aws:PrincipalTag giới hạn principal ngay trong resource-based policy; tuy nhiên source key chọn B và B cũng hoạt động vì quyền thực tế là giao của managed permission với IAM policy ở development account.",
+        "why_correct": "A: tạo resource share với customer managed permission chỉ gồm write-only actions (cấp phát/giải phóng CIDR, không xem chi tiết pool) và condition aws:PrincipalTag để chỉ IAM principal có tag được phép - đây đúng là cách AWS mô tả để share IPAM pool tới development account theo least privilege. AWS managed permission cấp cả đọc và ghi nên không đạt least privilege.",
         "others": {
-          "Q107:B": "Đáp án của source key: hoạt động (IAM policy ở development account quyết định principal nào dùng được), nhưng AWS managed permission cho cả xem lẫn allocate/release nên trần quyền phía resource rộng hơn CMP chỉ-ghi.",
+          "Q107:B": "Đáp án của source key: hoạt động nhờ IAM policy ở development account, nhưng AWS managed permission cấp cả đọc lẫn ghi trên IPAM pool; AWS khuyến nghị dùng customer managed permission cho kịch bản least privilege này.",
           "Q107:C": "SCP không cấp quyền và không thu hẹp managed permission của share; resource-based policy trên IPAM pool do RAM tự sinh từ managed permission, không phải cơ chế cấu hình riêng.",
           "Q107:D": "CMP 'full access' đi ngược least privilege; VPC endpoint policy chỉ kiểm soát request đi qua endpoint đó, không giới hạn được principal."
         }
@@ -30861,7 +31043,7 @@
           "meaning_vi": "Quyền thực tế = managed permission của share giao với IAM policy bên nhận."
         }
       ],
-      "memory_tip_vi": "Nếu share qua AWS RAM mà đề nhấn mạnh least privilege -> nghĩ đến customer managed permission (chọn action + condition); kiểm tra: account nhận vẫn phải gắn IAM policy cho principal, và AWS managed permission + IAM policy cũng hạn chế được principal (câu này đang tranh chấp).",
+      "memory_tip_vi": "Nếu share qua AWS RAM mà đề nhấn mạnh least privilege và chỉ một số principal -> nghĩ đến customer managed permission (chọn đúng action, vd. write-only) + condition như aws:PrincipalTag; kiểm tra: CMP chỉ hỗ trợ một số resource type và không dùng system tag aws:.",
       "tags": {
         "domains": [
           "4 Identity and Access Management",
@@ -30895,7 +31077,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T19:54:33Z",
-      "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+      "last_reviewed_at": "2026-09-30T20:41:04+00:00",
       "independent_verdict": {
         "answer": [
           "Q107:A"
@@ -30918,7 +31100,7 @@
         ],
         "recorded_at": "2026-09-30T19:54:33Z"
       },
-      "reconciliation_vi": "Blind = A, source key = B (mismatch). Đã tìm lý lẽ cho B: trang Terms and concepts xác nhận principal ở consuming account chỉ làm được những gì vừa được managed permission vừa được IAM identity-based policy do admin account nhận cho phép, và admin phải gắn policy thì principal mới có quyền — vậy B giới hạn được đúng principal và IAM policy cũng có thể thu hẹp action; AWSRAMDefaultPermissionsIpamPool vốn chỉ gồm thao tác pool (xem + allocate/release), không phải full access. Tìm lý lẽ cho A: trang CMP nói AWS managed permission 'might not provide least privilege' và nêu đúng ví dụ IPAM (cấp phát nhưng không xem); trang Considerations chỉ loại trừ aws:PrincipalTag/aws: (system tag), nên condition aws:PrincipalTag với tag tự đặt hợp lệ; SAR cho thấy Allocate/Release là Write, GetIpamPoolAllocations là List, GetIpamPoolCidrs là Read, nên 'write-only' đúng là cấp phát không xem. C (SCP không cấp quyền; resource-based policy do RAM tự sinh) và D (full access, endpoint policy không thay IAM) vẫn kém. Kết luận: A chặt hơn ở phía resource và khớp tài liệu least privilege của RAM, nhưng B không bị tài liệu bác bỏ và A có thiếu sót (không nêu IAM policy bên nhận, write-only có thể thiếu quyền xem). Xung đột với source key chưa được bằng chứng phân định -> disputed, giữ researched_answer A (medium).",
+      "reconciliation_vi": "Blind = A, source key = B (mismatch). Đã tìm lý lẽ cho B: trang Terms and concepts xác nhận principal ở consuming account chỉ làm được những gì vừa được managed permission vừa được IAM identity-based policy do admin account nhận cho phép, và admin phải gắn policy thì principal mới có quyền — vậy B giới hạn được đúng principal và IAM policy cũng có thể thu hẹp action; AWSRAMDefaultPermissionsIpamPool vốn chỉ gồm thao tác pool (xem + allocate/release), không phải full access. Tìm lý lẽ cho A: trang CMP nói AWS managed permission 'might not provide least privilege' và nêu đúng ví dụ IPAM (cấp phát nhưng không xem); trang Considerations chỉ loại trừ aws:PrincipalTag/aws: (system tag), nên condition aws:PrincipalTag với tag tự đặt hợp lệ; SAR cho thấy Allocate/Release là Write, GetIpamPoolAllocations là List, GetIpamPoolCidrs là Read, nên 'write-only' đúng là cấp phát không xem. C (SCP không cấp quyền; resource-based policy do RAM tự sinh) và D (full access, endpoint policy không thay IAM) vẫn kém. Kết luận: A chặt hơn ở phía resource và khớp tài liệu least privilege của RAM, nhưng B không bị tài liệu bác bỏ và A có thiếu sót (không nêu IAM policy bên nhận, write-only có thể thiếu quyền xem). Xung đột với source key chưa được bằng chứng phân định -> disputed, giữ researched_answer A (medium). | AUDIT (r1-audit, 2026-09-30T20:41:04+00:00): tìm thấy bằng chứng phân định trực tiếp - blog AWS Security 'Configure fine-grained access to your resources shared using AWS Resource Access Manager' (snapshot 007db9a554d3) dựng đúng kịch bản của đề và dùng đúng giải pháp A (CMP chỉ Write + aws:PrincipalTag), đồng thời nói AWS managed permission 'grants both read and write permissions' nên phải tạo CMP. Các lo ngại trước đó (write-only có thể thiếu quyền xem; A không nêu IAM policy bên nhận) được blog giải quyết: blog kiểm chứng development account tạo được VPC từ pool chỉ với quyền Write. Nâng disputed -> verified (high), vẫn khác source key (B).",
       "history": [
         {
           "version": "r1",
@@ -30933,12 +31115,20 @@
           "previous_answer": [
             "Q107:A"
           ]
+        },
+        {
+          "version": "r1-audit",
+          "date": "2026-09-30T20:41:04+00:00",
+          "change": "AUDIT: status disputed -> verified; confidence medium -> high; researched_answer giữ A (differs_from_source=true, source B). Bằng chứng mới: blog AWS Security (ref14-ref17, snapshot 007db9a554d3) trình bày đúng kịch bản đề với giải pháp CMP write-only + aws:PrincipalTag và nói AWS managed permission cấp cả đọc lẫn ghi. Cập nhật option_reviews A (evidence direct) và B, confidence, explanation, memory tip.",
+          "previous_answer": [
+            "Q107:A"
+          ]
         }
       ],
       "research_version": "r1",
       "source_key_gradable": true,
       "source_key_ungradable_reason": null,
-      "gradable_by_research": false
+      "gradable_by_research": true
     },
     "Q108": {
       "status": "verified",
@@ -38580,8 +38770,7 @@
         "reason_vi": "Cả A và B đều làm được việc 'identify' bucket không tuân thủ: A bằng managed rule s3-default-encryption-kms (tham số kmsKeyArns) + scope theo tag, B bằng custom Lambda rule đọc tag trong configuration item. Đề chỉ hỏi 'Which solution will meet this requirement?' không có tiêu chí least operational overhead để phân định, và A lại mô tả sai cơ chế (tag là 'parameter', chỉ nêu tên tag). Hai đáp án bảo vệ được cho Choose 1.",
         "open_issues": [
           "Nếu áp quy ước đề thi 'managed rule hơn code tự viết' và hiểu 'parameters' của A là cấu hình rule nói chung -> A (kết luận blind).",
-          "Nếu đọc A theo nguyên văn (rule chỉ có tham số kmsKeyArns, không có tham số tag; A không nêu giá trị True) -> A không thực hiện được như mô tả, B là đáp án duy nhất (source key).",
-          "AUDIT: key-direction change (verdict của unit B nâng từ meets_but_suboptimal lên meets; đáp án không chuyển sang B, status hạ xuống ambiguous)."
+          "Nếu đọc A theo nguyên văn (rule chỉ có tham số kmsKeyArns, không có tham số tag; A không nêu giá trị True) -> A không thực hiện được như mô tả, B là đáp án duy nhất (source key)."
         ]
       },
       "option_reviews": [
@@ -38828,7 +39017,7 @@
       ],
       "image_transcriptions": [],
       "researched_at": "2026-09-30T20:21:36+00:00",
-      "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+      "last_reviewed_at": "2026-09-30T20:40:58+00:00",
       "independent_verdict": {
         "answer": [
           "Q133:A"
@@ -38867,6 +39056,12 @@
           "previous_answer": [
             "Q133:A"
           ]
+        },
+        {
+          "version": "r1-audit",
+          "date": "2026-09-30T20:40:58+00:00",
+          "change": "AUDIT (scs-auditor, độc lập): đã giải quyết cờ key-direction change – giữ status ambiguous, researched_answer=null, confidence medium. Việc nâng B lên 'meets' là hợp lệ, không phụ thuộc key: configuration item có tag key-value (ref7) nên custom Lambda rule kiểm tra đúng tag + KMS key; lý do 'suboptimal' của blind dựa trên tiêu chí least operational overhead mà đề không nêu. A vẫn bảo vệ được theo cách đọc nới lỏng (managed rule s3-default-encryption-kms có kmsKeyArns; trigger Configuration changes nên scope theo tag hợp lệ – ref1, ref2, ref3), nhưng câu 'Specify the tag name ... as parameters' trái với danh sách tham số của rule (chỉ kmsKeyArns). Không có tài liệu phân định A/B mà không phải thêm điều kiện đề không nêu -> không nâng lên verified B (tránh thiên lệch theo key), không quay về A. Đã đọc lại snapshot 251ae49566ed, e7de823e81e2, 17a9fc903c1e, 2e56bf992cbf, 3986009fb779, 6ead4370c770.",
+          "previous_answer": null
         }
       ],
       "research_version": "r1",

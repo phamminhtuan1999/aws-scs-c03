@@ -4,7 +4,7 @@
   "stage": "final",
   "research_version": "r1",
   "researched_at": "2026-09-30T20:21:36+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T20:40:58+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -134,8 +134,7 @@
     "reason_vi": "Cả A và B đều làm được việc 'identify' bucket không tuân thủ: A bằng managed rule s3-default-encryption-kms (tham số kmsKeyArns) + scope theo tag, B bằng custom Lambda rule đọc tag trong configuration item. Đề chỉ hỏi 'Which solution will meet this requirement?' không có tiêu chí least operational overhead để phân định, và A lại mô tả sai cơ chế (tag là 'parameter', chỉ nêu tên tag). Hai đáp án bảo vệ được cho Choose 1.",
     "open_issues": [
       "Nếu áp quy ước đề thi 'managed rule hơn code tự viết' và hiểu 'parameters' của A là cấu hình rule nói chung -> A (kết luận blind).",
-      "Nếu đọc A theo nguyên văn (rule chỉ có tham số kmsKeyArns, không có tham số tag; A không nêu giá trị True) -> A không thực hiện được như mô tả, B là đáp án duy nhất (source key).",
-      "AUDIT: key-direction change (verdict của unit B nâng từ meets_but_suboptimal lên meets; đáp án không chuyển sang B, status hạ xuống ambiguous)."
+      "Nếu đọc A theo nguyên văn (rule chỉ có tham số kmsKeyArns, không có tham số tag; A không nêu giá trị True) -> A không thực hiện được như mô tả, B là đáp án duy nhất (source key)."
     ]
   },
   "reconciliation_vi": "Blind = A (verified, medium), source key = B. Đã kiểm tra cả hai phía: (1) trang rule s3-default-encryption-kms chỉ có một tham số tùy chọn kmsKeyArns (ref1) và trang Adding Config Rules định nghĩa parameter là thuộc tính tài nguyên phải tuân theo (ref8), còn lọc theo tag là 'scope of changes' (ref2, ref3) – nên câu 'Specify the tag name ... as parameters' của A sai nguyên văn, dù ý đồ (managed rule + scope theo tag) làm được; A cũng chỉ nêu tên tag, không nêu giá trị True. (2) Bằng chứng MỚI cho B: configuration item của AWS Config chứa danh sách tag key–value (ref7), nên custom Lambda rule kiểm tra đúng giá trị tag và key KMS – B đáp ứng đầy đủ yêu cầu, không chỉ 'chạy được'. Blind xếp B là meets_but_suboptimal dựa trên tiêu chí ít vận hành mà đề KHÔNG nêu, nên mối lo đó không còn làm căn cứ loại B. Không có tài liệu nào phân định A với B khi đề không có tiêu chí tối ưu: chọn A cần nới lỏng cách đọc A, chọn B cần bỏ qua quy ước ưu tiên managed rule. C (Inspector không quét S3) và D (Trusted Advisor không có custom policy rule) sai rõ. Kết luận: ambiguous, researched_answer = null, không chấm điểm.",
@@ -309,6 +308,12 @@
       "previous_answer": [
         "Q133:A"
       ]
+    },
+    {
+      "version": "r1-audit",
+      "date": "2026-09-30T20:40:58+00:00",
+      "change": "AUDIT (scs-auditor, độc lập): đã giải quyết cờ key-direction change – giữ status ambiguous, researched_answer=null, confidence medium. Việc nâng B lên 'meets' là hợp lệ, không phụ thuộc key: configuration item có tag key-value (ref7) nên custom Lambda rule kiểm tra đúng tag + KMS key; lý do 'suboptimal' của blind dựa trên tiêu chí least operational overhead mà đề không nêu. A vẫn bảo vệ được theo cách đọc nới lỏng (managed rule s3-default-encryption-kms có kmsKeyArns; trigger Configuration changes nên scope theo tag hợp lệ – ref1, ref2, ref3), nhưng câu 'Specify the tag name ... as parameters' trái với danh sách tham số của rule (chỉ kmsKeyArns). Không có tài liệu phân định A/B mà không phải thêm điều kiện đề không nêu -> không nâng lên verified B (tránh thiên lệch theo key), không quay về A. Đã đọc lại snapshot 251ae49566ed, e7de823e81e2, 17a9fc903c1e, 2e56bf992cbf, 3986009fb779, 6ead4370c770.",
+      "previous_answer": null
     }
   ]
 }

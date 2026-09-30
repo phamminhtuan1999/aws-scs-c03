@@ -141,7 +141,7 @@ test.describe('exam simulation', () => {
     // wrong policy-image question
     await page.goto(`/#/exam/results/${await sessionId(page)}/${at('Q088') + 1}`);
     await expect(page.getByText('✗ Differs from the source key (scored against the source key)')).toBeVisible();
-    await expect(page.locator('p.answer-line')).toContainText('Answer: B');
+    await expect(page.locator('p.answer-line')).toContainText(/(?:Answer|Source key \(not verified\)): B/);
     await expect(page.locator('p.answer-line')).toContainText('You chose: A');
     await snap(page, 'desktop-results-04-review-wrong-policy-choice');
     // Q008: shown, not scored
