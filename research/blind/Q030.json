@@ -1,0 +1,66 @@
+{
+  "question_id": "Q030",
+  "question_content_hash": "9e1202c84962b1901d9dc935dd5cd0adf652c48506bdeaf2ad26846f12db61fe",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Lập inventory dữ liệu nhạy cảm trong S3 bucket của mọi account trong organization.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Findings phải xem được từ một nơi duy nhất (tài khoản security chuyên dụng).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Phạm vi: AWS Organizations, nhiều account.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q030:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Macie phát hiện dữ liệu nhạy cảm trong S3; delegated Macie administrator quản lý Macie cho các account trong org. Cấu hình Macie publish sensitive data findings (mặc định không publish) sang Security Hub mà security account là delegated admin -> xem tập trung.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q030:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Amazon Inspector quét EC2, ECR image và Lambda để tìm lỗ hổng; không quét S3 bucket để phát hiện dữ liệu nhạy cảm.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q030:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Inspector không quét dữ liệu nhạy cảm trong S3; Trusted Advisor cũng không phải nơi nhận findings dữ liệu nhạy cảm.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref5", "ref6"], "evidence_kind": "direct"},
+    {"unit_id": "Q030:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Macie đúng dịch vụ, nhưng Trusted Advisor chỉ tích hợp để hiển thị các control của Security Hub CSPM (FSBP), không nhận sensitive data findings từ Macie; bật Macie riêng lẻ từng account cũng không tạo điểm xem tập trung.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref6", "ref2"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q030:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Macie nêu rõ tích hợp Organizations với delegated administrator và publish sensitive data findings sang Security Hub CSPM; Inspector không quét S3; Trusted Advisor chỉ hiển thị control FSBP của Security Hub CSPM.", "open_issues": ["Tên dịch vụ hiện tại là AWS Security Hub CSPM (đề ghi 'AWS Security Hub'); không làm đổi đáp án."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html", "title": "What is Amazon Macie?", "section": "intro",
+     "snapshot_id": "abdcfe897682", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon Macie is a data security service that discovers sensitive data by using machine learning and pattern matching",
+     "supports": "Macie là dịch vụ phát hiện dữ liệu nhạy cảm (trong S3).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/macie/latest/user/accounts-mgmt-ao.html", "title": "Managing multiple Macie accounts with AWS Organizations", "section": "intro",
+     "snapshot_id": "25724666160e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you start by designating an account as the delegated Macie administrator account for the organization.",
+     "supports": "Security account có thể là delegated Macie administrator để quản lý Macie toàn org.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/macie/latest/user/securityhub-integration.html", "title": "Evaluating Macie findings with AWS Security Hub CSPM", "section": "Types of findings that Macie publishes to Security Hub CSPM",
+     "snapshot_id": "6eb33784e24e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "By default, Macie publishes only new and updated policy findings to Security Hub CSPM. Macie doesn't publish sensitive data findings to Security Hub CSPM.",
+     "supports": "Phải cấu hình publication settings để gửi sensitive data findings sang Security Hub (khớp với 'configure' trong phương án A).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/designate-orgs-admin-account.html", "title": "Integrating Security Hub CSPM with AWS Organizations", "section": "intro",
+     "snapshot_id": "250ff8ff3b9f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "it allows the delegated administrator to enable Security Hub CSPM for member accounts, view data in member accounts",
+     "supports": "Delegated Security Hub admin xem dữ liệu của member accounts từ một nơi.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html", "title": "What is Amazon Inspector?", "section": "intro",
+     "snapshot_id": "6ead4370c770", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon Inspector discovers and scans Amazon EC2 instances, container images in Amazon ECR, and Lambda functions.",
+     "supports": "Inspector không quét S3 để tìm dữ liệu nhạy cảm.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/awssupport/latest/user/security-hub-controls-with-trusted-advisor.html", "title": "Viewing AWS Security Hub CSPM controls in AWS Trusted Advisor", "section": "Notes",
+     "snapshot_id": "fb5634a3c667", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "From Trusted Advisor, you can view controls in the AWS Foundational Security Best Practices security standard",
+     "supports": "Tích hợp bảo mật của Trusted Advisor chỉ là control FSBP của Security Hub CSPM, không phải findings của Macie/Inspector.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q030:stem:1", "detail_vi": "Ký tự lỗi mã hoá '�' thay cho dấu nháy trong 'organization's'."},
+    {"type": "outdated", "location": "Q030:A", "detail_vi": "'AWS Security Hub' trong đề hiện tương ứng với AWS Security Hub CSPM; không ảnh hưởng đáp án."}
+  ]
+}

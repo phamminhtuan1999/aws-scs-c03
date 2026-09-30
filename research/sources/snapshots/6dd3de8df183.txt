@@ -1,0 +1,287 @@
+URL: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html
+TITLE: Amazon EC2 security group connection tracking - Amazon Elastic Compute Cloud
+
+# Amazon EC2 security group connection tracking
+
+Your security groups use connection tracking to track information about traffic to
+and from the instance. Rules are applied based on the connection state of the traffic
+to determine if the traffic is allowed or denied. With this approach, security groups
+are stateful. This means that responses to inbound traffic are allowed to flow out
+of the instance regardless of outbound security group rules, and vice versa.
+
+As an example, suppose that you initiate a command such as netcat or similar to your
+instances from your home computer, and your inbound security group rules allow ICMP
+traffic. Information about the connection (including the port information) is tracked.
+Response traffic from the instance for the command is not tracked as a new request, but
+rather as an established connection, and is allowed to flow out of the instance, even if
+your outbound security group rules restrict outbound ICMP traffic.
+
+For protocols other than TCP, UDP, or ICMP, only the IP address and protocol number is
+tracked. If your instance sends traffic to another host, and the host sends the same
+type of traffic to your instance within 600 seconds, the security group for your
+instance accepts it regardless of inbound security group rules. The security group
+accepts it because it’s regarded as response traffic for the original traffic.
+
+When you change a security group rule, its tracked connections are not immediately
+interrupted. The security group continues to allow packets until existing connections
+time out. To ensure that traffic is immediately interrupted, or that all traffic is
+subject to firewall rules regardless of the tracking state, you can use a network ACL
+for your subnet. Network ACLs are stateless and therefore do not automatically allow
+response traffic. Adding a network ACL that blocks traffic in either direction breaks
+existing connections. For more information, see Network ACLs in the
+Amazon VPC User Guide.
+
+Note
+
+Security groups have no effect on DNS traffic to or from the Route 53 Resolver, sometimes referred to
+as the 'VPC+2 IP address' (see What is Amazon Route 53
+Resolver? in the Amazon Route 53 Developer Guide), or the ‘AmazonProvidedDNS’ (see Work with DHCP option sets in the Amazon Virtual Private Cloud User Guide). If you wish to filter DNS requests
+through the Route 53 Resolver, you can enable Route 53 Resolver DNS Firewall (see Route
+53 Resolver DNS Firewall in the Amazon Route 53 Developer
+Guide).
+
+## Untracked connections
+
+Not all flows of traffic are tracked. If a security group rule permits TCP or UDP flows
+for all traffic (0.0.0.0/0 or ::/0) and there is a corresponding rule in the other
+direction that permits all response traffic (0.0.0.0/0 or ::/0) for any port
+(0-65535), then that flow of traffic is not tracked, unless it is part of an automatically tracked connection. The
+response traffic for an untracked flow is allowed based on the inbound or outbound
+rule that permits the response traffic, not based on tracking information.
+
+An untracked flow of traffic is immediately interrupted if the rule that enables the flow
+is removed or modified. For example, if you have an open (0.0.0.0/0) outbound rule,
+and you remove a rule that allows all (0.0.0.0/0) inbound SSH (TCP port 22) traffic
+to the instance (or modify it such that the connection would no longer be
+permitted), your existing SSH connections to the instance are immediately dropped.
+The connection was not previously being tracked, so the change will break the
+connection. On the other hand, if you have a narrower inbound rule that initially
+allows an SSH connection (meaning that the connection was tracked), but change that
+rule to no longer allow new connections from the address of the current SSH client,
+the existing SSH connection is not interrupted because it is tracked.
+
+## Automatically tracked connections
+
+Connections made through the following are
+automatically tracked, even if the security group configuration does not otherwise
+require tracking:
+
+- Egress-only internet gateways
+
+- Global Accelerator accelerators
+
+- NAT gateways
+
+- Network Firewall firewall endpoints
+
+- Network Load Balancers
+
+- AWS PrivateLink (interface VPC endpoints)
+
+- AWS Lambda (Hyperplane elastic network interfaces)
+
+- DynamoDB gateway endpoints – Each connection to DynamoDB consumes 2 conntrack entries.
+
+## Connection tracking allowances
+
+Amazon EC2 defines the maximum number of connections that can be tracked per instance. After
+the maximum is reached, any packets that are sent or received are dropped because a
+new connection cannot be established. When this happens, applications that send and
+receive packets cannot communicate properly. Use the conntrack_allowance_available
+network performance metric to determine the number of tracked connections still
+available for that instance type.
+
+To determine whether packets were dropped because the network traffic for your
+instance exceeded the maximum number of connections that can be tracked, use the
+conntrack_allowance_exceeded network performance metric. For more
+information, see Monitor network performance for ENA settings on your EC2 instance.
+
+With Elastic Load Balancing, if you exceed the maximum number of connections that can be tracked per instance,
+we recommend that you scale either the number of instances registered with the
+load balancer or the size of the instances registered with the load balancer.
+
+## Connection tracking best practices
+
+Asymmetric routing, where traffic comes into an instance through
+one network interface and leaves through a different network interface, can reduce the peak performance
+that an instance can achieve if flows are tracked.
+
+To maintain peak performance and optimize connection management when connection tracking is enabled for your security groups,
+we recommend the following configuration:
+
+- Avoid asymmetric routing topologies, if possible.
+
+- Instead of using security groups for filtering, use network ACLs.
+
+- If you must use security groups with connection tracking, configure the shortest idle connection tracking
+timeout possible. For more details on idle connection tracking timeout, see the following section.
+
+- With the shorter default timeouts on Nitrov6 instances, applications with long-lived connections (such as database connection pools,
+persistent HTTP connections, or streaming workloads) should configure an appropriate TcpEstablishedTimeout value at instance launch.
+
+- For long-lived connections, configure TCP keep alives to be sent at intervals of less than 5 minutes to ensure connections stay open
+and maintain their tracked state. This helps prevent connections from being dropped due to idle timeout and reduces the overhead
+of connection re-establishment.
+
+For more information about performance tuning on the Nitro system, see
+Nitro system considerations for performance tuning.
+
+## Idle connection tracking timeout
+
+The security group tracks each connection established to ensure that return packets are
+delivered as expected. There is a maximum number of connections that can be tracked
+per instance. Connections that remain idle can lead to connection tracking
+exhaustion and cause connections not to be tracked and packets to be dropped. You
+can set the timeout for idle connection tracking on an Elastic network
+interface.
+
+Note
+
+This feature is available only with Nitro-based instances. You should test your applications on Nitrov6 generation instances with the reduced 350 second default connection tracking timeout before deploying to production.
+
+There are three configurable timeouts:
+
+- TCP established timeout: Timeout (in seconds) for idle TCP
+connections in an established state.
+
+- Min: 60 seconds
+
+- Max: 432000 seconds
+
+- Default: 350 seconds for Nitro v6
+instance types (excluding P6e-GB200); 432000 seconds for all other instance types (including P6e-GB200).
+
+- Recommended: Less than 432000 seconds
+
+- UDP timeout: Timeout (in seconds) for idle UDP flows that
+have seen traffic only in a single direction or a single request-response transaction.
+
+- Min: 30 seconds
+
+- Max: 60 seconds
+
+- Default: 30 seconds
+
+- UDP stream timeout: Timeout (in seconds) for idle UDP flows
+classified as streams which have seen more than one request-response transaction.
+
+- Min: 60 seconds
+
+- Max: 180 seconds
+
+- Default: 180 seconds
+
+You may want to modify the default timeouts for any of the following cases:
+
+- If you are monitoring tracked
+connections using Amazon EC2 network performance metrics, the
+conntrack_allowance_exceeded and
+conntrack_allowance_available metrics
+enable you to monitor dropped packets and tracked connection utilization to
+proactively manage EC2 instance capacity with scale up or out actions to
+help meet network connections demand before dropping packets. If you are
+observing conntrack_allowance_exceeded
+drops on your EC2 instances, you may benefit from setting a lower TCP
+established timeout to account for stale TCP/UDP sessions resulting from
+improper clients or network middle boxes.
+
+- Typically, load balancers or firewalls have TCP Established idle timeout in the range of 60 to
+90 minutes. If you are running workloads that are expected to handle a very
+high number of connections (greater than 100k) from appliances like network
+firewalls, configuring a similar timeout on an EC2 network interface is
+advised.
+
+- If you are running a workload that uses an asymmetric routing topology,
+we recommend that you configure a TCP Established idle timeout of 60 seconds.
+
+- If you are running workloads with high numbers of connections like DNS, SIP, SNMP, Syslog, Radius and other services that primarily use UDP to serve requests, setting the ‘UDP-stream’ timeout to 60s provides higher scale/performance for existing capacity and to prevent gray failures.
+
+- For TCP/UDP connections through Network Load Balancers,
+all connections are tracked. Idle timeout value for TCP flows is
+350secs and UDP flows is 120 secs, and varies from interface level timeout
+values. You may want to configure timeouts at the network interface level to
+allow for more flexibility for timeout than the defaults for the load balancer.
+
+You have the option to configure the connection tracking timeouts when you do the
+following:
+
+- Create a network interface
+
+- Modify network interface attributes
+
+- Launch an EC2 instance
+
+- Create an EC2 instance launch template
+
+## Example
+
+In the following example, the security group has inbound rules that allow TCP and ICMP
+traffic, and outbound rules that allow all outbound traffic.
+
+Inbound
+
+Protocol type
+
+Port number
+
+Source
+
+TCP
+
+22 (SSH)
+
+203.0.113.1/32
+
+TCP
+
+80 (HTTP)
+
+0.0.0.0/0
+
+TCP
+
+80 (HTTP)
+
+::/0
+
+ICMP
+
+All
+
+0.0.0.0/0
+
+Outbound
+
+Protocol type
+
+Port number
+
+Destination
+
+All
+
+All
+
+0.0.0.0/0
+
+All
+
+All
+
+::/0
+
+With a direct network connection to the instance or network interface, the tracking
+behavior is as follows:
+
+- Inbound and outbound TCP traffic on port 22 (SSH) is tracked, because the inbound rule
+allows traffic from 203.0.113.1/32 only, and not all IP addresses
+(0.0.0.0/0).
+
+- Inbound and outbound TCP traffic on port 80 (HTTP) is not tracked, because the inbound
+and outbound rules allow traffic from all IP addresses.
+
+- ICMP traffic is always tracked.
+
+If you remove the outbound rule for IPv4 traffic, all inbound and outbound IPv4 traffic is tracked,
+including traffic on port 80 (HTTP). The same applies for IPv6 traffic if you remove the outbound
+rule for IPv6 traffic.

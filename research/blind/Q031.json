@@ -1,0 +1,64 @@
+{
+  "question_id": "Q031",
+  "question_content_hash": "b1a20a1e14b016a52154d7487170168bdc4f511a773d2a45cb545613a7f33305",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Xác định nguyên nhân khiến finding DNS của GuardDuty không được tạo (và do đó không xuất hiện ở tài khoản delegated administrator của Security Hub).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Môi trường chỉ dùng một AWS Region duy nhất.", "kind": "scope"},
+    {"id": "R3", "text_vi": "GuardDuty và Security Hub đã được bật tự động cho mọi tài khoản (cũ và mới) trong AWS Organizations, có delegated administrator.", "kind": "condition"},
+    {"id": "R4", "text_vi": "Finding cần sinh ra từ truy vấn DNS của EC2 instance.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q031:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "GuardDuty lấy VPC Flow Logs qua luồng độc lập, không cần bật flow logs trong tài khoản; hơn nữa finding DNS dựa trên DNS query logs chứ không phải flow logs.",
+     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q031:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Nếu VPC dùng DHCP options trỏ tới resolver bên ngoài như OpenDNS, GuardDuty không thể truy cập Route53 Resolver DNS query logs, nên không thể tạo finding DNS.",
+     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q031:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Tích hợp GuardDuty -> Security Hub được kích hoạt tự động khi cả hai dịch vụ được bật; đề nói cả hai đã được bật tự động cho mọi tài khoản, nên đây không phải nguyên nhân.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q031:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Cross-Region aggregation chỉ gom finding từ nhiều Region về home Region; công ty chỉ dùng một Region nên thiếu cấu hình này không làm mất finding.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref5"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q031:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu GuardDuty nêu rõ khi dùng resolver khác như OpenDNS thì GuardDuty không xử lý được nguồn DNS logs; các lựa chọn còn lại bị tài liệu bác bỏ trực tiếp hoặc không liên quan (một Region).", "open_issues": ["Trong thực tế, example.com không phải domain độc hại nên dù dùng AWS DNS cũng có thể không sinh finding; đề dùng example.com như tên giữ chỗ cho domain test."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html", "title": "GuardDuty foundational data sources", "section": "VPC Flow Logs",
+     "snapshot_id": "6600ffb9d938", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You don't need to create or configure VPC flow logs in your account for GuardDuty to access this data.",
+     "supports": "GuardDuty không phụ thuộc việc bật VPC Flow Logs trong tài khoản.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html", "title": "GuardDuty foundational data sources", "section": "Route53 Resolver DNS query logs",
+     "snapshot_id": "6600ffb9d938", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If you use another DNS resolver, such as OpenDNS or GoogleDNS, or if you set up your own DNS resolvers, then GuardDuty cannot access and process data from this data source.",
+     "supports": "Dùng OpenDNS qua DHCP options khiến GuardDuty không thấy truy vấn DNS nên không sinh finding DNS.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html", "title": "AWS service integrations with Security Hub CSPM", "section": "Overview",
+     "snapshot_id": "76cf7dbcbc07", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "are activated automatically after you enable Security Hub CSPM and the other service.",
+     "supports": "Tích hợp gửi finding (như GuardDuty) được kích hoạt tự động, không cần bật thủ công.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html", "title": "AWS service integrations with Security Hub CSPM", "section": "Amazon GuardDuty (Sends findings)",
+     "snapshot_id": "76cf7dbcbc07", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "GuardDuty sends all of the finding types that it generates to Security Hub CSPM.",
+     "supports": "Nếu GuardDuty tạo finding, finding sẽ được gửi sang Security Hub; vấn đề nằm ở việc finding không được tạo.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/finding-aggregation.html", "title": "Understanding cross-Region aggregation in Security Hub CSPM", "section": "Overview",
+     "snapshot_id": "fe7e39531f02", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "control compliance statuses, and security scores from multiple AWS Regions to a single home Region.",
+     "supports": "Cross-Region aggregation chỉ liên quan khi có nhiều Region; không áp dụng cho môi trường một Region.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q031:stem:2", "detail_vi": "Câu hỏi có lỗi ngữ pháp 'Why was the finding was not created'."},
+    {"type": "ambiguous", "location": "Q031:stem:1", "detail_vi": "example.com là domain giữ chỗ, không phải domain độc hại được GuardDuty nhận diện; cần hiểu là domain test sinh finding DNS."}
+  ],
+  "notes_vi": "Cơ chế: finding DNS của GuardDuty chỉ có khi EC2 dùng AWS DNS resolver (mặc định)."
+}

@@ -1,0 +1,57 @@
+{
+  "question_id": "Q025",
+  "question_content_hash": "6ed3056fb3c5b1461eeade509cc0813b4d7283dd575d96d828a590c4908eafd8",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Instance trong subnet phải khởi tạo được kết nối outbound TLS tới dịch vụ internet qua TCP 443 (cần cả rule outbound 443 lẫn rule inbound cho traffic phản hồi vì NACL là stateless).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Phải deny inbound traffic có đích là cổng MySQL 3306.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Rule NACL được đánh giá theo thứ tự số tăng dần, rule khớp đầu tiên được áp dụng: rule deny 3306 phải đứng trước bất kỳ rule allow nào bao phủ 3306.", "kind": "condition"},
+    {"id": "R4", "text_vi": "Chọn MỘT bộ rule NACL (custom NACL, public subnet).", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q025:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Inbound chỉ allow cổng đích 443; traffic phản hồi từ server HTTPS đi về cổng ephemeral của instance (không phải 443) nên bị rule * deny mặc định chặn -> kết nối outbound TLS không hoạt động. Rule deny 3306 thì có tác dụng.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q025:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Rule 100 deny 3306 được đánh giá trước rule 200 allow 1024-65535 nên 3306 bị chặn; dải ephemeral cho phép traffic phản hồi của kết nối outbound 443; outbound 443 cho phép request. Đúng khuyến nghị AWS: đặt rule deny trước rule allow dải ephemeral.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q025:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Rule 100 allow 1024-65535 bao gồm cổng 3306 và được đánh giá trước; traffic 3306 khớp rule 100 và được allow, rule 200 deny 3306 không bao giờ được áp dụng.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref2", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q025:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Deny 3306 đúng thứ tự, nhưng inbound chỉ allow cổng đích 443 nên traffic phản hồi về cổng ephemeral của instance bị chặn -> outbound TLS không hoạt động.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q025:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu VPC nêu trực tiếp NACL stateless, đánh giá theo số rule nhỏ nhất, cần inbound cho cổng ephemeral khi instance là client, và khuyến nghị đặt deny trước allow dải ephemeral.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html", "title": "Control subnet traffic with network access control lists", "section": "Network ACL rules",
+     "snapshot_id": "38359da063d9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If, for example, you create a NACL rule to allow specific inbound traffic to a subnet, responses to that traffic are not automatically allowed.",
+     "supports": "NACL stateless: traffic phản hồi phải được allow riêng bằng rule inbound.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/nacl-rules.html", "title": "Network ACL rules", "section": "Rule number",
+     "snapshot_id": "0e463a392584", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "As soon as a rule matches traffic, it's applied regardless of any higher-numbered rule that might contradict it.",
+     "supports": "Rule số nhỏ khớp trước thắng; deny 3306 phải có số nhỏ hơn allow 1024-65535.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html", "title": "Custom network ACLs for your VPC", "section": "Ephemeral ports",
+     "snapshot_id": "85eaa2185da1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If an instance in your VPC is the client initiating a request, your network ACL must have an inbound rule to enable traffic destined for the ephemeral ports",
+     "supports": "Kết nối outbound 443 cần rule inbound cho cổng ephemeral, không phải inbound 443.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html", "title": "Custom network ACLs for your VPC", "section": "Ephemeral ports",
+     "snapshot_id": "85eaa2185da1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Ensure that you place the deny rules earlier in the table than the allow rules that open the wide range of ephemeral ports.",
+     "supports": "Deny 3306 (nằm trong 1024-65535) phải đứng trước rule allow dải ephemeral.", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Cổng trong rule NACL là cổng đích của gói tin; phản hồi HTTPS về instance có cổng đích là ephemeral port của client."
+}

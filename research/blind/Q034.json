@@ -1,0 +1,64 @@
+{
+  "question_id": "Q034",
+  "question_content_hash": "3098aef344bfe62619054791ffb044ce3955a0c3fc028efaacc93ca8718ab5e6",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Bảo vệ nền tảng web (không còn bản vá bảo mật) khỏi SQL injection.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Hoàn thành trong 24 giờ, ít công sức nhất.", "kind": "optimization"},
+    {"id": "R3", "text_vi": "Duy trì hoạt động bình thường trong khi triển khai (hai EC2 instance, Route 53 weighted routing, RDS).", "kind": "constraint"},
+    {"id": "R4", "text_vi": "Kẻ tấn công không được vượt qua lớp bảo vệ bằng cách truy cập trực tiếp EC2.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q034:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "ALB với target group gồm cả hai EC2 giữ nguyên năng lực phục vụ; WAF gắn được với ALB và có rule/managed rule group chặn SQL injection; kiểm thử trước rồi mới chuyển Route 53, sau đó khóa security group để không truy cập thẳng EC2.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q034:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Chỉ dùng một EC2 làm origin nên bỏ một instance và giảm năng lực/độ sẵn sàng; đồng thời không chặn truy cập trực tiếp tới EC2 nên kẻ tấn công vẫn có thể bỏ qua CloudFront/WAF.",
+     "requirement_ids": ["R3", "R4"], "reference_ids": ["ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q034:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Nền tảng legacy không còn nhận bản vá bảo mật, nên việc tự sửa mã nguồn tốn công sức lớn và khó hoàn thành trong 24 giờ; không phải giải pháp ít công sức nhất.",
+     "requirement_ids": ["R2"], "reference_ids": [], "evidence_kind": "inference"},
+    {"unit_id": "Q034:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS WAF không gắn trực tiếp với EC2 instance (chỉ CloudFront, ALB, API Gateway...); thêm nữa chặn cổng SQL trên EC2 không liên quan tới SQL injection qua ứng dụng web và việc khôi phục security group làm mất bảo vệ.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref2"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q034:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Chỉ A vừa đặt WAF trước cả hai instance trên tài nguyên WAF hỗ trợ, vừa kiểm thử trước khi chuyển DNS và chặn đường vòng trực tiếp tới EC2.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html", "title": "Target groups for your Application Load Balancers", "section": "Target groups",
+     "snapshot_id": "23fdfc741ee6", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Target groups route requests to individual registered targets, such as EC2 instances,",
+     "supports": "Có thể đăng ký hai EC2 hiện có làm target cho ALB.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html", "title": "Resources that you can protect with AWS WAF", "section": "Regional resources",
+     "snapshot_id": "1dd55ffe60ec", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can use AWS WAF to protect the following regional resource types:",
+     "supports": "Danh sách tài nguyên regional của WAF có Application Load Balancer nhưng không có EC2 instance.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-use-case.html", "title": "Use-case specific rule groups", "section": "SQL database managed rule group",
+     "snapshot_id": "4685878919e3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The SQL database rule group contains rules to block request patterns associated with exploitation of SQL databases, like SQL injection attacks.",
+     "supports": "WAF có managed rule group chặn SQL injection, triển khai nhanh.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-update-security-groups.html", "title": "Security groups for your Application Load Balancer", "section": "Security groups",
+     "snapshot_id": "2767b6098b8f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The security group for your Application Load Balancer controls the traffic that is allowed to reach and leave the load balancer.",
+     "supports": "Có thể cấu hình security group để chỉ ALB tới được EC2, chặn truy cập trực tiếp.", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html", "title": "Use various origins with CloudFront distributions", "section": "Use an Application Load Balancer",
+     "snapshot_id": "4aee8e51c7c0", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "make sure that viewers can only access your web servers through CloudFront and not by accessing the load balancer directly",
+     "supports": "Khi đặt CloudFront phía trước cần chặn truy cập trực tiếp tới origin; phương án B không làm việc này và chỉ dùng một EC2.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q034:stem:0", "detail_vi": "Ký tự lỗi mã hóa '�' thay cho dấu nháy (company's, engineer's)."},
+    {"type": "data", "location": "Q034:stem:0", "detail_vi": "'Amazon RDS cluster' và 'Route 53 weighted load balancing' là cách diễn đạt không chuẩn nhưng không ảnh hưởng đáp án."}
+  ],
+  "notes_vi": ""
+}

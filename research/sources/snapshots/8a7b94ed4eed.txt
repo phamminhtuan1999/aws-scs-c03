@@ -1,0 +1,77 @@
+URL: https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-logging-to-kinesis.html
+TITLE: Log REST API calls to Amazon Data Firehose in API Gateway - Amazon API Gateway
+
+# Log REST API calls to Amazon Data Firehose in API Gateway
+
+To help debug issues related to client access to your API, you can log API calls to
+Amazon Data Firehose. For more information about Firehose, see What Is Amazon Data
+Firehose?.
+
+For access logging, you can only enable CloudWatch or Firehose—you can't enable both.
+However, you can enable CloudWatch for execution logging and Firehose for access logging.
+
+Topics
+
+- Firehose log formats for API Gateway
+
+- Permissions for Firehose logging
+
+- Set up Firehose access logging by using the API Gateway console
+
+## Firehose log formats for API Gateway
+
+Firehose logging uses the same format as CloudWatch logging.
+
+## Permissions for Firehose logging
+
+When Firehose access logging is enabled on a stage, API Gateway creates a service-linked role
+in your account if the role doesn't exist already. The role is named
+AWSServiceRoleForAPIGateway and has the
+APIGatewayServiceRolePolicy managed policy attached to it. For more
+information about service-linked roles, see Using Service-Linked
+Roles.
+
+Note
+
+The name of your Firehose stream must be
+amazon-apigateway-{your-stream-name}.
+
+## Set up Firehose access logging by using the API Gateway console
+
+To set up API logging, you must have deployed the API to a stage. You must also have
+created a Firehose stream.
+
+- Sign in to the API Gateway console at https://console.aws.amazon.com/apigateway.
+
+- Do one of the following:
+
+- Choose an existing API, and then choose a stage.
+
+- Create an API and deploy it to a stage.
+
+- In the main navigation pane, choose Stages.
+
+- In the Logs and tracing section, choose
+Edit.
+
+- To enable access logging to a Firehose stream:
+
+- Turn on
+Custom access logging.
+
+- For Access log destination ARN, enter the ARN of a Firehose stream. The ARN
+format is
+arn:aws:firehose:{region}:{account-id}:deliverystream/amazon-apigateway-{your-stream-name}.
+
+Note
+
+The name of your Firehose stream must be
+amazon-apigateway-{your-stream-name}.
+
+- For Log format, enter a log format. You can choose CLF,
+JSON, XML, or CSV. To learn more about example log formats, see Access log formats.
+
+- Choose Save changes.
+
+API Gateway is now ready to log requests to your API to Firehose. You don't need to redeploy
+the API when you update the stage settings, logs, or stage variables.

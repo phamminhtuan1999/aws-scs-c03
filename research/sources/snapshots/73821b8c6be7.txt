@@ -1,0 +1,220 @@
+URL: https://docs.aws.amazon.com/apigateway/latest/developerguide/rest-api-execution-logging.html
+TITLE: Execution logging for REST APIs - Amazon API Gateway
+
+# Execution logging for REST APIs
+
+Execution logging records the actions that API Gateway takes to process an API request.
+Logged data includes errors, execution traces, request and response parameter values or
+payloads, data used by Lambda authorizers, whether API keys are required, and whether
+usage plans are enabled. API Gateway redacts authorization headers, API key values, and similar
+sensitive request parameters from the logged data.
+
+To improve your security posture, we recommend that you use execution logging at
+the ERROR or INFO level. You might need to do this to
+comply with various compliance frameworks. For more information, see Amazon API Gateway controls
+in the AWS Security Hub User Guide.
+
+## Standard execution logging
+
+When you enable execution logging on a stage, API Gateway automatically creates and
+manages a CloudWatch Logs log group. The log group is named
+API-Gateway-Execution-Logs_{rest-api-id}/{stage_name}. Within each
+log group, logs are divided into log streams ordered by
+Last Event Time.
+
+With standard execution logging:
+
+- Log events are truncated at 1 KB.
+
+- API Gateway manages the log group name. You cannot choose the log group
+name or send logs directly to Amazon S3 or Firehose.
+
+To enable standard execution logging, set the loggingLevel on your
+stage to ERROR or INFO. No other configuration is
+required.
+
+### Permissions
+
+To enable CloudWatch Logs, you must grant API Gateway permission to read and write logs
+to CloudWatch for your account. The AmazonAPIGatewayPushToCloudWatchLogs managed policy has all the
+required permissions.
+
+Create an IAM role with apigateway.amazonaws.com as its
+trusted entity, attach the preceding policy, and set the IAM role ARN on
+the cloudWatchRoleArn
+property on your Account.
+You must set this property separately for each AWS Region in which you want
+to enable CloudWatch Logs.
+
+Note
+
+API Gateway calls AWS Security Token Service to assume the IAM role, so make sure that
+AWS STS is enabled for the Region. For more information, see Managing AWS STS in an AWS Region.
+
+### Enable execution logging (console)
+
+Before you begin, deploy the API to a stage and configure an appropriate
+CloudWatch Logs role ARN for your account.
+
+- Sign in to the API Gateway console at https://console.aws.amazon.com/apigateway.
+
+- On the main navigation pane, choose
+Settings, and then under
+Logging, choose
+Edit.
+
+- For CloudWatch log role ARN, enter the ARN of
+an IAM role with appropriate permissions. You need to do this once
+for each AWS account that creates APIs using API Gateway.
+
+- In the main navigation pane, choose
+APIs, choose your REST API, and then choose
+Stages.
+
+- Choose a stage, and then in the Logs and
+tracing section, choose
+Edit.
+
+- Select a logging level from the CloudWatch Logs
+dropdown menu:
+
+- Off –
+API Gateway does not log requests for this stage.
+
+- Errors only –
+API Gateway logs errors only.
+
+- Errors and info logs
+– API Gateway logs all events.
+
+- (Optional) Select Data tracing to log full
+request and response data. This can result in logging sensitive
+data.
+
+Note
+
+We recommend that you don't use Data
+tracing for production APIs.
+
+- (Optional) Select Detailed metrics to turn on
+detailed CloudWatch metrics. For more information, see Monitor REST API execution with Amazon CloudWatch metrics.
+
+- Choose Save changes.
+
+You don't need to redeploy the API when you update stage settings.
+
+### Enable execution logging (CloudFormation)
+
+Use the MethodSettings property on the stage resource to
+enable execution logging.
+
+TestStage:
+Type: AWS::ApiGateway::Stage
+Properties:
+StageName: test
+RestApiId: !Ref MyAPI
+DeploymentId: !Ref Deployment
+MethodSettings:
+- ResourcePath: "/*"
+HttpMethod: "*"
+LoggingLevel: INFO
+
+To enable CloudWatch Logs, you must grant API Gateway permission to read and write logs to
+CloudWatch for your account. To learn more, see Associate account with IAM role in the
+AWS CloudFormation User Guide.
+
+## Amazon CloudWatch Logs delivery for execution logs
+
+Amazon CloudWatch Logs delivery provides an alternative path for execution logs. Instead of
+writing to an API Gateway-managed log group, you configure a delivery that sends execution
+logs to destinations that you own and control.
+
+With Amazon CloudWatch Logs delivery:
+
+- Log events can be up to 1 MB, capturing more complete request and
+response data. Payloads that exceed 1 MB are still truncated.
+
+- You choose the destination: your own CloudWatch Logs log groups, Amazon S3 buckets,
+or Firehose streams.
+
+- You can send logs to multiple destinations simultaneously.
+
+- You control the log group configuration, including naming and
+retention.
+
+Important
+
+CloudWatch Logs delivery replaces standard execution logging. When you configure a
+delivery, API Gateway stops writing to the auto-managed log group. You cannot use
+both paths at the same time for the same stage.
+
+When you create a delivery, API Gateway routes execution logs to your configured
+destinations instead of the auto-managed log group. When you delete a delivery,
+execution logs automatically resume flowing to the auto-managed log group. No
+API Gateway configuration changes are needed beyond the prerequisite of setting
+loggingLevel to ERROR or INFO.
+
+Note
+
+Log delivery is best-effort. In rare cases, some log events might not be
+delivered.
+
+Warning
+
+Before you enable log delivery, update any dashboards, alarms, or
+subscription filters that reference the auto-managed log group
+(API-Gateway-Execution-Logs_{rest-api-id}/{stage_name}). After
+delivery is active, that log group no longer receives new events.
+
+The following table compares standard execution logging with Amazon CloudWatch Logs
+delivery.
+
+Standard execution logging
+
+Amazon CloudWatch Logs delivery
+
+Max log event size
+
+1 KB
+
+1 MB
+
+Destinations
+
+CloudWatch Logs (managed log group)
+
+CloudWatch Logs, Amazon S3, Firehose (your own resources)
+
+Multiple destinations
+
+No
+
+Yes
+
+Log group name
+
+Fixed by API Gateway
+
+You choose
+
+Setup
+
+Automatic when logging is enabled
+
+Requires creating a Amazon CloudWatch Logs delivery
+
+Prerequisite
+
+Set loggingLevel to ERROR or
+INFO
+
+Set loggingLevel to ERROR or
+INFO
+
+Note
+
+If you set loggingLevel to OFF after configuring
+a delivery, no execution logs are generated or delivered. Your delivery
+destinations remain configured but receive no data.
+
+To create a delivery, see Create a log delivery for REST API execution logs.

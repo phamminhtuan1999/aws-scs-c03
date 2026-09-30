@@ -1,0 +1,323 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html
+TITLE: Monitoring AWS Config with Amazon EventBridge - AWS Config
+
+# Monitoring AWS Config with Amazon EventBridge
+
+Amazon EventBridge delivers a near real-time stream of system events that describe changes in AWS
+resources. Use Amazon EventBridge to detect and react to changes in the status of AWS Config events.
+
+You can create a rule that runs whenever there is a state transition, or when there is a
+transition to one or more states that are of interest. Then, based on rules you create,
+Amazon EventBridge invokes one or more target actions when an event matches the values you specify in
+a rule. Depending on the type of event, you might want to send notifications, capture event
+information, take corrective action, initiate events, or take other actions.
+
+Before you create event rules for AWS Config, however, you should do the following:
+
+- Familiarize yourself with events, rules, and targets in EventBridge. For more
+information, see What Is
+Amazon EventBridge?
+
+- For more information about how to get started with EventBridge and set up rules, see
+Getting started with
+Amazon EventBridge.
+
+- Create the target or targets you will use in your event rules.
+
+Topics
+
+- Considerations
+
+- Amazon EventBridge format for AWS Config
+
+- Creating Amazon EventBridge Rule for AWS Config
+
+## Considerations
+
+You will not receive alerts through EventBridge for the following resource types if you are not recording them with AWS Config:
+
+- AWS::ACM::Certificate
+
+- AWS::CloudTrail::Trail
+
+- AWS::CloudWatch::Alarm
+
+- AWS::EC2::CustomerGateway
+
+- AWS::EC2::EIP
+
+- AWS::EC2::Host
+
+- AWS::EC2::Instance
+
+- AWS::EC2::InternetGateway
+
+- AWS::EC2::NetworkAcl
+
+- AWS::EC2::NetworkInterface
+
+- AWS::EC2::RouteTable
+
+- AWS::EC2::SecurityGroup
+
+- AWS::EC2::Subnet
+
+- AWS::EC2::VPC
+
+- AWS::EC2::VPNConnection
+
+- AWS::EC2::VPNGateway
+
+- AWS::EC2::Volume
+
+- AWS::ElasticLoadBalancingV2::LoadBalancer
+
+- AWS::IAM::Group
+
+- AWS::IAM::Policy
+
+- AWS::IAM::Role
+
+- AWS::IAM::User
+
+- AWS::RDS::DBInstance
+
+- AWS::RDS::DBSecurityGroup
+
+- AWS::RDS::DBSnapshot
+
+- AWS::RDS::DBSubnetGroup
+
+- AWS::RDS::EventSubscription
+
+- AWS::Redshift::Cluster
+
+- AWS::Redshift::ClusterParameterGroup
+
+- AWS::Redshift::ClusterSecurityGroup
+
+- AWS::Redshift::ClusterSnapshot
+
+- AWS::Redshift::ClusterSubnetGroup
+
+- AWS::Redshift::EventSubscription
+
+- AWS::S3::Bucket
+
+## Amazon EventBridge format for AWS Config
+
+The EventBridge event for AWS Config has the
+following format:
+
+{
+"version": "0",
+"id": "cd4d811e-ab12-322b-8255-872ce65b1bc8",
+"detail-type": "event type",
+"source": "aws.config",
+"account": "111122223333",
+"time": "2018-03-22T00:38:11Z",
+"region": "us-east-1",
+"resources": [
+resources
+],
+"detail": {
+specific message type
+}
+}
+
+## Creating Amazon EventBridge Rule for AWS Config
+
+Use the following steps to create an EventBridge rule that triggers on an event emitted by
+AWS Config. Events are emitted on a best effort basis.
+
+- In the navigation pane, choose Rules.
+
+- Choose Create rule.
+
+- Enter a name and description for the rule.
+
+A rule can't have the same name as another rule in the same Region and on the
+same event bus.
+
+Note
+
+An event bus receives events from a source, uses rules to evaluate them, applies any
+configured input transformation, and routes them to the appropriate
+target(s). Your account's default event bus receives events from
+AWS services. A custom event bus can receive events from your custom
+applications and services. A partner event bus receives events from an event
+source created by an SaaS partner. These events come from the partners
+services or applications. For more information, see Event buses in Amazon EventBridge in the Amazon EventBridge User Guide.
+
+- For Rule type, choose Rule with an event pattern.
+
+- For Event source, choose AWS events or EventBridge partner events.
+
+- (Optional) For Sample event type, choose AWS
+events.
+
+- (Optional) For Sample events, choose the event type that
+triggers the rule:
+
+- Choose AWS API Call from CloudTrail to base
+rules on API calls made to this service. For more information about
+creating this type of rule, see Tutorial: Create an
+Amazon EventBridge rule for AWS CloudTrail API calls.
+
+- Choose Config Configuration Item Change to get
+notifications when a resource in your account changes.
+
+As described in these support articles, you can use EventBridge to receive
+custom email notifications when a resource is created or deleted, How can I receive custom email notifications when a resource is
+created in my AWS account using AWS Config service? and How can I receive custom email notifications when a resource is
+deleted in my AWS account using AWS Config service?.
+
+- Choose Config Rules Compliance Change to get
+notifications when a compliance check to your rules fails.
+
+As described in this support article, you can use EventBridge to receive
+custom email notifications when a resource is noncompliant,
+How can I be notified when an AWS resource is noncompliant using
+AWS Config?.
+
+- Choose Config Rules Re-evaluation Status to get
+reevaluation status notifications.
+
+- Choose Config Configuration Snapshot Delivery
+Status to get configuration snapshot delivery status
+notifications.
+
+- Choose Config Configuration History Delivery
+Status to get configuration history delivery status
+notifications.
+
+- For Creation method, choose Use pattern form.
+
+- For Event source, choose AWS services.
+
+- For AWS service, choose
+Config.
+
+- For Event type, choose the event type that triggers the
+rule:
+
+- Choose All Events to make a rule that applies to
+all AWS services. If you choose this option, you cannot choose
+specific message types, rule names, resource types, or resource
+IDs.
+
+- Choose AWS API Call from CloudTrail to base
+rules on API calls made to this service. For more information about
+creating this type of rule, see Tutorial: Create an
+Amazon EventBridge rule for AWS CloudTrail API calls.
+
+- Choose Config Configuration Item Change to get
+notifications when a resource in your account changes.
+
+As described in these support articles, you can use EventBridge to receive
+custom email notifications when a resource is created or deleted, How can I receive custom email notifications when a resource is
+created in my AWS account using AWS Config service? and How can I receive custom email notifications when a resource is
+deleted in my AWS account using AWS Config service?.
+
+- Choose Config Rules Compliance Change to get
+notifications when a compliance check to your rules fails.
+
+As described in this support article, you can use EventBridge to receive
+custom email notifications when a resource is noncompliant, How can I be notified when an AWS resource is noncompliant using
+AWS Config?.
+
+- Choose Config Rules Re-evaluation Status to get
+reevaluation status notifications.
+
+- Choose Config Configuration Snapshot Delivery
+Status to get configuration snapshot delivery status
+notifications.
+
+- Choose Config Configuration History Delivery
+Status to get configuration history delivery status
+notifications.
+
+- Choose Any message type to receive notifications of any
+type. Choose Specific message type(s) to receive the
+following types of notifications:
+
+- If you choose
+ConfigurationItemChangeNotification, you receive
+messages when the configuration of a resource that AWS Config evaluates has changed.
+
+- If you choose ComplianceChangeNotification, you
+receive messages when the compliance type of a resource that AWS Config
+evaluates has changed.
+
+- If you choose ConfigRulesEvaluationStarted, you
+receive messages when AWS Config starts evaluating your rule against the
+specified resources.
+
+- If you choose
+ConfigurationSnapshotDeliveryCompleted, you
+receive messages when AWS Config successfully delivers the configuration
+snapshot to your Amazon S3 bucket.
+
+- If you choose
+ConfigurationSnapshotDeliveryFailed, you receive
+messages when AWS Config fails to deliver the configuration snapshot to your
+Amazon S3 bucket.
+
+- If you choose
+ConfigurationSnapshotDeliveryStarted, you
+receive messages when AWS Config starts delivering the configuration snapshot
+to your Amazon S3 bucket.
+
+- If you choose
+ConfigurationHistoryDeliveryCompleted, you
+receive messages when AWS Config successfully delivers the configuration
+history to your Amazon S3 bucket.
+
+- If you chose a specific event type from the Event Type
+dropdown list, choose Any resource type to make a rule that
+applies to all AWS Config supported resource types.
+
+Or choose Specific resource type(s), and then type the
+AWS Config supported resource type (for example,
+AWS::EC2::Instance).
+
+- If you chose a specific event type from the Event Type
+dropdown list, choose Any resource ID to include any AWS Config
+supported resource ID.
+
+Or choose Specific resource ID(s), and then type the AWS Config
+supported resource ID (for example, i-04606de676e635647).
+
+- If you chose a specific event type from the Event Type
+dropdown list, choose Any rule name to include any AWS Config
+supported rule.
+
+Or choose Specific rule name(s), and then type the AWS Config
+supported rule (for example, required-tags).
+
+- For Select target(s), choose the type of target you have
+prepared to use with this rule, and then configure any additional options
+required by that type.
+
+- The fields displayed vary depending on the service you choose. Enter
+information specific to this target type as needed.
+
+- For many target types, EventBridge needs permissions to send events to the target. In
+these cases, EventBridge can create the IAM role needed for your rule to run.
+
+- To create an IAM role automatically, choose Create a new
+role for this specific resource.
+
+- To use an IAM role that you created earlier, choose Use
+existing role.
+
+- (Optional) Choose Add target to add another target for
+this rule.
+
+- (Optional) Enter one or more tags for the rule. For more information, see
+Amazon EventBridge tags.
+
+- Review your rule setup to make sure it meets your event-monitoring
+requirements.
+
+- Choose Create to confirm your selection.

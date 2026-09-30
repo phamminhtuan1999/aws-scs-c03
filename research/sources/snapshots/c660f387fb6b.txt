@@ -1,0 +1,259 @@
+URL: https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html
+TITLE: Delegated administration - AWS IAM Identity Center
+
+# Delegated administration
+
+Delegated administration provides a convenient way for assigned users in a registered
+member account to perform most IAM Identity Center administrative tasks. When you enable IAM Identity Center, your
+IAM Identity Center instance is created in the management account in AWS Organizations by default. This was
+originally designed this way so that IAM Identity Center can provision, de-provision, and update roles
+across all your organization's member accounts. Even though your IAM Identity Center instance must
+always reside in the management account, you can choose to delegate administration of
+IAM Identity Center to a member account in AWS Organizations, thereby extending the ability to manage IAM Identity Center
+from outside the management account.
+
+Enabling delegated administration provides the following benefits:
+
+- Minimizes the number of people who require access to the management account to
+help mitigate security concerns
+
+- Allows select administrators to assign users and groups to applications and to
+your organization's member accounts
+
+For more information about how IAM Identity Center works with AWS Organizations, see Configure access to AWS accounts. For
+additional information and to review an example company scenario showing how to
+configure delegated administration, see Getting started with IAM Identity Center delegated administration in the AWS
+Security Blog.
+
+Topics
+
+- Best practices
+
+- Prerequisites
+
+- Register a member account
+
+- Deregister a member account
+
+- View which member account has been registered as the delegated administrator
+
+## Best practices
+
+Here are some best practices to consider before you configure delegated
+administration:
+
+- Grant least privilege to the
+management account – Knowing that the management account
+is a highly privileged account and to adhere to the principal of least
+privilege, we highly recommend that you restrict access to the
+management account to as few people as possible. The delegated administrator
+feature is intended to minimize the number of people who require access to
+the management account. You can also consider using temporary elevated access to grant this access only when
+needed.
+
+- Dedicated permission sets for the management
+account – Use dedicated permission sets for the
+management account. For security reasons, a permission set used for access to
+the management account can only be modified by an IAM Identity Center administrator from
+the management account. The delegated administrator can't alter permission
+sets provisioned in the management account.
+
+- Assign users only (not groups) to permission sets in
+the management account – Because the management account
+has special privileges, you must use caution when assigning access to this
+account in the console or AWS Command Line Interface (CLI). If you assign groups to
+permission sets with access to the management account, anyone with
+permissions to modify the memberships in those groups can add/remove users
+to/from those groups, and thus affect who has access to the
+management account. This is any group admin with control over your identity
+source, including your identity provider (IdP) administrator, Microsoft
+Active Directory Domain Service (AD DS) administrator, or IAM Identity Center
+administrator. Therefore, you should assign users directly to permission
+sets that grant access in the management account, and avoid groups. If you do
+use groups to manage access to the management account, ensure that proper
+controls are in place in the IdP to limit who has the ability to modify
+those groups, and ensure that changes to those groups (or changes to the
+credentials for the users in the management account) are logged and reviewed
+as necessary.
+
+- Consider your Active Directory location
+– If you plan on using Active Directory as your IAM Identity Center identity
+source, locate the directory in the member account where you have enabled
+the IAM Identity Center delegated administrator feature. If you decide to change the IAM Identity Center
+identity source from any other source to Active Directory, or change it from
+Active Directory to any other source, the directory must reside in the IAM Identity Center
+delegated administrator member account. If you want your Active Directory to
+be in the management account, you must perform the setup in the
+management account as the delegated administrator won't have the necessary
+permissions to complete it.
+
+### Limit IAM Identity Center identity store actions in the delegated administration account with external identity sources
+
+If you use an external identity source such as an IdP or Directory Service, you should
+implement policies that limit the identity store actions that an IAM Identity Center admin can
+take from within the delegated administration account. Write and delete
+operations should be carefully considered. Generally, the external identity
+source is the source of truth for users and their attributes, and for group
+memberships. If you modify these using the identity store APIs or the console,
+your changes will be overwritten during normal synchronization cycles. It's best
+to leave these operations to the exclusive control of your identity source of
+truth. This also guards against an IAM Identity Center administrator modifying group
+memberships to grant access to a group-assigned permission set or application,
+rather than leaving the group membership control to your IdP admin. You should
+also guard who can create SCIM bearer tokens from the delegated administration
+account, as these could enable a member account admin to modify groups and users
+through a SCIM client.
+
+There may be times when write or delete operations are appropriate from the
+delegated admin account. For example, you can create a group without adding
+members, then make assignments to a permission set without having to wait for
+the IdP admin to create the group. No one will have access to that assignment
+until the IdP admin provisions the group and the IdP sync process establishes
+the group members. It may also be appropriate to delete a user or a group to
+prevent sign-in or authorization during a time when you're unable to wait on the
+IdP sync process to remove access by the user or the group. However, misuse of
+this permission can be disruptive to users. You should use the principle of
+least privilege when assigning identity store permissions. You can control which
+identity store actions are allowed by your delegated administration account
+admins using a service control policy (SCP).
+
+The example SCP below prevents assigning users to groups through the Identity Store
+API and the AWS Management Console, which is recommended when your identity source is
+external. This does not affect user sync from Directory Service or from an external IdP (via
+SCIM).
+
+Note
+
+It is possible that, although you use an external identity source, your
+organization relies, fully or partly, on the Identity Store APIs for the
+provisioning of users and groups. Therefore, before activating this SCP, you
+should confirm that your user provisioning process does not use this
+Identity Store API operation. Also, refer to the next section for information
+about how to limit the managing of group memberships to specific
+groups.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{ "Effect": "Deny",
+"Action": ["identitystore:CreateGroupMembership"],
+"Resource": [ "*" ] }
+]
+}
+
+If you'd like to prevent adding users only to groups that grant access to the
+management account, you can reference those specific groups using the group ARN
+in the following format:
+arn:${Partition}:identitystore:::group/${GroupId}. This and
+other resource types available in the Identity Store are documented in Resource types defined by AWS Identity Store in the
+Service Authorization Reference. You can also consider including additional
+Identity Store APIs in the SCP. For more information, see Actionsin the Identity Store API Reference.
+
+By adding the following policy statement to your SCP, you can prevent the
+creation of SCIM bearer tokens by the delegated admin. You can apply this for
+both external identity sources.
+
+Note
+
+If your delegated admin needs to set up user provisioning with SCIM, or
+perform the periodic SCIM bearer token rotation, you will need to
+temporarily allow access to this API to allow the delegated admin to
+complete those tasks.
+
+{ "Effect": "Deny",
+"Action": ["sso-directory:CreateBearerToken"],
+"Resource": [ "*" ]
+}
+
+### Limit IAM Identity Center identity store actions in the delegated administration account for locally managed users
+
+If you create your users and groups directly in IAM Identity Center, rather than using an
+external IdP or Directory Service, then you should take precautions for who can create
+users, reset passwords, and control group membership. These actions give the
+administrator great powers for who can sign in and who can gain access through
+membership in groups. These policies are best implemented as in-line policies
+within the permission sets you use for your IAM Identity Center administrators, rather than as
+SCPs. The following example inline policy has two objectives. Firstly, it
+prevents adding users to specific groups. You can use this to prevent delegated
+admins from adding users to groups that grant access to the management account.
+Secondly, it prevents the issuance of SCIM bearer tokens.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": [
+"identitystore:CreateGroupMembership"
+],
+"Resource": [
+"arn:partition:identitystore:::group/group-id-1",
+"arn:partition:identitystore:::group/group-id-2"
+]
+},
+{
+"Effect": "Deny",
+"Action": [
+"sso-directory:CreateBearerToken"
+],
+"Resource": [
+"*"
+]
+}
+]
+}
+
+Replace partition with your AWS partition
+(aws, aws-cn, or aws-us-gov), and replace
+group-id-1 and
+group-id-2 with the IDs of the identity store groups
+that you want to protect.
+
+### Segregate IAM Identity Center configuration management from PermissionSet management
+
+Separate the administrative tasks including modification of external identity source, SCIM token management, session
+timeout configuration from the tasks to create, modify, and assign permission sets by creating distinct admin permission sets
+from your management account.
+
+### Limit issuance of SCIM bearer tokens
+
+SCIM bearer tokens enable an external identity source to provision users, groups, and group memberships via the
+SCIM protocol when the identity source of your IAM Identity Center is an external IdP such as Okta or Entra ID. You can set up the following
+SCP to prevent the creation of SCIM bearer tokens by delegated administrators. If your delegated administrator needs to set
+up user provisioning with SCIM, or perform the periodic SCIM bearer token rotation, you will need to temporarily allow access
+to this API to allow the delegated administrator to complete those tasks.
+
+{ "Effect": "Deny",
+"Action": ["sso-directory:CreateBearerToken"],
+"Resource": [ "*" ]
+}
+
+### Use permission set tags and account lists to delegate administration of specific accounts
+
+You can create permissions sets that you assign to your IAM Identity Center administrators
+to delegate who can create permission sets, and who can assign which permission
+sets in which accounts. This is done by tagging permission sets and using policy
+conditions in permission sets that you assign to your administrators. For
+example, you can create permission sets that enable a user to create permission
+sets providing they are tagged a certain way. You can also create policies that
+enable an administrator to assign permission sets that have a specific tag in
+specified accounts. This can help you delegate management over accounts without
+giving an administrator the privileges to modify their access and privileges
+over the delegated administration account. For example, by tagging permission
+sets that you use only in the delegated administration account, you can specify
+a policy that gives only certain people the permissions to modify permission
+sets and assignments that affect the delegated administration account. You can
+also give other people permissions to manage a list of accounts outside of the
+delegated administration account. To learn more, see Delegating permission set management and account assignment in
+AWS IAM Identity Center in the AWS Security Blog.
+
+## Prerequisites
+
+Before you can register an account as a delegated administrator you must first
+have the following environment deployed:
+
+- AWS Organizations must be enabled and configured with at least one member account
+in addition to your default management account.
+
+- If your identity source is set to Active Directory, the IAM Identity Center configurable AD sync feature
+must be enabled.

@@ -1,0 +1,309 @@
+{
+  "question_id": "Q001",
+  "question_content_hash": "f95f143239d6591b52f204492d548da6f6cd78a52b52f6ba4e9890ddf3a3debb",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:29:15Z",
+  "last_reviewed_at": "2026-09-30T21:10:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5",
+    "blind_performed_by": {
+      "agent": "scs-researcher (blind)",
+      "model": "claude-opus-5-5"
+    }
+  },
+  "blind_record_sha256": "0540d9b43d2ddfe48ffb57bf450df78332c244c94f766f208970262812f28df4",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Lambda function MyLambdaFunction phải đọc được các object (s3:GetObject) trong bucket DOC-EXAMPLE-BUCKET.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chỉ thay đổi bucket policy hiện có (chọn MỘT thay đổi) để sửa lỗi.",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Policy sau khi sửa phải hợp lệ về Principal/Resource theo cú pháp IAM/S3.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q001_image_01.jpg",
+      "text": "{\n    \"Effect\": \"Allow\",\n    \"Principal\": {\n        \"Service\": \"lambda.amazonaws.com\"\n    },\n    \"Action\": \"s3:GetObject\",\n    \"Resource\": \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\",\n    \"Condition\": {\n        \"ArnLike\": {\n            \"aws:SourceArn\": \"arn:aws:lambda:::function:MyLambdaFunction\"\n        }\n    }\n}",
+      "notes_vi": "Chỉ là một statement (không có Version/Statement). Resource là ARN của bucket, không có '/*'. ARN Lambda thiếu Region và account ID."
+    },
+    {
+      "image": "images/Q001_image_02.jpg",
+      "text": "{\n    \"AWS\": \"arn:aws:lambda:::function:MyLambdaFunction\"\n}",
+      "notes_vi": "Principal kiểu AWS nhưng giá trị là ARN của Lambda function."
+    },
+    {
+      "image": "images/Q001_image_03.jpg",
+      "text": "[\n    \"s3:GetObject*\",\n    \"s3:GetBucket*\"\n]",
+      "notes_vi": "Mảng Action có wildcard."
+    },
+    {
+      "image": "images/Q001_image_04.jpg",
+      "text": "{\n    \"Service\": \"s3.amazonaws.com\"\n}",
+      "notes_vi": "Principal là service principal của S3."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q001:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "ARN của Lambda function không phải loại principal hợp lệ (chỉ account, IAM role/user, session, federated, service). Ngoài ra Resource vẫn là ARN bucket nên s3:GetObject vẫn không khớp object.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q001:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Mở rộng Action không sửa lỗi gốc: Resource vẫn là ARN bucket, trong khi các action object (GetObject*) yêu cầu ARN object dạng bucket/*. Còn thêm GetBucket* là quyền thừa, trái least privilege.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q001:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "s3:GetObject là object operation nên Resource phải là ARN object có '/' sau tên bucket (arn:aws:s3:::DOC-EXAMPLE-BUCKET/*). Đây là lỗi rõ ràng duy nhất trong policy và chỉ phương án này sửa nó.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q001:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Bucket policy cấp quyền trên bucket và object S3; đặt Resource là ARN Lambda không cấp quyền đọc object. Principal s3.amazonaws.com là dịch vụ S3, không phải danh tính mà Lambda function dùng.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q001:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu S3 nói trực tiếp action object cần ARN object 'bucket/*'; A, B, D đều sai rõ ràng. Giảm xuống medium vì policy gốc dùng service principal lambda.amazonaws.com + aws:SourceArn, trong khi thực tế Lambda gọi S3 bằng execution role, nên sau khi sửa C chưa chắc đủ trong thực tế.",
+      "open_issues": [
+        "Lambda truy cập S3 bằng credentials của execution role; bucket policy chuẩn nên dùng Principal là ARN của execution role. Đề không đưa phương án này nên C là thay đổi đúng duy nhất trong các lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:29:15Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+      "title": "How Amazon S3 works with IAM",
+      "section": "Object operations",
+      "snapshot_id": "cb82fb547892",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "S3 policy actions for object operations require the Resource element in policies to be the S3 object ARN",
+      "supports": "s3:GetObject phải áp dụng lên ARN object (bucket/*), không phải ARN bucket; lỗi của policy là Resource.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal",
+      "section": "How to specify a principal",
+      "snapshot_id": "879eb6158f92",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can specify any of the following principals in a policy: - AWS account and root user - IAM roles - Role sessions - IAM users - Federated user principals - AWS services - All principals",
+      "supports": "ARN của Lambda function không thuộc các loại principal hợp lệ (phương án A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html",
+      "title": "Defining Lambda function permissions with an execution role",
+      "section": "intro",
+      "snapshot_id": "046160ebb78f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A Lambda function's execution role is an AWS Identity and Access Management (IAM) role that grants the function permission to access AWS services and resources.",
+      "supports": "Lambda function truy cập S3 bằng execution role (IAM role), là lý do Principal kiểu service/function trong đề không thực tế.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html",
+      "title": "Bucket policies for Amazon S3",
+      "section": "intro",
+      "snapshot_id": "900e0583d8d9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A bucket policy is a resource-based policy that you can use to grant access permissions to your Amazon S3 bucket and the objects in it.",
+      "supports": "Bucket policy cấp quyền trên bucket/object S3, nên Resource là ARN Lambda (phương án D) vô nghĩa.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys",
+      "section": "aws:SourceArn",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "compare the Amazon Resource Name (ARN) of the resource making a service-to-service request with the ARN that you specify in the policy, but only when the request is made by an AWS service principal",
+      "supports": "aws:SourceArn chỉ có khi service principal gọi thay mặt tài nguyên; điều kiện này dùng cho confused deputy, không phải cơ chế Lambda function đọc S3.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+      "title": "How Amazon S3 works with IAM",
+      "section": "Object operations (Note)",
+      "snapshot_id": "cb82fb547892",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The object ARN must contain a forward slash after the bucket name, as seen in the previous examples.",
+      "supports": "ARN \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\" (không có \"/\") không khớp object, nên phải đổi Resource thành bucket/* như phương án C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+      "title": "How Amazon S3 works with IAM",
+      "section": "Bucket operations",
+      "snapshot_id": "cb82fb547892",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "S3 policy actions for bucket operations require the Resource element in bucket policies or IAM identity-based policies to be the S3 bucket type Amazon Resource Name (ARN) identifier",
+      "supports": "GetBucket* là bucket operation nên khớp ARN bucket, nhưng không giúp đọc object; phương án B không sửa lỗi Resource.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q001:C",
+      "detail_vi": "Chuỗi ARN có khoảng trắng thừa 'DOC-EXAMPLE- BUCKET/*' và dấu nháy kết thúc sai (''), ý định rõ là arn:aws:s3:::DOC-EXAMPLE-BUCKET/*."
+    },
+    {
+      "type": "data",
+      "location": "Q001:stem:1",
+      "detail_vi": "ARN Lambda 'arn:aws:lambda:::function:MyLambdaFunction' thiếu Region và account ID; và thiết kế Principal lambda.amazonaws.com không phản ánh cách Lambda function thực sự gọi S3 (qua execution role)."
+    }
+  ],
+  "source_answer": [
+    "Q001:C"
+  ],
+  "researched_answer": [
+    "Q001:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Tài liệu S3 nói trực tiếp action object (GetObject) cần Resource là ARN object có '/' sau tên bucket; A (principal là ARN function), B (không sửa Resource), D (Resource là ARN Lambda) đều sai rõ. Giữ medium vì chính policy gốc dùng service principal lambda.amazonaws.com + aws:SourceArn, trong khi Lambda thực tế gọi S3 bằng execution role.",
+    "open_issues": [
+      "Trong thực tế, request của function đến S3 được ký bằng credentials của execution role; bucket policy chuẩn nên dùng Principal là ARN của execution role (hoặc chỉ cần identity policy của role nếu cùng account). Không phương án nào nêu điều này; C là thay đổi duy nhất sửa lỗi có tài liệu hỗ trợ."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key đều là C. Đã kiểm tra lại phương án cạnh tranh mạnh nhất (B: mở rộng Action) bằng tài liệu S3: GetBucket* là bucket operation dùng ARN bucket, còn GetObject* vẫn cần ARN object, nên B không sửa được lỗi. A dùng ARN Lambda function làm principal (không phải loại principal hợp lệ), D đặt Resource là ARN Lambda trong bucket policy. Điểm yếu của đề (service principal lambda.amazonaws.com không phải cách Lambda truy cập S3) được ghi vào source_issues nhưng không làm xuất hiện đáp án khác; giữ C, verified mức medium.",
+  "explanation_vi": {
+    "why_correct": "s3:GetObject là object operation nên Resource phải là ARN object có dấu '/' sau tên bucket (arn:aws:s3:::DOC-EXAMPLE-BUCKET/*). Policy gốc chỉ trỏ tới ARN bucket nên không khớp object nào; phương án C sửa đúng lỗi này.",
+    "others": {
+      "Q001:A": "ARN của Lambda function không phải principal hợp lệ trong policy (chỉ account, IAM role/user, session, federated, service), và Resource vẫn là ARN bucket nên vẫn không đọc được object.",
+      "Q001:B": "Thêm GetObject*/GetBucket* không đổi Resource; GetObject* vẫn không khớp ARN bucket, còn GetBucket* chỉ là quyền thừa trên bucket.",
+      "Q001:D": "Bucket policy chỉ cấp quyền trên bucket/object S3, nên Resource là ARN Lambda vô nghĩa; Principal s3.amazonaws.com cũng không phải danh tính mà function dùng."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "read the objects in an Amazon S3 bucket",
+      "meaning_vi": "Đọc object → action s3:GetObject, Resource phải là ARN object bucket/*."
+    },
+    {
+      "phrase": "Which change should the security engineer make to the policy",
+      "meaning_vi": "Chỉ sửa bucket policy hiện có; tìm lỗi cú pháp/ARN trong policy."
+    }
+  ],
+  "memory_tip_vi": "Nếu policy S3 cấp action trên object (GetObject/PutObject) mà vẫn bị AccessDenied -> nghĩ đến Resource phải là arn:aws:s3:::bucket/*; kiểm tra thêm action bucket (ListBucket) thì dùng ARN bucket không có '/'.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management",
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon S3",
+      "AWS Lambda",
+      "AWS IAM"
+    ],
+    "reason_vi": "Đề kiểm tra cách viết resource-based policy S3 (ARN bucket và ARN object) để cấp quyền đọc dữ liệu."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:29:15Z",
+      "change": "blind verdict ['Q001:C'] (proposed_status=verified)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T21:10:00Z",
+      "change": "reconciliation: source=['Q001:C'], final=['Q001:C'], status=verified",
+      "previous_answer": [
+        "Q001:C"
+      ]
+    }
+  ],
+  "notes_vi": "Đề kiểm tra phân biệt ARN bucket và ARN object trong S3 policy. Trong thực tế nên cấp quyền cho execution role của Lambda (identity policy hoặc Principal role ARN trong bucket policy)."
+}

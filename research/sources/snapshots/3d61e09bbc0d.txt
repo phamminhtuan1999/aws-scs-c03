@@ -1,0 +1,288 @@
+URL: https://docs.aws.amazon.com/inspector/latest/user/scanning-cis.html
+TITLE: Center for Internet Security (CIS) scans for Amazon EC2 instance operating systems - Amazon Inspector
+
+# Center for Internet Security (CIS) scans for Amazon EC2 instance operating systems
+
+Amazon Inspector CIS scans (CIS scans) benchmark your Amazon EC2 instance operating systems to make sure you configured them according to best practice recommendations established by the Center for Internet Security.
+CIS Security Benchmarks provides industry standard configuration baselines and best practices for configuring a system securely.
+You can perform or schedule CIS scans after you enable Amazon Inspector EC2 scanning for an account.
+For information about how to activate Amazon EC2 scanning, see Activating a scan type.
+
+Note
+
+CIS standards are intended for x86_64 operating systems.
+Some checks may not be evaluated or return invalid remediation instructions on ARM-based resources.
+
+Amazon Inspector performs CIS scans on target Amazon EC2 instances based on instance tags and your defined scanning schedule.
+Amazon Inspector performs a series of instance checks on each targeted instance.
+Each check evaluates whether your system configuration meets specific CIS Benchmark recommendations.
+Each check has a CIS check ID and title, which correspond with a CIS Benchmark recommendation for that platform.
+When a CIS scan completes, you can view the results to see which instance checks passed, skipped, or failed for that system.
+
+Note
+
+To perform or schedule CIS scans, you must have a secure internet connection.
+However, if you want to run CIS scans on private instances, you must use a VPC endpoint.
+
+Topics
+
+- Amazon EC2 instance requirements for Amazon Inspector CIS scans
+
+- Running CIS scans
+
+- Considerations for managing Amazon Inspector CIS scans with AWS Organizations
+
+- Amazon Inspector owned Amazon S3 buckets used for Amazon Inspector CIS scans
+
+- Creating a CIS scan configuration
+
+- Viewing CIS scan results
+
+- Editing a CIS scan configuration
+
+- Downloading a CIS scan results
+
+## Amazon EC2 instance requirements for Amazon Inspector CIS scans
+
+To run a CIS scan on your Amazon EC2 instance, the Amazon EC2 instance must meet the following criteria:
+
+- The instance operating system is one of the supported operating systems for CIS scans.
+For more information, see Operating systems and programming languages supported by Amazon Inspector.
+
+- The instance is an Amazon EC2 Systems Manager instance.
+For more information, see Working with the SSM Agent in the AWS Systems Manager User Guide.
+
+- The Amazon Inspector SSM plugin is installed on the instance.
+Amazon Inspector automatically installs this plugin on manged instances.
+
+- The instance has an instance profile that grants permissions for SSM to manage the instance and Amazon Inspector to run CIS scans for that instance.
+To grant these permissions, attach the AmazonSSMManagedInstanceCore and AmazonInspector2ManagedCisPolicy policies to an IAM role.
+Then attach the IAM role to your instance as an instance profile.
+For instructions on creating and attaching an instance profile, see Work with IAM roles in the Amazon EC2 User Guide.
+
+Note
+
+You're not required to enable Amazon Inspector deep inspection before running a CIS scan on your Amazon EC2 instance.
+If you disable Amazon Inspector deep inspection, Amazon Inspector automatically installs the SSM Agent, but the SSM Agent won't be invoked to run deep inspection anymore.
+However, as a result, the InspectorLinuxDistributor-do-not-delete association is present in your account.
+
+### Amazon Virtual Private Cloud endpoint requirements for running CIS scans on private Amazon EC2 instances
+
+You can run CIS scans on Amazon EC2 instances over an Amazon network.
+However, if you want to run CIS scans on private Amazon EC2 instances, you must create Amazon VPC endpoints.
+The following endpoints are required when you create Amazon VPC endpoints for Systems Manager:
+
+- com.amazonaws.region.ec2messages
+
+- com.amazonaws.region.inspector2
+
+- com.amazonaws.region.s3
+
+- com.amazonaws.region.ssm
+
+- com.amazonaws.region.ssmmessages
+
+For more information, see Creating Amazon VPC endpoints for Systems Manager in the AWS Systems Manager User Guide.
+
+Note
+
+Currently, some AWS Regions don't support the amazonaws.com.region.inspector2 endpoint.
+
+## Running CIS scans
+
+You can either run a CIS scan once on-demand or as a scheduled recurring scan. To run a
+scan, you first create a scan configuration.
+
+When you create a scan configuration, you specify tag key-value pairs to use to target
+
+instances. If you are the Amazon Inspector delegated administrator for an organization, you can specify
+multiple accounts in the scan configuration, and Amazon Inspector will look for instances with the specified
+tags in each of those accounts. You choose the CIS Benchmark level for the scan. For each
+benchmark, CIS supports a level 1 and level 2 profile designed to provide baselines for different
+levels of security that different environments may require.
+
+- Level 1 – recommends essential basic security settings that can
+be configured on any system. Implementing these settings should cause little or no
+interruption of service. The goal of these recommendations is to reduce the number of
+entry points into your systems, reducing your overall cybersecurity risks.
+
+- Level 2 – recommends more advanced security settings for
+high-security environments. Implementing these settings requires planning and coordination
+to minimize the risk of business impact. The goal of these recommendations is to help you
+achieve regulatory compliance.
+
+Level 2 extends level 1. When you choose Level 2, Amazon Inspector checks for all configurations
+recommended for level 1 and level 2.
+
+After defining the parameters for your scan, you can choose whether to run it as a one time
+scan, which runs after you complete the configuration, or a recurring scan. Recurring scans
+can run daily, weekly, or monthly, at a time of your choice.
+
+Tip
+
+We recommend choosing a day and time that's least likely to impact your system while the scan
+is running.
+
+## Considerations for managing Amazon Inspector CIS scans with AWS Organizations
+
+When you run CIS scans in an organization, Amazon Inspector delegated administrators and member accounts interact with CIS scan configurations and scan results differently.
+
+How Amazon Inspector delegated administrators can interact with CIS scan configurations and scan results
+
+When the delegated administrator creates a scan configuration, either for all accounts or a specific member accounts, the organization owns the configuration.
+Scan configurations that an organization owns have an ARN specifying the organization ID as the owner:
+
+arn:aws:inspector2:Region:111122223333:owner/OrganizationId/cis-configuration/scanId
+
+The delegated administrator can manage scan configurations that an organization owns, even if another account created them.
+
+The delegated administrator can view scan results for any account in its organization.
+
+If the delegated administrator creates a scan configuration and specifies SELF as the target account, the delegated administrator owns scan configuration, even if they leave the organization.
+However, the delegated administrator cannot change the target of a scan configuration with SELF as the target.
+
+Note
+
+The delegated adminstrator cannot add tags to CIS scan configurations the organization owns.
+
+How Amazon Inspector member accounts can interact with CIS scan configurations and scan results
+
+When a member account creates a CIS scan configuration, it owns the configuration.
+However, the delegated administrator can view the configuration.
+If a member account leaves the organization, the delegated administrator won't be able to view the configuration.
+
+Note
+
+The delegated administrator cannot edit a scan configuration the member account creates.
+
+Member accounts, delegated administrators with SELF as the target, and standalone accounts all own scan configurations they create.
+These scan configurations have an ARN that shows the account ID as the owner:
+
+arn:aws:inspector2:Region:111122223333:owner/111122223333/cis-configuration/scanId
+
+A member account can view scan results in their account, including scan results from CIS scans the delegated administrator scheduled.
+
+## Amazon Inspector owned Amazon S3 buckets used for Amazon Inspector CIS scans
+
+Open Vulnerability and Assessment Language (OVAL) is an information security effort that standardizes how to assess and report the machine state of computer systems.
+The following table lists all of the Amazon Inspector owned Amazon S3 buckets with OVAL defintions that are used for CIS scans.
+Amazon Inspector stages OVAL definition files that are required for CIS scans.
+The Amazon Inspector owned Amazon S3 buckets should be allowlisted in VPCs if necessary.
+
+Note
+
+The details for each of the following Amazon Inspector owned Amazon S3 buckets aren't subject to change.
+However, the table might be updated to reflect newly supported AWS Regions.
+You can't use Amazon Inspector ownerd Amazon S3 buckets for other Amazon S3 operations or in your own Amazon S3 buckets.
+
+CIS bucket
+
+AWS Region
+
+cis-datasets-prod-arn-5908f6f
+
+Europe (Stockholm)
+
+cis-datasets-prod-bah-8f88801
+
+Middle East (Bahrain)
+
+cis-datasets-prod-bjs-0f40506
+
+China (Beijing)
+
+cis-datasets-prod-bom-435a167
+
+Asia Pacific (Mumbai)
+
+cis-datasets-prod-cdg-f3a9c58
+
+Europe (Paris)
+
+cis-datasets-prod-cgk-09eb12f
+
+Asia Pacific (Jakarta)
+
+cis-datasets-prod-cmh-63030b9
+
+US East (Ohio)
+
+cis-datasets-prod-cpt-02c5c6f
+
+Africa (Cape Town)
+
+cis-datasets-prod-dub-984936f
+
+Europe (Ireland)
+
+cis-datasets-prod-fra-6eb96eb
+
+Europe (Frankfurt)
+
+cis-datasets-prod-gru-de69f99
+
+South America (São Paulo)
+
+cis-datasets-prod-hkg-8e30800
+
+Asia Pacific (Hong Kong)
+
+cis-datasets-prod-iad-8438411
+
+US East (N. Virginia)
+
+cis-datasets-prod-icn-f4eff1c
+
+Asia Pacific (Seoul)
+
+cis-datasets-prod-kix-5743b21
+
+Asia Pacific (Osaka)
+
+cis-datasets-prod-lhr-8b1fbd0
+
+Europe (London)
+
+cis-datasets-prod-mxp-7b1bbce
+
+Europe (Milan)
+
+cis-datasets-prod-nrt-464f684
+
+Asia Pacific (Tokyo)
+
+cis-datasets-prod-osu-5bead6f
+
+AWS GovCloud (US-East)
+
+cis-datasets-prod-pdt-adadf9c
+
+AWS GovCloud (US-West)
+
+cis-datasets-prod-pdx-acfb052
+
+US West (Oregon)
+
+cis-datasets-prod-sfo-1515ba8
+
+US West (N. California)
+
+cis-datasets-prod-sin-309725b
+
+Asia Pacific (Singapore)
+
+cis-datasets-prod-syd-f349107
+
+Asia Pacific (Sydney)
+
+cis-datasets-prod-yul-5e0c95e
+
+Canada (Central)
+
+cis-datasets-prod-zhy-5a8eacb
+
+China (Ningxia)
+
+cis-datasets-prod-zrh-67e0e3d
+
+Europe (Zurich)

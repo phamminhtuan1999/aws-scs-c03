@@ -1,0 +1,193 @@
+URL: https://docs.aws.amazon.com/cur/latest/userguide/dataexports-create-standard.html
+TITLE: Creating a standard export - AWS Data Exports
+
+# Creating a standard export
+
+You can create a standard data export that you can analyze using other processing tools
+(Amazon Athena, for example).
+
+To create a standard data export
+
+- Open the Billing and Cost Management console at https://console.aws.amazon.com/costmanagement/.
+
+- In the navigation pane, choose Data Exports.
+
+- Choose Create export.
+
+- On the Create export page, under Export
+type, choose Standard data export.
+
+- For Export name, enter a name for your export.
+
+Export names can have up to 128 characters and must be unique. Valid characters are
+a-z, A-Z, 0-9, - (hyphen), and _ (underscore).
+
+- Under Data table configurations, you can specify the table and
+columns to be contained within your export. First, select the table you want to
+export.
+
+Note
+
+Exporting the Cost optimization recommendations table requires a service-linked
+role. For more information, see Service-linked roles for Data Exports.
+
+Exporting the Carbon emissions table requires the IAM permission
+sustainability:GetCarbonFootprintSummary to access the carbon footprint data.
+
+With the exception of FOCUS 1.0 with AWS columns and Carbon emissions, there are
+different table configurations to add data to your export.
+
+- For CUR 2.0:
+
+- For Billing view, choose the appropriate values for Type and View that correspond to your billing group.
+
+- Select Include resource IDs to include the IDs of each
+individual resource in the export.
+
+Note
+
+Including resource IDs creates individual line items for each of your
+resources. This might increase the size of your export significantly, based on
+your AWS usage.
+
+Selecting resource ID will add a Tag column containing data about users, accounts, cost categories, and
+resources when you create a new report. You can deselect the columns to avoid redundant information.
+
+- Select Split cost allocation data to include detailed
+cost and usage for shared resources (Amazon ECS and Amazon EKS).
+
+Note
+
+Including split cost allocation data creates individual line items for each
+of your resources (that is, ECS tasks and Kubernetes pods). This might increase
+the size of your Cost and Usage Report significantly, based on your AWS
+usage.
+
+- Select Include Capacity reservation data to include the Capacity
+reservation columns and row-level granularity in the export.
+
+Note
+
+Including Capacity reservation data creates 3 new columns and can split the instance line items, based on your AWS usage.
+
+- Select Enable manual discount format to convert your
+discounts so that they appear in the Cost and Usage Report in the manual discount
+format instead of the standard automated format.
+
+Note
+
+This option only appears if you are on the discount automation
+program.
+
+- For Time granularity, choose between hourly, daily, or
+monthly to have the line items in the export aggregated by that time
+granularity.
+
+- For FOCUS with AWS columns, there are no
+table configurations.
+
+- For Carbon emissions, there are no table
+configurations.
+
+- For Cost optimization recommendations:
+
+- Select Include all recommendations to remove the lowest
+savings value recommendation of recommendations that are incompatible with one
+another.
+
+- Add Recommendation filters if you want certain types of
+recommendations to be filtered out before incompatible recommendations are
+removed.
+
+Note
+
+If you specified these settings in the Cost Optimization Hub console, they will
+be carried over to Data Exports when you choose Create an
+export in Cost Optimization Hub.
+
+- For Column selection, select the columns you want to include in
+your export. If unsure, select all columns by selecting the first check box in the table header. Selecting more columns might increase the file size of your export.
+
+- Under Data table delivery options, for Data export
+refresh cadence: .
+
+- For billing and cost management data exports, the only option available is
+Daily - export is refreshed up to one time per day.
+
+- For carbon emissions data exports, the only option available is Monthly
+- export is refreshed once per month. Each update provides the carbon
+emissions data from the previous month (for example, a February update contains January data).
+
+- For File versioning, choose between the following which
+determines whether your export is overwritten with each update:
+
+- Overwrite existing data export file: Each export refresh
+overwrites the previous delivery within the data partition (for example, billing
+periods). Overwriting exports can save on Amazon S3 storage costs.
+
+Note
+
+Overwrite is not supported for exports of cost optimization
+recommendations.
+
+- Create new data export file: Each export refresh is written
+to a separate directory, even for deliveries of the same partition (for example,
+billing period). Creating new export versions allows you to track the changes in cost
+and usage data over time.
+
+- For Report data integration, choose whether you want to enable your
+export to integrate with Amazon Athena,or Amazon Redshift. The export is
+compressed in the following formats:
+
+- Amazon Athena: Selects the delivery options optimal for Amazon Athena
+which are Parquet ﬁle format and overwrite existing report. Also delivers a script that
+can be used to set up the integration.
+
+- Amazon Redshift: Selects the delivery option optimal for Amazon
+Redshift which is gzip/csv ﬁle format. Also delivers a script that can be used to set
+up the integration.
+
+- For Compression type and file format, choose between the
+following for your export:
+
+- Parquet – Parquet
+
+- gzip – text/csv
+
+- zip - text/csv
+
+- Under Data export storage settings, choose whether you want your export delivered to the S3 bucket of:
+
+- This account
+
+- Another account
+
+- If you choose This Account for S3 bucket name, choose Configure and do one of the following:
+
+- Select existing bucket.
+
+- Choose Create a bucket, enter S3 bucket name, and then choose the Region where you want to create a new bucket.
+
+- Review the Bucket policy. If you are selecting an existing bucket, you need to acknowledge that Data Exports will
+overwrite your existing S3 bucket policy. The new
+policy will allow both CUR and Data Exports to deliver exports.
+
+- If you choose Another account enter S3 bucket, S3 bucket owner,
+which is the AWS account that owns the bucket, and Region
+
+- For S3 path prefix, enter a name for the directory that will be
+created in your S3 bucket to store all the export data.
+
+Note
+
+If your export is delivered to the S3 bucket of Another account, we recommend using S3 path prefix that is
+unique to your account to prevent multiple accounts with identical path prefix and report name accidentally over-writing one another's data.
+
+- Under Tags, you can choose to add up to 50 tags in order to
+search and filter your resources or track your AWS costs.
+
+Note
+
+Adding tags is optional.
+
+- Choose Create to complete the creation of your export.

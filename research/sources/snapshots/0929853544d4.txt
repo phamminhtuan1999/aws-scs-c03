@@ -1,0 +1,405 @@
+URL: https://docs.aws.amazon.com/aws-backup/latest/devguide/plan-options-and-configuration.html
+TITLE: Backup plan options and configuration - AWS Backup
+
+# Backup plan options and configuration
+
+When you define a backup plan in the AWS Backup console, you configure the following
+options:
+
+## Backup plan name
+
+You must provide a name for your backup plan. Names are limited to 50 characters,
+including alphanumeric characters, dashes, underscores, and periods.
+
+## Backup rules
+
+Backup plans are composed of one or more backup rules. To add backup rules to a backup
+plan, or to edit existing rules in a backup plan:
+
+- From the AWS Backup console, in the left navigation pane, choose Backup
+plans.
+
+- Under Backup plan name, select a backup plan.
+
+- Under the Backup rules section:
+
+- To add a backup rule, choose Add backup rule.
+
+- To edit an existing backup rule, select a rule, then choose
+Edit.
+
+Note
+
+If you have a backup plan with multiple rules and the time frames of the two rules
+overlap, AWS Backup optimizes the backup and takes a backup for the rule with the longer
+retention time. The optimization takes into account the full start window, not just when
+the daily backup is taken.
+
+Each backup rule consists of the following elements.
+
+### Backup rule name
+
+Backup rule names are case sensitive. They must contain from 1 to 50 alphanumeric
+characters or hyphens.
+
+### Backup frequency
+
+The backup frequency determines how often AWS Backup creates a snapshot backup. Using the
+console, you can choose a frequency of every hour, 12 hours, daily, weekly, or monthly.
+You can also create a cron expression that creates snapshot backups as frequently as
+hourly. Using the AWS Backup CLI, you can schedule snapshot backups as frequently as
+hourly.
+
+If you select weekly, you can specify which days of the week you want backups to be
+taken. If you select monthly, you can choose a specific day of the month.
+
+You can also check the Enable continuous backups for supported
+resources checkbox to create a point-in-time restore (PITR)-enabled
+continuous backup rule. Unlike snapshot backups, continuous backups allow you to perform
+point-in-time restore. To learn more about continuous backups, see Point-in-Time Recovery.
+
+### Backup window
+
+Backup windows consist of the time that the backup window begins and the duration of
+the window in hours. Backup jobs are started within this window.
+The default settings in the console are:
+
+- 12:30 AM local to your system’s timezone (0:30 in
+24-hour systems)
+
+- Start within 8 hours
+
+- Complete within 7 days
+
+(complete within parameter does not apply to Amazon FSx
+resources)
+
+You can customize the backup frequency and backup window start time using a cron
+expression. To see the six fields of AWS cron expressions, see Cron and rate expressions
+in the Amazon EventBridge User Guide. Two examples of AWS cron expressions are
+15 * ? * * * (take a backup every hour at 15 minutes past the hour) and
+0 12 * * ? * (take a backup every day at 12 noon UTC). For a table of
+examples, click the preceding link and scroll down the page.
+
+AWS Backup evaluates cron expressions between 00:00 and 23:59. If you create a
+backup rule for "every 12 hours" but provide a start time of later than 11:59, it will
+only run once per day.
+
+Backup plans in a timezone that observes daylight savings time might be impacted by
+the time shift forward. You can switch to UTC or create a manual backup on the day that
+time shifts forward. For more information see Daylight
+savings time on EventBridge Scheduler.
+
+Continuous backups and point-in-time restore (PITR) reference the changes recorded over a
+period of time; therefore, they cannot be scheduled with a time or cron expression.
+
+In general, AWS database services cannot start backups 1 hour before or during their
+maintenance window and Amazon FSx cannot start backups 3 hours before
+or during their maintenance window or automatic backup window (Amazon Aurora is exempt from
+this maintenance window restriction). Snapshot backups
+scheduled during those times will fail. An exception occurs when you opt in to using AWS Backup
+for both snapshot and continuous backups for a supported service.
+AWS Backup will schedule backup windows automatically to avoid conflicts. See Point-in-Time Recovery for a list of supported services and instructions on
+how to use AWS Backup to take continuous backups.
+
+### Overlapping backup rules
+
+On occasion, a backup plan might contain multiple, overlapping rules. When the start
+windows of different rules overlap, AWS Backup retains the backup under the rule with the
+longer retention period. For example, consider a backup plan with two rules:
+
+- Backup hourly, with a 1-hour start window, and retain for 1 day.
+
+- Backup every 12 hours, with an 8-hour start window, and retain for 1
+week.
+
+After 24 hours, the second rule creates two backups (because it has the longer
+retention period). The first rule creates eight backups (because the second rule's
+8-hour start window prevented more hourly backups from running). Specifically:
+
+During this Start Window
+
+This Rule Creates 1 Backup
+
+Midnight to 8AM
+
+12 hours
+
+8 to 9
+
+Hourly
+
+9 to 10
+
+Hourly
+
+10 to 11
+
+Hourly
+
+11 to Noon
+
+Hourly
+
+Noon to 8PM
+
+12 hours
+
+8 to 9
+
+Hourly
+
+9 to 10
+
+Hourly
+
+10 to 11
+
+Hourly
+
+11 to Midnight
+
+Hourly
+
+During the start window, the backup job status remains in CREATED status until it
+has successfully begun or until the start window time has run out. If within the start
+window time AWS Backup receives an error that allows the job to be retried,
+AWS Backup will automatically retry to begin the job at least every 10 minutes
+until the backup
+successfully begins (the job status changes to RUNNING) or until the job status
+changes to EXPIRED (which is expected to occur when the start window time is over).
+
+### Lifecycle and storage tiers
+
+Backups are stored for the number of days you specify, known as the backup
+lifecycle. Backups can be restored until the end of their
+lifecycle.
+
+This is set as the total retention period in the lifecycle
+section of backup rule configuration in the AWS Backup console.
+
+If you use AWS CLI, this is set
+using the parameter DeleteAfterDays. The retention period for snapshots can range
+between 1 day and 100 years (or indefinitely if you don't enter one), while the
+retention period for continuous backups can range from 1 day to 35 days. The
+creation date of a backup is the date the backup job started, not the date it completed.
+If your backup job doesn't complete on the same date it started, use the date on which
+it began to help calculate retention periods.
+
+Backups are maintained in a storage tier. Each tier incurs a different cost for
+storage and for restore, as outlined by AWS Backup pricing. Every backup is
+created and is stored in warm storage. Depending on how long you choose to store your
+backup, you may wish to transition your backup to a lower-cost tier called cold storage.
+Feature availability by resource displays
+which resources have this optional feature.
+
+Console
+
+- Open the AWS Backup console at https://console.aws.amazon.com/backup.
+
+- Create or edit a backup plan.
+
+- In the lifecycle section of backup rule configuration, check the box
+Move backups from warm to cold storage.
+
+- (optional) If Amazon EBS is one of the resources you back
+up and your backup frequency is monthly or less frequent, you can transition
+them to cold tier using EBS snapshot archival.
+
+- Input a value (in days) that you want your backups to remain in warm
+storage. AWS Backup recommends at least 8 days.
+
+- Input a value (in days) for the total retention period. The difference
+between total retention period and time in warm storage will be the amount of
+days the backups remain in cold storage.
+
+AWS CLI
+
+- Use create-backup-plan or update-backup-plan.
+
+- - Include the Boolean parameter OptInToArchiveForSupportedResources for EBS
+resources.
+
+- Include the parameter MoveToColdStorageAfterdays.
+
+- Use the parameter DeleteAfterDays. This value must be 90
+(days) plus the value you input for
+MoveToColdStorageAfterDays.
+
+Cold storage is currently available for the following resource types:
+
+Resource type
+
+Incremental or Full backup in cold storage
+
+AWS CloudFormation
+
+Incremental
+
+DynamoDB with advanced features
+
+Full; no Incremental backups in any tier
+
+Amazon EBS (using EBS Snapshot Archive)
+
+Full; Incremental backups will become Full after
+transition.
+
+Amazon EFS
+
+Incremental
+
+SAP HANA databases running on Amazon EC2 instances
+
+Incremental
+
+Amazon Timestream
+
+Incremental
+
+VMware virtual machines
+
+Incremental
+
+Once you have enabled transition to cold storage through the console or command
+line, the following conditions are true for backups in cold storage (or archive):
+
+- Backups transitioned must be stored in cold storage for a minimum of 90 days, in
+addition to the time in warm storage. AWS Backup requires the retention to be set for 90
+days longer than the “transition to cold after days” setting. You can't change the
+“transition to cold after days” setting after a backup has been transitioned to
+cold.
+
+- Some services support incremental backups. For incremental backups, you must
+have at least one warm full backup. AWS Backup recommends that you set your lifecycle
+settings to not move your backup to cold storage until after at least 8 days. If the
+full backup is transitioned to cold storage too soon (for example, a transition to
+cold storage after 1 day), AWS Backup will create another warm full backup.
+
+- For resource types that support incremental backups, AWS Backup transitions data from
+warm to cold storage if the transitioned data is no longer referenced by warm
+backups. Data in backups retained in cold storage that is only referenced by other
+cold backups is billed at cold storage tier prices. Other backups continue at warm
+storage tier pricing.
+
+### Backup vault
+
+A backup vault is a container to organize your backups in. Backups created by a
+backup rule are organized in the backup vault that you specify in the backup rule. You
+can use backup vaults to set the AWS Key Management Service (AWS KMS) encryption key that is used to
+encrypt backups in the backup vault and to control access to the backups in the backup
+vault. You can also add tags to backup vaults to help you organize them. If you don't
+want to use the default vault, you can create your own. For step-by-step instructions
+for creating a backup vault, see Backup vault creation and deletion.
+
+### Copy to Regions
+
+As part of your backup plan, you can optionally create a backup copy in the same or another
+AWS Region. These copies can be made either in the same account or another account. For more information about backup copies, see Creating backup copies across AWS Regions.
+
+When you define a backup copy, you configure the following options:
+
+#### Destination Region
+
+The destination Region for the backup copy.
+
+#### (Advanced Settings) Backup vault
+
+The destination backup vault for the copy.
+
+#### (Advanced Settings) IAM Role
+
+The IAM role that AWS Backup uses when creating the copy. The role must also have
+AWS Backup listed as a trusted entity, which enables AWS Backup to assume the role. If you
+choose Default and the AWS Backup default role is not present in your
+account, a role is created for you with the correct permissions.
+
+#### (Advanced Settings) Lifecycle
+
+Specifies when to transition the backup copy to cold storage and when to expire
+(delete) the copy. Backups transitioned to cold storage must be stored in cold storage
+for a minimum of 90 days. You can't change this value after a copy has transitioned to
+cold storage.
+
+Expire specifies the number of days after creation that the
+copy is deleted. This must be greater than 90 days beyond the Transition to
+cold storage value.
+
+If the value for Lifecycle:DeleteAfterDays (shown as
+Expire in the console) is not specified in the copy settings,
+the copy will follow the lifecycle settings of the backup from which it is
+copied.
+
+### Tags added to recovery points
+
+The tags that you list here are automatically added to backups when they are
+created.
+
+## Tags added to backup plans
+
+These tags are associated with the backup plan itself to help you organize and track
+your backup plan.
+
+## Advanced backup settings
+
+Advanced backup settings allow you to configure resource-specific backup options for different AWS services.
+
+### Amazon EC2 advanced backup settings
+
+Enables application consistent backups for third-party applications that are running
+on Amazon EC2 instances. Currently, AWS Backup supports Windows VSS backups. AWS Backup excludes specific
+Amazon EC2 instance types from Windows VSS backups. For more information, see Create Windows VSS backups.
+
+### Amazon S3 advanced backup settings
+
+AWS Backup provides advanced settings to control what metadata is included in your Amazon S3
+backups. You can optionally exclude Access Control Lists (ACLs) and object tags from
+your backups, which aligns with Amazon S3 best practices of using bucket-level permissions
+instead of object-level ACLs.
+
+For detailed information on configuring Amazon S3 backup options for ACLs and object tags,
+see Advanced Amazon S3 backup settings.
+
+Important
+
+When you exclude ACLs from backups, objects restored without ACLs will use the
+destination bucket's default ownership settings. The destination bucket must have
+appropriate object ownership configuration.
+
+Note
+
+When a continuous backup job is running for an Amazon S3 bucket and you initiate a
+snapshot backup job, the snapshot will use the same ACL and object tag settings as
+the continuous backup, regardless of the settings specified for the snapshot job.
+
+## Malware scanning
+
+AWS Backup integrates with Amazon GuardDuty to provide automated malware scanning of your recovery points.
+When you enable malware scanning in your backup plan, AWS Backup automatically scans your backups for
+malware and provides scan results to help you make informed decisions about restoring your data.
+
+To configure malware scanning for your backup plan:
+
+- Create an IAM role that trusts malware-protection.guardduty.amazonaws.com
+and attach the AWS managed policy AWSBackupGuardDutyRolePolicyForScans.
+
+- Attach the AWS managed policy AWSBackupServiceRolePolicyForScans to your
+backup selection's IAM role.
+
+- In your backup plan configuration, add scanning settings that specify:
+
+- The scan service (GuardDuty)
+
+- The resource types to scan (Amazon EC2, Amazon EBS, Amazon S3)
+
+- The IAM role ARN for GuardDuty to assume
+
+- Configure scan actions in your backup rules to specify:
+
+- The scan service (GuardDuty)
+
+- The scan type (incremental or full scan)
+
+For more information about the managed policies, see
+AWSBackupGuardDutyRolePolicyForScans and
+AWSBackupServiceRolePolicyForScans.

@@ -1,0 +1,212 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html
+TITLE: Suppression rules in GuardDuty - Amazon GuardDuty
+
+# Suppression rules in GuardDuty
+
+A suppression rule is a set of criteria, consisting of a filter attribute paired with
+a value, used to filter findings by automatically archiving new findings that match the
+specified criteria. Suppression rules can be used to filter low-value findings, false
+positive findings, or threats you do not intend to act on, to make it easier to
+recognize the security threats with the most impact to your environment.
+
+After you create a suppression rule, new findings that match the criteria defined in
+the rule are automatically archived as long as the suppression rule is in place. You can
+use an existing filter to create a suppression rule or create a suppression rule from a
+new filter you define. You can configure suppression rules to suppress entire finding
+types, or define more granular filter criteria to suppress only specific instances of a
+particular finding type. You can edit the suppression rules at any time.
+
+Suppressed findings are not sent to AWS Security Hub CSPM, Amazon Simple Storage Service, Amazon Detective, or Amazon EventBridge,
+reducing finding noise level if you consume GuardDuty findings via Security Hub CSPM, a third-party
+SIEM, or other alerting and ticketing applications. If you've enabled Malware Protection for EC2, the
+suppressed GuardDuty findings won't initiate a malware scan.
+
+GuardDuty continues to generate findings even when they match your suppression rules,
+however, those findings are automatically marked as archived. The
+archived finding is stored in GuardDuty for 90-days and can be viewed at any time during
+that period. You can view suppressed findings in the GuardDuty console by selecting
+Archived from the findings table, or through the GuardDuty API
+using the ListFindings API with a findingCriteria
+criterion of service.archived equal to true.
+
+Note
+
+In a multi-account environment only the GuardDuty administrator can create suppression
+rules.
+
+## Using suppression rules with Extended Threat Detection
+
+GuardDuty Extended Threat Detection automatically detects multi-stage attacks that span data sources, multiple types of
+AWS resources, and time, within an AWS account. It correlates events
+across different data sources to identify scenarios that present themselves as a potential threat to your AWS
+environment, and then generates an attack sequence finding. For more information,
+see How Extended Threat Detection works.
+
+When you create suppression rules that archive findings, Extended Threat Detection can't use these archived findings
+when correlating events for attack sequences. Broad suppression rules
+might impact the ability of GuardDuty to detect behaviors aligned with detecting multi-stage attacks. Findings
+that are archived because of suppression rules are not considered as signals for attack sequences. For example, if you create a
+suppression rule that archives all EKS cluster-related findings instead
+of targeting specific known activities, GuardDuty won't be able to use those findings to detect
+an attack sequence where a threat actor exploits a container, obtains privileged tokens, and accesses sensitive
+resources.
+
+Consider the following recommendations from GuardDuty:
+
+- Continue using suppression rules to reduce alerts from known trusted activities.
+
+- Keep the suppression rules focused
+on specific behaviors for which you don't want GuardDuty to generate a finding.
+
+## Common use cases for suppression rules and examples
+
+The following finding types have common use cases for applying suppression rules.
+Select the finding name to learn more about that finding. Review the use case
+description to decide if you want to build a suppression rule for that finding
+type.
+
+Important
+
+GuardDuty recommends that you build suppression rules reactively and only for findings
+for which you have repeatedly identified false positives in your environment.
+
+- UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS – Use a suppression rule to automatically archive findings generated
+when VPC networking is configured to route internet traffic such that it
+egresses from an on-premises gateway rather than from a VPC Internet
+Gateway.
+
+This finding is generated when networking is configured to route internet
+traffic such that it egresses from an on-premises gateway rather than from a VPC
+Internet Gateway (IGW). Common configurations, such as using AWS Outposts, or VPC
+VPN connections, can result in traffic routed this way. If this is expected
+behavior, it is recommended that you use suppression rules and create a rule
+that consists of two filter criteria. The first criteria is finding
+type, which should be
+UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS.
+The second filter criteria is API caller IPv4 address with
+the IP address or CIDR range of your on-premises internet gateway. The example
+below represents the filter you would use to suppress this finding type based on
+API caller IP address.
+
+Finding type: UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS API caller IPv4 address: 198.51.100.6
+
+Note
+
+To include multiple API caller IPs you can add each IP address
+to the list of values for Equals or NotEquals conditions, or use wildcard
+patterns for Matches or NotMatches conditions. An Equals or NotEquals value
+can also be a CIDR range, which matches any IP address within that
+range.
+
+- Recon:EC2/Portscan
+– Use a suppression rule to automatically archive findings when using a
+vulnerability assessment application.
+
+The suppression rule should consist of two filter criteria. The first criteria
+should use the Finding type attribute with a
+value of Recon:EC2/Portscan. The second filter criteria should
+match the instance or instances that host these vulnerability assessment tools.
+You can use either the Instance image ID attribute or the
+Tag value attribute depending on which criteria are
+identifiable with the instances that host these tools. The example below
+represents the filter you would use to suppress this finding type based on
+instances with a certain AMI.
+
+Finding type: Recon:EC2/Portscan Instance image ID: ami-999999999
+
+- UnauthorizedAccess:EC2/SSHBruteForce – Use a
+suppression rule to automatically archive findings when it is targeted to
+bastion instances.
+
+If the target of the brute force attempt is a bastion host, this may represent
+expected behavior for your AWS environment. If this is the case, we recommend
+that you set up a suppression rule for this finding. The suppression rule should
+consist of two filter criteria. The first criteria should use the
+Finding type attribute with a value of
+UnauthorizedAccess:EC2/SSHBruteForce. The
+second filter criteria should match the instance or instances that serve as a
+bastion host. You can use either the Instance image ID
+attribute or the Tag value attribute depending on which
+criteria is identifiable with the instances that host these tools. The example
+below represents the filter you would use to suppress this finding type based on
+instances with a certain instance tag value.
+
+Finding type: UnauthorizedAccess:EC2/SSHBruteForce Instance tag value: devops
+
+- Recon:EC2/PortProbeUnprotectedPort – Use a
+suppression rule to automatically archive findings when it is targeted to
+intentionally exposed instances.
+
+There may be cases in which instances are intentionally exposed, for example
+if they are hosting web servers. If this is the case in your AWS environment,
+we recommend that you set up a suppression rule for this finding. The
+suppression rule should consist of two filter criteria. The first criteria
+should use the Finding type attribute with a
+value of Recon:EC2/PortProbeUnprotectedPort. The
+second filter criteria should match the instance or instances that serve as a
+bastion host. You can use either the Instance image ID
+attribute or the Tag value attribute, depending on which
+criteria is identifiable with the instances that host these tools. The example
+below represents the filter you would use to suppress this finding type based on
+instances with a certain instance tag key in the console.
+
+Finding type: Recon:EC2/PortProbeUnprotectedPort Instance tag key: prod
+
+### Recommended suppression rules for Runtime Monitoring findings
+
+- PrivilegeEscalation:Runtime/DockerSocketAccessed gets
+generated when a process inside a container communicates with the Docker
+socket. There may be containers in your environment that may need to access
+the Docker socket for legitimate reasons. Access from such containers will
+generate PrivilegeEscalation:Runtime/DockerSocketAccessed
+finding. If this is a case in your AWS environment, we recommend that you
+set up a suppression rule for this finding type. The first criteria should
+use the Finding type field with value equal to
+PrivilegeEscalation:Runtime/DockerSocketAccessed.
+The second filter criteria is Executable path field
+with value equal to the process's executablePath in the
+generated finding. Alternatively, the second filter criteria can use
+Executable SHA-256 field with value equal to the
+process's executableSha256 in the generated finding.
+
+- Kubernetes clusters run their own DNS servers as pods, such as
+coredns. Therefore, for each DNS lookup from a pod, GuardDuty
+captures two DNS events – one from the pod and the other from the
+server pod. This may generate duplicates for the following DNS
+findings:
+
+- Backdoor:Runtime/C&CActivity.B!DNS
+
+- CryptoCurrency:Runtime/BitcoinTool.B!DNS
+
+- Impact:Runtime/AbusedDomainRequest.Reputation
+
+- Impact:Runtime/BitcoinDomainRequest.Reputation
+
+- Impact:Runtime/MaliciousDomainRequest.Reputation
+
+- Impact:Runtime/SuspiciousDomainRequest.Reputation
+
+- Trojan:Runtime/BlackholeTraffic!DNS
+
+- Trojan:Runtime/DGADomainRequest.C!DNS
+
+- Trojan:Runtime/DriveBySourceTraffic!DNS
+
+- Trojan:Runtime/DropPoint!DNS
+
+- Trojan:Runtime/PhishingDomainRequest!DNS
+
+The duplicate findings will include pod, container, and process details
+that correspond to your DNS server pod. You may set up a suppression rule to
+suppress these duplicate findings using these fields. The first filter
+criteria should use the Finding type field with value
+equal to a DNS finding type from the list of findings provided earlier in
+this section. The second filter criteria could be either
+Executable path with value equal to your DNS
+server's executablePath or Executable
+SHA-256 with value equal to your DNS server's
+executableSHA256 in the generated finding. As an optional
+third filter criteria, you can use Kubernetes container
+image field with value equal to the container image of your
+DNS server pod in the generated finding.

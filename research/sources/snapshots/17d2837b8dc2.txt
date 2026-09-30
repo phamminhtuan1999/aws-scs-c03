@@ -1,0 +1,770 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config.html
+TITLE: Evaluating Resources with AWS Config Rules - AWS Config
+
+# Evaluating Resources with AWS Config Rules
+
+Use AWS Config to evaluate the configuration settings of your AWS resources. You do this by
+creating AWS Config rules, which represent your ideal configuration settings. AWS Config provides
+customizable, predefined rules called managed rules to help you get started.
+
+Topics
+
+- Considerations
+
+- Region Support
+
+- Components of a Rule
+
+- Managed Rules
+
+- Custom Rules
+
+- Service-Linked Rules
+
+- Organizational Rules
+
+- Adding Rules
+
+- Updating Rules
+
+- Deleting Rules
+
+- Viewing Rules
+
+- Turning on Proactive Evaluation
+
+- Sending Evaluations to Security Hub CSPM
+
+- Evaluating Resources with Rules
+
+- Deleting Evaluation Results
+
+- Troubleshooting
+
+## Considerations
+
+Cost Considerations
+
+For details about the costs associated with resource recording, see AWS Config pricing.
+
+Recommendation: Consider excluding the
+AWS::Config::ResourceCompliance resource type from recording
+before deleting rules
+
+Deleting rules creates configuration items (CIs) for
+AWS::Config::ResourceCompliance that can affect your costs for the
+configuration recorder. If you are deleting rules which evaluate a large number of
+resource types, this can lead to a spike in the number of CIs recorded.
+
+To avoid the associated costs, you can opt to disable recording for the
+AWS::Config::ResourceCompliance resource type before deleting
+rules, and re-enable recording after the rules have been deleted.
+
+However, since deleting rules is an asynchronous process, it might take an hour or
+more to complete. During the time when recording is disabled for
+AWS::Config::ResourceCompliance, rule evaluations will not be
+recorded in the associated resource’s history.
+
+AWS Config recommends that you weigh these factors on a case-by-case basis before
+deciding how to proceed with deleting rules.
+
+Recommendation: Add logic to handle the evaluation of deleted resources
+for custom lambda rules
+
+When creating AWS Config custom lambda rules, it is highly recommended that you add
+logic to handle the evaluation of deleted resources.
+
+When evaluation results are marked as NOT_APPLICABLE, they will be
+marked for deletion and cleaned up. If they're NOT marked as
+NOT_APPLICABLE, the evaluation results will remain unchanged until
+the rule is deleted, which can cause an unexpected spike in the creation of CIs for
+AWS::Config::ResourceCompliance upon rule deletion.
+
+For information on how to set AWS Config custom lambda rules to return
+NOT_APPLICABLE for deleted resources, see Managing deleted resources with AWS Config custom lambda rules.
+
+Recommendation: Provide the resources in scope for custom lambda
+rules
+
+AWS Config Custom Lambda Rules can cause a high number of Lambda function invocations if
+the rule is not scoped to one or more resource types. To avoid increased activity
+associated with your account, it is highly recommended to provide resources in scope
+for your Custom Lambda rules. If no resource types are selected, the rule will
+invoke the Lambda function for all resources in the account.
+
+Other considerations
+
+Defaut Values for Managed Rules
+
+The default values specified for managed rules are pre-populated only when using
+the AWS console. Default values are not supplied for the API, CLI, or SDK.
+
+Configuration Item Recording Delays
+
+AWS Config usually records configuration changes to your resources right after a change
+is detected, or at the frequency that you specify. However, this is on a best effort
+basis and can take longer at times. For example, a resource type with known delays is
+AWS::SecretsManager::Secret. This
+resource type is an example, and this list is non-exhaustive.
+
+Policies and compliance results
+
+IAM
+policies and other policies
+managed in AWS Organizations can impact whether AWS Config has permissions to record
+configuration changes for your resources. Additionally, rules directly evaluate the
+configuration of a resource and rules don't take into account these policies when
+running evaluations. Make sure that the policies in effect align with how you intend
+to use AWS Config.
+
+Tagging support for resource types
+
+If a resource type does not support tagging or does not include tag information in its
+describe API response, AWS Config won't capture tag data in the configuration items (CIs) for that
+resource type. AWS Config will still record these resources. However, any functionality that relies
+on tag data won't work. This affects tag-based filtering, grouping, or compliance evaluation
+that relies on tag data.
+
+Directory Buckets Are Not Supported
+
+Managed rules only support general purpose buckets when evaluating Amazon Simple Storage Service (Amazon S3)
+resources. For more
+information on general purpose buckets and directory buckets, see Buckets
+overview and Directory
+buckets in the Amazon S3 User Guide.
+
+Managed Rules and Global IAM Resource Types
+
+The global IAM resource types onboarded before February 2022
+(AWS::IAM::Group, AWS::IAM::Policy,
+AWS::IAM::Role, and AWS::IAM::User) can only be
+recorded by AWS Config in AWS Regions where AWS Config was available before February 2022.
+These resource types cannot be recorded in Regions supported by AWS Config after February
+2022. For a list of those Regions, see Recording AWS Resources | Global Resources.
+
+If you record a global IAM resource type in at least one Region, periodic rules
+that report compliance on the global IAM resource type will run evaluations in all
+Regions where the periodic rule is added, even if you have not enabled the recording
+of the global IAM resource type in the Region where the periodic rule was
+added.
+
+To avoid unnecessary evaluations, you should only deploy periodic rules that
+report compliance on a global IAM resource type to one of the supported Regions.
+For a list of which managed rules are supported in which Regions, see List of AWS Config Managed Rules by Region Availability.
+
+## Region Support
+
+Currently, the AWS Config Rule feature is supported in the following AWS regions. For a
+list of which individual AWS Config rules are supported in which Regions, see List of AWS Config Managed
+Rules by Region Availability.
+
+Region Name
+
+Region
+
+Endpoint
+
+Protocol
+
+US East (Ohio)
+
+us-east-2
+
+config.us-east-2.amazonaws.com
+
+config-fips.us-east-2.amazonaws.com
+
+HTTPS
+
+HTTPS
+
+US East (N. Virginia)
+
+us-east-1
+
+config.us-east-1.amazonaws.com
+
+config-fips.us-east-1.amazonaws.com
+
+HTTPS
+
+HTTPS
+
+US West (N. California)
+
+us-west-1
+
+config.us-west-1.amazonaws.com
+
+config-fips.us-west-1.amazonaws.com
+
+HTTPS
+
+HTTPS
+
+US West (Oregon)
+
+us-west-2
+
+config.us-west-2.amazonaws.com
+
+config-fips.us-west-2.amazonaws.com
+
+HTTPS
+
+HTTPS
+
+Africa (Cape Town)
+
+af-south-1
+
+config.af-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hong Kong)
+
+ap-east-1
+
+config.ap-east-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hyderabad)
+
+ap-south-2
+
+config.ap-south-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Jakarta)
+
+ap-southeast-3
+
+config.ap-southeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Malaysia)
+
+ap-southeast-5
+
+config.ap-southeast-5.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Melbourne)
+
+ap-southeast-4
+
+config.ap-southeast-4.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Mumbai)
+
+ap-south-1
+
+config.ap-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (New Zealand)
+
+ap-southeast-6
+
+config.ap-southeast-6.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Osaka)
+
+ap-northeast-3
+
+config.ap-northeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Seoul)
+
+ap-northeast-2
+
+config.ap-northeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Singapore)
+
+ap-southeast-1
+
+config.ap-southeast-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Sydney)
+
+ap-southeast-2
+
+config.ap-southeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Taipei)
+
+ap-east-2
+
+config.ap-east-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Thailand)
+
+ap-southeast-7
+
+config.ap-southeast-7.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Tokyo)
+
+ap-northeast-1
+
+config.ap-northeast-1.amazonaws.com
+
+HTTPS
+
+Canada (Central)
+
+ca-central-1
+
+config.ca-central-1.amazonaws.com
+
+HTTPS
+
+Canada West (Calgary)
+
+ca-west-1
+
+config.ca-west-1.amazonaws.com
+
+HTTPS
+
+Europe (Frankfurt)
+
+eu-central-1
+
+config.eu-central-1.amazonaws.com
+
+HTTPS
+
+Europe (Ireland)
+
+eu-west-1
+
+config.eu-west-1.amazonaws.com
+
+HTTPS
+
+Europe (London)
+
+eu-west-2
+
+config.eu-west-2.amazonaws.com
+
+HTTPS
+
+Europe (Milan)
+
+eu-south-1
+
+config.eu-south-1.amazonaws.com
+
+HTTPS
+
+Europe (Paris)
+
+eu-west-3
+
+config.eu-west-3.amazonaws.com
+
+HTTPS
+
+Europe (Spain)
+
+eu-south-2
+
+config.eu-south-2.amazonaws.com
+
+HTTPS
+
+Europe (Stockholm)
+
+eu-north-1
+
+config.eu-north-1.amazonaws.com
+
+HTTPS
+
+Europe (Zurich)
+
+eu-central-2
+
+config.eu-central-2.amazonaws.com
+
+HTTPS
+
+Israel (Tel Aviv)
+
+il-central-1
+
+config.il-central-1.amazonaws.com
+
+HTTPS
+
+Mexico (Central)
+
+mx-central-1
+
+config.mx-central-1.amazonaws.com
+
+HTTPS
+
+Middle East (Bahrain)
+
+me-south-1
+
+config.me-south-1.amazonaws.com
+
+HTTPS
+
+Middle East (UAE)
+
+me-central-1
+
+config.me-central-1.amazonaws.com
+
+HTTPS
+
+South America (São Paulo)
+
+sa-east-1
+
+config.sa-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-East)
+
+us-gov-east-1
+
+config.us-gov-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-West)
+
+us-gov-west-1
+
+config.us-gov-west-1.amazonaws.com
+
+HTTPS
+
+Deploying AWS Config Rules across member accounts in an AWS Organization is supported in
+the following Regions.
+
+Region Name
+
+Region
+
+Endpoint
+
+Protocol
+
+US East (Ohio)
+
+us-east-2
+
+config.us-east-2.amazonaws.com
+
+HTTPS
+
+US East (N. Virginia)
+
+us-east-1
+
+config.us-east-1.amazonaws.com
+
+HTTPS
+
+US West (N. California)
+
+us-west-1
+
+config.us-west-1.amazonaws.com
+
+HTTPS
+
+US West (Oregon)
+
+us-west-2
+
+config.us-west-2.amazonaws.com
+
+HTTPS
+
+Africa (Cape Town)
+
+af-south-1
+
+config.af-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hong Kong)
+
+ap-east-1
+
+config.ap-east-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hyderabad)
+
+ap-south-2
+
+config.ap-south-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Jakarta)
+
+ap-southeast-3
+
+config.ap-southeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Malaysia)
+
+ap-southeast-5
+
+config.ap-southeast-5.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Melbourne)
+
+ap-southeast-4
+
+config.ap-southeast-4.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Mumbai)
+
+ap-south-1
+
+config.ap-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (New Zealand)
+
+ap-southeast-6
+
+config.ap-southeast-6.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Osaka)
+
+ap-northeast-3
+
+config.ap-northeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Seoul)
+
+ap-northeast-2
+
+config.ap-northeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Singapore)
+
+ap-southeast-1
+
+config.ap-southeast-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Sydney)
+
+ap-southeast-2
+
+config.ap-southeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Taipei)
+
+ap-east-2
+
+config.ap-east-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Thailand)
+
+ap-southeast-7
+
+config.ap-southeast-7.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Tokyo)
+
+ap-northeast-1
+
+config.ap-northeast-1.amazonaws.com
+
+HTTPS
+
+Canada (Central)
+
+ca-central-1
+
+config.ca-central-1.amazonaws.com
+
+HTTPS
+
+Canada West (Calgary)
+
+ca-west-1
+
+config.ca-west-1.amazonaws.com
+
+HTTPS
+
+Europe (Frankfurt)
+
+eu-central-1
+
+config.eu-central-1.amazonaws.com
+
+HTTPS
+
+Europe (Ireland)
+
+eu-west-1
+
+config.eu-west-1.amazonaws.com
+
+HTTPS
+
+Europe (London)
+
+eu-west-2
+
+config.eu-west-2.amazonaws.com
+
+HTTPS
+
+Europe (Milan)
+
+eu-south-1
+
+config.eu-south-1.amazonaws.com
+
+HTTPS
+
+Europe (Paris)
+
+eu-west-3
+
+config.eu-west-3.amazonaws.com
+
+HTTPS
+
+Europe (Spain)
+
+eu-south-2
+
+config.eu-south-2.amazonaws.com
+
+HTTPS
+
+Europe (Stockholm)
+
+eu-north-1
+
+config.eu-north-1.amazonaws.com
+
+HTTPS
+
+Europe (Zurich)
+
+eu-central-2
+
+config.eu-central-2.amazonaws.com
+
+HTTPS
+
+Israel (Tel Aviv)
+
+il-central-1
+
+config.il-central-1.amazonaws.com
+
+HTTPS
+
+Mexico (Central)
+
+mx-central-1
+
+config.mx-central-1.amazonaws.com
+
+HTTPS
+
+Middle East (Bahrain)
+
+me-south-1
+
+config.me-south-1.amazonaws.com
+
+HTTPS
+
+Middle East (UAE)
+
+me-central-1
+
+config.me-central-1.amazonaws.com
+
+HTTPS
+
+South America (São Paulo)
+
+sa-east-1
+
+config.sa-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-East)
+
+us-gov-east-1
+
+config.us-gov-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-West)
+
+us-gov-west-1
+
+config.us-gov-west-1.amazonaws.com
+
+HTTPS

@@ -1,0 +1,78 @@
+URL: https://docs.aws.amazon.com/cur/latest/userguide/dataexports-processing.html
+TITLE: Processing data exports - AWS Data Exports
+
+# Processing data exports
+
+In the following sections, you'll find information about processing your data
+exports.
+
+## Configuring Amazon Athena
+
+To build a table and partitions for Athena using an AWS Glue crawler
+
+- Create an export of CUR 2.0 or Carbon emissions with the following data export
+delivery options:
+
+- Compression type and file format: Parquet - Parquet
+
+- File versioning: Overwrite existing data export file
+
+- In Athena, use the notebook editor with Trino SQL and choose
+Create to create a table with "AWS Glue crawler". Using the Glue
+crawler workflow, point the Glue crawler to run on the
+s3://<bucket-name>/<prefix>/<export-name>/data folder to automatically load all
+of the delivered partitions for the specified export to Athena.
+
+- After the Glue crawler is complete, you can use Athena to write queries on the table
+created by the Glue crawler.
+
+## Configuring Amazon Redshift
+
+Amazon Redshift is a cloud data warehouse that can be accessed either in a provisioned
+capacity or serverless model. Amazon Redshift offers fast query performance for processing
+your data from Data Exports.
+
+For information on setting up Redshift, see the Amazon Redshift
+Getting Started Guide.
+
+## Recommended SQL queries for processing CUR 2.0
+
+After loading your CUR 2.0 export data into a data analytics tool such as Amazon Athena or
+Amazon Redshift, you can process it in order to gain cost and usage insights. AWS
+Well-Architected Labs provides a CUR query library that you can use to process CUR. For more
+information, see AWS CUR Query Library.
+
+Note the following two pieces of information about SQL queries:
+
+- The Well-Architected Labs SQL queries won't work in the data export query field,
+because Data Exports doesn't support aggregations and some of the other SQL syntax used in these
+queries.
+
+- The Well-Architected Labs SQL queries will only work if you haven’t renamed your
+columns from the default names. Depending on the query, you may need to query some of the
+product columns as separate columns using the dot operator. For more information, see
+Data
+query–SQL query and table configurations.
+
+## Recommended SQL queries for processing carbon emissions data exports
+
+To get the total carbon emissions per payer_account_id:
+
+SELECT payer_account_id, SUM(total_mbm_emissions_value) AS total_emissions
+FROM "ccft-data-exports"."ccft-data-exports-data" -- change to your table name
+GROUP BY payer_account_id
+ORDER BY total_emissions DESC;
+
+To get the total carbon emissions per payer_account_id and per product_code:
+
+SELECT payer_account_id, product_code, SUM(total_mbm_emissions_value) AS total_emissions
+FROM "ccft-data-exports"."ccft-data-exports-data"-- change to your table name
+GROUP BY payer_account_id, product_code
+ORDER BY total_emissions DESC;
+
+To get the total carbon emissions per payer_account_id and per region_code:
+
+SELECT payer_account_id, region_code, SUM(total_mbm_emissions_value) AS total_emissions
+FROM "ccft-data-exports"."ccft-data-exports-data" -- change to your table name
+GROUP BY payer_account_id, region_code
+ORDER BY total_emissions DESC;

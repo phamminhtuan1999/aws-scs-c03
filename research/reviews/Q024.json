@@ -1,0 +1,296 @@
+{
+  "question_id": "Q024",
+  "question_content_hash": "bb2253ced9f06aa8b106429571c65419e40cbe102d591a3f0b5e58d56a4c5bf7",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "3e5864655d57c4e3bc59fbbda817711db546eb20e67f905a1ddb87f8fe0e1fdd",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giới hạn mỗi client IP chỉ được đọc dữ liệu 3 lần trong bất kỳ khoảng 5 phút nào (thực sự chặn, không chỉ cảnh báo).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Bối cảnh: website công khai ALB -> EC2 (ứng dụng stateless, nhiều instance) -> DynamoDB; lo ngại quét độc hại và DDoS.",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "LEAST effort.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q024:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS WAF rate-based rule gắn vào ALB, đếm theo IP với cửa sổ 300 giây là cơ chế chặn ít công sức nhất và là ý đồ của đề; nhưng rate limit tối thiểu là 10 (trước 08/2024 là 100, WAF Classic cũng 100) và WAF không giới hạn chính xác, nên không thể đặt đúng 3 lần/5 phút như lựa chọn mô tả.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q024:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Lambda chỉ đếm và gửi thông báo khi vượt ngưỡng, không chặn request nên không áp đặt được giới hạn; 'CloudWatch request' cũng không phải nguồn sự kiện rõ ràng.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q024:C",
+      "unit_type": "choice",
+      "verdict": "undetermined",
+      "reason_vi": "Tự viết logic trong ứng dụng có thể trả lỗi khi vượt 3 lần, nhưng sau ALB địa chỉ nguồn là của load balancer (phải đọc X-Forwarded-For) và ứng dụng stateless nhiều instance cần bộ đếm dùng chung không được nêu; dù làm được thì công sức lớn nhất và không giảm tải DDoS trước EC2.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q024:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Read capacity của DynamoDB là thông lượng mỗi giây cho cả bảng, không theo từng IP; TTL xóa item trong vòng vài ngày chứ không đúng 5 phút; hạ RCU xuống 3 chỉ gây throttle cho mọi người dùng.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": null,
+    "proposed_status": "ambiguous",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Rõ ràng đề nhắm tới AWS WAF rate-based rule (lựa chọn A) vì đây là cơ chế chặn theo IP ít công sức nhất, nhưng tài liệu hiện hành nêu rate limit tối thiểu là 10 và không chính xác tuyệt đối, nên con số 3 lần/5 phút không cấu hình được. Không lựa chọn nào đáp ứng đúng nguyên văn yêu cầu mà vẫn ít công sức.",
+      "open_issues": [
+        "Nếu bỏ qua con số 3 (hiểu là 'giới hạn tần suất theo IP'), A là lựa chọn hợp lý duy nhất.",
+        "Chưa xác minh lịch sử ngưỡng tối thiểu của WAF (trước đây từng cao hơn); ở mọi thời điểm đều không cho phép 3."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "source_answer": [
+    "Q024:A"
+  ],
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Source key = A và đây rõ ràng là cơ chế đề nhắm tới (AWS WAF rate-based rule theo IP trên ALB), nhưng tài liệu hiện hành nêu rate limit tối thiểu là 10 (trước 30/08/2024 là 100; WAF Classic cũng tối thiểu 100), nên 3 lần/5 phút chưa bao giờ cấu hình được. Không lựa chọn nào đáp ứng đúng nguyên văn yêu cầu.",
+    "open_issues": [
+      "Nếu hiểu con số 3 chỉ mang tính minh họa ('giới hạn tần suất theo IP'), A là lựa chọn hợp lý duy nhất và ít công sức nhất.",
+      "WAF rate limiting vốn không nhằm giới hạn chính xác tuyệt đối."
+    ]
+  },
+  "reconciliation_vi": "Blind = null (ambiguous), source key = A. Đã cố tìm cách đọc đề để A đúng: kiểm tra lịch sử ngưỡng WAF – What's New 30/08/2024 hạ tối thiểu từ 100 xuống 10; API WAF Classic cũng tối thiểu 100; tài liệu caveats nói rate limiting 'not intended for precise' – nên tại mọi thời điểm không thể cấu hình 3 request/5 phút, không phải trường hợp outdated. Các lựa chọn khác sai rõ hơn: B chỉ thông báo không chặn, D dùng RCU (thông lượng/giây toàn bảng) và TTL (xóa trong vài ngày), C phải tự xây bộ đếm dùng chung và đọc X-Forwarded-For – công sức lớn nhất. Kết luận: A là đáp án 'ý đồ đề' nhưng không thỏa nguyên văn; giữ researched_answer = null, status ambiguous (không chấm điểm).",
+  "explanation_vi": {
+    "why_correct": "CHƯA KẾT LUẬN (ambiguous): đề nhắm tới AWS WAF rate-based rule gắn vào ALB (lựa chọn A, cũng là source key) – cách ít công sức nhất để chặn theo IP trong cửa sổ 5 phút; nhưng WAF chỉ cho rate limit tối thiểu 10 request (trước 08/2024 là 100), nên con số 3 lần/5 phút không cấu hình được và không lựa chọn nào khớp đúng nguyên văn.",
+    "others": {
+      "Q024:A": "Đúng cơ chế và ít công sức nhất, nhưng không thể đặt ngưỡng 3 vì WAF rate-based rule tối thiểu là 10 request mỗi cửa sổ đánh giá.",
+      "Q024:B": "Lambda chỉ đếm và gửi thông báo khi vượt ngưỡng, không chặn request nên không áp đặt được giới hạn.",
+      "Q024:C": "Tự viết logic trong ứng dụng cần đọc X-Forwarded-For và bộ đếm dùng chung cho nhiều instance stateless, công sức lớn nhất và không giảm tải trước EC2.",
+      "Q024:D": "Read capacity là thông lượng mỗi giây của cả bảng chứ không theo IP, và TTL xóa item trong vài ngày chứ không đúng 5 phút."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "each client IP address",
+      "meaning_vi": "Giới hạn theo từng IP nguồn -> rate-based rule với aggregate key là IP."
+    },
+    {
+      "phrase": "5-minute period",
+      "meaning_vi": "Cửa sổ đánh giá 300 giây – mặc định của WAF rate-based rule."
+    },
+    {
+      "phrase": "LEAST effort",
+      "meaning_vi": "Ưu tiên tính năng có sẵn (WAF) thay vì tự viết code."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề yêu cầu chặn theo IP khi vượt số request trong vài phút trước ALB/CloudFront/API Gateway -> nghĩ đến AWS WAF rate-based rule; kiểm tra ngưỡng: tối thiểu 10 request/cửa sổ (trước 08/2024 là 100) và không chính xác tuyệt đối.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS WAF",
+      "Elastic Load Balancing (ALB)",
+      "Amazon DynamoDB",
+      "AWS Lambda"
+    ],
+    "reason_vi": "Bảo vệ ứng dụng web trước quét độc hại/DDoS tầng 7 bằng giới hạn tần suất theo IP."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-high-level-settings.html",
+      "title": "Rate-based rule high-level settings in AWS WAF",
+      "section": "Rate limit / Evaluation window",
+      "snapshot_id": "5bf095f4854b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The lowest limit setting allowed is 10.",
+      "supports": "Không thể đặt giới hạn 3 request trong rate-based rule (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedStatement.html",
+      "title": "RateBasedStatement - AWS WAFV2",
+      "section": "Limit",
+      "snapshot_id": "c2e2bc9ecd9a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Valid Range: Minimum value of 10. Maximum value of 2000000000.",
+      "supports": "API xác nhận giới hạn tối thiểu 10.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-caveats.html",
+      "title": "Rate-based rule caveats in AWS WAF",
+      "section": "Caveats",
+      "snapshot_id": "3885312d4e35",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "It's not intended for precise request-rate limiting.",
+      "supports": "WAF rate limiting không chính xác tuyệt đối, không đảm bảo 'bất kỳ 5 phút nào' đúng 3 lần.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html",
+      "title": "HTTP headers and Application Load Balancers",
+      "section": "X-Forwarded-For",
+      "snapshot_id": "227aa20bf999",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "your server access logs only contain the IP address of the load balancer.",
+      "supports": "Ứng dụng sau ALB không thấy trực tiếp IP client; C phải xử lý X-Forwarded-For.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/provisioned-capacity-mode.html",
+      "title": "DynamoDB provisioned capacity mode",
+      "section": "Read capacity units and write capacity units",
+      "snapshot_id": "ef5c518e5ccc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "one read capacity unit (RCU) represents one strongly consistent read operation per second",
+      "supports": "RCU là thông lượng mỗi giây của bảng, không phải giới hạn theo IP (D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html",
+      "title": "Using time to live (TTL) in DynamoDB",
+      "section": "Overview",
+      "snapshot_id": "c82a46c4cde1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "DynamoDB automatically deletes expired items within a few days of their expiration time",
+      "supports": "TTL không xóa đúng sau 5 phút (D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2024/08/aws-waf-rate-based-rules-lower-rate-limits/",
+      "title": "AWS WAF enhances rate-based rules to support lower rate limits",
+      "section": "What's New, Posted on: Aug 30, 2024",
+      "snapshot_id": "5b865b952063",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Customers can now configure rate-based rules with rate limits as low as 10 requests per evaluation window, compared to the previous minimum of 100 requests.",
+      "supports": "Lịch sử ngưỡng: trước 30/08/2024 tối thiểu 100, sau đó 10; chưa từng cho phép 3 nên không phải trường hợp outdated.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_waf_RateBasedRule.html",
+      "title": "RateBasedRule (AWS WAF Classic) - API Reference",
+      "section": "RateLimit",
+      "snapshot_id": "8f2b2f08172b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Valid Range: Minimum value of 100. Maximum value of 2000000000.",
+      "supports": "AWS WAF Classic cũng có ngưỡng tối thiểu 100 request/5 phút, không thể đặt 3.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q024:A",
+      "detail_vi": "Giới hạn 3 request/5 phút thấp hơn mức tối thiểu của AWS WAF rate-based rule (10 từ 30/08/2024; trước đó 100; WAF Classic 100); đề nhắm tới WAF nhưng con số không cấu hình được."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q024:B",
+      "detail_vi": "'Lambda function based on an Amazon CloudWatch request' không rõ nghĩa."
+    }
+  ],
+  "notes_vi": "Cơ chế đúng về ý tưởng là AWS WAF rate-based rule gắn vào ALB (A). Vì không option nào đáp ứng đúng con số 3 lần/5 phút, đề được đánh dấu ambiguous.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:35:22Z",
+      "change": "Blind verdict (scs-researcher): answer=null, proposed_status=ambiguous",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:45:00Z",
+      "change": "Reconciliation: source key A vs blind null. Bổ sung ref7 (What's New 08/2024: tối thiểu 100 -> 10) và ref8 (WAF Classic tối thiểu 100): 3 chưa từng hợp lệ, nên giữ null + ambiguous thay vì outdated; cập nhật reason của A.",
+      "previous_answer": null
+    }
+  ]
+}

@@ -1,0 +1,356 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/aggregate-data.html
+TITLE: Multi-Account Multi-Region Data Aggregation for AWS Config - AWS Config
+
+# Multi-Account Multi-Region Data Aggregation for AWS Config
+
+An aggregator is an AWS Config resource type that collects AWS Config configuration and compliance
+data from the following:
+
+- Multiple accounts and multiple AWS Regions.
+
+- Single account and multiple AWS Regions.
+
+- An organization in AWS Organizations and all the accounts in that organization which have
+AWS Config enabled.
+
+Use an aggregator to view the resource configuration and compliance data recorded in
+AWS Config. The following image displays how an aggregator collects AWS Config data from multiple accounts and Regions.
+
+## Use Cases
+
+- Compliance Monitoring: You can aggregate compliance data to assess the overall compliance postures of your organization, or across accounts and Regions.
+
+- Change Tracking: You can track changes to resources over time across your organization, or across accounts and Regions.
+
+- Resource Relationships: You can analyze resource dependencies and relationships across your organization, or across accounts and Regions.
+
+Note
+
+Aggregators provide a read-only view into the source accounts and
+Regions that the aggregator is authorized to view by replicating data from the source accounts into the aggregator account.
+Aggregators do not provide mutating
+access into a source account or region. For example, this means that you cannot deploy
+rules through an aggregator or push snapshot files to a source account or region
+through an aggregator.
+
+Using aggregators does not incur any additional costs.
+
+## Terminology
+
+A source account is the AWS account from which you want to aggregate AWS Config resource
+configuration and compliance data. A source account can be an individual account or an
+organization in AWS Organizations. You can provide source accounts individually or you can retrieve
+them through AWS Organizations.
+
+A source region is the AWS Region from which you want to aggregate AWS Config configuration
+and compliance data.
+
+An aggregator account is an account where you create an aggregator.
+
+Authorization refers to the permissions you grant to an
+aggregator account and region to collect your AWS Config configuration and compliance data.
+Authorization is not required if you are aggregating source accounts that are part of
+AWS Organizations.
+
+A service-linked aggregator is linked to a specific AWS service. The configuration and compliance data in scope are set by the linked service.
+
+## Region Support
+
+Currently, multi-account multi-region data aggregation is supported in the following
+Regions:
+
+Region Name
+
+Region
+
+Endpoint
+
+Protocol
+
+US East (Ohio)
+
+us-east-2
+
+config.us-east-2.amazonaws.com
+
+HTTPS
+
+US East (N. Virginia)
+
+us-east-1
+
+config.us-east-1.amazonaws.com
+
+HTTPS
+
+US West (N. California)
+
+us-west-1
+
+config.us-west-1.amazonaws.com
+
+HTTPS
+
+US West (Oregon)
+
+us-west-2
+
+config.us-west-2.amazonaws.com
+
+HTTPS
+
+Africa (Cape Town)
+
+af-south-1
+
+config.af-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hong Kong)
+
+ap-east-1
+
+config.ap-east-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Hyderabad)
+
+ap-south-2
+
+config.ap-south-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Jakarta)
+
+ap-southeast-3
+
+config.ap-southeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Malaysia)
+
+ap-southeast-5
+
+config.ap-southeast-5.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Melbourne)
+
+ap-southeast-4
+
+config.ap-southeast-4.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Mumbai)
+
+ap-south-1
+
+config.ap-south-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (New Zealand)
+
+ap-southeast-6
+
+config.ap-southeast-6.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Osaka)
+
+ap-northeast-3
+
+config.ap-northeast-3.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Seoul)
+
+ap-northeast-2
+
+config.ap-northeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Singapore)
+
+ap-southeast-1
+
+config.ap-southeast-1.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Sydney)
+
+ap-southeast-2
+
+config.ap-southeast-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Taipei)
+
+ap-east-2
+
+config.ap-east-2.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Thailand)
+
+ap-southeast-7
+
+config.ap-southeast-7.amazonaws.com
+
+HTTPS
+
+Asia Pacific (Tokyo)
+
+ap-northeast-1
+
+config.ap-northeast-1.amazonaws.com
+
+HTTPS
+
+Canada (Central)
+
+ca-central-1
+
+config.ca-central-1.amazonaws.com
+
+HTTPS
+
+Canada West (Calgary)
+
+ca-west-1
+
+config.ca-west-1.amazonaws.com
+
+HTTPS
+
+Europe (Frankfurt)
+
+eu-central-1
+
+config.eu-central-1.amazonaws.com
+
+HTTPS
+
+Europe (Ireland)
+
+eu-west-1
+
+config.eu-west-1.amazonaws.com
+
+HTTPS
+
+Europe (London)
+
+eu-west-2
+
+config.eu-west-2.amazonaws.com
+
+HTTPS
+
+Europe (Milan)
+
+eu-south-1
+
+config.eu-south-1.amazonaws.com
+
+HTTPS
+
+Europe (Paris)
+
+eu-west-3
+
+config.eu-west-3.amazonaws.com
+
+HTTPS
+
+Europe (Spain)
+
+eu-south-2
+
+config.eu-south-2.amazonaws.com
+
+HTTPS
+
+Europe (Stockholm)
+
+eu-north-1
+
+config.eu-north-1.amazonaws.com
+
+HTTPS
+
+Europe (Zurich)
+
+eu-central-2
+
+config.eu-central-2.amazonaws.com
+
+HTTPS
+
+Israel (Tel Aviv)
+
+il-central-1
+
+config.il-central-1.amazonaws.com
+
+HTTPS
+
+Mexico (Central)
+
+mx-central-1
+
+config.mx-central-1.amazonaws.com
+
+HTTPS
+
+Middle East (Bahrain)
+
+me-south-1
+
+config.me-south-1.amazonaws.com
+
+HTTPS
+
+Middle East (UAE)
+
+me-central-1
+
+config.me-central-1.amazonaws.com
+
+HTTPS
+
+South America (São Paulo)
+
+sa-east-1
+
+config.sa-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-East)
+
+us-gov-east-1
+
+config.us-gov-east-1.amazonaws.com
+
+HTTPS
+
+AWS GovCloud (US-West)
+
+us-gov-west-1
+
+config.us-gov-west-1.amazonaws.com
+
+HTTPS

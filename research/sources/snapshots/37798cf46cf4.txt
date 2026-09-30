@@ -1,0 +1,239 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/aggregated-create.html
+TITLE: Creating Aggregators for AWS Config - AWS Config
+
+# Creating Aggregators for AWS Config
+
+You can use the AWS Config console or the AWS CLI to create your aggregators. From the AWS Config you
+can choose Add individual account IDs or Add my
+organization from where you want to aggregate data. For the AWS CLI there are
+two different procedures.
+
+Creating Aggregators (Console)
+
+On the Aggregator page, you can create an aggregator by
+specifying the source account IDs or organization and regions from where you
+want to aggregate data.
+
+- Sign in to the AWS Management Console and open the AWS Config console at
+https://console.aws.amazon.com/config/home.
+
+- Navigate to the Aggregators page and choose
+Create aggregator.
+
+- Allow data replication, gives permission to AWS Config
+to replicate data from the source accounts into an aggregator
+account.
+
+Choose Allow AWS Config to replicate data from source account(s)
+into an aggregator account. You must select this checkbox to
+continue to add an aggregator.
+
+- For Aggregator name, type the name for your
+aggregator.
+
+The aggregator name must be a unique name with a maximum of 64
+alphanumeric characters. The name can contain hyphens and
+underscores.
+
+- For Select source accounts, either choose
+Add individual account IDs or Add my
+organization from where you want to aggregate
+data.
+
+Note
+
+Authorization is required when using Add individual
+account IDs to select source accounts.
+
+- If you choose Add individual account IDs,
+you can add individual account IDs for an aggregator
+account.
+
+- Choose Add source accounts to add
+account IDs.
+
+- Choose Add AWS account IDs to
+manually add comma-separated AWS account IDs. If you
+want to aggregate data from the current account, type
+the account ID of the account.
+
+OR
+
+Choose Upload a file to upload a
+file (.txt or .csv) of comma-separated AWS account
+IDs.
+
+- Choose Add source accounts to
+confirm your selection.
+
+- If you choose Add my organization, you
+can add all accounts in your organization to an aggregator
+account.
+
+Note
+
+You must be signed in to the management account or a
+registered delegated administrator and all the features must
+be enabled in your organization. If the caller is a
+management account, AWS Config calls
+EnableAwsServiceAccess API to enable
+integration between AWS Config and AWS Organizations. If the
+caller is a registered delegated administrator, AWS Config calls
+ListDelegatedAdministrators API to verify
+whether the caller is a valid delegated administrator.
+
+Ensure that the management account registers delegated
+administrator for AWS Config service principal name
+(config.amazonaws.com) before the delegated administrator
+creates an aggregator. To register a delegated
+administrator, see Registering a Delegated Administrator for AWS Config.
+
+You must assign an IAM role to allow AWS Config to call read-only
+APIs for your organization.
+
+- Choose Choose a role from your
+account to select an existing IAM
+role.
+
+Note
+
+In the IAM console, attach the
+AWSConfigRoleForOrganizations managed
+policy to your IAM role. Attaching this policy
+allows AWS Config to call AWS Organizations
+DescribeOrganization,
+ListAWSServiceAccessForOrganization,
+and ListAccounts APIs. By default
+config.amazonaws.com is automatically
+specified as a trusted entity.
+
+- Or, choose Create a role and type
+a name for your IAM role name to create IAM
+role.
+
+- For Regions, choose the regions for which you
+want to aggregate data.
+
+- Select one region or multiple regions or all the
+AWS Regions.
+
+- Select Include future AWS Regions to
+aggregate data from all future AWS Regions where multi-account
+multi-region data aggregation is enabled.
+
+- Choose Save. AWS Config displays the aggregator.
+
+Creating Aggregators using Individual Accounts (AWS CLI)
+
+- Open a command prompt or a terminal window.
+
+- Enter the following command to create an aggregator named
+MyAggregator.
+
+aws configservice put-configuration-aggregator --configuration-aggregator-name MyAggregator --account-aggregation-sources "[{\"AccountIds\": [\"AccountID1\",\"AccountID2\",\"AccountID3\"],\"AllAwsRegions\": true}]"
+
+For account-aggregation-sources, enter one of the
+following.
+
+- A comma-separated list of AWS account IDs for which you want
+to aggregate data. Wrap the account IDs in square brackets, and
+be sure to escape quotation marks (for example,
+"[{\"AccountIds\":
+[\"AccountID1\",\"AccountID2\",\"AccountID3\"],\"AllAwsRegions\":
+true}]").
+
+- You can also upload a JSON file of comma-separated
+AWS account IDs. Upload the file using the following syntax:
+--account-aggregation-sources
+MyFilePath/MyFile.json
+
+The JSON file must be in the following format:
+
+[
+{
+"AccountIds": [
+"AccountID1",
+"AccountID2",
+"AccountID3"
+],
+"AllAwsRegions": true
+}
+]
+
+- Press Enter to execute the command.
+
+You should see output similar to the following:
+
+{
+"ConfigurationAggregator": {
+"ConfigurationAggregatorArn": "arn:aws:config:Region:AccountID:config-aggregator/config-aggregator-floqpus3",
+"CreationTime": 1517942461.442,
+"ConfigurationAggregatorName": "MyAggregator",
+"AccountAggregationSources": [
+{
+"AllAwsRegions": true,
+"AccountIds": [
+"AccountID1",
+"AccountID2",
+"AccountID3"
+]
+}
+],
+"LastUpdatedTime": 1517942461.442
+}
+}
+
+Creating Aggregators using AWS Organizations (AWS CLI)
+
+Before you begin this procedure, you must be signed in to the management
+account or a registered delegated administrator and all the features must be
+enabled in your organization.
+
+Note
+
+Ensure that the management account registers a delegated administrator
+with both of the following AWS Config service principal names
+(config.amazonaws.com
+andconfig-multiaccountsetup.amazonaws.com) before the
+delegated administrator creates an aggregator. To register a delegated
+administrator, see Registering a Delegated Administrator for AWS Config.
+
+- Open a command prompt or a terminal window.
+
+- If have not created an IAM role for your AWS Config aggregator, enter the
+following command:
+
+aws iam create-role --role-name OrgConfigRole --assume-role-policy-document "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"config.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}" --description "Role for organizational AWS Config aggregator"
+
+Note
+
+Copy the Amazon Resource Name (ARN) from this IAM role for use
+when you create your AWS Config aggregator. You can find the ARN on the
+response object.
+
+- If have not attached a policy to your IAM role, attach the AWSConfigRoleForOrganizations managed policy or enter the
+following command:
+
+aws iam create-policy --policy-name OrgConfigPolicy --policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["organizations:ListAccounts","organizations:DescribeOrganization","organizations:ListAWSServiceAccessForOrganization","organizations:ListDelegatedAdministrators"],"Resource":"*"}]}'
+
+- Enter the following command to create an aggregator named
+MyAggregator.
+
+aws configservice put-configuration-aggregator --configuration-aggregator-name MyAggregator --organization-aggregation-source "{\"RoleArn\": \"Complete-Arn\",\"AllAwsRegions\": true}"
+
+- Press Enter to execute the command.
+
+You should see output similar to the following:
+
+{
+"ConfigurationAggregator": {
+"ConfigurationAggregatorArn": "arn:aws:config:Region:AccountID:config-aggregator/config-aggregator-floqpus3",
+"CreationTime": 1517942461.442,
+"ConfigurationAggregatorName": "MyAggregator",
+"OrganizationAggregationSource": {
+"AllAwsRegions": true,
+"RoleArn": "arn:aws:iam::account-of-role-to-assume:role/name-of-role"
+},
+"LastUpdatedTime": 1517942461.442
+}
+}

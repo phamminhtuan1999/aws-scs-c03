@@ -16,20 +16,20 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 ## Batches
 | Batch | IDs | Blind | Reconcile |
 |---|---|---|---|
-| 1 | Q001–Q006 | done 6/6 valid | running |
-| 2 | Q007–Q012 | done 6/6 valid | running |
+| 1 | Q001–Q006 | done 6/6 valid | done 6/6 valid (6 verified; Q005 upgraded from blind "ambiguous" → audit) |
+| 2 | Q007–Q012 | done 6/6 valid | done 6/6 valid (5 verified, Q008 ambiguous) |
 | 3 | Q013–Q018 | done 6/6 valid | done 6/6 valid (6 verified, 0 differ) |
-| 4 | Q019–Q024 | done 6/6 valid | running |
-| 5 | Q025–Q030 | running (2026-09-30) | queued |
-| 6 | Q031–Q036 | running (2026-09-30) | queued |
+| 4 | Q019–Q024 | done 6/6 valid | done 6/6 valid (5 verified, Q024 ambiguous) |
+| 5 | Q025–Q030 | done 6/6 valid | running |
+| 6 | Q031–Q036 | done 6/6 valid | running |
 | 7 | Q037–Q042 | running (2026-09-30) | queued |
 | 8 | Q043–Q048 | running (2026-09-30) | queued |
 | 9 | Q049–Q054 | running (2026-09-30) | queued |
-| 10 | Q055–Q060 | queued | queued |
-| 11 | Q061–Q066 | queued | queued |
-| 12 | Q067–Q072 | queued | queued |
-| 13 | Q073–Q078 | queued | queued |
-| 14 | Q079–Q084 | queued | queued |
+| 10 | Q055–Q060 | running (2026-09-30) | queued |
+| 11 | Q061–Q066 | running (2026-09-30) | queued |
+| 12 | Q067–Q072 | running (2026-09-30) | queued |
+| 13 | Q073–Q078 | running (2026-09-30) | queued |
+| 14 | Q079–Q084 | running (2026-09-30) | queued |
 | 15 | Q085–Q090 | queued | queued |
 | 16 | Q091–Q096 | queued | queued |
 | 17 | Q097–Q102 | queued | queued |
@@ -44,3 +44,15 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 ## Execution notes
 - Custom agent types in `.claude/agents/` were not loadable mid-session, so agents run as `general-purpose` with an explicit `model` (research: opus = Opus 5.5; web: sonnet = Sonnet 5.5) and read their role file first. The per-agent reasoning-effort setting (high / xhigh) could not be applied through this route; prompts ask for deep, careful work instead. In a new session the definitions in `.claude/agents/` apply model + effort directly.
 - Web builder (Sonnet) started 2026-09-30 in parallel with blind batches 1–3.
+
+## Audit queue (lượt 3 — must be re-checked by an agent that did not do the reconciliation)
+Rule: any question whose final status/answer moved TOWARD the source key after the key was seen, any `differs_from_source`, any IAM/KMS/policy-image question with confidence < high, and any time-dependent conclusion.
+- Q005 — blind proposed `ambiguous` (3 slots vs 4–5 valid steps); reconciler raised to `verified` (S6>S1>S3) after comparing with the key. Evidence cited: Okta/Google Workspace tutorial step headings. Risk of key-confirmation bias → independent audit required.
+- Q001 — medium confidence, unrealistic premise (service principal vs execution role).
+- Q010 — medium confidence; stem data errors (ARN, account ID, key state contradiction).
+- Q011 — time-dependent pricing statements (Systems Manager on-prem pricing change 2026).
+- Q019 — time-dependent (CloudTrail Lake availability change 2026).
+- Snapshot `d7556cbfe602` is empty (redirect to guide root); not cited; harmless.
+- Q023 — medium; engine not specified (Aurora MySQL vs PostgreSQL); RDS Proxy RequireTLS doc conflict (user guide vs API reference).
+- Charset check (2026-09-30): bank has no U+FFFD; "encoding error" claims in blind records of Q021, Q027–Q030, Q032, Q034 are console artifacts (U+2019) → removed at reconciliation. Real anomaly: Q052 option D uses Cyrillic `ЕС2` (U+0415, U+0421). See research/schema/SOURCE_FACTS.md.
+- Q028 — outdated finding name suffix (GuardDuty `.OutsideAWS`/`.InsideAWS`); Q029 — SSE-C disabled by default on new buckets since 2026-04 (time-dependent); Q030 — "Security Hub" renamed "Security Hub CSPM" (time-dependent naming).

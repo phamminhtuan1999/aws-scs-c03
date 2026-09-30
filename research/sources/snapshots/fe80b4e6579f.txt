@@ -1,0 +1,277 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-lists-create-activate.html
+TITLE: Adding and activating an entity list or IP list - Amazon GuardDuty
+
+# Adding and activating an entity list or IP list
+
+Entity lists and IP address lists help you customize the threat detection capabilities in GuardDuty. For more
+information about these lists, see Understanding entity lists and IP address lists.
+To manage the trusted and threat intelligence data for your AWS environment, GuardDuty
+recommends using entity lists. Before you begin, see Setting up prerequisites for entity lists and IP address lists.
+
+Choose one of the following access methods to add and
+activate a trusted entity list, threat entity list, trusted IP list, or a threat IP
+list.
+
+Console
+
+(Optional) step 1: Fetching location URL of your list
+
+- Open the Amazon S3 console at
+https://console.aws.amazon.com/s3/.
+
+- In the navigation pane, choose
+Buckets.
+
+- Choose the Amazon S3 bucket name that contains the specific list that
+you want to add.
+
+- Choose the object (list) name to view its details.
+
+- Under the Properties tab, copy the
+S3 URI for this object.
+
+Step 2: Adding trusted or threat intelligence data
+
+- Open the GuardDuty console at https://console.aws.amazon.com/guardduty/.
+
+- In the navigation pane, choose Lists.
+
+- On the Lists page, choose Entity
+lists or IP address lists
+tab.
+
+- Based on your selected tab, choose to add a trusted list or a
+threat list.
+
+- In the dialog box to add either trusted or threat list, do the
+following steps:
+
+- For List name, enter a name for your
+list.
+
+List naming constraints – The name of your list can include
+lowercase letters, uppercase letters, numbers, dash (-), and underscore (_).
+
+For an IP address list, the name
+of your list must be unique within an AWS account and Region.
+
+- For Location, provide the location
+where you have uploaded your list. If you don't already have
+it, see Step 1: Fetching location URL of your list.
+
+Applies only to custom threat and custom trusted entity sets – If you provide a
+location URL that doesn't match the following supported formats, then you will receive an error message during list addition and activation.
+
+Format of location URL:
+
+- https://s3.amazonaws.com/bucket.name/file.txt
+
+- https://s3-aws-region.amazonaws.com/bucket.name/file.txt
+
+- http://bucket.s3.amazonaws.com/file.txt
+
+- http://bucket.s3-aws-region.amazonaws.com/file.txt
+
+- s3://bucket.name/file.txt
+
+- (Optional) For Expected bucket owner,
+you can enter the AWS account ID that owns the Amazon S3 bucket
+specified in the Location field.
+
+When you don't specify an AWS account ID owner, then
+GuardDuty behaves differently for entity lists and IP address lists. For entity lists,
+GuardDuty will validate that the current member account owns the S3 bucket specified in the
+Location field. For IP address lists, if you don't
+specify an AWS account ID owner, GuardDuty doesn't perform any validation.
+
+If GuardDuty finds that this S3 bucket doesn't belong to the specified
+account ID, you will get an error at the time of activating the list.
+
+- Select the I agree check box.
+
+- Choose Add list. By default, the
+Status of the added list is
+Inactive. For the list to be
+effective, you must activate the list.
+
+Step 3: Activating an entity list or IP address list
+
+- Open the GuardDuty console at https://console.aws.amazon.com/guardduty/.
+
+- In the navigation pane, choose Lists.
+
+- On the Lists page, select the tab in which
+you want to activate the list - Entity lists or
+IP address lists.
+
+- Select one list that you want to activate. This will enable the
+Action and Edit
+menu.
+
+- Choose Action, and then choose
+Activate.
+
+API/CLI
+
+To add and activate a trusted entity list
+
+- Run CreateTrustedEntitySet. Make sure to provide the
+detectorId of the member account for which you want
+to create this trusted entity list. To find the detectorId for your account and current Region, see the
+Settings page in the https://console.aws.amazon.com/guardduty/ console,
+or run the ListDetectors API.
+
+List naming constraints – The name of your list can include
+lowercase letters, uppercase letters, numbers, dash (-), and underscore (_).
+
+- Alternatively, you can do this by running the following
+AWS Command Line Interface command:
+
+aws guardduty create-trusted-entity-set \
+--detector-id 12abc34d567e8fa901bc2d34e56789f0 \
+--name "AnyOrganizationListEXAMPLE" \
+--format TXT \
+--location "https://s3.amazonaws.com/amzn-s3-demo-bucket/DOC-EXAMPLE-SOURCE-FILE.format" \
+--activate
+
+Replace detector-id with the detector ID of the
+member account for which you will create the trusted entity
+list, and other placeholder values that are shown in red.
+
+If you don't want to activate this newly created list, then replace
+the parameter --activate with --no-activate.
+
+The expected-bucket-owner parameter is optional. Whether or not
+you specify the value for this parameter, GuardDuty validates that the AWS account ID associated
+with this --detector-id value owns the S3 bucket specified in the
+--location parameter. If GuardDuty finds that this S3 bucket doesn't
+belong to the specified account ID, you will get an error at the time of activating
+this list.
+
+Applies only to custom threat and custom trusted entity sets – If you provide a
+location URL that doesn't match the following supported formats, then you will receive an error message during list addition and activation.
+
+To add and activate threat entity lists
+
+- Run CreateThreatEntitySet. Make sure to provide the
+detectorId of the member account for which you want
+to create this threat entity list. To find the detectorId for your account and current Region, see the
+Settings page in the https://console.aws.amazon.com/guardduty/ console,
+or run the ListDetectors API.
+
+List naming constraints – The name of your list can include
+lowercase letters, uppercase letters, numbers, dash (-), and underscore (_).
+
+- Alternatively, you can do this by running the following
+AWS Command Line Interface command:
+
+aws guardduty create-threat-entity-set \
+--detector-id 12abc34d567e8fa901bc2d34e56789f0 \
+--name "AnyOrganizationListEXAMPLE" \
+--format TXT \
+--location "https://s3.amazonaws.com/amzn-s3-demo-bucket/DOC-EXAMPLE-SOURCE-FILE.format" \
+--activate
+
+Replace detector-id with the detector ID of the
+member account for which you will create the trusted entity
+list, and other placeholder values that are shown in red.
+
+If you don't want to activate this newly created list, then replace
+the parameter --activate with --no-activate.
+
+The expected-bucket-owner parameter is optional. Whether or not
+you specify the value for this parameter, GuardDuty validates that the AWS account ID associated
+with this --detector-id value owns the S3 bucket specified in the
+--location parameter. If GuardDuty finds that this S3 bucket doesn't
+belong to the specified account ID, you will get an error at the time of activating
+this list.
+
+Applies only to custom threat and custom trusted entity sets – If you provide a
+location URL that doesn't match the following supported formats, then you will receive an error message during list addition and activation.
+
+To add and activate a trusted IP address list
+
+- Run CreateIPSet. Make sure to provide the
+detectorId of the member account for which you want
+to create this trusted IP address list. To find the detectorId for your account and current Region, see the
+Settings page in the https://console.aws.amazon.com/guardduty/ console,
+or run the ListDetectors API.
+
+For an IP address list, the name
+of your list must be unique within an AWS account and Region.
+
+List naming constraints – The name of your list can include
+lowercase letters, uppercase letters, numbers, dash (-), and underscore (_).
+
+- Alternatively, you can do this by running the following
+AWS Command Line Interface command and make sure to replace the
+detector-id with the detector ID of the
+member account for which you will update the trusted IP address
+list.
+
+aws guardduty create-ip-set \
+--detector-id 12abc34d567e8fa901bc2d34e56789f0 \
+--name "AnyOrganizationListEXAMPLE" \
+--format TXT \
+--location "https://s3.amazonaws.com/amzn-s3-demo-bucket/DOC-EXAMPLE-SOURCE-FILE.format" \
+--activate
+
+Replace detector-id with the detector ID of the
+member account for which you will create the trusted IP
+list, and other placeholder values that are shown in red.
+
+If you don't want to activate this newly created list, then replace
+the parameter --activate with --no-activate.
+
+The expected-bucket-owner parameter is optional. When you don't specify
+the account ID that owns the S3 bucket, GuardDuty doesn't perform any validation. When you
+specify the account ID for the expected-bucket-owner parameter, GuardDuty validates that this
+AWS account ID owns the S3 bucket specified in the
+--location parameter. If GuardDuty finds that this S3 bucket doesn't
+belong to the specified account ID, you will get an error at the time of activating
+this list.
+
+To add and activate threat IP lists
+
+- Run CreateThreatIntelSet. Make sure to provide the
+detectorId of the member account for which you want
+to create this threat IP address list. To find the detectorId for your account and current Region, see the
+Settings page in the https://console.aws.amazon.com/guardduty/ console,
+or run the ListDetectors API.
+
+List naming constraints – The name of your list can include
+lowercase letters, uppercase letters, numbers, dash (-), and underscore (_).
+
+For an IP address list, the name
+of your list must be unique within an AWS account and Region.
+
+- Alternatively, you can do this by running the following
+AWS Command Line Interface command and make sure to replace the
+detector-id with the detector ID of the
+member account for which you will update the threat IP
+list.
+
+aws guardduty create-threat-intel-set \
+--detector-id 12abc34d567e8fa901bc2d34e56789f0 \
+--name "AnyOrganizationListEXAMPLE" \
+--format TXT \
+--location "https://s3.amazonaws.com/amzn-s3-demo-bucket/DOC-EXAMPLE-SOURCE-FILE.format" \
+--activate
+
+Replace detector-id with the detector ID of the
+member account for which you will create the threat IP
+list, and other placeholder values that are shown in red.
+
+If you don't want to activate this newly created list, then replace
+the parameter --activate with --no-activate.
+
+The expected-bucket-owner parameter is optional. When you don't specify
+the account ID that owns the S3 bucket, GuardDuty doesn't perform any validation. When you
+specify the account ID for the expected-bucket-owner parameter, GuardDuty validates that this
+AWS account ID owns the S3 bucket specified in the
+--location parameter. If GuardDuty finds that this S3 bucket doesn't
+belong to the specified account ID, you will get an error at the time of activating
+this list.
+
+After you activate an entity list or IP address list, it might take a few
+minutes for this list to be effective. For more information, see Important considerations for GuardDuty lists.

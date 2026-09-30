@@ -1,0 +1,141 @@
+URL: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-service-event-cloudtrail.html
+TITLE: AWS service events delivered via AWS CloudTrail - Amazon EventBridge
+
+# AWS service events delivered via AWS CloudTrail
+
+AWS CloudTrail is a service that automatically records events such as AWS API calls. You can
+create EventBridge rules that use the information from CloudTrail. For more information about CloudTrail, see
+What is AWS CloudTrail?.
+
+Note
+
+CloudTrail also records the Custom Event Bus management API calls, such as CreateEventBus,
+CreateSubscriber, and PutResourcePolicy, made through the eventsv2
+endpoint. See Observability for the Custom Event Bus: metrics, logs, and CloudTrail.
+
+CloudTrail sends the following types of events to the default EventBridge event bus. In each case, the detail-type value of the event is the listed event type:
+
+- AWS API Call via CloudTrail
+
+Events that represent a request to a public AWS service API.
+
+For more information, see Understanding CloudTrail events
+in the AWS CloudTrail User Guide.
+
+- AWS Console Signin via CloudTrail
+
+Attempts to sign in to the AWS Management Console, the AWS Discussion Forums,
+and the AWS Support Center.
+
+For more information, see AWS Management Console sign-in events in the AWS CloudTrail
+User Guide.
+
+- AWS Console Action via CloudTrail
+
+Actions that were taken in the console that were not an API calls.
+
+For more information, see AWS Management Console sign-in events
+in the AWS CloudTrail User Guide.
+
+- AWS Service Event via CloudTrail
+
+Events created by AWS services but are not directly triggered by a request to a public AWS service API.
+
+For more information, see AWS service events
+in the AWS CloudTrail User Guide.
+
+- AWS Insight via CloudTrail
+
+Insights events are triggered by CloudTrail when customer enables the CloudTrail Insight
+feature.
+
+For more information, see CloudTrail Insights
+in the AWS CloudTrail User Guide.
+
+- AWS Network Activity Event via CloudTrail
+
+Network activity events capture API calls made through VPC endpoints from
+private VPCs. These events require a trail configured with network activity
+event selectors for the relevant event source.
+
+For more information, see Logging network activity events in the AWS CloudTrail
+User Guide.
+
+To record events with one of the CloudTrail detail-type values, you must enable a CloudTrail trail with logging. For more information, see
+Working with CloudTrail trails
+in the AWS CloudTrail User Guide.
+
+Note
+
+All CloudTrail events are delivered to the default event bus only. To process CloudTrail
+events on a Custom Event Bus - Classic, create a rule on the default bus that forwards matching
+events to your Classic custom bus.
+
+Note
+
+If you forward read-only management events to another event bus (a Custom Event Bus - Classic, or a bus in another account or Region), two rules need the state
+ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS: the forwarding rule on
+the default event bus, and the rule on the destination event bus. A rule in the
+default ENABLED state does not match read-only management events, so
+its targets are not invoked.
+
+The rule state controls which event categories are matched:
+
+- Write (mutating) management events — Matched by
+rules in the default ENABLED state. No special configuration
+needed beyond an active trail.
+
+- Read-only management events — Matched only by
+rules with state set to
+ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS. For more
+information, see Receiving read-only management events from AWS services.
+
+- Data events — Matched by rules in the default
+ENABLED state. The trail must be configured to capture the
+specific data event types. For more information, see Logging data events in the AWS CloudTrail User
+Guide.
+
+- Network activity events — Matched by rules in the
+default ENABLED state. The trail must be configured with network
+activity event selectors for the relevant event source, and the API call must
+be made through a VPC endpoint.
+
+Some occurrences in AWS services can be reported to EventBridge both by the service itself and
+by CloudTrail. For example, an Amazon EC2 API call that starts an instance generates multiple events:
+
+- EC2 Instance State-change Notification events sent directly from Amazon EC2 to EventBridge,
+as the instance enters the pending and then running
+states. For example:
+
+{
+. . .
+"detail-type":"EC2 Instance State-change Notification",
+"source":"aws.ec2",
+. . .
+"detail":{
+"instance-id":"i-abcd1111",
+"state":"pending"
+}
+}
+
+- An AWS API Call via CloudTrail event sent from CloudTrail to EventBridge that represents the API call itself. For example:
+
+{
+. . .
+"detail-type":"AWS API Call via CloudTrail",
+"source":"aws.ec2",
+. . .
+],
+"detail": {
+"eventSource": "ec2.amazonaws.com",
+"eventName": "StartInstances"
+}
+}
+
+Note
+
+If you use a Put*Events API call event as the basis for creating an event pattern, make sure the final event pattern does not exceed 1 MB. The maximum size of any
+Put*Events requests is 1 MB. For more information, see .
+
+For more information about the services that CloudTrail supports, see CloudTrail supported
+services and integrations in the CloudTrail User Guide.

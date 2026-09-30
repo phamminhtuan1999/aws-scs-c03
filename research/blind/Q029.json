@@ -1,0 +1,73 @@
+{
+  "question_id": "Q029",
+  "question_content_hash": "e2fcd439fc62d85dbd7df6c6adf5bdc7c41307b95f9b6a3e33f38c86aca189a6",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Dùng server-side encryption cho bucket S3 chứa dữ liệu nhạy cảm.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Tách nhiệm vụ: operations team quản lý quyền truy cập S3, security team quản lý quyền truy cập encryption key.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Lỗi cấu hình của chỉ MỘT team không được làm lộ plaintext -> đọc dữ liệu phải cần đồng thời quyền S3 và quyền dùng key (hai lớp kiểm soát độc lập).", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q029:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "SSE-S3 dùng key do S3 quản lý; không có KMS key của khách hàng để security team kiểm soát bằng IAM policy. Ai có quyền S3 đọc object đều nhận plaintext, nên chỉ cần operations team cấu hình sai là lộ dữ liệu.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q029:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Với SSE-KMS dùng customer managed key, đọc object cần cả quyền S3 (operations team quản lý qua bucket policy) lẫn kms:Decrypt trên key (security team quản lý qua key policy). Lỗi của một team đơn lẻ không đủ để cấp quyền đọc plaintext.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref2", "ref3", "ref4", "ref5", "ref6"], "evidence_kind": "direct"},
+    {"unit_id": "Q029:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Bắt buộc SSE-S3 qua bucket policy vẫn dùng key do S3 quản lý; IAM policy của security team không có key nào để kiểm soát, nên truy cập plaintext chỉ phụ thuộc quyền S3.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q029:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "SSE-C yêu cầu client gửi key trong mỗi request; KMS key không bao giờ rời KMS ở dạng không mã hoá nên không thể 'lưu key SSE-C trong KMS' rồi lấy ra đưa cho S3 như mô tả. Ngoài ra SSE-C bị tắt mặc định trên bucket mới từ 04/2026 và tăng gánh quản lý key.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref7", "ref8"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q029:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu S3/KMS nêu SSE-KMS cần quyền kms:Decrypt trên key và key policy là cơ chế chính kiểm soát truy cập key; SSE-S3 không có lớp kiểm soát key riêng.", "open_issues": []},
+    "reference_ids": ["ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html", "title": "Protecting data with server-side encryption", "section": "Server-side encryption with Amazon S3 managed keys (SSE-S3)",
+     "snapshot_id": "008add6fab06", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "As long as you authenticate your request and you have access permissions, there is no difference in the way you access encrypted or unencrypted objects.",
+     "supports": "Với SSE-S3, quyền truy cập S3 là đủ để đọc plaintext; không có lớp kiểm soát key riêng.", "kind": "inference"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html", "title": "Protecting data with server-side encryption", "section": "Server-side encryption with AWS KMS keys (SSE-KMS)",
+     "snapshot_id": "008add6fab06", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "With AWS KMS, you have more control over your keys. For example, you can view separate keys, edit control policies, and follow the keys in AWS CloudTrail.",
+     "supports": "SSE-KMS cho phép quản lý key và policy riêng biệt với quyền S3.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html", "title": "Using server-side encryption with AWS KMS keys (SSE-KMS)", "section": "Permissions",
+     "snapshot_id": "e1e1c91f80b4", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To download an object encrypted with an AWS KMS key, you need kms:Decrypt permissions for the key.",
+     "supports": "Đọc object SSE-KMS cần thêm quyền KMS ngoài quyền S3 -> hai lớp kiểm soát.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html", "title": "Key policies in AWS KMS", "section": "intro",
+     "snapshot_id": "116b9d4e546c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Key policies are the primary way to control access to KMS keys.",
+     "supports": "Security team kiểm soát key bằng key policy.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html", "title": "Using server-side encryption with AWS KMS keys (SSE-KMS)", "section": "Requiring SSE-KMS",
+     "snapshot_id": "e1e1c91f80b4", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "To require server-side encryption of all objects in a particular Amazon S3 bucket, you can use a bucket policy.",
+     "supports": "Operations team có thể bắt buộc SSE-KMS bằng bucket policy.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html", "title": "AWS KMS keys", "section": "Customer keys and AWS keys",
+     "snapshot_id": "51ffc263dff1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Use customer managed keys when control is important",
+     "supports": "Customer managed key cho phép security team tự quản lý key policy.", "kind": "direct"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerSideEncryptionCustomerKeys.html", "title": "Using server-side encryption with customer-provided keys (SSE-C)", "section": "intro",
+     "snapshot_id": "1365ab42d2e9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Starting April 2026, SSE-C is disabled by default for all new general purpose buckets and existing buckets in accounts with no SSE-C encrypted objects.",
+     "supports": "SSE-C bị tắt mặc định và yêu cầu gửi key với mỗi request; không phải thiết kế phù hợp.", "kind": "direct"},
+    {"id": "ref8", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/overview.html", "title": "AWS Key Management Service", "section": "intro",
+     "snapshot_id": "d48094f18d5f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "KMS keys are created, managed, used, and deleted entirely within AWS KMS. They never leave the service unencrypted.",
+     "supports": "Không thể lấy KMS key ra để làm key SSE-C cung cấp cho S3.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q029:stem:0", "detail_vi": "Ký tự lỗi mã hoá '�' thay cho dấu nháy trong 'company's'."}
+  ]
+}

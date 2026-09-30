@@ -1,0 +1,70 @@
+{
+  "question_id": "Q037",
+  "question_content_hash": "15d23760f41db820b1c46e02627d2753f5ec842845c4fa317a49ff038e2d8b0d",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Bảo vệ API Gateway trên 12 account trong cùng AWS Organizations.", "kind": "scope"},
+    {"id": "R2", "text_vi": "Chặn SQL injection và bot attack (AWS WAF managed rules).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Tự động áp dụng cho cả tài nguyên hiện có và tài nguyên triển khai trong tương lai.", "kind": "constraint"},
+    {"id": "R4", "text_vi": "LEAST operational overhead.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q037:A", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Có Config managed rule api-gw-associated-with-waf để phát hiện stage chưa có web ACL, nhưng remediation tạo web ACL phải là SSM Automation document tự viết và phải triển khai/quản lý ở từng account; tạo web ACL riêng cho mỗi API tốn công hơn nhiều so với một policy tập trung.",
+     "requirement_ids": ["R1", "R3", "R4"], "reference_ids": ["ref6", "ref7"], "evidence_kind": "inference"},
+    {"unit_id": "Q037:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Firewall Manager AWS WAF policy hỗ trợ resource type AWS::ApiGateway::Stage, dùng được managed rule group Bot Control và SQL database, và tự áp dụng cho account/tài nguyên mới trong Organizations; chỉ cấu hình một lần từ admin account.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5", "ref9"], "evidence_kind": "direct"},
+    {"unit_id": "Q037:C", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Service Catalog chỉ đóng gói template để provision; vẫn cần Config rule + remediation tùy biến ở mỗi account để phát hiện và gắn web ACL. Nhiều thành phần tự xây hơn Firewall Manager, và 'product applied' không phải thứ Config đánh giá trực tiếp.",
+     "requirement_ids": ["R3", "R4"], "reference_ids": ["ref6", "ref7"], "evidence_kind": "inference"},
+    {"unit_id": "Q037:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Security Hub custom action là thao tác thủ công của analyst trên console (chọn tối đa 20 finding mỗi lần) để gửi sang EventBridge, nên không tự động bảo vệ tài nguyên mới; ngoài ra phải tự viết Lambda tạo web ACL.",
+     "requirement_ids": ["R3", "R4"], "reference_ids": ["ref8"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q037:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Firewall Manager nêu rõ hỗ trợ API Gateway stage cho AWS WAF policy và tự áp dụng cho tài nguyên/account mới trong tổ chức; đây là cơ chế quản lý tập trung ít công vận hành nhất.", "open_issues": ["Firewall Manager yêu cầu tiền điều kiện: Organizations, admin account, AWS Config bật ở các account (không phải lý do loại B)."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5", "ref8"],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html", "title": "Policy - AWS Firewall Manager API Reference", "section": "ResourceType", "snapshot_id": "37939786f5b6", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS WAF - AWS::ApiGateway::Stage, AWS::ElasticLoadBalancingV2::LoadBalancer, and AWS::CloudFront::Distribution.",
+     "supports": "AWS WAF policy của Firewall Manager hỗ trợ resource type API Gateway stage.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/fms-chapter.html", "title": "AWS Firewall Manager", "section": "Overview", "snapshot_id": "3e40c74477bc", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "the service automatically applies them across your accounts and resources, even as you add new accounts and resources.",
+     "supports": "Firewall Manager tự áp dụng bảo vệ cho account và tài nguyên mới.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/policy-scope.html", "title": "Using the AWS Firewall Manager policy scope", "section": "Policy scope management in AWS Firewall Manager", "snapshot_id": "100670ec171a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Firewall Manager manages them continuously and applies them to new AWS accounts and resources as they are added, in accordance with the policy scope.",
+     "supports": "Policy được áp dụng liên tục cho tài nguyên tương lai.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-use-case.html", "title": "Use-case specific rule groups", "section": "SQL database managed rule group", "snapshot_id": "4685878919e3", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The SQL database rule group contains rules to block request patterns associated with exploitation of SQL databases, like SQL injection attacks.",
+     "supports": "Managed rule group 'SQL database' chặn SQL injection.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html", "title": "AWS WAF Bot Control rule group", "section": "Overview", "snapshot_id": "f04311b5b41e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The Bot Control managed rule group provides rules that manage requests from bots.",
+     "supports": "Bot Control managed rule group xử lý bot traffic.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/config/latest/developerguide/api-gw-associated-with-waf.html", "title": "api-gw-associated-with-waf - AWS Config", "section": "Rule description", "snapshot_id": "17d936a87cca", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Checks if an Amazon API Gateway API stage is using an AWS WAF web access control list (web ACL).",
+     "supports": "Config có thể phát hiện stage chưa gắn web ACL (A/C khả thi về phát hiện).", "kind": "direct"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/config/latest/developerguide/remediation.html", "title": "Remediating Noncompliant Resources with AWS Config", "section": "Overview", "snapshot_id": "327727d16367", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can also create and associate custom automation documents with AWS Config rules.",
+     "supports": "Remediation tạo web ACL cần automation document tùy biến -> thêm công vận hành.", "kind": "inference"},
+    {"id": "ref8", "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-integration-types.html", "title": "Security Hub CSPM event types in EventBridge", "section": "Findings for custom actions", "snapshot_id": "05261238db18", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "This is useful for analysts working with the Security Hub CSPM console who want to send a specific finding, or a small set of findings, to a response or remediation workflow.",
+     "supports": "Custom action là cơ chế thủ công, không tự động cho tài nguyên mới.", "kind": "direct"},
+    {"id": "ref9", "url": "https://docs.aws.amazon.com/waf/latest/developerguide/create-policy.html", "title": "Creating an AWS Firewall Manager policy", "section": "Creating an AWS Firewall Manager policy for AWS WAF", "snapshot_id": "4acc66a07947", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If instead you want to automatically apply the policy to existing in-scope resources, choose Auto remediate any noncompliant resources.",
+     "supports": "Firewall Manager có auto remediation tích hợp, không cần tự xây.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q037:stem:0", "detail_vi": "'ousting APIs' là lỗi OCR của 'existing APIs'."}
+  ],
+  "notes_vi": "Tên 'SQL database managed rule group' trong đáp án B khớp tên chính thức AWSManagedRulesSQLiRuleSet."
+}

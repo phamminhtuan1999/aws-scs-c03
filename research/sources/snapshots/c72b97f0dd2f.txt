@@ -1,0 +1,190 @@
+URL: https://repost.aws/knowledge-center/cloudhsm-share-clusters
+TITLE: Share CloudHSM clusters with other AWS accounts | AWS re:Post
+
+AWS Builder Center: Learn, Build and Connect with builders in the AWS community
+
+AWS Builder Center is the official home for builders on AWS. Share and read what others are working on, follow people who inspire you, explore training and workshops, and find tools to support what you're building.
+
+# How do I share CloudHSM clusters with other AWS accounts?
+
+3 minute read
+
+0
+
+My organization has multiple AWS accounts. I want to share my AWS CloudHSM clusters with these accounts.
+
+## Resolution
+
+To access CloudHSM with another account in AWS Organizations, use AWS Resource Access Manager (AWS RAM). In the following example, Account 1 contains the CloudHSM cluster, and Account 2 contains the CloudHSM client instance.
+
+### Activate sharing
+
+Complete the following steps:
+
+- With your Organizations management account, open the AWS RAM console in the same AWS Region as your CloudHSM, and choose Settings.
+
+- Select Enable sharing within your AWS Organization.
+
+- With your Organizations management account, open the AWS Organization console.
+
+- Choose Settings, and note the Organization ID.
+
+### Create a resource share with Account 1 and other accounts
+
+Complete the following steps:
+
+- Open the AWS RAM console with Account 1 in the same Region as your CloudHSM.
+
+- In the navigation pane, under Shared by me, choose Resource shares.
+
+- Choose Create resource share.
+
+- For Name, enter a name for the resource share.
+
+- For Resources, select the Amazon Virtual Private Cloud (Amazon VPC) subnet ID for your CloudHSM.
+
+- For Principals, select Allow external accounts.
+
+- In the Add AWS account number search pane, enter the Organization ID. Choose Add, and then choose Create resource share.
+
+Note: You can also share Organizational Units (OUs) and accounts.
+
+### Configure the security group to allow the CloudHSM client to connect to the CloudHSM cluster
+
+Complete the following steps:
+
+- Open the CloudHSM console with Account 1 in the same Region as your CloudHSM cluster.
+
+- In the navigation pane, choose Clusters.
+
+- For Cluster ID, select your CloudHSM cluster.
+
+- For Security group, select your security group.
+
+- Choose the Inbound tab, and then choose Edit.
+
+- Choose Add Rule.
+
+- For Port Range, enter 2223-2225.
+
+- For Source, enter the private IP address of your client instance, and then choose Save.
+
+Note: To get the client instance private IP address, see View the IPv4 addresses.
+
+### Create client instances for the subnets shared with Account 2
+
+Complete the following steps:
+
+- Open the Amazon Elastic Compute Cloud (Amazon EC2) console with Account 2, choose Launch Instance, and then select an Amazon Machine Image (AMI).
+
+- Choose Next: Configure Instance Details.
+
+- For Network, select the Amazon VPC that's shared with Account 2.
+
+- For Subnet, select the subnet that's shared with Account 2.
+
+- For Auto-assign Public IP, choose Enable, and then choose Next: Add Storage.
+
+- Choose Next: Add Tags, and then choose Next: Configure Security Group.
+
+- In Assign a security group, choose either Create a new security group or Select an existing security group based on your instance type.
+
+- Choose Review and Launch, and then choose Launch.
+
+- Choose an existing key pair or create a new one based on your instance type. Then, select the agreement check box.
+
+- Choose Launch Instances.
+
+## Related information
+
+Sharing your AWS resources
+
+Control traffic to your AWS resources using security groups
+
+Share your VPC subnets with other accounts
+
+FollowShare
+
+Topics
+
+Security, Identity, & Compliance
+
+Tags
+
+AWS CloudHSM
+
+Language
+
+English
+
+AWS OFFICIALUpdated 2 years ago
+
+No comments
+
+Comment on this article
+
+ClearPost comment
+
+## Relevant content
+
+- Uninitialized cloudHSM cluster cost
+
+Accepted Answer
+
+ienugr
+
+asked 3 years ago
+
+- How do AWS services access/authenticate/authorize to CloudHSM?
+
+AWS-User-1591731
+
+asked 4 years ago
+
+- Multi-region support for CloudHSM
+
+Bruno_M
+
+asked 5 years ago
+
+- Correct way of deleting an HSM from CloudHSM cluster
+
+Accepted Answer
+
+manoj
+
+asked a year ago
+
+- How to configure AWS CloudHSM CLI with configure-cli command?
+
+Accepted Answer
+
+TheQuietBuilder
+
+asked a year ago
+
+- How do I share keys with other users to only allow certain crypto functions in CloudHSM?
+
+AWS OFFICIALUpdated 2 years ago
+
+- How do I restore a CloudHSM cluster from a previous backup?
+
+AWS OFFICIALUpdated 3 years ago
+
+- How can I resolve connection issues between the CloudHSM client and the CloudHSM cluster?
+
+AWS OFFICIALUpdated 3 years ago
+
+- How do I resolve the error "RET_MXN_AUTH_FAILED" that I get when I use the cloudhsm_mgmt_util command for CloudHSM?
+
+AWS OFFICIALUpdated 3 years ago
+
+- How do I move a member account between AWS Organizations without interrupting AWS RAM resource sharing?
+
+EXPERT
+
+Jiwon Jung
+
+published 2 months ago
+
+FEEDBACK

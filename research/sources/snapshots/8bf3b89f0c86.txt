@@ -1,0 +1,153 @@
+URL: https://docs.aws.amazon.com/singlesignon/latest/userguide/awsapps.html
+TITLE: AWS managed applications - AWS IAM Identity Center
+
+# AWS managed applications
+
+AWS IAM Identity Center streamlines and simplifies the task of connecting your workforce users to
+AWS managed applications such as Kiro and Amazon Quick. With IAM Identity Center, you can connect
+your existing identity provider once and synchronize users and groups from your
+directory, or create and manage your users directly in IAM Identity Center. By providing one point of
+federation, IAM Identity Center eliminates the need to set up federation or user and group
+synchronization for each application and reduces your administrative effort. You also
+get a common view of user and group
+assignments.
+
+For a table of AWS applications that work with IAM Identity Center, see AWS managed applications that you can use with IAM Identity Center.
+
+## Controlling access to AWS managed applications
+
+Access to AWS managed applications is controlled in two ways:
+
+- Initial entry to the application
+
+IAM Identity Center manages this through assignments to the application. By default,
+assignments are required for AWS managed applications. If you are an
+application administrator, you can choose whether to require assignments to
+an application.
+
+If assignments are required, when users sign in to the
+AWS access portal, only users who are assigned to the application
+directly or through a group assignment can view the application tile.
+
+If assignments aren't required, you can allow all IAM Identity Center users to enter the
+application. In this case, the application manages access to resources and
+the application tile is visible to all users who visit the
+AWS access portal.
+
+Important
+
+If you’re an IAM Identity Center administrator, you can use the IAM Identity Center console to
+remove assignments to AWS managed applications. Before you remove
+assignments, we recommend that you coordinate with the application
+administrator. You should also coordinate with the application
+administrator if you plan to modify the setting that determines whether
+assignments required, or automate application assignments.
+
+- Access to application resources
+
+The application manages this through independent resource assignments
+that it controls.
+
+AWS managed applications provide an administrative user interface that you can
+use to manage access to application resources. For example, Quick administrators
+can assign users to access dashboards based on their group membership. Most AWS
+managed applications also provide an AWS Management Console experience that enables you to
+assign users to the application. The console experience for these applications might
+integrate both functions, to combine user assignment capabilities with the ability
+to manage access to application resources.
+
+## Sharing identity information
+
+### Considerations for sharing identity information in AWS accounts
+
+IAM Identity Center supports most commonly used attributes across applications. These
+attributes include first and last name, phone number, email address, address,
+and preferred language. Carefully consider which applications and which accounts
+can use this personally identifiable information.
+
+You can control access to this information in either of the following
+ways:
+
+- You can choose to enable access in only the AWS Organizations management account
+or in all accounts in AWS Organizations.
+
+- Alternatively, you can use service control policies (SCPs) to control
+which applications can access the information in which accounts in
+AWS Organizations.
+
+For example, if you enable access in the AWS Organizations management account only, then
+applications in member accounts have no access to the information. However, if
+you enable access in all accounts, you can use SCPs to disallow access by all
+applications except those you want to permit.
+
+Service control policies are a feature of AWS Organizations. For instructions on
+attaching an SCP, see Attaching and detaching service control policies in the
+AWS Organizations User Guide.
+
+### Configuring IAM Identity Center to share identity information
+
+IAM Identity Center provides an identity store that contains user and group attributes,
+excluding sign-in credentials. You can use either of the following methods to
+keep the users and groups in your IAM Identity Center identity store updated:
+
+- Use the IAM Identity Center identity store as your main identity source. If you
+choose this method, you manage your users, their sign-in credentials,
+and groups from within the IAM Identity Center console or AWS Command Line Interface (AWS CLI). For more
+information, see Manage users in the Identity Center directory.
+
+- Set up provisioning (synchronization) of users and groups coming from
+either of the following identity sources to your IAM Identity Center identity
+store:
+
+- Active Directory – For
+more information, see Microsoft AD directory.
+
+- External identity provider
+– For more information, see External identity providers.
+
+If you choose this provisioning method, you continue managing your
+users and groups from within your identity source, and those changes are
+synchronized to the IAM Identity Center identity store.
+
+Whichever identity source you choose, IAM Identity Center can share the user and group
+information with AWS managed applications. That way, you can connect an
+identity source to IAM Identity Center once and then share identity information with multiple
+applications in the AWS Cloud. This eliminates the need to independently set
+up federation and identity provisioning with each application. This sharing
+feature also makes it easy to give your users access to many applications in
+different AWS accounts.
+
+## Constraining the use of AWS managed applications
+
+When you first enable IAM Identity Center, it becomes available as an identity source for AWS
+managed applications across all accounts in your AWS Organizations. To constrain
+applications, you must implement service control policies (SCPs). SCPs are a feature
+of AWS Organizations that you can use to centrally control the maximum permissions that
+identities (users and roles) in your organization can have. You can use SCPs to
+block access to the IAM Identity Center user and group information and to prevent the application
+from being started, except in designated accounts. For more information, see Service
+control policies (SCPs) in the AWS Organizations User Guide.
+
+The following SCP example blocks access to the IAM Identity Center user and group information
+and prevents the application from being started, except in designated accounts
+(111111111111 and 222222222222):
+
+{
+"Sid": "DenyIdCExceptInDesignatedAWSAccounts",
+"Effect": "Deny",
+"Action": [
+"identitystore:*",
+"sso:*",
+"sso-directory:*",
+"sso-oauth:*"
+],
+"Resource": "*",
+"Condition": {
+"StringNotEquals": {
+"aws:PrincipalAccount": [
+"111111111111",
+"222222222222"
+]
+}
+}
+}
