@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { clearNotices } from '../src/storage/notices';
@@ -5,6 +6,7 @@ import { MemoryBackend, setBackend } from '../src/storage/store';
 import { resetClock } from '../src/time/clock';
 
 // jsdom gaps
+window.scrollTo = (() => {}) as typeof window.scrollTo;
 if (!HTMLElement.prototype.scrollIntoView) HTMLElement.prototype.scrollIntoView = () => {};
 if (!window.matchMedia) {
   window.matchMedia = ((q: string) => ({

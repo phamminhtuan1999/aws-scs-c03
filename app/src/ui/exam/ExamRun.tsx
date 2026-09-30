@@ -10,7 +10,7 @@ import { EXAM_NAME } from '../../version';
 import { useData, useNow, useSlot } from '../hooks';
 import { Modal } from '../Modal';
 import { QuestionView } from '../question/QuestionView';
-import { commitActive, submitActive, useActiveExam } from './active';
+import { commitActive, getLastSeenActiveId, submitActive, useActiveExam } from './active';
 import { ReviewScreen, examCounts } from './ReviewScreen';
 
 const WARN_STEPS = [15, 5, 1]; // minutes
@@ -21,17 +21,15 @@ export function ExamRun() {
   const route = useRoute();
   const now = useNow(1000, !!session);
   const settings = useSlot(settingsSlot);
-  const lastId = useRef<string | null>(null);
   const [dialog, setDialog] = useState<null | 'help' | 'end'>(null);
   const [announce, setAnnounce] = useState('');
   const announced = useRef<Set<number>>(new Set());
   const mainRef = useRef<HTMLElement>(null);
 
-  if (session) lastId.current = session.id;
-
   // The exam ended (user, timeout, or another tab): go to its results.
   useEffect(() => {
-    if (!session && lastId.current) navigate(`/exam/results/${lastId.current}`, { replace: true });
+    const last = getLastSeenActiveId();
+    if (!session && last) navigate(`/exam/results/${last}`, { replace: true });
     else if (!session) navigate('/exam', { replace: true });
   }, [session]);
 

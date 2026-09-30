@@ -5,11 +5,16 @@ import { activeSlot, getActiveSessionId, loadSession, saveSession, sessionSlot, 
 import { getClock } from '../../time/clock';
 import { useSlot } from '../hooks';
 
+let lastSeenActiveId: string | null = null;
+/** Id of the most recent in-progress exam this tab has displayed (used to reach its results after it ends). */
+export const getLastSeenActiveId = () => lastSeenActiveId;
+
 /** The in-progress exam, if any (null when none, or when the stored session is already submitted). */
 export function useActiveExam(): ExamSession | null {
   const active = useSlot(activeSlot);
   const s = useSlot(sessionSlot(active.id ?? '__none__'));
   if (!active.id || !s || s.status !== 'in_progress') return null;
+  lastSeenActiveId = s.id;
   return s;
 }
 
