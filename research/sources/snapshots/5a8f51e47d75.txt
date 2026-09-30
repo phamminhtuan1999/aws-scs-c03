@@ -1,0 +1,1185 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html
+TITLE: Examples of Amazon S3 bucket policies - Amazon Simple Storage Service
+
+# Examples of Amazon S3 bucket policies
+
+With Amazon S3 bucket policies, you can secure access to objects in your buckets, so that only
+users with the appropriate permissions can access them. You can even prevent authenticated users
+without the appropriate permissions from accessing your Amazon S3 resources.
+
+This section presents examples of typical use cases for bucket policies. These sample
+policies use amzn-s3-demo-bucket as the resource value. To test these policies,
+replace the user input placeholders with your own
+information (such as your bucket name).
+
+To grant or deny permissions to a set of objects, you can use wildcard characters
+(*) in Amazon Resource Names (ARNs) and other values. For example, you can
+control access to groups of objects that begin with a common prefix or end with a specific
+extension, such as .html.
+
+For more information about AWS Identity and Access Management (IAM) policy language, see Policies and permissions in Amazon S3.
+
+For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+Note
+
+When testing permissions by using the Amazon S3 console, you must grant additional permissions
+that the console requires—s3:ListAllMyBuckets,
+s3:GetBucketLocation, and s3:ListBucket. For an example
+walkthrough that grants permissions to users and tests those permissions by using the console,
+see Controlling access to a bucket with user policies.
+
+Additional resources for creating bucket policies include the following:
+
+- For a list of the IAM policy actions, resources, and condition keys that you can use
+when creating a bucket policy, see Actions, resources, and
+condition keys for Amazon S3 in the Service Authorization
+Reference.
+
+- For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+- For guidance on creating your S3 policy, see Adding a bucket policy by using the Amazon S3 console.
+
+- To troubleshoot errors with a policy, see Troubleshoot access denied (403 Forbidden) errors in Amazon S3.
+
+If you're having trouble adding or updating a policy, see Why do I get the error "Invalid principal in policy" when I try to update my Amazon S3 bucket policy? in the AWS re:Post Knowledge Center.
+
+Topics
+
+- Granting read-only permission to a public anonymous user
+
+- Requiring encryption
+
+- Managing buckets using canned ACLs
+
+- Managing object access with object tagging
+
+- Managing object access by using global condition keys
+
+- Managing access based on HTTP or HTTPS requests
+
+- Managing user access to specific folders
+
+- Managing access for access logs
+
+- Managing access to an Amazon CloudFront OAI
+
+- Managing access for Amazon S3 Storage Lens
+
+- Managing permissions for S3 Inventory, S3 analytics, and S3 Inventory reports
+
+- Requiring MFA
+
+- Preventing users from deleting objects
+
+## Granting read-only permission to a public anonymous user
+
+You can use your policy settings to grant access to public anonymous users, which is
+useful if you're configuring your bucket as a static website. Granting access to public
+anonymous users requires you to disable the Block Public Access settings for your bucket. For
+more information about how to do this, and the policy required, see Setting permissions for website access. To
+learn how to set up more restrictive policies for the same purpose, see How can I grant
+public read access to some objects in my Amazon S3 bucket? in the AWS Knowledge
+Center.
+
+By default, Amazon S3 blocks public access to your account and buckets. If you want to use a bucket to host a static website, you can use these steps to edit your block public access settings.
+
+Warning
+
+Before you complete these steps, review Blocking public access to your Amazon S3 storage to ensure that you understand and accept the risks involved with allowing public access. When you turn off block public access settings to make your bucket public, anyone on the internet can access your bucket. We recommend that you block all public access to your buckets.
+
+- Open the Amazon S3 console at https://console.aws.amazon.com/s3/.
+
+- Choose the name of the bucket that you have configured as a static website.
+
+- Choose Permissions.
+
+- Under Block public access (bucket settings), choose Edit.
+
+- Clear Block all public
+access, and choose Save changes.
+
+Amazon S3 turns off the Block Public Access settings for your bucket. To create a public static website, you might also have to edit the Block Public Access settings for your account
+before adding a bucket policy. If the Block Public Access settings for your account are currently turned on, you see a note under Block public access (bucket settings).
+
+## Requiring encryption
+
+You can require server-side encryption with AWS Key Management Service (AWS KMS) keys (SSE-KMS), as shown in
+the following examples.
+
+### Require SSE-KMS for all objects written to a bucket
+
+The following example policy requires every object that is written to the bucket to be
+encrypted with server-side encryption using AWS Key Management Service (AWS KMS) keys (SSE-KMS). If the object
+isn't encrypted with SSE-KMS, the request is denied.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "PutObjPolicy",
+"Statement": [{
+"Sid": "DenyObjectsThatAreNotSSEKMS",
+"Principal": "*",
+"Effect": "Deny",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition": {
+"Null": {
+"s3:x-amz-server-side-encryption-aws-kms-key-id": "true"
+}
+}
+}]
+}
+
+### Require SSE-KMS with a specific AWS KMS key for all objects written to a bucket
+
+The following example policy denies any objects from being written to the bucket if they
+aren’t encrypted with SSE-KMS by using a specific KMS key ID. Even if the objects are
+encrypted with SSE-KMS by using a per-request header or bucket default encryption, the
+objects can't be written to the bucket if they haven't been encrypted with the specified
+KMS key. Make sure to replace the KMS key ARN that's used in this example with your own
+KMS key ARN.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "PutObjPolicy",
+"Statement": [{
+"Sid": "DenyObjectsThatAreNotSSEKMSWithSpecificKey",
+"Principal": "*",
+"Effect": "Deny",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition": {
+"ArnNotEqualsIfExists": {
+"s3:x-amz-server-side-encryption-aws-kms-key-id": "arn:aws:kms:us-east-1:111122223333:key/01234567-89ab-cdef-0123-456789abcdef"
+}
+}
+}]
+}
+
+## Managing buckets using canned ACLs
+
+### Granting permissions to multiple accounts to upload objects or set object ACLs for public access
+
+The following example policy grants the s3:PutObject and
+s3:PutObjectAcl permissions to multiple AWS accounts. Also, the example
+policy requires that any requests for these operations must include the
+public-read
+canned access control list (ACL). For more information,
+see Policy actions for Amazon S3 and Policy condition keys for Amazon S3.
+
+Warning
+
+The public-read canned ACL allows anyone in the world to view the objects
+in your bucket. Use caution when granting anonymous access to your Amazon S3 bucket or
+disabling block public access settings. When you grant anonymous access, anyone in the
+world can access your bucket. We recommend that you never grant anonymous access to your
+Amazon S3 bucket unless you specifically need to, such as with static website hosting. If you want to enable block public access settings for
+static website hosting, see Tutorial: Configuring a
+static website on Amazon S3.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AddPublicReadCannedAcl",
+"Effect": "Allow",
+"Principal": {
+"AWS": [
+"arn:aws:iam::111122223333:root",
+"arn:aws:iam::444455556666:root"
+]
+},
+"Action": [
+"s3:PutObject",
+"s3:PutObjectAcl"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": [
+"public-read"
+]
+}
+}
+}
+]
+}
+
+### Grant cross-account permissions to upload objects while ensuring that the bucket owner has full control
+
+The following example shows how to allow another AWS account to upload objects to your
+bucket while ensuring that you have full control of the uploaded objects. This policy grants
+a specific AWS account (111122223333)
+the ability to upload objects only if that account includes the
+bucket-owner-full-control canned ACL on upload. The StringEquals
+condition in the policy specifies the s3:x-amz-acl condition key to express the
+canned ACL requirement. For more information, see Policy condition keys for Amazon S3.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement":[
+{
+"Sid":"PolicyForAllowUploadWithACL",
+"Effect":"Allow",
+"Principal":{"AWS":"111122223333"},
+"Action":"s3:PutObject",
+"Resource":"arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition": {
+"StringEquals": {"s3:x-amz-acl":"bucket-owner-full-control"}
+}
+}
+]
+}
+
+## Managing object access with object tagging
+
+### Allow a user to read only objects that have a specific tag key and value
+
+The following permissions policy limits a user to only reading objects that have the
+environment: production tag key and value. This policy uses the
+s3:ExistingObjectTag condition key to specify the tag key and value.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement":[
+{
+"Principal":{
+"AWS":"arn:aws:iam::111122223333:role/JohnDoe"
+},
+"Effect":"Allow",
+"Action":[
+"s3:GetObject",
+"s3:GetObjectVersion"
+],
+"Resource":"arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition":{
+"StringEquals":{
+"s3:ExistingObjectTag/environment":"production"
+}
+}
+}
+]
+}
+
+### Restrict which object tag keys that users can add
+
+The following example policy grants a user permission to perform the
+s3:PutObjectTagging action, which allows a user to add tags to an existing
+object. The condition uses the s3:RequestObjectTagKeys condition key to specify
+the allowed tag keys, such as Owner or CreationDate. For more
+information, see Creating a
+condition that tests multiple key values in the IAM User Guide.
+
+The policy ensures that every tag key specified in the request is an authorized tag key.
+The ForAnyValue qualifier in the condition ensures that at least one of the
+specified keys must be present in the request.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{"Principal":{"AWS":[
+"arn:aws:iam::111122223333:role/JohnDoe"
+]
+},
+"Effect": "Allow",
+"Action": [
+"s3:PutObjectTagging"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket/*"
+],
+"Condition": {"ForAnyValue:StringEquals": {"s3:RequestObjectTagKeys": [
+"Owner",
+"CreationDate"
+]
+}
+}
+}
+]
+}
+
+### Require a specific tag key and value when allowing users to add object tags
+
+The following example policy grants a user permission to perform the
+s3:PutObjectTagging action, which allows a user to add tags to an existing
+object. The condition requires the user to include a specific tag key (such as
+Project) with the value set to
+X.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{"Principal":{"AWS":[
+"arn:aws:iam::111122223333:user/JohnDoe"
+]
+},
+"Effect": "Allow",
+"Action": [
+"s3:PutObjectTagging"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket/*"
+],
+"Condition": {"StringEquals": {"s3:RequestObjectTag/Project": "X"
+}
+}
+}
+]
+}
+
+### Allow a user to only add objects with a specific object tag key and value
+
+The following example policy grants a user permission to perform the
+s3:PutObject action so that they can add objects to a bucket. However, the
+Condition statement restricts the tag keys and values that are allowed on the
+uploaded objects. In this example, the user can only add objects that have the specific tag
+key (Department) with the value set to
+Finance to the bucket.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Principal":{
+"AWS":[
+"arn:aws:iam::111122223333:user/JohnDoe"
+]
+},
+"Effect": "Allow",
+"Action": [
+"s3:PutObject"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket/*"
+],
+"Condition": {
+"StringEquals": {
+"s3:RequestObjectTag/Department": "Finance"
+}
+}
+}]
+}
+
+## Managing object access by using global condition keys
+
+Global condition
+keys are condition context keys with an aws prefix. AWS services can
+support global condition keys or service-specific keys that include the service prefix. You
+can use the Condition element of a JSON policy to compare the keys in a request
+with the key values that you specify in your policy.
+
+### Restrict access to only Amazon S3 server access log deliveries
+
+In the following example bucket policy, the aws:SourceArn global condition key is used to compare the Amazon Resource
+Name (ARN) of the resource, making a service-to-service request with the ARN that
+is specified in the policy. The aws:SourceArn global condition key is used to
+prevent the Amazon S3 service from being used as a confused deputy during
+transactions between services. Only the Amazon S3 service is allowed to add objects to the Amazon S3
+bucket.
+
+This example bucket policy grants s3:PutObject permissions to only the
+logging service principal (logging.s3.amazonaws.com).
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowPutObjectS3ServerAccessLogsPolicy",
+"Principal": {
+"Service": "logging.s3.amazonaws.com"
+},
+"Effect": "Allow",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket-logs/*",
+"Condition": {
+"StringEquals": {
+"aws:SourceAccount": "111122223333"
+},
+"ArnLike": {
+"aws:SourceArn": "arn:aws:s3:::amzn-s3-demo-source-bucket1"
+}
+}
+},
+{
+"Sid": "RestrictToS3ServerAccessLogs",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket-logs/*",
+"Condition": {
+"ForAllValues:StringNotEquals": {
+"aws:PrincipalServiceNamesList": "logging.s3.amazonaws.com"
+}
+}
+}
+]
+}
+
+### Allow access to only your organization
+
+If you want to restrict IAM-based access to a resource so that only principals from
+AWS accounts in your organization (including the AWS Organizations management account) can access
+it, you can use the aws:PrincipalOrgID global condition key.
+
+Here’s an example of a resource-based bucket policy that you can use to grant specific
+IAM principals in your organization direct access to your bucket. By adding the
+aws:PrincipalOrgID global condition key to your bucket policy, the principal
+account is now required to be in your organization to obtain access through this policy
+statement. Even if you accidentally specify an incorrect account when granting access, the
+aws:PrincipalOrgID global condition key acts as an additional
+safeguard. When this global key is used in an Allow statement, it ensures that only
+principals from accounts in the listed organization can obtain access through that
+statement.
+
+Important
+
+This Allow statement with a condition does not deny access granted through other
+mechanisms. If your bucket has ACLs enabled or other policies that grant access, principals
+outside your organization may still be able to access objects. To fully restrict access to
+only your organization, we recommend using this condition in a Deny statement (see example
+below), disabling ACLs by setting Object Ownership to “Bucket owner enforced”, and
+enabling S3 Block Public Access.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Sid": "AllowGetObject",
+"Principal": {
+"AWS": "*"
+},
+"Effect": "Allow",
+"Action": "s3:GetObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",
+"Condition": {
+"StringEquals": {
+"aws:PrincipalOrgID": ["o-aa111bb222"]
+}
+}
+}]
+}
+
+#### Deny access to principals outside your organization
+
+For stronger protection, use a Deny statement with the aws:PrincipalOrgID
+condition. A Deny statement overrides any Allow, regardless of how access is granted. The
+following example denies all S3 actions to any principal that is not in your organization.
+This approach provides defense-in-depth even if ACLs or other policies would have
+inadvertently granted access.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "DenyAccessFromOutsideOrg",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:*",
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket",
+"arn:aws:s3:::amzn-s3-demo-bucket/*"
+],
+"Condition": {
+"StringNotEquals": {
+"aws:PrincipalOrgID": "o-aa111bb222"
+}
+}
+}
+]
+}
+
+## Managing access based on HTTP or HTTPS requests
+
+### Restrict access to only HTTPS requests
+
+If you want to prevent potential attackers from manipulating network traffic, you can
+use HTTPS (TLS) to only allow encrypted connections while restricting HTTP requests from
+accessing your bucket. To determine whether the request is HTTP or HTTPS, use the aws:SecureTransport global condition key in your S3 bucket
+policy. The aws:SecureTransport condition key checks whether a request was sent
+by using HTTP.
+
+If a request returns true, then the request was sent through HTTPS. If the
+request returns false, then the request was sent through HTTP. You can then
+allow or deny access to your bucket based on the desired request scheme.
+
+In the following example, the bucket policy explicitly denies HTTP requests.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Sid": "RestrictToTLSRequestsOnly",
+"Action": "s3:*",
+"Effect": "Deny",
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket",
+"arn:aws:s3:::amzn-s3-demo-bucket/*"
+],
+"Condition": {
+"Bool": {
+"aws:SecureTransport": "false"
+}
+},
+"Principal": "*"
+}]
+}
+
+### Restrict access to a specific HTTP referer
+
+Suppose that you have a website with the domain name
+www.example.com or
+example.com with links to photos and videos
+stored in your bucket named amzn-s3-demo-bucket. By default, all Amazon S3 resources
+are private, so only the AWS account that created the resources can access them.
+
+To allow read access to these objects from your website, you can add a bucket policy
+that allows the s3:GetObject permission with a condition that the
+GET request must originate from specific webpages. The following policy
+restricts requests by using the StringLike condition with the
+aws:Referer condition key.
+
+Make sure that the browsers that you use include the HTTP referer header in
+the request.
+
+Warning
+
+We recommend that you use caution when using the aws:Referer condition
+key. It is dangerous to include a publicly known HTTP referer header value. Unauthorized
+parties can use modified or custom browsers to provide any aws:Referer value
+that they choose. Therefore, do not use aws:Referer to prevent unauthorized
+parties from making direct AWS requests.
+
+The aws:Referer condition key is offered only to allow customers to
+protect their digital content, such as content stored in Amazon S3, from being referenced on
+unauthorized third-party sites. For more information, see aws:Referer in the
+IAM User Guide.
+
+## Managing user access to specific folders
+
+### Grant users access to specific folders
+
+Suppose that you're trying to grant users access to a specific folder. If the IAM user
+and the S3 bucket belong to the same AWS account, then you can use an IAM policy to
+grant the user access to a specific bucket folder. With this approach, you don't need to
+update your bucket policy to grant access. You can add the IAM policy to an IAM role
+that multiple users can switch to.
+
+If the IAM identity and the S3 bucket belong to different AWS accounts, then you
+must grant cross-account access in both the IAM policy and the bucket policy. For more
+information about granting cross-account access, see Bucket
+owner granting cross-account bucket permissions.
+
+The following example bucket policy grants
+JohnDoe full console access to only his folder
+(home/JohnDoe/). By creating a home
+folder and granting the appropriate permissions to your users, you can have multiple users
+share a single bucket. This policy consists of three Allow statements:
+
+- AllowRootAndHomeListingOfCompanyBucket:
+Allows the user (JohnDoe) to list objects at the
+root level of the amzn-s3-demo-bucket bucket and
+in the home folder. This statement also allows the user to search on the
+prefix home/ by using the console.
+
+- AllowListingOfUserFolder: Allows the user
+(JohnDoe) to list all objects in the
+home/JohnDoe/ folder and any
+subfolders.
+
+- AllowAllS3ActionsInUserFolder: Allows the
+user to perform all Amazon S3 actions by granting Read, Write, and
+Delete permissions. Permissions are limited to the bucket owner's home
+folder.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowRootAndHomeListingOfCompanyBucket",
+"Principal": {
+"AWS": [
+"arn:aws:iam::111122223333:user/JohnDoe"
+]
+},
+"Effect": "Allow",
+"Action": ["s3:ListBucket"],
+"Resource": ["arn:aws:s3:::amzn-s3-demo-bucket"],
+"Condition": {
+"StringEquals": {
+"s3:prefix": ["", "home/", "home/JohnDoe"],
+"s3:delimiter": ["/"]
+}
+}
+},
+{
+"Sid": "AllowListingOfUserFolder",
+"Principal": {
+"AWS": [
+"arn:aws:iam::111122223333:user/JohnDoe"
+]
+},
+"Action": ["s3:ListBucket"],
+"Effect": "Allow",
+"Resource": ["arn:aws:s3:::amzn-s3-demo-bucket"],
+"Condition": {
+"StringLike": {
+"s3:prefix": ["home/JohnDoe/*"]
+}
+}
+},
+{
+"Sid": "AllowAllS3ActionsInUserFolder",
+"Effect": "Allow",
+"Principal": {
+"AWS": [
+"arn:aws:iam::111122223333:user/JohnDoe"
+]
+},
+"Action": ["s3:*"],
+"Resource": ["arn:aws:s3:::amzn-s3-demo-bucket/home/JohnDoe/*"]
+}
+]
+}
+
+## Managing access for access logs
+
+### Grant access to Application Load Balancer for enabling access logs
+
+When you enable access logs for Application Load Balancer, you must specify the name of the S3 bucket where
+the load balancer will store the logs. The bucket must have an attached policy that grants Elastic Load Balancing permission to write to the bucket.
+
+In the following example, the bucket policy grants Elastic Load Balancing (ELB) permission to write the
+access logs to the bucket:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:root"
+},
+"Effect": "Allow",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/prefix/AWSLogs/111122223333/*"
+}
+]
+}
+
+Note
+
+Make sure to replace elb-account-id with the
+AWS account ID for Elastic Load Balancing for your AWS Region. For the list of Elastic Load Balancing Regions, see
+Attach a policy to your Amazon S3 bucket in the Elastic Load Balancing User
+Guide.
+
+If your AWS Region does not appear in the supported Elastic Load Balancing Regions list, use the
+following policy, which grants permissions to the specified log delivery service.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Principal": {
+"Service": "logdelivery.elasticloadbalancing.amazonaws.com"
+},
+"Effect": "Allow",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/prefix/AWSLogs/111122223333/*"
+}
+]
+}
+
+Then, make sure to configure your Elastic Load Balancing access logs by enabling them. You can verify your bucket permissions by creating a test file.
+
+## Managing access to an Amazon CloudFront OAI
+
+### Grant permission to an Amazon CloudFront OAI
+
+The following example bucket policy grants a CloudFront origin access identity (OAI)
+permission to get (read) all objects in your S3 bucket. You can use a CloudFront OAI to allow
+users to access objects in your bucket through CloudFront but not directly through Amazon S3. For more
+information, see Restricting access to Amazon S3 content by using an Origin Access
+Identity in the Amazon CloudFront Developer Guide.
+
+The following policy uses the OAI's ID as the policy's Principal. For more
+information about using S3 bucket policies to grant access to a CloudFront OAI, see Migrating from origin access identity (OAI) to origin access control (OAC) in the
+Amazon CloudFront Developer Guide.
+
+To use this example:
+
+- Replace EH1HDMB1FH2TC with the OAI's ID. To
+find the OAI's ID, see the Origin Access Identity page on the
+CloudFront console, or use ListCloudFrontOriginAccessIdentities in the CloudFront API.
+
+- Replace amzn-s3-demo-bucket with the name of your bucket.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "PolicyForCloudFrontPrivateContent",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity EH1HDMB1FH2TC"
+},
+"Action": "s3:GetObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*"
+}
+]
+}
+
+## Managing access for Amazon S3 Storage Lens
+
+### Grant permissions for Amazon S3 Storage Lens
+
+S3 Storage Lens aggregates your metrics and displays the information in the Account snapshot section on the
+Amazon S3 console Buckets page. S3 Storage Lens also provides an interactive dashboard that you can use to visualize insights and
+trends, flag outliers, and receive recommendations for optimizing storage costs and applying data protection best practices. Your dashboard has
+drill-down options to generate and visualize insights at the organization, account, AWS Region, storage class, bucket, prefix, or
+Storage Lens group level. You can also send a daily metrics report in CSV or Parquet format to a general purpose S3 bucket or export
+the metrics directly to an AWS-managed S3 table bucket.
+
+S3 Storage Lens can export your aggregated storage usage metrics to an Amazon S3 bucket for further
+analysis. The bucket where S3 Storage Lens places its metrics exports is known as the
+destination bucket. When setting up your S3 Storage Lens metrics export, you
+must have a bucket policy for the destination bucket. For more information, see Monitoring your storage activity and usage with Amazon S3 Storage Lens.
+
+The following example bucket policy grants Amazon S3 permission to write objects
+(PUT requests) to a destination bucket. You use a bucket policy like this on
+the destination bucket when setting up an S3 Storage Lens metrics export.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "S3StorageLensExamplePolicy",
+"Effect": "Allow",
+"Principal": {
+"Service": "storage-lens.s3.amazonaws.com"
+},
+"Action": "s3:PutObject",
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-destination-bucket/destination-prefix/StorageLens/111122223333/*"
+],
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceAccount": "111122223333",
+"aws:SourceArn": "arn:aws:s3:region-code:111122223333:storage-lens/storage-lens-dashboard-configuration-id"
+}
+}
+}
+]
+}
+
+When you're setting up an S3 Storage Lens organization-level metrics export, use the following
+modification to the previous bucket policy's Resource statement.
+
+"Resource": "arn:aws:s3:::amzn-s3-demo-destination-bucket/destination-prefix/StorageLens/your-organization-id/*",
+
+## Managing permissions for S3 Inventory, S3 analytics, and S3 Inventory reports
+
+### Grant permissions for S3 Inventory and S3 analytics
+
+S3 Inventory creates lists of the objects in a bucket, and S3 analytics Storage Class
+Analysis export creates output files of the data used in the analysis. The bucket that the
+inventory lists the objects for is called the source bucket. The bucket
+where the inventory file or the analytics export file is written to is called a
+destination bucket. When setting up an inventory or an analytics
+export, you must create a bucket policy for the destination bucket. For more information,
+see Cataloging and analyzing your data with S3 Inventory and Amazon S3 analytics – Storage Class Analysis.
+
+The following example bucket policy grants Amazon S3 permission to write objects
+(PUT requests) from the account for the source bucket to the destination
+bucket. You use a bucket policy like this on the destination bucket when setting up S3
+Inventory and S3 analytics export.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "InventoryAndAnalyticsExamplePolicy",
+"Effect": "Allow",
+"Principal": {
+"Service": "s3.amazonaws.com"
+},
+"Action": "s3:PutObject",
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-destination-bucket/*"
+],
+"Condition": {
+"ArnLike": {
+"aws:SourceArn": "arn:aws:s3:::amzn-s3-demo-source-bucket"
+},
+"StringEquals": {
+"aws:SourceAccount": "111122223333",
+"s3:x-amz-acl": "bucket-owner-full-control"
+}
+}
+}
+]
+}
+
+### Control S3 Inventory report configuration creation
+
+Cataloging and analyzing your data with S3 Inventory creates lists of
+the objects in an S3 bucket and the metadata for each object. The
+s3:PutInventoryConfiguration permission allows a user to create an inventory
+configuration that includes all object metadata fields that are available by default and to
+specify the destination bucket to store the inventory. A user with read access to objects in
+the destination bucket can access all object metadata fields that are available in the
+inventory report. For more information about the metadata fields that are available in S3
+Inventory, see Amazon S3 Inventory list.
+
+To restrict a user from configuring an S3 Inventory report, remove the
+s3:PutInventoryConfiguration permission from the user.
+
+Some object metadata fields in S3 Inventory report configurations are optional, meaning
+that they're available by default but they can be restricted when you grant a user the
+s3:PutInventoryConfiguration permission. You can control whether users can
+include these optional metadata fields in their reports by using the
+s3:InventoryAccessibleOptionalFields condition key. For a list of the
+optional metadata fields available in S3 Inventory, see OptionalFields in the Amazon Simple Storage Service API Reference.
+
+Note
+
+For directory buckets, use the s3express:InventoryAccessibleOptionalFields condition key instead of s3:InventoryAccessibleOptionalFields. For more information about configuring S3 Inventory for directory buckets, see Configuring Amazon S3 Inventory.
+
+To grant a user permission to create an inventory configuration with specific optional
+metadata fields, use the s3:InventoryAccessibleOptionalFields condition key to
+refine the conditions in your bucket policy.
+
+The following example policy grants a user (Ana)
+permission to create an inventory configuration conditionally. The
+ForAllValues:StringEquals condition in the policy uses the
+s3:InventoryAccessibleOptionalFields condition key to specify the two allowed
+optional metadata fields, namely Size and StorageClass. So, when
+Ana is creating an inventory configuration, the
+only optional metadata fields that she can include are Size and
+StorageClass.
+
+JSON
+
+{
+"Id": "InventoryConfigPolicy",
+"Version":"2012-10-17",
+"Statement": [{
+"Sid": "AllowInventoryCreationConditionally",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Ana"
+},
+"Action":
+"s3:PutInventoryConfiguration",
+"Resource":
+"arn:aws:s3:::DOC-EXAMPLE-SOURCE-BUCKET",
+"Condition": {
+"ForAllValues:StringEquals": {
+"s3:InventoryAccessibleOptionalFields": [
+"Size",
+"StorageClass"
+]
+}
+}
+}
+]
+}
+
+To restrict a user from configuring an S3 Inventory report that includes specific
+optional metadata fields, add an explicit Deny statement to the bucket policy
+for the source bucket. The following example bucket policy denies the user
+Ana from creating an inventory configuration in
+the source bucket amzn-s3-demo-source-bucket that
+includes the optional ObjectAccessControlList or ObjectOwner
+metadata fields. The user Ana can still create an
+inventory configuration with other optional metadata fields.
+
+{
+"Id": "InventoryConfigSomeFields",
+"Version": "2012-10-17",
+"Statement": [{
+"Sid": "AllowInventoryCreation",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Ana"
+},
+"Action": "s3:PutInventoryConfiguration",
+"Resource":
+"arn:aws:s3:::amzn-s3-demo-source-bucket"
+
+},
+{
+"Sid": "DenyCertainInventoryFieldCreation",
+"Effect": "Deny",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Ana"
+},
+"Action": "s3:PutInventoryConfiguration",
+"Resource":
+"arn:aws:s3:::amzn-s3-demo-source-bucket",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"s3:InventoryAccessibleOptionalFields": [
+"ObjectOwner",
+"ObjectAccessControlList"
+]
+}
+}
+}
+]
+}
+
+Note
+
+The use of the s3:InventoryAccessibleOptionalFields condition key in
+bucket policies doesn't affect the delivery of inventory reports based on the existing
+inventory configurations.
+
+Important
+
+We recommend that you use ForAllValues with an Allow effect
+or ForAnyValue with a Deny effect, as shown in the prior
+examples.
+
+Don't use ForAllValues with a Deny effect nor
+ForAnyValue with an Allow effect, because these combinations
+can be overly restrictive and block inventory configuration deletion.
+
+To learn more about the ForAllValues and ForAnyValue
+condition set operators, see Multivalued context keys in the IAM User Guide.
+
+#### Control S3 Inventory report configuration creation for directory buckets
+
+For directory buckets, you use the s3express:InventoryAccessibleOptionalFields condition key in an IAM identity-based policy instead of a bucket policy. The following example IAM policy grants a user permission to create an inventory configuration for a directory bucket. The ForAllValues:StringEquals condition uses the s3express:InventoryAccessibleOptionalFields condition key to specify the allowed optional metadata fields.
+
+{
+"Version": "2012-10-17",
+"Statement": [{
+"Sid": "AllowInventoryCreationForDirectoryBucket",
+"Effect": "Allow",
+"Action": "s3express:PutInventoryConfiguration",
+"Resource": "arn:aws:s3express:region:account-id:bucket/bucket-base-name--zone-id--x-s3",
+"Condition": {
+"ForAllValues:StringEquals": {
+"s3express:InventoryAccessibleOptionalFields": [
+"Size",
+"StorageClass"
+]
+}
+}
+}]
+}
+
+## Requiring MFA
+
+Amazon S3 supports MFA-protected API access, a feature that can enforce multi-factor
+authentication (MFA) for access to your Amazon S3 resources. Multi-factor authentication provides
+an extra level of security that you can apply to your AWS environment. MFA is a security
+feature that requires users to prove physical possession of an MFA device by providing a valid
+MFA code. For more information, see AWS Multi-Factor
+Authentication. You can require MFA for any requests to access your Amazon S3 resources.
+
+To enforce the MFA requirement, use the aws:MultiFactorAuthAge condition key
+in a bucket policy. IAM users can access Amazon S3 resources by using temporary credentials
+issued by the AWS Security Token Service (AWS STS). You provide the MFA code at the time of the AWS STS
+request.
+
+When Amazon S3 receives a request with multi-factor authentication, the
+aws:MultiFactorAuthAge condition key provides a numeric value that indicates
+how long ago (in seconds) the temporary credential was created. If the temporary credential
+provided in the request was not created by using an MFA device, this key value is null
+(absent). In a bucket policy, you can add a condition to check this value, as shown in the
+following example.
+
+This example policy denies any Amazon S3 operation on the
+/taxdocuments folder in the
+amzn-s3-demo-bucket bucket if the request is not authenticated by using MFA. To
+learn more about MFA, see Using
+Multi-Factor Authentication (MFA) in AWS in the
+IAM User Guide.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "123",
+"Statement": [
+{
+"Sid": "",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/taxdocuments/*",
+"Condition": { "Null": { "aws:MultiFactorAuthAge": true }}
+}
+]
+}
+
+The Null condition in the Condition block evaluates to
+true if the aws:MultiFactorAuthAge condition key value is null,
+indicating that the temporary security credentials in the request were created without an MFA
+device.
+
+The following bucket policy is an extension of the preceding bucket policy. The following
+policy includes two policy statements. One statement allows the s3:GetObject
+permission on a bucket (amzn-s3-demo-bucket) to everyone. Another statement
+further restricts access to the
+amzn-s3-demo-bucket/taxdocuments folder in the
+bucket by requiring MFA.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "123",
+"Statement": [
+{
+"Sid": "DenyInsecureConnections",
+"Effect": "Deny",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:root"
+},
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/taxdocuments/*",
+"Condition": { "Null": { "aws:MultiFactorAuthAge": true } }
+},
+{
+"Sid": "AllowGetObject",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:root"
+},
+"Action": ["s3:GetObject"],
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*"
+}
+]
+}
+
+You can optionally use a numeric condition to limit the duration for which the
+aws:MultiFactorAuthAge key is valid. The duration that you specify with the
+aws:MultiFactorAuthAge key is independent of the lifetime of the temporary
+security credential that's used in authenticating the request.
+
+For example, the following bucket policy, in addition to requiring MFA authentication,
+also checks how long ago the temporary session was created. The policy denies any operation if
+the aws:MultiFactorAuthAge key value indicates that the temporary session was
+created more than an hour ago (3,600 seconds).
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "123",
+"Statement": [
+{
+"Sid": "",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/taxdocuments/*",
+"Condition": {"Null": {"aws:MultiFactorAuthAge": true }}
+},
+{
+"Sid": "",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/taxdocuments/*",
+"Condition": {"NumericGreaterThan": {"aws:MultiFactorAuthAge": 3600 }}
+},
+{
+"Sid": "",
+"Effect": "Allow",
+"Principal": "*",
+"Action": ["s3:GetObject"],
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*"
+}
+]
+}
+
+## Preventing users from deleting objects
+
+By default, users have no permissions. But as you create policies, you might grant users
+permissions that you didn't intend to grant. To avoid such permission loopholes, you can write
+a stricter access policy by adding an explicit deny.
+
+To explicitly block users or accounts from deleting objects, you must add the following
+actions to a bucket policy: s3:DeleteObject, s3:DeleteObjectVersion,
+and s3:PutLifecycleConfiguration permissions. All three actions are required
+because you can delete objects either by explicitly calling the DELETE Object API
+operations or by configuring their lifecycle (see Managing the lifecycle of objects) so that Amazon S3 can remove the objects when their
+lifetime expires.
+
+In the following policy example, you explicitly deny DELETE Object
+permissions to the user MaryMajor. An explicit
+Deny statement always supersedes any other permission granted.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "statement1",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::123456789012:user/MaryMajor"
+},
+"Action": [
+"s3:GetObjectVersion",
+"s3:GetBucketAcl"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket1",
+"arn:aws:s3:::amzn-s3-demo-bucket1/*"
+]
+},
+{
+"Sid": "statement2",
+"Effect": "Deny",
+"Principal": {
+"AWS": "arn:aws:iam::123456789012:user/MaryMajor"
+},
+"Action": [
+"s3:DeleteObject",
+"s3:DeleteObjectVersion",
+"s3:PutLifecycleConfiguration"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket1",
+"arn:aws:s3:::amzn-s3-demo-bucket1/*"
+]
+}
+]
+}

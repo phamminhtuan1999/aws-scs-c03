@@ -1,0 +1,173 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication-what-is-isnot-replicated.html
+TITLE: What does Amazon S3 replicate? - Amazon Simple Storage Service
+
+# What does Amazon S3 replicate?
+
+Amazon S3 replicates only specific items in buckets that are configured for replication.
+
+Topics
+
+- What is replicated with replication configurations?
+
+- What isn't replicated with replication configurations?
+
+## What is replicated with replication configurations?
+
+By default, Amazon S3 replicates the following:
+
+- Objects created after you add a replication configuration.
+
+- Unencrypted objects.
+
+- Objects encrypted using customer provided keys (SSE-C), objects encrypted at rest
+under an Amazon S3 managed key (SSE-S3) or a KMS key stored in AWS Key Management Service (SSE-KMS). For
+more information, see Replicating encrypted objects (SSE-S3, SSE-KMS, DSSE-KMS, SSE-C).
+
+- Object metadata from the source objects to the replicas. For information about
+replicating metadata from the replicas to the source objects, see Replicating metadata changes with replica modification sync.
+
+- Only objects in the source bucket for which the bucket owner has permissions to read
+objects and access control lists (ACLs).
+
+For more information about resource ownership, see Amazon S3 bucket and object ownership.
+
+- Object ACL updates, unless you direct Amazon S3 to change the replica ownership when
+source and destination buckets aren't owned by the same accounts.
+
+For more information, see Changing the replica owner.
+
+It can take a while until Amazon S3 can bring the two ACLs in sync. This change in
+ownership applies only to objects created after you add a replication configuration to
+the bucket.
+
+- Object tags, if there are any.
+
+- Object annotations, if there are any. Each annotation replicates independently as
+changes occur during live replication. During S3 Batch Replication, annotations are
+replicated independently alongside the object, but there are no separate job tasks for
+individual annotations. If annotation replication fails, the job task fails, but the object's replication status does not reflect the annotation failure.
+
+- S3 Object Lock retention information, if there is any.
+
+When Amazon S3 replicates objects that have retention information applied, it applies
+those same retention controls to your replicas, overriding the default retention period
+configured on your destination buckets. If you don't have retention controls applied to
+the objects in your source bucket, and you replicate into destination buckets that have
+a default retention period set, the destination bucket's default retention period is
+applied to your object replicas. For more information, see Locking objects with Object Lock.
+
+### How delete operations affect replication
+
+If you delete an object from the source bucket, the following actions occur by
+default:
+
+- If you make a DELETE request without specifying an object version ID, Amazon S3 adds a
+delete marker. Amazon S3 deals with the delete marker as follows:
+
+- If you are using the latest version of the replication configuration (that is,
+you specify the Filter element in a replication configuration rule),
+Amazon S3 does not replicate the delete marker by default. However, you can add
+delete marker replication to non-tag-based rules. For more
+information, see Replicating delete markers between buckets.
+
+- If you don't specify the Filter element, Amazon S3 assumes that the
+replication configuration is version V1, and it replicates delete markers that
+resulted from user actions. However, if Amazon S3 deletes an object due to a lifecycle
+action, the delete marker is not replicated to the destination buckets.
+
+- If you specify an object version ID to delete in a DELETE request,
+Amazon S3 deletes that object version in the source bucket. But it doesn't replicate the
+deletion in the destination buckets. In other words, it doesn't delete the same object
+version from the destination buckets. This protects data from malicious deletions.
+
+## What isn't replicated with replication configurations?
+
+By default, Amazon S3 doesn't replicate the following:
+
+- Objects in the source bucket that are replicas that were created by another
+replication rule. For example, suppose you configure replication where bucket A is the
+source and bucket B is the destination. Now suppose that you add another replication
+configuration where bucket B is the source and bucket C is the destination. In this
+case, objects in bucket B that are replicas of objects in bucket A are not replicated to
+bucket C.
+
+To replicate objects that are replicas, use Batch Replication. Learn more about
+configuring Batch Replication at Replicating existing
+objects.
+
+- Objects in the source bucket that have already been replicated to a different
+destination. For example, if you change the destination bucket in an existing
+replication configuration, Amazon S3 won't replicate the objects again.
+
+To replicate previously replicated objects, use Batch Replication. Learn more about
+configuring Batch Replication at Replicating existing
+objects.
+
+- Batch Replication does not support re-replicating objects that were deleted with
+the version ID of the object from the destination bucket. To re-replicate these objects,
+you can copy the source objects in place with a Batch Copy job. Copying those objects in
+place creates new versions of the objects in the source bucket and initiates replication
+automatically to the destination. For more information about how to use Batch Copy, see,
+Examples that use Batch Operations to
+copy objects.
+
+- By default, when replicating from a different AWS account, delete markers added to
+the source bucket are not replicated.
+
+For information about how to replicate delete markers, see Replicating delete markers between buckets.
+
+- Objects that are stored in the S3 Glacier Flexible Retrieval,
+S3 Glacier Deep Archive, S3 Intelligent-Tiering Archive Access, or S3 Intelligent-Tiering Deep Archive Access
+storage classes or tiers. You cannot replicate these objects until you restore them and
+copy them to a different storage class.
+
+To learn more about S3 Glacier Flexible Retrieval and S3 Glacier Deep Archive,
+see Storage classes for rarely accessed objects.
+
+To learn more about the S3 Intelligent-Tiering, see Managing storage costs with Amazon S3 Intelligent-Tiering.
+
+- Objects in the source bucket that the bucket owner doesn't have sufficient
+permissions to replicate.
+
+For information about how an object owner can grant permissions to a bucket owner,
+see Grant cross-account permissions to upload objects while ensuring that the bucket owner has full control.
+
+- Updates to bucket-level subresources.
+
+For example, if you change the lifecycle configuration or add a notification
+configuration to your source bucket, these changes are not applied to the destination
+bucket. This feature makes it possible to have different configurations on source and
+destination buckets.
+
+- Actions performed by lifecycle configuration.
+
+For example, if lifecycle configuration is enabled only on your source bucket, Amazon S3
+creates delete markers for expired objects but doesn't replicate those markers. If you
+want the same lifecycle configuration applied to both the source and destination
+buckets, enable the same lifecycle configuration on both. For more information about
+lifecycle configuration, see Managing the lifecycle of objects.
+
+- When you're using tag-based replication rules with live replication, new objects
+must be tagged with the matching replication rule tag in the PutObject
+operation. Otherwise, the objects won't be replicated. If objects are tagged after the
+PutObject operation, those objects also won't be replicated.
+
+To replicate objects that have been tagged after the PutObject
+operation, you must use S3 Batch Replication. For more information about Batch
+Replication, see Replicating existing
+objects.
+
+- Annotation deletions on the source bucket are not replicated to the destination. If
+you delete an annotation on the source, the annotation persists on the replica. You
+cannot exclude annotations from replication using replication rule filters. When
+replication is configured, all annotation creates and updates are replicated unless the replication
+role policy explicitly denies s3:ReplicateObjectAnnotation.
+
+If annotations are repeatedly deleted and recreated on the source with different
+names, the destination replica accumulates annotations over time because deletions are
+not replicated. This accumulation can eventually cause the destination to exceed the
+1,000 annotation limit per object version.
+
+Annotation overwrites (updates to an existing annotation name) at the source are
+replicated to the destination. The destination annotation content stays current with the
+source.

@@ -1,0 +1,966 @@
+URL: https://docs.aws.amazon.com/iot/latest/developerguide/pub-sub-policy.html
+TITLE: Publish/Subscribe policy examples - AWS IoT Core
+
+# Publish/Subscribe policy examples
+
+The policy you use depends on how you're connecting to AWS IoT Core. You can
+connect to AWS IoT Core by using an MQTT client, HTTP, or WebSocket. When you
+connect with an MQTT client, you're authenticating with an X.509 certificate.
+When you connect over HTTP or the WebSocket protocol, you're authenticating with
+Signature Version 4 and Amazon Cognito.
+
+Note
+
+For registered devices, we recommend that you use thing policy variables for
+Connect actions and attach the thing to the principal
+that's used for the connection.
+
+In this section:
+
+- Using wildcard characters in MQTT and AWS IoT Core policies
+
+- Policies to publish, subscribe and receive messages to/from specific topics
+
+- Policies to publish, subscribe and receive messages to/from topics with a specific prefix
+
+- Policies to publish, subscribe and receive messages to/from topics specific to each device
+
+- Policies to publish, subscribe and receive messages to/from topics with thing attribute in topic name
+
+- Policies to deny publishing messages to subtopics of a topic name
+
+- Policies to deny receiving messages from subtopics of a topic name
+
+- Policies to subscribe to topics using MQTT wildcard characters
+
+- Policies for HTTP and WebSocket clients
+
+## Using wildcard characters in MQTT and AWS IoT Core policies
+
+MQTT and AWS IoT Core policies have different wildcard characters and you
+should choose them after careful consideration. In MQTT, the wildcard
+characters + and # are used in MQTT topic
+filters to subscribe to multiple topic names. AWS IoT Core policies
+use * and ? as wildcard characters and follow the
+conventions of IAM policies. In a policy document, the *
+represents any combination of characters and a question mark ?
+represents any single character. In policy documents, the MQTT wildcard
+characters, + and # are treated as those
+characters with no special meaning. To describe multiple topic names and
+topic filters in the resource attribute of a policy, use the
+* and ? wildcard characters in place of the
+MQTT wildcard characters.
+
+When you choose the wildcard characters to use in a policy document,
+consider that the * character is not confined to a single topic
+level. The + character is confined to a single topic level in
+an MQTT topic filter. To help constrain a wildcard specification to a single
+MQTT topic filter level, consider using multiple ? characters.
+For more information about using wildcard characters in a policy resource
+and more examples of what they match, see Using wildcards in resource ARNs.
+
+The table below shows the different wildcard characters used in MQTT and
+AWS IoT Core policies for MQTT clients.
+
+Wildcard character
+
+Is MQTT wildcard character
+
+Example in MQTT
+
+Is AWS IoT Core policy wildcard character
+
+Example in AWS IoT Core policies for MQTT clients
+
+#
+
+Yes
+
+some/#
+
+No
+
+N/A
+
++
+
+Yes
+
+some/+/topic
+
+No
+
+N/A
+
+*
+
+No
+
+N/A
+
+Yes
+
+topicfilter/some/*/topic
+
+topicfilter/some/sensor*/topic
+
+?
+
+No
+
+N/A
+
+Yes
+
+topic/some/?????/topic
+
+topicfilter/some/sensor???/topic
+
+## Policies to publish, subscribe and receive messages to/from specific topics
+
+The following shows examples for registered and unregistered devices to
+publish, subscribe and receive messages to/from the topic named
+"some_specific_topic". The examples also highlight that Publish
+and Receive use "topic" as the resource, and
+Subscribe uses "topicfilter" as the resource.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. It also provides
+Publish, Subscribe and
+Receive permissions for the topic named
+"some_specific_topic".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/some_specific_topic"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/some_specific_topic"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/some_specific_topic"
+]
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. It also provides
+Publish, Subscribe and
+Receive permissions for the topic named
+"some_specific_topic".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/some_specific_topic"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/some_specific_topic"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/some_specific_topic"
+]
+}
+]
+}
+
+## Policies to publish, subscribe and receive messages to/from topics with a specific prefix
+
+The following shows examples for registered and unregistered devices to
+publish, subscribe and receive messages to/from topics prefixed with
+"topic_prefix".
+
+Note
+
+Note the use of the wildcard character * in this example.
+Although * is useful to provide permissions for multiple
+topic names in a single statement, it can lead to unintended
+consequences by providing more privileges to devices than required. So
+we recommend that you only use the wildcard character *
+after careful consideration.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. It also provides
+Publish, Subscribe and
+Receive permissions for topics prefixed with
+"topic_prefix".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish",
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/topic_prefix*"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/topic_prefix*"
+]
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. It also provides
+Publish, Subscribe and
+Receive permissions for topics prefixed with
+"topic_prefix".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish",
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/topic_prefix*"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/topic_prefix*"
+]
+}
+]
+}
+
+## Policies to publish, subscribe and receive messages to/from topics specific to each device
+
+The following shows examples for registered and unregistered devices to
+publish, subscribe and receive messages to/from topics that are specific to
+the given device.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. It provides permission to
+publish to the thing-specific topic
+(sensor/device/${iot:Connection.Thing.ThingName})
+and also subscribe to and receive from the thing-specific topic
+(command/device/${iot:Connection.Thing.ThingName}).
+If the thing name in the registry is "thing1", the device will
+be able to publish to the topic "sensor/device/thing1". The
+device will also be able to subscribe to and receive from the
+topic "command/device/thing1".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/sensor/device/${iot:Connection.Thing.ThingName}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/command/device/${iot:Connection.Thing.ThingName}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/command/device/${iot:Connection.Thing.ThingName}"
+]
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. It provides permission to
+publish to the client-specific topic
+(sensor/device/${iot:ClientId}), and also
+subscribe to and receive from the client-specific topic
+(command/device/${iot:ClientId}). If the device
+connects with clientId as clientId1, it will be able to publish
+to the topic "sensor/device/clientId1". The device will also be
+able to subscribe to and receive from the topic
+device/clientId1/command.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/sensor/device/${iot:Connection.Thing.ThingName}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/command/device/${iot:Connection.Thing.ThingName}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/command/device/${iot:Connection.Thing.ThingName}"
+]
+}
+]
+}
+
+## Policies to publish, subscribe and receive messages to/from topics with thing attribute in topic name
+
+The following shows an example for registered devices to publish,
+subscribe and receive messages to/from topics whose names include thing
+attributes.
+
+Note
+
+Thing attributes only exist for devices registered in AWS IoT Core
+Registry. There is no corresponding example for unregistered
+devices.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. It provides permission to
+publish to the topic
+(sensor/${iot:Connection.Thing.Attributes[version]}),
+and subscribe to and receive from the topic
+(command/${iot:Connection.Thing.Attributes[location]})
+where the topic name includes thing attributes. If the thing
+name in the registry has version=v1 and
+location=Seattle, the device will be able to
+publish to the topic "sensor/v1", and subscribe to and receive
+from the topic "command/Seattle".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/sensor/${iot:Connection.Thing.Attributes[version]}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/command/${iot:Connection.Thing.Attributes[location]}"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Receive"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/command/${iot:Connection.Thing.Attributes[location]}"
+]
+}
+]
+}
+
+Unregistered devices
+
+Because thing attributes only exist for devices registered in
+AWS IoT Core registry, there is no corresponding example for
+unregistered things.
+
+## Policies to deny publishing messages to subtopics of a topic name
+
+The following shows examples for registered and unregistered devices to
+publish messages to all topics except certain subtopics.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. It provides permission to
+publish to all topics prefixed with "department/" but not to the
+"department/admins" subtopic.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/department/*"
+]
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/department/admins"
+]
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. It provides permission to
+publish to all topics prefixed with "department/" but not to the
+"department/admins" subtopic.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/department/*"
+]
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/department/admins"
+]
+}
+]
+}
+
+## Policies to deny receiving messages from subtopics of a topic name
+
+The following shows examples for registered and unregistered devices to
+subscribe to and receive messages from topics with specific prefixes except
+certain subtopics.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. The policy allows devices to
+subscribe to any topic prefixed with "topic_prefix". By using
+NotResource in the statement for
+iot:Receive, we allow the device to receive
+messages from all topics that the device has subscribed to,
+except the topics prefixed with "topic_prefix/restricted". For
+example, with this policy, devices can subscribe to
+"topic_prefix/topic1" and even "topic_prefix/restricted",
+however, they will only receive messages from the topic
+"topic_prefix/topic1" and no messages from the topic
+"topic_prefix/restricted".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/topic_prefix/*"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Receive",
+"NotResource": "arn:aws:iot:us-east-1:123456789012:topic/topic_prefix/restricted/*"
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. The policy allows devices to
+subscribe to any topic prefixed with "topic_prefix". By using
+NotResource in the statement for
+iot:Receive, we allow the device to receive
+messages from all topics that the device has subscribed to,
+except topics prefixed with "topic_prefix/restricted". For
+example, with this policy, devices can subscribe to
+"topic_prefix/topic1" and even "topic_prefix/restricted".
+However, they will only receive messages from the topic
+"topic_prefix/topic1" and no messages from the topic
+"topic_prefix/restricted".
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/topic_prefix/*"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Receive",
+"NotResource": "arn:aws:iot:us-east-1:123456789012:topic/topic_prefix/restricted/*"
+}
+]
+}
+
+## Policies to subscribe to topics using MQTT wildcard characters
+
+MQTT wildcard characters + and # are treated as literal strings, but they
+are not treated as wildcards when used in AWS IoT Core policies. In MQTT, + and
+# are treated as wildcards only when subscribing to a topic filter but as a
+literal string in all other contexts. We recommend that you only use these
+MQTT wildcards as part of AWS IoT Core policies after careful
+consideration.
+
+The following shows examples for registered and unregistered things using
+MQTT wildcards in AWS IoT Core policies. These wildcards are treated as literal
+strings.
+
+Registered devices
+
+For devices registered in AWS IoT Core registry, the following
+policy allows devices to connect with clientId that matches the
+name of a thing in the registry. The policy allows devices to
+subscribe to the topics "department/+/employees" and
+"location/#". Because + and # are treated as literal strings in
+AWS IoT Core policies, devices can subscribe to the topic
+"department/+/employees" but not to the topic
+"department/engineering/employees". Similarly, devices can
+subscribe to the topic "location/#" but not to the topic
+"location/Seattle". However, once the device subscribes to the
+topic "department/+/employees", the policy will allow them to
+receive messages from the topic
+"department/engineering/employees". Similarly, once the device
+subscribes to the topic "location/#", they will receive messages
+from the topic "location/Seattle" as well.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/department/+/employees"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/location/#"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Receive",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topic/*"
+}
+]
+}
+
+Unregistered devices
+
+For devices not registered in AWS IoT Core registry, the
+following policy allows devices to connect using either
+clientId1, clientId2 or clientId3. The policy allows devices to
+subscribe to the topics of "department/+/employees" and
+"location/#". Because + and # are treated as literal strings in
+AWS IoT Core policies, devices can subscribe to the topic
+"department/+/employees" but not to the topic
+"department/engineering/employees". Similarly, devices can
+subscribe to the topic "location/#" but not "location/Seattle".
+However, once the device subscribes to the topic
+"department/+/employees", the policy will allow them to receive
+messages from the topic "department/engineering/employees".
+Similarly, once the device subscribes to the topic "location/#",
+they will receive messages from the topic "location/Seattle" as
+well.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientId1",
+"arn:aws:iot:us-east-1:123456789012:client/clientId2",
+"arn:aws:iot:us-east-1:123456789012:client/clientId3"
+]
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/department/+/employees"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Subscribe",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topicfilter/location/#"
+},
+{
+"Effect": "Allow",
+"Action": "iot:Receive",
+"Resource": "arn:aws:iot:us-east-1:123456789012:topic/*"
+}
+]
+}
+
+## Policies for HTTP and WebSocket clients
+
+When you connect over HTTP or the WebSocket protocol, you're
+authenticating with Signature Version 4 and Amazon Cognito. Amazon Cognito identities can be
+authenticated or unauthenticated. Authenticated identities belong to users
+who are authenticated by any supported identity provider. Unauthenticated
+identities typically belong to guest users who do not authenticate with an
+identity provider. Amazon Cognito provides a unique identifier and AWS credentials
+to support unauthenticated identities. For more information, see Authorization with Amazon Cognito identities.
+
+For the following operations, AWS IoT Core uses AWS IoT Core policies attached
+to Amazon Cognito identities through the AttachPolicy API. This scopes
+down the permissions attached to the Amazon Cognito Identity pool with authenticated
+identities.
+
+- iot:Connect
+
+- iot:Publish
+
+- iot:Subscribe
+
+- iot:Receive
+
+- iot:GetThingShadow
+
+- iot:UpdateThingShadow
+
+- iot:DeleteThingShadow
+
+That means an Amazon Cognito Identity needs permission from the IAM role policy and the
+AWS IoT Core policy. You attach the IAM role policy to the pool and the
+AWS IoT Core policy to the Amazon Cognito Identity through the AWS IoT Core
+AttachPolicy API.
+
+Authenticated and unauthenticated users are different identity types. If
+you don't attach an AWS IoT policy to the Amazon Cognito Identity, an authenticated user fails
+authorization in AWS IoT and doesn't have access to AWS IoT resources and
+actions.
+
+Note
+
+For other AWS IoT Core operations or for unauthenticated identities,
+AWS IoT Core does not scope down the permissions attached to the Amazon Cognito
+identity pool role. For both authenticated and unauthenticated
+identities, this is the most permissive policy that we recommend you
+attach to the Amazon Cognito pool role.
+
+HTTP
+
+To allow unauthenticated Amazon Cognito identities to publish messages over HTTP on
+a topic specific to the Amazon Cognito Identity, attach the following IAM policy to the
+Amazon Cognito Identity pool role:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/${cognito-identity.amazonaws.com:sub}"
+]
+}
+]
+}
+
+To allow authenticated users, attach the preceding policy to the Amazon Cognito Identity
+pool role and to the Amazon Cognito Identity using the AWS IoT Core AttachPolicy API.
+
+Note
+
+When authorizing Amazon Cognito identities, AWS IoT Core considers both policies
+and grants the least privileges specified. An action is allowed only if
+both policies allow the requested action. If either policy disallows an
+action, that action is unauthorized.
+
+MQTT
+
+To allow unauthenticated Amazon Cognito identities to publish MQTT messages over
+WebSocket on a topic specific to the Amazon Cognito Identity in your account, attach the
+following IAM policy to the Amazon Cognito Identity pool role:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": ["arn:aws:iot:us-east-1:123456789012:topic/${cognito-identity.amazonaws.com:sub}"]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": ["arn:aws:iot:us-east-1:123456789012:client/${cognito-identity.amazonaws.com:sub}"]
+}
+]
+}
+
+To allow authenticated users, attach the preceding policy to the Amazon Cognito Identity
+pool role and to the Amazon Cognito Identity using the AWS IoT Core AttachPolicy API.
+
+Note
+
+When authorizing Amazon Cognito identities, AWS IoT Core considers both and grants
+the least privileges specified. An action is allowed only if both
+policies allow the requested action. If either policy disallows an
+action, that action is unauthorized.

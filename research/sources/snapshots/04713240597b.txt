@@ -1,0 +1,470 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/setting-repl-config-perm-overview.html
+TITLE: Setting up permissions for live replication - Amazon Simple Storage Service
+
+# Setting up permissions for live replication
+
+When setting up live replication in Amazon S3, you must acquire the necessary permissions as
+follows:
+
+- You must grant the AWS Identity and Access Management (IAM) principal (user or role) who will be creating replication
+rules a certain set of permissions.
+
+- Amazon S3 needs permissions to replicate objects on your behalf. You grant these permissions by
+creating an IAM role and then specifying that role in your replication configuration.
+
+- When the source and destination buckets aren't owned by the same accounts, the owner
+of the destination bucket must also grant the source bucket owner permissions to store the
+replicas.
+
+Note
+
+If you're using S3 Batch Operations to replicate objects on demand instead of setting up live
+replication, a different IAM role and policies are required for S3 Batch Replication. For a
+Batch Replication IAM role and policy examples, see Configuring an IAM role for S3 Batch Replication.
+
+Topics
+
+- Step 1: Granting permissions to the IAM principal who's creating replication rules
+
+- Step 2: Creating an IAM role for Amazon S3 to assume
+
+- (Optional) Step 3: Granting permissions when the source and destination buckets are owned by different AWS accounts
+
+- (Optional) Step 4: Granting permissions to change replica ownership
+
+## Step 1: Granting permissions to the IAM principal who's creating replication rules
+
+The IAM user or role that you will use to create replication rules needs permissions to create replication rules for one- or two-way replications. If the user or role doesn't have these permissions, you won't be able to create replication rules. For more information, see IAM Identities in the IAM User Guide.
+
+The user or role needs the following actions:
+
+- iam:AttachRolePolicy
+
+- iam:CreatePolicy
+
+- iam:CreateServiceLinkedRole
+
+- iam:PassRole
+
+- iam:PutRolePolicy
+
+- s3:GetBucketVersioning
+
+- s3:GetObjectVersionAcl
+
+- s3:GetObjectVersionForReplication
+
+- s3:GetReplicationConfiguration
+
+- s3:PutReplicationConfiguration
+
+Following is a sample IAM policy that includes these actions.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"s3:GetAccessPoint",
+"s3:GetAccountPublicAccessBlock",
+"s3:GetBucketAcl",
+"s3:GetBucketLocation",
+"s3:GetBucketPolicyStatus",
+"s3:GetBucketPublicAccessBlock",
+"s3:ListAccessPoints",
+"s3:ListAllMyBuckets",
+"s3:PutReplicationConfiguration",
+"s3:GetReplicationConfiguration",
+"s3:GetBucketVersioning",
+"s3:GetObjectVersionForReplication",
+"s3:GetObjectVersionAcl",
+"s3:GetObject",
+"s3:ListBucket",
+"s3:GetObjectVersion",
+"s3:GetBucketOwnershipControls",
+"s3:PutBucketOwnershipControls",
+"s3:GetObjectLegalHold",
+"s3:GetObjectRetention",
+"s3:GetBucketObjectLockConfiguration"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-bucket1-*",
+"arn:aws:s3:::amzn-s3-demo-bucket2-*/*"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"s3:List*AccessPoint*",
+"s3:GetMultiRegion*"
+],
+"Resource": "*"
+},
+{
+"Effect": "Allow",
+"Action": [
+"iam:Get*",
+"iam:CreateServiceLinkedRole",
+"iam:CreateRole",
+"iam:PassRole"
+],
+"Resource": "arn:aws:iam::*:role/service-role/s3*"
+},
+{
+"Effect": "Allow",
+"Action": [
+"iam:List*"
+],
+"Resource": "*"
+},
+{
+"Effect": "Allow",
+"Action": [
+"iam:AttachRolePolicy",
+"iam:PutRolePolicy",
+"iam:CreatePolicy"
+],
+"Resource": [
+"arn:aws:iam::*:policy/service-role/s3*",
+"arn:aws:iam::*:role/service-role/s3*"
+]
+}
+]
+}
+
+## Step 2: Creating an IAM role for Amazon S3 to assume
+
+By default, all Amazon S3 resources—buckets, objects, and related
+subresources—are private, and only the resource owner can access the resource. Amazon S3
+needs permissions to read and replicate objects from the source bucket. You grant these
+permissions by creating an IAM role and specifying that role in your replication
+configuration.
+
+This section explains the trust policy and the minimum required permissions policy that
+are attached to this IAM role. The example walkthroughs provide step-by-step instructions
+to create an IAM role. For more information, see Examples for configuring live replication.
+
+Note
+
+If you're using the console to create your replication configuration, we recommend that you skip
+this section and instead have the console create this IAM role and the necessary trust and
+permission policies for you.
+
+The trust policy identifies which principal
+identities can assume the IAM role. The permissions
+policy specifies which actions the IAM role can perform, on which resources,
+and under what conditions.
+
+- The following example shows a trust policy where
+you identify Amazon S3 as the AWS service principal that can assume the role:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement":[
+{
+"Effect":"Allow",
+"Principal":{
+"Service":"s3.amazonaws.com"
+},
+"Action":"sts:AssumeRole"
+}
+]
+}
+
+- The following example shows a trust policy where
+you identify Amazon S3 and S3 Batch Operations as service principals that can assume the role. Use
+this approach if you're creating a Batch Replication job. For more information, see
+Create a Batch Replication job for new replication rules or destinations.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement":[
+{
+"Effect":"Allow",
+"Principal":{
+"Service": [
+"s3.amazonaws.com",
+"batchoperations.s3.amazonaws.com"
+]
+},
+"Action":"sts:AssumeRole"
+}
+]
+}
+
+For more information about IAM roles, see IAM roles in the IAM User Guide.
+
+- The following example shows the permissions
+policy, where you grant the IAM role permissions to perform replication
+tasks on your behalf. When Amazon S3 assumes the role, it has the permissions that you
+specify in this policy. In this policy, amzn-s3-demo-source-bucket is the
+source bucket, and amzn-s3-demo-destination-bucket is the destination
+bucket.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"s3:GetReplicationConfiguration",
+"s3:ListBucket"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-source-bucket"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"s3:GetObjectVersionForReplication",
+"s3:GetObjectVersionAcl",
+"s3:GetObjectVersionTagging"
+],
+"Resource": [
+"arn:aws:s3:::amzn-s3-demo-source-bucket/*"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"s3:ReplicateObject",
+"s3:ReplicateDelete",
+"s3:ReplicateTags"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-destination-bucket/*"
+}
+]
+}
+
+The permissions policy grants permissions for the following actions:
+
+- s3:GetReplicationConfiguration and s3:ListBucket –
+Permissions for these actions on the amzn-s3-demo-source-bucket bucket
+allow Amazon S3 to retrieve the replication configuration and list the bucket content.
+(The current permissions model requires the s3:ListBucket permission
+for accessing delete markers.)
+
+- s3:GetObjectVersionForReplication and
+s3:GetObjectVersionAcl – Permissions for these actions are
+granted on all objects to allow Amazon S3 to get a specific object version and access
+control list (ACL) associated with the objects.
+
+- s3:ReplicateObject and s3:ReplicateDelete –
+Permissions for these actions on all objects in the
+amzn-s3-demo-destination-bucket bucket allow Amazon S3 to replicate
+objects or delete markers to the destination bucket. For information about delete
+markers, see How delete operations affect replication.
+
+Note
+
+Permissions for the s3:ReplicateObject action on the
+amzn-s3-demo-destination-bucket bucket also allow replication of
+metadata such as object tags and ACLs. Therefore, you don't need to explicitly
+grant permission for the s3:ReplicateTags action.
+
+- s3:GetObjectVersionTagging – Permissions for this action on
+objects in the amzn-s3-demo-source-bucket bucket allow Amazon S3 to read
+object tags for replication. For more information about object tags, see Tagging your objects. If Amazon S3 doesn't have
+the s3:GetObjectVersionTagging permission, it replicates the objects,
+but not the object tags.
+
+- s3:GetObjectVersionAnnotationForReplication – Permissions
+for this action on objects in the source bucket allow Amazon S3 to read annotations for
+replication. If Amazon S3 doesn't have this permission, annotation replication fails. For
+more information about annotations, see Annotating your objects.
+
+For a list of Amazon S3 actions, see
+Actions, resources, and condition keys for Amazon S3 in the Service Authorization Reference.
+
+For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+Important
+
+The AWS account that owns the IAM role must have permissions for the actions
+that it grants to the IAM role.
+
+For example, suppose that the source bucket contains objects owned by another
+AWS account. The owner of the objects must explicitly grant the AWS account that
+owns the IAM role the required permissions through the objects' access control lists
+(ACLs). Otherwise, Amazon S3 can't access the objects, and replication of the objects
+fails. For information about ACL permissions, see Access control list (ACL) overview.
+
+The permissions described here are related to the minimum replication
+configuration. If you choose to add optional replication configurations, you must
+grant additional permissions to Amazon S3:
+
+- To replicate encrypted objects, you also need to grant the necessary AWS Key Management Service
+(AWS KMS) key permissions. For more information, see Replicating encrypted objects (SSE-S3, SSE-KMS, DSSE-KMS, SSE-C).
+
+- To use Object Lock with replication, you must grant 2 additional
+permissions on the source S3 bucket in the AWS Identity and Access Management (IAM) role that you use to
+set up replication. The 2 additional permissions are
+s3:GetObjectRetention and s3:GetObjectLegalHold. If
+the role has an s3:Get* permission statement, that statement
+satisfies the requirement. For more information, see Using Object Lock with S3 Replication.
+
+## (Optional) Step 3: Granting permissions when the source and destination buckets are owned by different AWS accounts
+
+When the source and destination buckets aren't owned by the same accounts, the owner of
+the destination bucket must also add a bucket policy to grant the owner of the source bucket
+permissions to perform replication actions, as shown in the following example. In this
+example policy, amzn-s3-demo-destination-bucket is the destination
+bucket.
+
+You can also use the Amazon S3 console to automatically generate this bucket policy for you.
+For more information, see Enable receiving replicated objects from a
+source bucket.
+
+Note
+
+The ARN format of the role might appear different. If the role was created by using
+the console, the ARN format is
+arn:aws:iam::account-ID:role/service-role/role-name.
+If the role was created by using the AWS CLI, the ARN format is
+arn:aws:iam::account-ID:role/role-name.
+For more information, see IAM
+roles in the IAM User Guide.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "PolicyForDestinationBucket",
+"Statement": [
+{
+"Sid": "Permissions on objects",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:role/service-role/source-account-IAM-role"
+},
+"Action": [
+"s3:ReplicateDelete",
+"s3:ReplicateObject"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-destination-bucket/*"
+},
+{
+"Sid": "Permissions on bucket",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:role/service-role/source-account-IAM-role"
+},
+"Action": [
+"s3:List*",
+"s3:GetBucketVersioning",
+"s3:PutBucketVersioning"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-destination-bucket"
+}
+]
+}
+
+For an example, see Configuring replication for buckets in different accounts.
+
+If objects in the source bucket are tagged, note the following:
+
+- If the source bucket owner grants Amazon S3 permission for the
+s3:GetObjectVersionTagging and s3:ReplicateTags actions to
+replicate object tags (through the IAM role), Amazon S3 replicates the tags along with the
+objects. For information about the IAM role, see Step 2: Creating an IAM role for Amazon S3 to assume.
+
+- If the owner of the destination bucket doesn't want to replicate the tags, they can
+add the following statement to the destination bucket policy to explicitly deny
+permission for the s3:ReplicateTags action. In this policy,
+amzn-s3-demo-destination-bucket is the destination bucket.
+
+...
+"Statement":[
+{
+"Effect":"Deny",
+"Principal":{
+"AWS":"arn:aws:iam::source-bucket-account-id:role/service-role/source-account-IAM-role"
+},
+"Action":"s3:ReplicateTags",
+"Resource":"arn:aws:s3:::amzn-s3-demo-destination-bucket/*"
+}
+]
+...
+
+- Similarly, if the source bucket owner grants Amazon S3 permission for the
+s3:GetObjectVersionAnnotationForReplication action to replicate
+annotations (through the IAM role), Amazon S3 replicates the annotations along with the
+objects. For information about the IAM role, see Step 2: Creating an IAM role for Amazon S3 to assume.
+
+If the owner of the destination bucket doesn't want to replicate the annotations,
+they can add the following statement to the destination bucket policy to explicitly deny
+permission for the s3:ReplicateObjectAnnotation action. In this policy,
+amzn-s3-demo-destination-bucket is the destination bucket.
+
+...
+"Statement":[
+{
+"Effect":"Deny",
+"Principal":{
+"AWS":"arn:aws:iam::source-bucket-account-id:role/service-role/source-account-IAM-role"
+},
+"Action":"s3:ReplicateObjectAnnotation",
+"Resource":"arn:aws:s3:::amzn-s3-demo-destination-bucket/*"
+}
+]
+...
+
+Note
+
+- If you want to replicate encrypted objects, you also must grant the necessary
+AWS Key Management Service (AWS KMS) key permissions. For more information, see Replicating encrypted objects (SSE-S3, SSE-KMS, DSSE-KMS, SSE-C).
+
+- To use Object Lock with replication, you must grant 2 additional permissions on
+the source S3 bucket in the AWS Identity and Access Management (IAM) role that you use to set up replication.
+The 2 additional permissions are s3:GetObjectRetention and
+s3:GetObjectLegalHold. If the role has an s3:Get*
+permission statement, that statement satisfies the requirement. For more information,
+see Using Object Lock with S3 Replication.
+
+Enable receiving replicated objects from a source bucket
+
+Instead of manually adding the preceding policy to your destination bucket, you can
+quickly generate the policies needed to enable receiving replicated objects from a source
+bucket through the Amazon S3 console.
+
+- Sign in to the AWS Management Console and open the Amazon S3 console at
+https://console.aws.amazon.com/s3/.
+
+- In the left navigation pane, choose Buckets.
+
+- In the Buckets list, choose the bucket that you want to use as
+a destination bucket.
+
+- Choose the Management tab, and scroll down to
+Replication rules.
+
+- For Actions, choose Receive replicated
+objects.
+
+Follow the prompts and enter the AWS account ID of the source bucket account, and
+then choose Generate policies. The console generates an Amazon S3 bucket
+policy and a KMS key policy.
+
+- To add this policy to your existing bucket policy, either choose Apply
+settings or choose Copy to manually copy the changes.
+
+- (Optional) Copy the AWS KMS policy to your desired KMS key policy in the AWS Key Management Service
+console.
+
+## (Optional) Step 4: Granting permissions to change replica ownership
+
+When different AWS accounts own the source and destination buckets, you can tell Amazon S3 to change
+the ownership of the replica to the AWS account that owns the destination bucket. To override the
+ownership of replicas, you must either grant some additional permissions or adjust the
+S3 Object Ownership settings for the destination bucket. For more information about owner override,
+see Changing the replica owner.

@@ -1,0 +1,103 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/config-item-table.html
+TITLE: Components of a Configuration Item - AWS Config
+
+# Components of a Configuration Item
+
+A configuration item represents a point-in-time view of the various
+attributes of a supported AWS resource that exists in your account. The components of a
+configuration item include metadata, attributes, relationships, current configuration, and
+related events. AWS Config creates a configuration item whenever it detects a change to a
+resource type that it is recording. For example, if AWS Config is recording Amazon S3 buckets,
+AWS Config creates a configuration item whenever a bucket is created, updated, or deleted. You
+can also select for AWS Config to create a configuration item at the recording frequency that you
+set.
+
+A configuration item consists of the following components.
+
+Component
+
+Description
+
+Contains
+
+Metadata
+
+Information about this configuration item
+
+- Version ID
+
+- Time when the configuration item was captured
+
+- Status of the configuration item indicating whether the item
+was captured successfully
+
+- State ID indicating the ordering of the configuration items of
+a resource
+
+Attributes
+
+Resource attributes
+
+- Resource ID
+
+- List of key–value tags for this resource
+
+- Resource type (see Supported Resource Types for AWS Config)
+
+- Amazon Resource Name (ARN)
+
+- Availability Zone that contains this resource, if
+applicable
+
+- Time the resource was created
+
+Relationships
+
+How the resource is related to other resources associated with the
+account
+
+Description of the relationship, such as Amazon EBS volume
+vol-1234567 is attached to an Amazon EC2 instance
+i-a1b2c3d4
+
+Current configuration
+
+Information returned through a call to the Describe or List API of the
+resource
+
+For example, DescribeVolumes API returns the following
+information about the volume:
+
+- Availability Zone the volume is in
+
+- Time the volume was attached
+
+- ID of the EC2 instance it is attached to
+
+- Current status of the volume
+
+- State of DeleteOnTermination flag
+
+- Device the volume is attached to
+
+- Type of volume, such as gp2, io1, or
+standard
+
+Notes
+
+- A configuration item relationship does not include network flow or data flow
+dependencies. Configuration items cannot be customized to represent your application
+architecture.
+
+- As of Version 1.3, the relatedEvents field is empty. You can access the LookupEvents API in the
+AWS CloudTrail API Reference to retrieve the events for the
+resource.
+
+- As of Version 1.3, the configurationItemMD5Hash field is empty. You can use the
+configurationStateId field to ensure you have the latest configuration item.
+
+- If a resource type does not support tagging or does not include tag information in its
+describe API response, AWS Config won't capture tag data in the configuration items (CIs) for that
+resource type. AWS Config will still record these resources. However, any functionality that relies
+on tag data won't work. This affects tag-based filtering, grouping, or compliance evaluation
+that relies on tag data.

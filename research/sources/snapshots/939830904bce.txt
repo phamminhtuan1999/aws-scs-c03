@@ -1,0 +1,300 @@
+URL: https://docs.aws.amazon.com/kms/latest/APIReference/API_ScheduleKeyDeletion.html
+TITLE: ScheduleKeyDeletion - AWS Key Management Service
+
+# ScheduleKeyDeletion
+
+Schedules the deletion of a KMS key. By default, AWS KMS applies a waiting period of 30
+days, but you can specify a waiting period of 7-30 days. When this operation is successful,
+the key state of the KMS key changes to PendingDeletion and the key can't be used
+in any cryptographic operations. It remains in this state for the duration of the waiting
+period. Before the waiting period ends, you can use CancelKeyDeletion to
+cancel the deletion of the KMS key. After the waiting period ends, AWS KMS deletes the KMS key,
+its key material, and all AWS KMS data associated with it, including all aliases that refer to
+it.
+
+Important
+
+Deleting a KMS key is a destructive and potentially dangerous operation. When a KMS key
+is deleted, all data that was encrypted under the KMS key is unrecoverable. (The only
+exception is a multi-Region replica key, or an asymmetric or HMAC KMS key with
+imported key material.) To prevent the use of a KMS key without deleting it, use
+DisableKey.
+
+You can schedule the deletion of a multi-Region primary key and its replica keys at any
+time. However, AWS KMS will not delete a multi-Region primary key with existing replica keys. If
+you schedule the deletion of a primary key with replicas, its key state changes to
+PendingReplicaDeletion and it cannot be replicated or used in cryptographic
+operations. This status can continue indefinitely. When the last of its replicas keys is
+deleted (not just scheduled), the key state of the primary key changes to
+PendingDeletion and its waiting period (PendingWindowInDays)
+begins. For details, see Deleting multi-Region keys in
+the
+AWS Key Management Service Developer Guide.
+
+When AWS KMS
+deletes a KMS key from an AWS CloudHSM
+key store, it makes a best effort to delete the associated key material from the
+associated AWS CloudHSM cluster. However, you might need to manually delete the orphaned key
+material from the cluster and its backups. Deleting a KMS key from an external key
+store has no effect on the associated external key. However, for both types of
+custom key stores, deleting a KMS key is destructive and irreversible. You cannot decrypt
+ciphertext encrypted under the KMS key by using only its associated external key or AWS CloudHSM key.
+Also, you cannot recreate a KMS key in an external key store by creating a new KMS key with
+the same key material.
+
+For more information about scheduling a KMS key for deletion, see Deleting KMS keys in the
+
+AWS Key Management Service Developer Guide.
+
+The KMS key that you use for this operation must be in a compatible key state. For
+details, see Key states of AWS KMS keys in the
+AWS Key Management Service Developer Guide.
+
+Cross-account use: No. You cannot perform this operation on a KMS key in a different AWS account.
+
+Required permissions: kms:ScheduleKeyDeletion (key
+policy)
+
+Related operations
+
+- CancelKeyDeletion
+
+- DisableKey
+
+Eventual consistency: The AWS KMS API follows an eventual consistency model.
+For more information, see AWS KMS eventual consistency.
+
+## Request Syntax
+
+{
+"KeyId": "string",
+"PendingWindowInDays": number
+}
+
+## Request Parameters
+
+For information about the parameters that are common to all actions, see Common Parameters.
+
+The request accepts the following data in JSON format.
+
+Note
+
+In the following list, the required parameters are described first.
+
+KeyId
+
+The unique identifier of the KMS key to delete.
+
+Specify the key ID or key ARN of the KMS key.
+
+For example:
+
+- Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
+
+- Key ARN: arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+
+To get the key ID and key ARN for a KMS key, use ListKeys or DescribeKey.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 2048.
+
+Required: Yes
+
+PendingWindowInDays
+
+The waiting period, specified in number of days. After the waiting period ends, AWS KMS
+deletes the KMS key.
+
+If the KMS key is a multi-Region primary key with replica keys, the waiting period begins
+when the last of its replica keys is deleted. Otherwise, the waiting period begins
+immediately.
+
+This value is optional. If you include a value, it must be between 7 and 30, inclusive. If
+you do not include a value, it defaults to 30. You can use the kms:ScheduleKeyDeletionPendingWindowInDays condition key to further
+constrain the values that principals can specify in the PendingWindowInDays
+parameter.
+
+Type: Integer
+
+Valid Range: Minimum value of 7. Maximum value of 30.
+
+Required: No
+
+## Response Syntax
+
+{
+"DeletionDate": number,
+"KeyId": "string",
+"KeyState": "string",
+"PendingWindowInDays": number
+}
+
+## Response Elements
+
+If the action is successful, the service sends back an HTTP 200 response.
+
+The following data is returned in JSON format by the service.
+
+DeletionDate
+
+The date and time after which AWS KMS deletes the KMS key.
+
+If the KMS key is a multi-Region primary key with replica keys, this field does not
+appear. The deletion date for the primary key isn't known until its last replica key is
+deleted.
+
+Type: Timestamp
+
+KeyId
+
+The Amazon Resource Name (key ARN) of the KMS key whose deletion is scheduled.
+
+Type: String
+
+Length Constraints: Minimum length of 1. Maximum length of 2048.
+
+KeyState
+
+The current status of the KMS key.
+
+For more information about how key state affects the use of a KMS key, see
+Key states of AWS KMS keys in the
+AWS Key Management Service Developer Guide.
+
+Type: String
+
+Valid Values: Creating | Enabled | Disabled | PendingDeletion | PendingImport | PendingReplicaDeletion | Unavailable | Updating
+
+PendingWindowInDays
+
+The waiting period before the KMS key is deleted.
+
+If the KMS key is a multi-Region primary key with replicas, the waiting period begins when
+the last of its replica keys is deleted. Otherwise, the waiting period begins
+immediately.
+
+Type: Integer
+
+Valid Range: Minimum value of 7. Maximum value of 30.
+
+## Errors
+
+For information about the errors that are common to all actions, see Common Error Types.
+
+DependencyTimeoutException
+
+The system timed out while trying to fulfill the request. You can retry the
+request.
+
+HTTP Status Code: 500
+
+InvalidArnException
+
+The request was rejected because a specified ARN, or an ARN in a key policy, is not
+valid.
+
+HTTP Status Code: 400
+
+KMSInternalException
+
+The request was rejected because an internal exception occurred. The request can be
+retried.
+
+HTTP Status Code: 500
+
+KMSInvalidStateException
+
+The request was rejected because the state of the specified resource is not valid for this
+request.
+
+This exceptions means one of the following:
+
+- The key state of the KMS key is not compatible with the operation.
+
+To find the key state, use the DescribeKey operation. For more
+information about which key states are compatible with each AWS KMS operation, see
+Key states of AWS KMS keys in the
+
+AWS Key Management Service Developer Guide
+.
+
+- For cryptographic operations on KMS keys in custom key stores, this exception
+represents a general failure with many possible causes. To identify the cause, see the
+error message that accompanies the exception.
+
+HTTP Status Code: 400
+
+NotFoundException
+
+The request was rejected because the specified entity or resource could not be
+found.
+
+HTTP Status Code: 400
+
+## Examples
+
+The following examples are formatted for
+legibility.
+
+### Example Request
+
+This example illustrates one usage of ScheduleKeyDeletion.
+
+POST / HTTP/1.1
+Host: kms.us-east-2.amazonaws.com
+Content-Length: 75
+X-Amz-Target: TrentService.ScheduleKeyDeletion
+X-Amz-Date: 20161210T003358Z
+Content-Type: application/x-amz-json-1.1
+Authorization: AWS4-HMAC-SHA256\
+Credential=AKIAI44QH8DHBEXAMPLE/20161210/us-east-2/kms/aws4_request,\
+SignedHeaders=content-type;host;x-amz-date;x-amz-target,\
+Signature=c42c52cf0e4057e004b73a905b0e5da215f63dd33117e7316f760e6223433abb
+
+{
+"PendingWindowInDays": 7,
+"KeyId": "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
+
+### Example Response
+
+This example illustrates one usage of ScheduleKeyDeletion.
+
+HTTP/1.1 200 OK
+Server: Server
+Date: Sat, 10 Dec 2016 00:33:58 GMT
+Content-Type: application/x-amz-json-1.1
+Content-Length: 114
+Connection: keep-alive
+x-amzn-RequestId: 5704ddf7-be70-11e6-b0c0-3343f53dee45
+
+{
+"DeletionDate": 1.4820192E9,
+"KeyId": "arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+"PendingWindowInDays": 7
+}
+
+## See Also
+
+For more information about using this API in one of the language-specific AWS SDKs, see the following:
+
+- AWS Command Line Interface V2
+
+- AWS SDK for .NET V4
+
+- AWS SDK for C++
+
+- AWS SDK for Go v2
+
+- AWS SDK for Java V2
+
+- AWS SDK for JavaScript V3
+
+- AWS SDK for Kotlin
+
+- AWS SDK for PHP V3
+
+- AWS SDK for Python (Boto3)
+
+- AWS SDK for Ruby V3

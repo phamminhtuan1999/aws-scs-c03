@@ -1,0 +1,537 @@
+URL: https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html
+TITLE: Key states of AWS KMS keys - AWS Key Management Service
+
+# Key states of AWS KMS keys
+
+An AWS KMS key always has a key state. Operations on the KMS key and its environment can
+change the key state. The key state can change either transiently, or until another operation changes its key
+state. These operations are done either asynchronously, or by an API call.
+
+The table in this section shows how key states affect calls to AWS KMS API operations. As a
+result of its key state, an operation on a KMS key is expected to succeed (✓),
+fail (X), or succeed only under certain conditions (?). The result
+often differs for KMS keys with imported key material.
+
+This table includes only the API operations that use an existing KMS key. Other operations,
+such as CreateKey and ListKeys, are omitted.
+
+Topics
+
+- Key states and KMS key types
+
+- Key state table
+
+## Key states and KMS key types
+
+The type of the KMS key determines the key states it can have.
+
+- All KMS keys can be in the Enabled, Disabled, and
+PendingDeletion states.
+
+- Most KMS keys are created in the Enabled state. Keys with imported key
+material are created in the PendingImport state.
+
+- The PendingImport state applies only to KMS keys with imported key material. When any key material for an imported key is
+deleted or it expires, then the state changes from Enabled to PendingImport.
+
+- The Unavailable state applies only to a KMS key in a custom key store. A KMS key in an AWS CloudHSM key store is Unavailable when the
+custom key store is intentionally disconnected from its AWS CloudHSM cluster. A KMS key in an
+external key store is Unavailable
+when the custom key store is intentionally disconnected from its external key store proxy. You can view and manage
+unavailable KMS keys, but you cannot use them in cryptographic operations.
+
+The key state of a KMS key in a custom key store is not affected by changes to its
+backing key. A KMS key in a AWS CloudHSM key store is not affected by changes to its associated key material in the AWS CloudHSM cluster. A
+KMS key in an external key store is not affected by changes to its external key in an external key manager. If the
+backing key is disabled or deleted, the KMS key state doesn't change, but cryptographic
+operations using the KMS key fail.
+
+- The Creating, Updating, and
+PendingReplicaDeletion key states apply only to multi-Region keys.
+
+- A multi-Region replica key is in the transient Creating key state
+while it is being created. This process might still be in progress when the ReplicateKey operation completes.
+When the replicate process completes, the replica key is in the Enabled
+or PendingImport state.
+
+- Multi-Region keys are in the transient Updating key state while the
+primary Region is being updated. This process might still be in progress when the
+UpdatePrimaryRegion
+operation completes. When the update process completes, the primary and replica keys
+resume the Enabled key state.
+
+- When you schedule deletion of a multi-Region primary key that has replica keys,
+the primary key is in the PendingReplicaDeletion state until all of its
+replica keys are deleted. Then its key state changes to PendingDeletion.
+For details, see Deleting multi-Region keys.
+
+## Key state table
+
+The following table shows how the key state of a KMS key affects AWS KMS
+operations.
+
+The descriptions of the numbered footnotes ([n]) are at
+the end of this topic.
+
+Note
+
+You might need to scroll horizontally or vertically to see all of the data in this table.
+
+API
+
+Enabled
+
+Disabled
+
+Pending deletion
+
+Pending replica deletion
+
+Pending import
+
+Unavailable
+
+Creating
+
+Updating
+
+CancelKeyDeletion
+
+[4]
+
+[4]
+
+[4]
+
+[4], [13]
+
+[4]
+
+[4]
+
+CreateAlias
+
+[3]
+
+CreateGrant
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[14]
+
+Decrypt
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[11]
+
+[14]
+
+DeleteAlias
+
+DeleteImportedKeyMaterial
+
+[9]
+
+[9]
+
+[9]
+
+N/A
+
+[14]
+
+[15]
+
+DeriveSharedSecret
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+DescribeKey
+
+DisableKey
+
+[3]
+
+[5]
+
+[12]
+
+[14]
+
+[15]
+
+DisableKeyRotation
+
+[7]
+
+[1] or [7]
+
+[3] or [7]
+
+[6]
+
+[7]
+
+[14]
+
+[7]
+
+EnableKey
+
+[3]
+
+[5]
+
+[12]
+
+[14]
+
+[15]
+
+EnableKeyRotation
+
+[7]
+
+[1] or [7]
+
+[3] or [7]
+
+[6]
+
+[7]
+
+[14]
+
+[7]
+
+Encrypt
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[11]
+
+[14]
+
+GenerateDataKey
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[11]
+
+[14]
+
+GenerateDataKeyPair
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[7]
+
+[14]
+
+GenerateDataKeyPairWithoutPlaintext
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[7]
+
+[14]
+
+GenerateDataKeyWithoutPlaintext
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[11]
+
+[14]
+
+GenerateMac
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+GetKeyPolicy
+
+GetKeyRotationStatus
+
+[7]
+
+[7]
+
+[7]
+
+[6]
+
+[7]
+
+[7]
+
+[7]
+
+GetParametersForImport
+
+[9]
+
+[9]
+
+[8] or [9]
+
+[9]
+
+[14]
+
+[15]
+
+GetPublicKey
+
+[2] or [3]
+
+N/A
+
+[14]
+
+ImportKeyMaterial
+
+[9]
+
+[9]
+
+[9]
+
+[9]
+
+[14]
+
+ListAliases
+
+ListGrants
+
+ListKeyPolicies
+
+ListKeyRotations
+
+[7]
+
+[7]
+
+[7]
+
+[7]
+
+[7]
+
+[7]
+
+ListResourceTags
+
+PutKeyPolicy
+
+ReEncrypt
+
+[1]
+
+[2] or [3]
+
+[5]
+
+[11]
+
+[14]
+
+ReplicateKey
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+[15]
+
+RetireGrant
+
+RevokeGrant
+
+RotateKeyOnDemand
+
+[7]
+
+[1] or [7]
+
+[3] or [7]
+
+[5]
+
+[7]
+
+[14]
+
+[7]
+
+ScheduleKeyDeletion
+
+[3]
+
+[15]
+
+Sign
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+TagResource
+
+[3]
+
+UntagResource
+
+[3]
+
+UpdateAlias
+
+[10]
+
+UpdateKeyDescription
+
+[3]
+
+UpdatePrimaryRegion
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+Verify
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+VerifyMac
+
+[1]
+
+[2] or [3]
+
+[5]
+
+N/A
+
+[14]
+
+Table Details
+
+- [1] DisabledException: <key ARN> is
+disabled.
+
+- [2] DisabledException: <key ARN> is pending
+deletion (or pending replica deletion).
+
+- [3] KMSInvalidStateException: <key ARN> is
+pending deletion (or pending replica deletion).
+
+- [4] KMSInvalidStateException: <key ARN> is not
+pending deletion (or pending replica deletion).
+
+- [5] KMSInvalidStateException: <key ARN> is
+pending import because no key material has ever been imported or one of the imported
+key materials is deleted or expired.
+
+- [6] UnsupportedOperationException: <key ARN>
+origin is EXTERNAL which is not valid for this operation.
+
+- [7] If the KMS key is in a custom key store: UnsupportedOperationException.
+
+- [8] If the KMS key has imported key material: KMSInvalidStateException
+
+- [9] If the KMS key cannot have imported key material: UnsupportedOperationException.
+
+- [10] If the source KMS key is pending deletion, the command succeeds. If the
+destination KMS key is pending deletion, the command fails with error:
+KMSInvalidStateException : <key ARN> is pending
+deletion.
+
+- [11] KMSInvalidStateException: <key ARN> is
+unavailable. You cannot perform this operation on an unavailable
+KMS key.
+
+- [12] The operation succeeds, but the key state of the KMS key does not change until it
+becomes available.
+
+- [13] While a KMS key in a custom key store is pending deletion, its key state remains
+PendingDeletion even if the KMS key becomes unavailable. This allows you to cancel
+deletion of the KMS key at any time during the waiting period.
+
+- [14] KMSInvalidStateException: <key ARN> is
+creating. AWS KMS throws this exception while it is replicating a multi-Region key
+(ReplicateKey).
+
+- [15] KMSInvalidStateException: <key ARN> is
+updating. AWS KMS throws this exception while it is updating the primary Region of
+a multi-Region key (UpdatePrimaryRegion).

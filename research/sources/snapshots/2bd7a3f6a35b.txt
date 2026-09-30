@@ -1,0 +1,154 @@
+URL: https://docs.aws.amazon.com/iot/latest/developerguide/basic-policy-variables.html
+TITLE: Basic AWS IoT Core policy variables - AWS IoT Core
+
+# Basic AWS IoT Core policy variables
+
+AWS IoT Core defines the following basic policy variables:
+
+- aws:SourceIp: The IP address of the client connected to
+the AWS IoT Core message broker.
+
+- iot:ClientId: The client ID used to connect to the
+AWS IoT Core message broker.
+
+- iot:DomainName: The domain name of the client connected
+to AWS IoT Core.
+
+Examples
+
+- Examples of ClientId and SourceIp policy variables
+
+- Examples of iot:DomainName policy variable
+
+## Examples of ClientId and SourceIp policy variables
+
+The following AWS IoT Core policy shows a policy that uses policy variables.
+aws:SourceIp can be used in the Condition element of your
+policy to allow principals to make API requests only within a specific address
+range. For examples, see Authorizing users and cloud services to use AWS IoT Jobs.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientid1"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Publish"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topic/my/topic/${iot:ClientId}"
+],
+"Condition": {
+"IpAddress": {
+"aws:SourceIp": "123.45.167.89"
+}
+}
+}
+]
+}
+
+In these examples, ${iot:ClientId} is replaced by the ID of the
+client connected to the AWS IoT Core message broker when the policy is evaluated.
+When you use policy variables like ${iot:ClientId}, you can
+inadvertently open access to unintended topics. For example, if you use a policy
+that uses ${iot:ClientId} to specify a topic filter:
+
+{
+"Effect": "Allow",
+"Action": [
+"iot:Subscribe"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:topicfilter/my/${iot:ClientId}/topic"
+]
+}
+
+A client can connect using + as the client ID. This would allow
+the user to subscribe to any topic that matches the topic filter
+my/+/topic. To protect against such security gaps, use the
+iot:Connect policy action to control which client IDs can
+connect. For example, this policy allows only those clients whose client ID is
+clientid1 to connect:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/clientid"
+]
+}
+]
+}
+
+Note
+
+Using the policy variable ${iot:ClientId} with
+Connect is not recommended. There is no check on the value
+of ClientId, so an attacher with a different client's ID can
+pass the validation but cause disconnection. Because any
+ClientId is allowed, setting a random client ID can bypass
+thing group policies.
+
+## Examples of iot:DomainName policy variable
+
+You can add the iot:DomainName policy variable to restrict
+which domains are allowed to use. Adding the iot:DomainName
+policy variable allows devices to connect to only specific configured
+endpoints.
+
+The following policy allows devices to connect to the specified domain.
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Sid": "AllowConnectionsToSpecifiedDomain",
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/clientid",
+"Condition": {
+"StringEquals": {
+"iot:DomainName": "d1234567890abcdefghij-ats.iot.us-east-1.amazonaws.com"
+}
+}
+}
+}
+
+The following policy denies devices to connect to the specified
+domain.
+
+{
+"Version":"2012-10-17",
+"Statement": {
+"Sid": "DenyConnectionsToSpecifiedDomain",
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/clientid",
+"Condition": {
+"StringEquals": {
+"iot:DomainName": "d1234567890abcdefghij-ats.iot.us-east-1.amazonaws.com"
+}
+}
+}
+}
+
+For more information about policy conditional operator, see IAM JSON policy elements: Condition operators. For more
+information about domain configurations, see What
+is a domain configuration?.

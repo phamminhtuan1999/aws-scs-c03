@@ -1,0 +1,219 @@
+URL: https://docs.aws.amazon.com/autoscaling/ec2/userguide/lifecycle-hooks.html
+TITLE: Amazon EC2 Auto Scaling lifecycle hooks - Amazon EC2 Auto Scaling
+
+# Amazon EC2 Auto Scaling lifecycle hooks
+
+Amazon EC2 Auto Scaling offers the ability to add lifecycle hooks to your Auto Scaling groups. These hooks let
+you create solutions that are aware of events in the Auto Scaling instance lifecycle, and then
+perform a custom action on instances when the corresponding lifecycle event occurs. A
+lifecycle hook provides a specified amount of time (one hour by default) to wait for the
+action to complete before the instance transitions to the next state.
+
+As an example of using lifecycle hooks with Auto Scaling instances:
+
+- When a scale-out event occurs, your newly launched instance completes its startup
+sequence and transitions to a wait state. While the instance is in a wait state, it
+runs a script to download and install the needed software packages for your
+application, making sure that your instance is fully ready before it starts
+receiving traffic. When the script is finished installing software, it sends the
+complete-lifecycle-action command to continue.
+
+- When a scale-in event occurs, a lifecycle hook pauses the instance before it is
+terminated and sends you a notification using Amazon EventBridge. While the instance is in the
+wait state, you can invoke an AWS Lambda function or connect to the instance to
+download logs or other data before the instance is fully terminated.
+
+A popular use of lifecycle hooks is to control when instances are registered with Elastic Load Balancing.
+By adding a launch lifecycle hook to your Auto Scaling group, you can ensure that your bootstrap
+scripts have completed successfully and the applications on the instances are ready to
+accept traffic before they are registered to the load balancer at the end of the lifecycle
+hook.
+
+Contents
+
+- Lifecycle hook availability
+
+- Considerations and
+limitations
+
+- Related resources
+
+- How lifecycle hooks work in Auto Scaling groups
+
+- Prepare to add a
+lifecycle hook
+
+- Control instance retention with instance lifecycle policies
+
+- Retrieve
+the target lifecycle state
+
+- Add lifecycle hooks to your Auto Scaling group
+
+- Complete a lifecycle action in an Auto Scaling group
+
+- Tutorial: Use instance metadata to retrieve lifecycle state
+
+- Tutorial: Configure a lifecycle hook that invokes a Lambda function
+
+## Lifecycle hook availability
+
+The following table lists the lifecycle hooks available for various scenarios.
+
+Event
+
+Instance launch or termination¹
+
+Maximum Instance
+Lifetime: Replacement instances
+
+Instance Refresh:
+Replacement instances
+
+Capacity
+Rebalancing: Replacement instances
+
+Warm Pools:
+Instances entering and leaving the warm pool
+
+Instance launching
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+Instance terminating
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+¹ Applies to all launches and terminations, whether they are initiated
+automatically or manually such as when you call the SetDesiredCapacity or
+TerminateInstanceInAutoScalingGroup operations. Does not apply when you
+attach or detach instances, move instances in and out of standby mode, or delete the
+group with the force delete option.
+
+## Considerations and limitations for lifecycle hooks
+
+When working with lifecycle hooks, keep in mind the following notes and
+limitations:
+
+- Amazon EC2 Auto Scaling provides its own lifecycle to help with the management of Auto Scaling
+groups. This lifecycle differs from that of other EC2 instances. For more
+information, see Amazon EC2 Auto Scaling instance lifecycle. Instances in a warm pool also
+have their own lifecycle, as described in Lifecycle state transitions for instances in a warm pool.
+
+- If you configure a warm pool for your Auto Scaling group, Amazon EC2 Auto Scaling stops or hibernates
+each instance that enters the warm pool. The stop or hibernate action does not
+wait for user data to finish running. To hold an instance until your bootstrap
+script completes, use a lifecycle hook for the
+EC2_INSTANCE_LAUNCHING lifecycle action. For more information,
+see Use lifecycle hooks with a warm pool in Auto Scaling group.
+
+- By default, termination lifecycle hooks operate on a best-effort basis. If a termination
+lifecycle hook times out, or is abandoned, Amazon EC2 Auto Scaling proceeds with terminating the instance
+immediately. You can combine termination lifecycle hooks with an instance lifecycle policy
+for instance retention. For more information, see Control instance retention with instance lifecycle policies.
+
+- You can use lifecycle hooks with Spot Instances, but a lifecycle hook does not
+prevent an instance from terminating in the event that capacity is no longer
+available, which can happen at any time with a two-minute interruption notice.
+For more information, see Spot Instance interruptions in the
+Amazon EC2 User Guide. However, you can enable Capacity
+Rebalancing to proactively replace Spot Instances that have received a rebalance
+recommendation from the Amazon EC2 Spot service, a signal that is sent when a Spot
+Instance is at elevated risk of interruption. For more information, see Capacity Rebalancing in Auto Scaling to replace at-risk Spot Instances.
+
+- Instances can remain in a wait state for a finite period of time. The default
+timeout for a lifecycle hook is one hour (heartbeat timeout). There is also a
+global timeout that specifies the maximum amount of time that you can keep an
+instance in a wait state. The global timeout is 48 hours or 100 times the
+heartbeat timeout, whichever is smaller.
+
+- The result of the lifecycle hook can be either abandon or continue. If an
+instance is launching, continue indicates that your actions were successful, and
+that Amazon EC2 Auto Scaling can put the instance into service. Otherwise, abandon indicates
+that your custom actions were unsuccessful, and that we can terminate and
+replace the instance. If an instance is terminating, both abandon and continue
+allow the instance to terminate. However, abandon stops any remaining actions,
+such as other lifecycle hooks, and continue allows any other lifecycle hooks to
+complete.
+
+- Amazon EC2 Auto Scaling limits the rate at which it allows instances to launch if the
+lifecycle hooks are failing consistently, so make sure to test and fix any
+permanent errors in your lifecycle actions.
+
+- Creating and updating lifecycle hooks using the AWS CLI, CloudFormation, or an SDK
+provides options not available when creating a lifecycle hook from the
+AWS Management Console. For example, the field to specify the ARN of an SNS topic or SQS
+queue doesn't appear in the console, because Amazon EC2 Auto Scaling already sends events to
+Amazon EventBridge. These events can be filtered and redirected to AWS services such as
+Lambda, Amazon SNS, and Amazon SQS as needed.
+
+- You can add multiple lifecycle hooks to an Auto Scaling group while you are creating
+it, by calling the CreateAutoScalingGroup API using the AWS CLI, CloudFormation, or an SDK.
+However, each hook must have the same notification target and IAM role, if
+specified. To create lifecycle hooks with different notification targets and
+different roles, create the lifecycle hooks one at a time in separate calls to
+the PutLifecycleHook API.
+
+- If you add a lifecycle hook for instance launch, the health check grace period
+starts as soon as the instance reaches the InService state. For
+more information, see Set the health check grace period for an Auto Scaling group.
+
+Scaling considerations
+
+- Dynamic scaling policies scale in and out in response to CloudWatch metric data,
+such as CPU and network I/O, that's aggregated across multiple instances. When
+scaling out, Amazon EC2 Auto Scaling doesn't immediately count a new instance towards the
+aggregated instance metrics of the Auto Scaling group. It waits until the instance
+reaches the InService state and the instance warmup has finished.
+For more information, see Scaling performance considerations in the default instance
+warmup topic.
+
+- On scale in, the aggregated instance metrics might not instantly reflect the
+removal of a terminating instance. The terminating instance stops counting
+toward the group's aggregated instance metrics shortly after the Amazon EC2 Auto Scaling
+termination workflow begins.
+
+- In most cases when lifecycle hooks are invoked, scaling activities due to
+simple scaling policies are paused until the lifecycle actions have completed
+and the cooldown period has expired. Setting a long interval for the cooldown
+period means that it will take longer for scaling to resume. For more
+information, see Lifecycle hooks can cause additional delays in the cooldown topic. In
+general, we recommend against using simple scaling policies if you can use
+either step scaling or target tracking scaling policies instead.
+
+## Related resources
+
+For an introduction video, see AWS re:Invent 2018: Capacity Management
+Made Easy with Amazon EC2 Auto Scaling on YouTube.
+
+We provide a few JSON and YAML template snippets that you can use to understand how to
+declare lifecycle hooks in your CloudFormation stack templates. For more information, see the
+AWS::AutoScaling::LifecycleHook reference in the
+AWS CloudFormation User Guide.
+
+You can also visit our GitHub
+repository to download example templates and user data scripts for lifecycle
+hooks.
+
+For examples of the use of lifecycle hooks, see the following blog posts.
+
+- Building a Backup System for Scaled Instances using Lambda and Amazon EC2 Run
+Command
+
+- Run code before terminating an EC2 Auto Scaling instance.

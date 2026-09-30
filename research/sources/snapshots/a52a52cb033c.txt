@@ -1,0 +1,396 @@
+URL: https://docs.aws.amazon.com/iot/latest/developerguide/connect-policy.html
+TITLE: Connect policy examples - AWS IoT Core
+
+# Connect policy examples
+
+The following policy denies permission to client IDs client1 and
+client2 to connect to AWS IoT Core, while allowing devices to
+connect using a client ID. The client ID matches the name of a thing that's
+registered in the AWS IoT Core registry and attached to the principal that's used
+for connection:
+
+Note
+
+For registered devices, we recommend that you use thing policy variables for
+Connect actions and attach the thing to the principal
+that's used for the connection.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/client1",
+"arn:aws:iot:us-east-1:123456789012:client/client2"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/${iot:Connection.Thing.ThingName}"
+],
+"Condition": {
+"Bool": {
+"iot:Connection.Thing.IsAttached": "true"
+}
+}
+}
+]
+}
+
+The following policy grants permission to connect to AWS IoT Core with client ID
+client1. This policy example is for unregistered
+devices.
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": [
+"arn:aws:iot:us-east-1:123456789012:client/client1"
+]
+}
+]
+}
+
+## MQTT persistent sessions policy examples
+
+connectAttributes allow you to specify what attributes you
+want to use in your connect message in your IAM policies such as
+PersistentConnect and LastWill. For more
+information, see Using connectAttributes.
+
+The following policy allows connect with PersistentConnect
+feature:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+}
+]
+}
+
+The following policy disallows PersistentConnect, other
+features are allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringNotEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+}
+]
+}
+
+The above policy can also be expressed using StringEquals,
+any other feature including new feature is allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1"
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+}
+]
+}
+
+The following policy allows connect by both PersistentConnect
+and LastWill, any other new feature is not allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect",
+"LastWill"
+]
+}
+}
+}
+]
+}
+
+The following policy allows clean connect by clients with or without
+LastWill, no other features will be allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"StringEquals": {
+"iot:ConnectAttributes": "LastWill"
+}
+}
+}]
+}
+
+The following policy only allows connect using default features:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": []
+}
+}
+}
+]
+}
+
+The following policy allows connect only with
+PersistentConnect, any new feature is allowed as long as
+the connection uses PersistentConnect:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+}
+]
+}
+
+The following policy states the connect must have both
+PersistentConnect and LastWill usage, no new
+feature is allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect",
+"LastWill"
+]
+}
+}
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"LastWill"
+]
+}
+}
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": []
+}
+}
+}
+]
+}
+
+The following policy must not have PersistentConnect but can
+have LastWill, any other new feature is not allowed:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+},
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ForAllValues:StringEquals": {
+"iot:ConnectAttributes": [
+"LastWill"
+]
+}
+}
+}
+]
+}
+
+The following policy allows connect only by clients that have a
+LastWill with topic "my/lastwill/topicName",
+any feature is allowed as long as it uses the LastWill
+topic:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ArnEquals": {
+"iot:LastWillTopic": "arn:aws:iot:us-east-1:123456789012:topic/my/lastwill/topicName"
+}
+}
+}
+]
+}
+
+The following policy only allows clean connect using a specific
+LastWillTopic, any feature is allowed as long as it uses
+the LastWillTopic:
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"iot:Connect"
+],
+"Resource": "arn:aws:iot:us-east-1:123456789012:client/client1",
+"Condition": {
+"ArnEquals": {
+"iot:LastWillTopic": "arn:aws:iot:us-east-1:123456789012:topic/my/lastwill/topicName"
+}
+}
+},
+{
+"Effect": "Deny",
+"Action": [
+"iot:Connect"
+],
+"Resource": "*",
+"Condition": {
+"ForAnyValue:StringEquals": {
+"iot:ConnectAttributes": [
+"PersistentConnect"
+]
+}
+}
+}
+]
+}

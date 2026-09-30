@@ -1,0 +1,1050 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html
+TITLE: How Amazon S3 works with IAM - Amazon Simple Storage Service
+
+# How Amazon S3 works with IAM
+
+Before you use IAM to manage access to Amazon S3, learn what IAM features are
+available to use with Amazon S3.
+
+IAM features you can use with Amazon S3
+
+IAM feature
+
+Amazon S3 support
+
+Identity-based policies
+
+Yes
+
+Resource-based policies
+
+Yes
+
+Policy actions
+
+Yes
+
+Policy resources
+
+Yes
+
+Policy condition keys (service-specific)
+
+Yes
+
+ACLs
+
+Yes
+
+ABAC (tags in
+policies)
+
+Partial
+
+Temporary
+credentials
+
+Yes
+
+Forward access sessions (FAS)
+
+Yes
+
+Service
+roles
+
+Yes
+
+Service-linked roles
+
+Partial
+
+To get a high-level view of how Amazon S3 and other AWS services work with most IAM
+features, see AWS services that work with IAM in the
+IAM User Guide.
+
+For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+## Identity-based policies for Amazon S3
+
+Supports identity-based policies:
+
+Yes
+
+Identity-based policies are JSON permissions policy documents that you can attach to an identity, such as an IAM user, group of users, or role. These
+policies control what actions users and roles can perform, on which resources, and under what conditions. To learn how to create an identity-based
+policy, see Define custom IAM permissions with customer managed policies in the
+IAM User Guide.
+
+With IAM identity-based policies, you can specify allowed or denied actions and
+resources as well as the conditions under which actions are allowed or denied. To learn about all of the elements that you can use in a
+JSON policy, see IAM JSON
+policy elements reference in the
+IAM User Guide.
+
+### Identity-based policy examples for Amazon S3
+
+To view examples of Amazon S3 identity-based policies, see Identity-based policies for Amazon S3.
+
+## Resource-based policies within Amazon S3
+
+Supports resource-based policies:
+
+Yes
+
+Resource-based policies are JSON policy documents that you attach to a resource. Examples of resource-based policies are
+IAM role trust policies and Amazon S3 bucket policies. In services that support resource-based policies, service
+administrators can use them to control access to a specific resource. For the resource where the policy is attached, the policy defines what actions
+a specified principal can perform on that resource and under what conditions. You must specify a principal in a resource-based policy. Principals
+can include accounts, users, roles, federated users, or AWS services.
+
+To enable cross-account access, you can specify an entire account or IAM entities
+in another account as the principal in a resource-based policy. For more information, see Cross account resource access in IAM in the
+IAM User Guide.
+
+The Amazon S3 service supports bucket policies,
+access points policies, and access
+grants:
+
+- Bucket policies are resource-based policies that are attached to an Amazon S3
+bucket. A bucket policy defines which principals can perform actions on the
+bucket.
+
+- Access point policies are resource-based polices that are evaluated in conjunction
+with the underlying bucket policy.
+
+- Access grants are a simplified model for defining access permissions to data in
+Amazon S3 by prefix, bucket, or object. For information about S3 Access Grants, see Managing access with S3 Access Grants.
+
+### Principals for bucket policies
+
+The Principal element specifies the user, account, service, or other
+entity that is either allowed or denied access to a resource.
+The following are examples of specifying Principal. For more
+information, see Principal
+in the IAM User Guide.
+
+#### Grant permissions to an AWS account
+
+To grant permissions to an AWS account, identify the account using the
+following format.
+
+"AWS":"account-ARN"
+
+The following are examples.
+
+"Principal":{"AWS":"arn:aws:iam::AccountIDWithoutHyphens:root"}
+
+"Principal":{"AWS":["arn:aws:iam::AccountID1WithoutHyphens:root","arn:aws:iam::AccountID2WithoutHyphens:root"]}
+
+Note
+
+The examples above grant permissions to the root user, which delegates permissions to the account level. However, IAM policies are still required on the specific roles and users in the account.
+
+#### Grant permissions to an IAM user
+
+To grant permission to an IAM user within your account, you must provide an
+"AWS":"user-ARN" name-value
+pair.
+
+"Principal":{"AWS":"arn:aws:iam::account-number-without-hyphens:user/username"}
+
+For detailed examples that provide step-by-step instructions, see Example 1: Bucket owner granting its users bucket permissions and Example 3: Bucket owner granting permissions to objects it does not own.
+
+Note
+
+If an IAM identity is deleted after you update your bucket policy, the bucket policy
+will show a unique identifier in the principal element instead of an ARN.
+These unique IDs are never reused, so you can safely remove principals with
+unique identifiers from all of your policy statements. For more information
+about unique identifiers, see IAM identifiers in the IAM User Guide.
+
+#### Grant anonymous permissions
+
+Warning
+
+Use caution when granting anonymous access to your Amazon S3 bucket. When you grant
+anonymous access, anyone in the world can access your bucket. We highly recommend
+that you never grant any kind of anonymous write access to your S3 bucket.
+
+To grant permission to everyone, also referred as anonymous access, you set
+the wildcard ("*") as the Principal value. For
+example, if you configure your bucket as a website, you want all the objects in
+the bucket to be publicly accessible.
+
+"Principal":"*"
+
+"Principal":{"AWS":"*"}
+
+Using "Principal": "*" with an Allow effect in a
+resource-based policy allows anyone, even if they’re not signed in to AWS, to
+access your resource.
+
+Using "Principal" : { "AWS" : "*" } with an Allow
+effect in a resource-based policy allows any root user, IAM user, assumed-role
+session, or federated user in any account in the same partition to access your
+resource.
+
+For anonymous users, these two methods are equivalent. For more information, see All principals in the IAM User Guide.
+
+You cannot use a wildcard to match part of a principal name or ARN.
+
+Important
+
+In AWS access control policies, the Principals "*" and {"AWS": "*"} behave identically.
+
+#### Restrict resource permissions
+
+You can also use resource policy to restrict access to resources that would otherwise be available to IAM principals. Use a Deny statement to prevent access.
+
+The following example blocks access if a secure transport protocol isn’t used:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "DenyBucketAccessIfSTPNotUsed",
+"Effect": "Deny",
+"Principal": "*",
+"Action": "s3:*",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"Bool": {
+"aws:SecureTransport": "false"
+}
+}
+}
+]
+}
+
+Using "Principal": "*" so that this restriction applies to everyone is a best practice for this policy, instead of attempting to deny access only to specific accounts or principals using this method.
+
+#### Require access through CloudFront URLs
+
+You can require that your users access your Amazon S3 content only by using CloudFront URLs instead of Amazon S3 URLs. To do this, create a CloudFront origin access control (OAC). Then, change the permissions on your S3 data. In your bucket policy, you can set CloudFront as the Principal as follows:
+
+"Principal":{"Service":"cloudfront.amazonaws.com"}
+
+Use a Condition element in the policy to allow CloudFront to access the bucket only when the request is on behalf of the CloudFront distribution that contains the S3 origin.
+
+"Condition": {
+"StringEquals": {
+"AWS:SourceArn": "arn:aws:cloudfront::111122223333:distribution/CloudFront-distribution-ID"
+}
+}
+
+For more information about requiring S3 access through CloudFront URLs, see Restricting access to an Amazon Simple Storage Service origin in the Amazon CloudFront Developer Guide. For more information about the security and privacy benefits of using Amazon CloudFront, see Configuring secure access and restricting access to content.
+
+### Resource-based policy examples for Amazon S3
+
+- To view policy examples for Amazon S3 buckets, see Bucket policies for Amazon S3.
+
+- To view policy examples for access points, see Configuring IAM policies for using access points.
+
+## Policy actions for Amazon S3
+
+Supports policy actions:
+
+Yes
+
+Administrators can use AWS JSON policies to specify who has access to what. That is, which principal can perform
+actions on what resources, and under what conditions.
+
+The Action element of a JSON policy describes the
+actions that you can use to allow or deny access in a policy. Include actions in a policy to grant permissions to perform the associated operation.
+
+The following shows different types of mapping relationship between S3 API operations and the
+required policy actions.
+
+- One-to-one mapping with the same name. For example, to use the PutBucketPolicy API operation, the s3:PutBucketPolicy policy action is required.
+
+- One-to-one mapping with different names. For example, to use the ListObjectsV2 API operation, the s3:ListBucket policy action is required.
+
+- One-to-many mapping. For example, to use the HeadObject API operation, the
+s3:GetObject is required. Also, when you use S3
+Object Lock and want to get an object's Legal Hold status or retention
+settings, the corresponding s3:GetObjectLegalHold or
+s3:GetObjectRetention policy actions are also required
+before you can use the HeadObject API operation.
+
+- Many-to-one mapping. For example, to use the ListObjectsV2 or HeadBucket API operations, the s3:ListBucket policy action is required.
+
+To see a list of Amazon S3 actions for use in policies, see Actions defined by Amazon S3 in the
+Service Authorization Reference. For a complete list of Amazon S3 API operations, see Amazon S3 API Actions in the Amazon Simple Storage Service API Reference.
+
+For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+Policy actions in Amazon S3 use the following prefix before the action:
+
+s3
+
+To specify multiple actions in a single statement, separate them with commas.
+
+"Action": [
+"s3:action1",
+"s3:action2"
+]
+
+### Bucket operations
+
+Bucket operations are S3 API operations that operate on the bucket resource type. For
+example, CreateBucket, ListObjectsV2, and
+PutBucketPolicy. S3 policy actions for bucket operations
+require the Resource element in bucket policies or IAM
+identity-based policies to be the S3 bucket type Amazon Resource Name (ARN) identifier in the following
+example format.
+
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket"
+
+The following bucket policy grants the user
+Akua with account
+12345678901 the
+s3:ListBucket permission to perform the ListObjectsV2
+API operation and list objects in an S3 bucket.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "Allow Akua to list objects in the bucket",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Akua"
+},
+"Action": [
+"s3:ListBucket"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket"
+}
+]
+}
+
+Bucket operations in policies for access points for general purpose buckets
+
+Permissions granted in an access point for general purpose buckets policy are effective only if the underlying
+bucket allows the same permissions. When you use S3 Access Points, you must
+delegate access control from the bucket to the access point or add the same permissions in
+the access point policies to the underlying bucket's policy. For more information, see
+Configuring IAM policies for using access points. In access point policies, S3 policy actions for bucket operations require you to use
+the access point ARN for the Resource element in the following
+format.
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point"
+
+The following access point policy grants the user
+Akua with account
+12345678901 the
+s3:ListBucket permission to perform the ListObjectsV2 API operation through the S3 access point named
+example-access-point. This permission
+allows Akua to list the objects in the bucket
+that's associated with example-access-point.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowAkuaToListObjectsInBucketThroughAccessPoint",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Akua"
+},
+"Action": [
+"s3:ListBucket"
+],
+"Resource": "arn:aws:s3:us-west-2:111122223333:accesspoint/example-access-point"
+}
+]
+}
+
+Note
+
+Not all bucket operations are supported by access points for general purpose buckets. For more information, see Access points compatibility with S3 operations.
+
+Bucket operations in policies for access points for directory buckets
+
+Permissions granted in an access points for directory buckets policy are effective only if the underlying
+bucket allows the same permissions. When you use S3 Access Points, you must
+delegate access control from the bucket to the access point or add the same permissions in
+the access point policies to the underlying bucket's policy. For more information, see
+Configuring IAM policies for using access points for directory buckets. In access point policies, S3 policy actions for bucket operations require you to use
+the access point ARN for the Resource element in the following
+format.
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point--usw2-az1--xa-s3"
+
+The following access point policy grants the user
+Akua with account
+12345678901 the
+s3:ListBucket permission to perform the ListObjectsV2 API operation through the access point named
+example-access-point--usw2-az1--xa-s3. This permission
+allows Akua to list the objects in the bucket
+that's associated with example-access-point--usw2-az1--xa-s3.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowAkuaToListObjectsInTheBucketThroughAccessPoint",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Akua"
+},
+"Action": [
+"s3:ListBucket"
+],
+"Resource": "arn:aws:s3express:us-east-1:111122223333:accesspoint/example-access-point-usw2-az1-xa-s3"
+}
+]
+}
+
+Note
+
+Not all bucket operations are supported by access points for directory buckets. For more information, see Object operations for access points for directory buckets.
+
+### Object operations
+
+Object operations are S3 API operations that act upon the object resource type. For
+example, GetObject, PutObject, and
+DeleteObject. S3 policy actions for object operations require
+the Resource element in policies to be the S3 object ARN in the
+following example formats.
+
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*"
+
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/prefix/*"
+
+Note
+
+The object ARN must contain a forward slash after the bucket name, as seen in the previous
+examples.
+
+The following bucket policy grants the user
+Akua with account
+12345678901 the
+s3:PutObject permission. This permission allows
+Akua to use the PutObject API operation to upload objects to the S3
+bucket named
+amzn-s3-demo-bucket.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "Allow Akua to upload objects",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Akua"
+},
+"Action": [
+"s3:PutObject"
+],
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*"
+}
+]
+}
+
+Object operations in access point policies
+
+When you use S3 Access Points to control access to object operations, you can
+use access point policies. When you use access point policies, S3 policy actions for object
+operations require you to use the access point ARN for the Resource
+element in the following format:
+arn:aws:s3:region:account-id:accesspoint/access-point-name/object/resource.
+For object operations that use access points, you must include the
+/object/ value after the whole access point ARN in the
+Resource element. Here are some examples.
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point/object/*"
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point/object/prefix/*"
+
+The following access point policy grants the user
+Akua with account
+12345678901 the
+s3:GetObject permission. This permission allows
+Akua to perform the GetObject API operation through the access point named
+example-access-point on all objects in
+the bucket that's associated with the access point.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "Allow Akua to get objects through access point",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::111122223333:user/Akua"
+},
+"Action": [
+"s3:GetObject"
+],
+"Resource": "arn:aws:s3:us-east-1:111122223333:accesspoint/example-access-point/object/*"
+}
+]
+}
+
+Note
+
+Not all object operations are supported by access points. For more information, see Access points compatibility with S3 operations.
+
+Object operations in policies for access points for directory buckets
+
+When you use access points for directory buckets to control access to object operations, you can
+use access point policies. When you use access point policies, S3 policy actions for object
+operations require you to use the access point ARN for the Resource
+element in the following format:
+arn:aws:s3:region:account-id:accesspoint/access-point-name/object/resource.
+For object operations that use access points, you must include the
+/object/ value after the whole access point ARN in the
+Resource element. Here are some examples.
+
+"Resource": "arn:aws:s3express:us-west-2:123456789012:accesspoint/example-access-point--usw2-az1--xa-s3/object/*"
+
+"Resource": "arn:aws:s3express:us-west-2:123456789012:accesspoint/example-access-point--usw2-az1--xa-s3/object/prefix/*"
+
+The following access point policy grants the user
+Akua with account
+12345678901 the
+s3:GetObject permission. This permission allows
+Akua to perform the GetObject API operation through the access point named
+example-access-point--usw2-az1--xa-s3 on all objects in
+the bucket that's associated with the access point.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "Allow Akua to get objects through access point",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::12345678901:user/Akua"
+},
+"Action": ["s3express:CreateSession", "s3:GetObject"],
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point--usw2-az1--xa-s3/object/*"
+}
+]
+}
+
+Note
+
+Not all object operations are supported by access points for directory buckets. For more information, see Object operations for access points for directory buckets.
+
+### Access point for general purpose bucket operations
+
+Access point operations are S3 API operations that operate on the
+accesspoint resource type. For example,
+CreateAccessPoint, DeleteAccessPoint, and
+GetAccessPointPolicy. S3 policy actions for access point operations can only
+be used in IAM identity-based policies, not in bucket policies or access point policies.
+Access points operations require the Resource element to be the access
+point ARN in the following example format.
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point"
+
+The following IAM identity-based policy grants the
+s3:GetAccessPointPolicy permission to perform the GetAccessPointPolicy API operation on
+the S3 access point named
+example-access-point.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "GrantPermissionToRetrieveTheAccessPointPolicyOfAccessPointExampleAccessPoint",
+"Effect": "Allow",
+"Action": [
+"s3:GetAccessPointPolicy"
+],
+"Resource": "arn:aws:s3:*:123456789012:accesspoint/example-access-point"
+}
+]
+}
+
+When you use Access Points, to control access to bucket operations, see Bucket operations in policies for access points for general purpose buckets; to control access to object operations, see Object operations in access point policies.
+For more information about how to configure access point policies, see Configuring IAM policies for using access points.
+
+### Access point for directory buckets operations
+
+Access point for directory buckets operations are S3 API operations that operate on the
+accesspoint resource type. For example,
+CreateAccessPoint, DeleteAccessPoint, and
+GetAccessPointPolicy. S3 policy actions for access point operations can only
+be used in IAM identity-based policies, not in bucket policies or access point policies.
+Access points for directory buckets operations require the Resource element to be the access
+point ARN in the following example format.
+
+"Resource": "arn:aws:s3:us-west-2:123456789012:accesspoint/example-access-point--usw2-az1--xa-s3"
+
+The following IAM identity-based policy grants the
+s3express:GetAccessPointPolicy permission to perform the GetAccessPointPolicy API operation on
+the access point named
+example-access-point--usw2-az1--xa-s3.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "GrantPermissionToRetrieveTheAccessPointPolicyOfAccessPointExampleAccessPointUsw2Az1XaS3",
+"Effect": "Allow",
+"Action": [
+"s3express:CreateSession","s3express:GetAccessPointPolicy"
+],
+"Resource": "arn:aws:s3:*:111122223333:accesspoint/example-access-point"
+}
+]
+}
+
+The following IAM identity-based policy grants the s3express:CreateAccessPoint permission to create an access points for directory buckets.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "Grant CreateAccessPoint.",
+"Principal": "*",
+"Action": [
+"s3express:CreateSession",
+"s3express:CreateAccessPoint"
+],
+"Effect": "Allow",
+"Resource": "*"
+}
+]
+}
+
+The following IAM identity-based policy grants the s3express:PutAccessPointScope permission to create access point scope for access points for directory buckets.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "Grant PutAccessPointScope",
+"Principal": "*",
+"Action": [
+"s3express:CreateSession",
+"s3express:CreateAccessPoint",
+"s3express:PutAccessPointScope"
+],
+"Effect": "Allow",
+"Resource": "*"
+}
+]
+}
+
+When you use access points for directory buckets to control access to bucket operations, see Bucket operations in policies for access points for directory buckets; to control access to object operations, see Object operations in policies for access points for directory buckets.
+For more information about how to configure access points for directory buckets policies, see Configuring IAM policies for using access points for directory buckets.
+
+### Object Lambda Access Point operations
+
+With Amazon S3 Object Lambda, you can add your own code to Amazon S3 GET, LIST,
+and HEAD requests to modify and process data as it is returned to an
+application. You can make requests through an Object Lambda Access Point, which works the same as making requests through other access points. For more information, see Transforming objects with S3 Object Lambda.
+
+For more information about how to configure policies for Object Lambda Access Point operations, see Configuring IAM policies for Object Lambda Access Points.
+
+### Multi-Region Access Point operations
+
+A Multi-Region Access Point provides a global endpoint that applications can use to fulfill requests from S3 buckets that are located in multiple AWS Region. You can use a Multi-Region Access Point to build multi-Region applications with the same architecture that's used in a single Region, and then run those applications anywhere in the world. For more information, see Managing multi-Region traffic with Multi-Region Access Points.
+
+For more information about how to configure policies for Multi-Region Access Point operations, see Multi-Region Access Point policy examples.
+
+### Batch job operations
+
+(Batch Operations) job operations are S3 API operations that operate on the job resource type.
+For example, DescribeJob and CreateJob. S3 policy
+actions for job operations can only be used in IAM identity-based policies,
+not in bucket policies. Also, job operations require the Resource
+element in IAM identity-based policies to be the job ARN in the
+following example format.
+
+"Resource": "arn:aws:s3:*:123456789012:job/*"
+
+The following IAM identity-based policy grants the s3:DescribeJob
+permission to perform the DescribeJob API operation
+on the S3 Batch Operations job named
+example-job.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowDescribingBatchOperationJob",
+"Effect": "Allow",
+"Action": [
+"s3:DescribeJob"
+],
+"Resource": "arn:aws:s3:*:111122223333:job/example-job"
+}
+]
+}
+
+### S3 Storage Lens configuration operations
+
+For more information about how to configure S3 Storage Lens configuration operations, see Setting Amazon S3 Storage Lens permissions.
+
+### Account operations
+
+Account operations are S3 API operations that operate on the account level. For example, GetPublicAccessBlock (for account). Account isn't a resource type defined by Amazon S3.
+S3 policy actions for account operations can only be used in IAM identity-based policies, not in bucket policies. Also, account operations require the Resource element in IAM identity-based policies to be "*".
+
+The following IAM identity-based policy grants the
+s3:GetAccountPublicAccessBlock permission to perform the
+account-level GetPublicAccessBlock API operation and retrieve the
+account-level Public Access Block settings.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement":[
+{
+"Sid":"AllowRetrievingTheAccountLevelPublicAccessBlockSettings",
+"Effect":"Allow",
+"Action":[
+"s3:GetAccountPublicAccessBlock"
+],
+"Resource":[
+"*"
+]
+}
+]
+}
+
+### Policy examples for Amazon S3
+
+- To view examples of Amazon S3 identity-based policies, see Identity-based policies for Amazon S3.
+
+- To view examples of Amazon S3 resource-based policies, see Bucket policies for Amazon S3 and Configuring IAM policies for using access points.
+
+## Policy resources for Amazon S3
+
+Supports policy resources:
+
+Yes
+
+Administrators can use AWS JSON policies to specify who has access to what. That is, which principal can perform
+actions on what resources, and under what conditions.
+
+The Resource JSON policy element specifies the object or objects to which the action applies. As a best practice, specify a resource using its Amazon Resource Name (ARN). For actions that don't support resource-level permissions, use a wildcard (*) to indicate that the statement applies to all resources.
+
+"Resource": "*"
+
+Some Amazon S3 API actions support multiple resources. For example,
+s3:GetObject accesses
+example-resource-1 and
+example-resource-2, so a principal must
+have permissions to access both resources. To specify multiple resources in a single
+statement, separate the ARNs with commas, as shown in the following example.
+
+"Resource": [
+"example-resource-1",
+"example-resource-2"
+
+Resources in Amazon S3 are buckets, objects, access points, or jobs. In a policy, use the
+Amazon Resource Name (ARN) of the bucket, object, access point, or job to identify the
+resource.
+
+To see a complete list of Amazon S3 resource types and their ARNs, see Resources defined by Amazon S3
+in the Service Authorization Reference. To learn with which actions you can
+specify the ARN of each resource, see Actions defined by Amazon S3.
+
+For more information about the permissions to S3 API operations by S3 resource types, see Required permissions for Amazon S3 API operations.
+
+### Wildcard characters in resource ARNs
+
+You can use wildcard characters as part of the resource ARN. You can use the
+wildcard characters (* and ?) within any ARN segment (the
+parts separated by colons). An asterisk (*) represents any combination
+of zero or more characters, and a question mark (?) represents any
+single character. You can use multiple * or ? characters in
+each segment. However, a wildcard character can't span segments.
+
+- The following ARN uses the * wildcard character in the
+relative-ID part of the ARN to identify all objects in the
+amzn-s3-demo-bucket bucket.
+
+arn:aws:s3:::amzn-s3-demo-bucket/*
+
+- The following ARN uses * to indicate all S3 buckets and
+objects.
+
+arn:aws:s3:::*
+
+- The following ARN uses both of the wildcard characters, * and
+?, in the relative-ID part. This ARN identifies
+all objects in buckets such as
+amzn-s3-demo-example1bucket,
+amzn-s3-demo-example2bucket,
+amzn-s3-demo-example3bucket, and
+so on.
+
+arn:aws:s3:::amzn-s3-demo-example?bucket/*
+
+### Policy variables for resource ARNs
+
+You can use policy variables in Amazon S3 ARNs. At policy-evaluation time, these
+predefined variables are replaced by their corresponding values. Suppose that you
+organize your bucket as a collection of folders, with one folder for each of your
+users. The folder name is the same as the username. To grant users permission to
+their folders, you can specify a policy variable in the resource ARN:
+
+arn:aws:s3:::bucket_name/developers/${aws:username}/
+
+At runtime, when the policy is evaluated, the variable
+${aws:username} in the resource ARN is substituted with the username
+of the person who is making the request.
+
+### Policy examples for Amazon S3
+
+- To view examples of Amazon S3 identity-based policies, see Identity-based policies for Amazon S3.
+
+- To view examples of Amazon S3 resource-based policies, see Bucket policies for Amazon S3 and Configuring IAM policies for using access points.
+
+## Policy condition keys for Amazon S3
+
+Supports service-specific policy condition keys:
+
+Yes
+
+Administrators can use AWS JSON policies to specify who has access to what. That is, which principal can perform
+actions on what resources, and under what conditions.
+
+The Condition element specifies when statements execute based on defined criteria. You can create conditional expressions that use condition
+operators, such as equals or less than, to match the condition in the
+policy with values in the request. To see all AWS global
+condition keys, see AWS global condition context keys in the
+IAM User Guide.
+
+Each Amazon S3 condition key maps to the same name request header allowed by the API
+on which the condition can be set. Amazon S3‐specific condition keys dictate the
+behavior of the same name request headers. For example, the condition key
+s3:VersionId used to grant conditional permission for the s3:GetObjectVersion permission defines behavior of the
+versionId query parameter that you set in a GET Object request.
+
+To see a list of Amazon S3 condition keys, see Condition keys for Amazon S3 in the
+Service Authorization Reference. To learn with which actions and resources you
+can use a condition key, see Actions defined by Amazon S3.
+
+### Example: Restricting object uploads to objects with a specific storage class
+
+Suppose that Account A, represented by account ID
+123456789012, owns a bucket. The
+Account A administrator wants to restrict
+Dave, a user in Account A, so that
+Dave can upload objects to the bucket
+only if the object is stored in the STANDARD_IA storage class. To
+restrict object uploads to a specific storage class, the Account A administrator can
+use the s3:x-amz-storage-class condition key, as shown in the following
+example bucket policy.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "statement1",
+"Effect": "Allow",
+"Principal": {
+"AWS": "arn:aws:iam::123456789012:user/Dave"
+},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket1/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-storage-class": [
+"STANDARD_IA"
+]
+}
+}
+}
+]
+}
+
+In the example, the Condition block specifies the
+StringEquals condition that is applied to the specified key-value pair,
+"s3:x-amz-storage-class":["STANDARD_IA"]. There is a set of predefined keys that
+you can use in expressing a condition. The example uses the s3:x-amz-storage-class
+condition key. This condition requires the user to include the x-amz-storage-class
+header with value STANDARD_IA in every PutObject
+request.
+
+### Policy examples for Amazon S3
+
+- To view examples of Amazon S3 identity-based policies, see Identity-based policies for Amazon S3.
+
+- To view examples of Amazon S3 resource-based policies, see Bucket policies for Amazon S3 and Configuring IAM policies for using access points.
+
+## ACLs in Amazon S3
+
+Supports ACLs:
+
+Yes
+
+In Amazon S3, access control lists (ACLs) control which AWS accounts have permissions to access a resource.
+ACLs are similar to resource-based policies, although they do not use the JSON policy document format.
+
+Important
+
+A majority of modern use cases in Amazon S3 no longer require the use of ACLs.
+
+For information about using ACLs to control access in Amazon S3, see Managing access with ACLs.
+
+## ABAC with Amazon S3
+
+Supports ABAC (tags in policies):
+
+Partial
+
+Attribute-based access control (ABAC) is an authorization strategy that defines permissions
+based on attributes called tags. You can attach tags to IAM entities and AWS resources, then design ABAC policies to allow operations when the principal's tag matches the tag on the resource.
+
+To control access based on tags, you provide tag information in the condition element of a policy using the aws:ResourceTag/key-name,
+aws:RequestTag/key-name, or aws:TagKeys condition keys.
+
+If a service supports all three condition keys for every resource type, then the value is Yes for the service. If a service supports all three condition keys for only some resource types, then the value is Partial.
+
+For more information about ABAC, see Define permissions with ABAC authorization in the IAM User Guide. To view a tutorial with steps for setting up ABAC, see
+Use attribute-based access control (ABAC) in the IAM User Guide.
+
+For information about resources that support ABAC in Amazon S3, see Using tags for attribute-based access control (ABAC).
+
+To view example identity-based policies for limiting access to S3 Batch Operations jobs based on
+tags, see Controlling permissions for Batch Operations using job tags.
+
+### ABAC and object tags
+
+In ABAC policies, objects use s3: tags instead of aws:
+tags. To control access to objects based on object tags, you provide tag information
+in the Condition element of a policy using the following
+tags:
+
+- s3:ExistingObjectTag/tag-key
+
+- s3:RequestObjectTagKeys
+
+- s3:RequestObjectTag/tag-key
+
+For information about using object tags to control access, including example permission
+policies, see Tagging and access control policies.
+
+## Using temporary credentials with Amazon S3
+
+Supports temporary credentials:
+
+Yes
+
+Temporary credentials provide short-term access to AWS resources and are automatically created when you use federation or switch roles. AWS recommends that you
+dynamically generate temporary credentials instead of using long-term access keys. For
+more information, see Temporary
+security credentials in IAM and AWS services
+that work with IAM in the IAM User Guide.
+
+## Forward access sessions for Amazon S3
+
+Supports forward access sessions (FAS):
+
+Yes
+
+Forward access sessions (FAS) use the permissions of the principal calling an AWS service, combined with the requesting AWS service to make requests to downstream services. For policy details
+when making FAS requests, see Forward access sessions.
+
+- FAS is used by Amazon S3 to make calls to AWS KMS to decrypt an object when SSE-KMS was used to encrypt it. For more information, see Using server-side encryption with AWS KMS keys (SSE-KMS).
+
+- S3 Access Grants also uses FAS. After you create an access grant to your S3 data for a particular identity, the grantee requests a temporary credential from S3 Access Grants. S3 Access Grants obtains a temporary credential for the requester from AWS STS and vends the credential to the requester. For more information, see Request access to Amazon S3 data through S3 Access Grants.
+
+## Service roles for Amazon S3
+
+Supports service roles:
+
+Yes
+
+A service role is an IAM role that a service assumes to perform
+actions on your behalf. An IAM administrator can create, modify, and delete a service role from within IAM. For
+more information, see Create a role to delegate permissions to an AWS service in the IAM User Guide.
+
+Warning
+
+Changing the permissions for a service role might break Amazon S3 functionality.
+Edit service roles only when Amazon S3 provides guidance to do so.
+
+## Service-linked roles for Amazon S3
+
+Supports service-linked roles:
+
+Partial
+
+A service-linked role is a type of service role that is linked to an AWS service. The service can assume the role to perform an action on your behalf.
+Service-linked roles appear in your AWS account and are owned by the service. An IAM administrator can view,
+but not edit the permissions for service-linked roles.
+
+Amazon S3 supports service-linked roles for Amazon S3 Storage Lens.
+For details about creating or managing Amazon S3 service-linked roles, see Using service-linked roles for Amazon S3 Storage Lens.
+
+Amazon S3 Service as a Principal
+
+Service name in the policy
+
+S3 feature
+
+More information
+
+s3.amazonaws.com
+
+S3 Replication
+
+Setting up live replication overview
+
+s3.amazonaws.com
+
+S3 event notifications
+
+Amazon S3 Event Notifications
+
+s3.amazonaws.com
+
+S3 Inventory
+
+Cataloging and analyzing your data with S3 Inventory
+
+access-grants.s3.amazonaws.com
+
+S3 Access Grants
+
+Register a location
+
+batchoperations.s3.amazonaws.com
+
+S3 Batch Operations
+
+Granting permissions for Batch Operations
+
+logging.s3.amazonaws.com
+
+S3 Server Access Logging
+
+Enabling Amazon S3 server access logging
+
+storage-lens.s3.amazonaws.com
+
+S3 Storage Lens
+
+Viewing Amazon S3 Storage Lens metrics using a data export

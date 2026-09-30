@@ -16,3 +16,31 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 ## Batches
 | Batch | IDs | Blind | Reconcile |
 |---|---|---|---|
+| 1 | Q001–Q006 | running (2026-09-30) | queued |
+| 2 | Q007–Q012 | running (2026-09-30) | queued |
+| 3 | Q013–Q018 | running (2026-09-30) | queued |
+| 4 | Q019–Q024 | running (2026-09-30) | queued |
+| 5 | Q025–Q030 | queued | queued |
+| 6 | Q031–Q036 | queued | queued |
+| 7 | Q037–Q042 | queued | queued |
+| 8 | Q043–Q048 | queued | queued |
+| 9 | Q049–Q054 | queued | queued |
+| 10 | Q055–Q060 | queued | queued |
+| 11 | Q061–Q066 | queued | queued |
+| 12 | Q067–Q072 | queued | queued |
+| 13 | Q073–Q078 | queued | queued |
+| 14 | Q079–Q084 | queued | queued |
+| 15 | Q085–Q090 | queued | queued |
+| 16 | Q091–Q096 | queued | queued |
+| 17 | Q097–Q102 | queued | queued |
+| 18 | Q103–Q108 | queued | queued |
+| 19 | Q109–Q114 | queued | queued |
+| 20 | Q115–Q120 | queued | queued |
+| 21 | Q121–Q126 | queued | queued |
+| 22 | Q127–Q132 | queued | queued |
+| 23 | Q133–Q138 | queued | queued |
+| 24 | Q139–Q143 | queued | queued |
+
+## Execution notes
+- Custom agent types in `.claude/agents/` were not loadable mid-session, so agents run as `general-purpose` with an explicit `model` (research: opus = Opus 5.5; web: sonnet = Sonnet 5.5) and read their role file first. The per-agent reasoning-effort setting (high / xhigh) could not be applied through this route; prompts ask for deep, careful work instead. In a new session the definitions in `.claude/agents/` apply model + effort directly.
+- Web builder (Sonnet) started 2026-09-30 in parallel with blind batches 1–3.
