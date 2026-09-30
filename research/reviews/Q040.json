@@ -2,9 +2,9 @@
   "question_id": "Q040",
   "question_content_hash": "d1372d3d0d82f82a46e437dc533cdd93836ac007f68e330ce5a30cde2dbc6cec",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,59 +33,63 @@
     {
       "unit_id": "Q040:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Revoke active sessions gắn Deny theo aws:TokenIssueTime nên chỉ chặn credential cấp trước thời điểm revoke (~30 giây); người assume role sau đó không bị ảnh hưởng. Credential instance profile tự cập nhật để luôn có bộ hợp lệ, nên khi instance vẫn bị xâm nhập (chưa vá trong 4 giờ) attacker có thể lấy credential mới và tải tiếp — biện pháp không bền.",
+      "verdict": "undetermined",
+      "reason_vi": "Thu hồi role sessions chặn credentials cũ, nhưng instance bị chiếm có thể lấy credentials mới.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref7",
-        "ref2",
-        "ref8"
+        "ref3",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q040:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Đổi security group chỉ chặn traffic mạng tới/từ instance (và không cắt kết nối đang được track); credential đã bị đánh cắp vẫn dùng được từ nơi khác để gọi S3 API.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Quarantine SG không vô hiệu hóa credentials được dùng ngoài EC2.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref3",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q040:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Macie chỉ phát hiện dữ liệu nhạy cảm; S3 Object Lock chỉ ngăn xóa/ghi đè (WORM), không ngăn đọc/tải xuống. Quét hàng trăm TB cũng không phải hành động tức thời.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Macie phát hiện dữ liệu nhạy cảm và Object Lock không chặn GetObject.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
+        "ref1",
+        "ref3",
         "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q040:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Bucket policy Deny đọc cho mọi principal là explicit deny, ghi đè mọi Allow bất kể attacker dùng credential cũ hay mới, có hiệu lực ngay và giữ nguyên đến khi dev team vá xong. Đổi lại ứng dụng hợp lệ cũng bị chặn tạm thời.",
+      "reason_vi": "Explicit deny bucket chặn request đọc mới từ cả credentials cũ và mới.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref3",
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -122,19 +126,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu IAM nêu trực tiếp revoke session chỉ chặn credential cấp trước thời điểm revoke (+~30 giây), còn EC2 tự làm mới credential của instance profile để luôn có bộ hợp lệ; khi lỗ hổng trên instance còn mở 4 giờ, A không bền còn explicit deny trong bucket policy (D) chặn mọi request đọc bất kể credential nào. Mức medium vì kết luận về A dựa trên việc suy ra attacker vẫn khai thác được instance trong 4 giờ.",
-    "open_issues": [
-      "Nếu hiểu attacker chỉ giữ một bộ credential và không còn truy cập instance/lỗ hổng, A cũng chặn được ngay và ít gây gián đoạn hơn; đề không nói rõ, nhưng chi tiết 'development team will require 4 hours to implement and deploy a fix' ngụ ý lỗ hổng vẫn mở.",
-      "D chặn cả truy cập hợp lệ vào bucket trong 4 giờ; đề chỉ yêu cầu chặn attacker ngay, không yêu cầu duy trì dịch vụ."
-    ]
+    "reason_vi": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind; A là đối thủ thật nên đã nghiên cứu cả hai phía. Ủng hộ A: trang Revoke IAM role temporary security credentials cho biết mọi credential của role cấp trước thời điểm revoke bị vô hiệu ngay, và GuardDuty mô tả finding S3 có thể do credential bị lộ -> A là bước ứng cứu chuẩn và nhắm đúng credential bị đánh cắp. Chống A: cùng trang đó nói người assume role sau thời điểm revoke khoảng 30 giây trở đi không bị ảnh hưởng; tài liệu IAM/EC2 nói credential trên instance tự cập nhật trước khi hết hạn để luôn có bộ hợp lệ. Attacker lấy credential từ instance bị xâm nhập và lỗ hổng chỉ được vá sau 4 giờ, nên có thể lấy lại bộ credential mới sau lần xoay vòng tiếp theo -> A chỉ tạm thời. D: explicit deny trong bucket policy ghi đè mọi Allow, áp dụng cho mọi credential cũ lẫn mới, có hiệu lực tới khi gỡ policy, đúng với khoảng 4 giờ chờ vá. B chỉ chặn mạng của instance (credential dùng được từ nơi khác), C không chặn đọc. Giữ D, verified, medium; ghi rõ giả định trong open_issues.",
+  "reconciliation_vi": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
   "explanation_vi": {
-    "why_correct": "Bucket policy với Deny s3:GetObject cho mọi principal là explicit deny, ghi đè quyền s3:GetObject của role, nên chặn ngay mọi lượt tải tiếp theo dù attacker dùng credential cũ hay credential mới lấy lại từ instance chưa được vá, và giữ hiệu lực suốt 4 giờ chờ dev team sửa.",
+    "why_correct": "D đặt explicit deny đọc tại bucket, chặn request mới dù attacker lấy credentials mới từ EC2 đang bị chiếm trong 4 giờ sửa lỗi. Biện pháp này cũng tạm chặn người dùng hợp lệ; không bảo đảm ngắt stream đã được authorize.",
     "others": {
-      "Q040:A": "Revoke session chỉ vô hiệu credential cấp trước thời điểm revoke; instance vẫn bị xâm nhập và EC2 tự cấp credential mới, nên attacker có thể lấy lại credential và tải tiếp trong 4 giờ chờ vá.",
-      "Q040:B": "Đổi security group chỉ chặn traffic mạng của instance; credential đã bị đánh cắp vẫn gọi được S3 API từ máy của attacker.",
-      "Q040:C": "Macie chỉ phát hiện PII và S3 Object Lock chỉ ngăn xóa/ghi đè, không ngăn đọc; quét hàng trăm TB cũng không phải hành động tức thời."
+      "Q040:A": "Thu hồi role sessions chặn credentials cũ, nhưng instance bị chiếm có thể lấy credentials mới.",
+      "Q040:B": "Quarantine SG không vô hiệu hóa credentials được dùng ngoài EC2.",
+      "Q040:C": "Macie phát hiện dữ liệu nhạy cảm và Object Lock không chặn GetObject."
     }
   },
   "keywords": [
@@ -151,7 +152,7 @@
       "meaning_vi": "Credential instance profile tự xoay vòng; instance còn bị xâm nhập thì attacker lấy lại được."
     }
   ],
-  "memory_tip_vi": "Nếu credential bị đánh cắp từ EC2 mà lỗ hổng chưa vá và cần chặn ngay truy cập vào một bucket -> nghĩ đến explicit Deny trong bucket policy; kiểm tra: revoke session chỉ chặn credential cũ, đổi security group không vô hiệu credential.",
+  "memory_tip_vi": "Nếu chỉ thu hồi credentials bị đánh cắp, revoke sessions; nếu cần khóa toàn bộ bucket trong thời gian sửa lỗi, explicit deny đọc.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -299,6 +300,11 @@
       "type": "typo",
       "location": "Q040:C",
       "detail_vi": "'Amazon Made' là lỗi của 'Amazon Macie'."
+    },
+    {
+      "type": "data",
+      "location": "Q040",
+      "detail_vi": "Policy authorization chặn request mới; không chứng minh terminate download stream đã được authorize trước đó."
     }
   ],
   "history": [
@@ -331,6 +337,23 @@
       "previous_answer": [
         "Q040:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q040:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q040:D"
+      ],
+      "note_vi": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -342,5 +365,25 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "notes_vi": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q040:D"
+    ],
+    "candidate_answers": [
+      "Q040:A",
+      "Q040:D"
+    ],
+    "root_adjudication": "Giữ D: ngữ cảnh fix cần4giờ, instance vẫn bị chiếm, nên revoke các session cũ không ngăn attacker lấy credentials mới. D là biện pháp duy trì chặn đọc trong thời gian khắc phục; không suy diễn ngắt stream đã authorize.",
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

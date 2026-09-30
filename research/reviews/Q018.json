@@ -2,9 +2,9 @@
   "question_id": "Q018",
   "question_content_hash": "a5d0839375ae01aeee4625ddb78d936147564494b8cdfdc3c225bf2243440ed4",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:00Z",
-  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,29 +33,27 @@
       "unit_id": "Q018:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Point-in-time restore cho phép khôi phục tới bất kỳ thời điểm nào trong backup retention (14 ngày) thành cluster mới; chọn 3:14 PM 5 ngày trước là thời điểm tốt cuối cùng ngay trước tấn công.",
+      "reason_vi": "Đúng: thời điểm gần nhất được nêu trước cuộc tấn công.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "Q018-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q018:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Snapshot tự động chỉ tạo mỗi ngày một lần trong backup window, nên snapshot 'gần nhất' có thể sau thời điểm tấn công (đã bị xâm nhập) hoặc sớm hơn nhiều giờ; không bảo đảm đúng phiên bản tốt cuối cùng.",
+      "reason_vi": "Sai: snapshot gần nhất có thể sau tấn công hoặc mất dữ liệu hơn PITR.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "Q018-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -63,13 +61,13 @@
       "unit_id": "Q018:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Liệt kê snapshot của mọi RDS database có thể chọn nhầm database khác, và vẫn có vấn đề độ chi tiết snapshot hằng ngày như B.",
+      "reason_vi": "Sai: khôi phục database khác không phục hồi cluster bị ảnh hưởng.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q018-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -77,13 +75,13 @@
       "unit_id": "Q018:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Khôi phục về 14 ngày trước làm mất 9 ngày dữ liệu hợp lệ trước tấn công và nằm sát giới hạn earliest restorable time; không phải phiên bản tốt cuối cùng.",
+      "reason_vi": "Sai: 14 ngày gây mất dữ liệu không cần thiết.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "Q018-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -159,6 +157,18 @@
       "quote": "the backup window is used to create a daily system backup that is preserved within the backup retention period.",
       "supports": "Snapshot/system backup chỉ có một lần mỗi ngày nên restore từ snapshot (B, C) không chính xác tới thời điểm trước tấn công.",
       "kind": "inference"
+    },
+    {
+      "id": "Q018-r2-1",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterToPointInTime.html",
+      "title": "RestoreDBClusterToPointInTime - Amazon Relational Database Service",
+      "accessed_at": "2026-09-30",
+      "quote": "Restores a DB cluster to an arbitrary point in time.",
+      "supports": "PITR restores a new database cluster at a requested time within available retention.",
+      "kind": "direct",
+      "snapshot_id": "ab5a6d044d69",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_answer": [
@@ -172,35 +182,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu Aurora và RDS Multi-AZ DB cluster nêu có thể restore tới bất kỳ thời điểm nào trong backup retention; 5 ngày trước nằm trong 14 ngày, và A là lựa chọn duy nhất khôi phục đúng thời điểm ngay trước tấn công.",
-    "open_issues": [
-      "Đề không nói rõ Aurora hay RDS Multi-AZ DB cluster; cả hai đều hỗ trợ restore to point in time. PITR tạo cluster mới, cần chuyển ứng dụng sang cluster đó."
-    ]
+    "reason_vi": "Giữ A; PITR tạo cluster mới và timestamp cần timezone/earliest-latest restorable range.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind (A) trùng khóa nguồn (A). Đã kiểm tra lại đối thủ mạnh nhất là B (restore từ snapshot gần 3:14 PM): automated backup chỉ tạo system backup một lần mỗi ngày trong backup window, nên snapshot gần nhất có thể sau thời điểm tấn công hoặc sớm hơn nhiều giờ; PITR dựa trên backup liên tục chọn được đúng 3:14 PM. D quay về 14 ngày trước làm mất 9 ngày dữ liệu hợp lệ. Giữ A.",
+  "reconciliation_vi": "Giữ A; PITR tạo cluster mới và timestamp cần timezone/earliest-latest restorable range.",
   "explanation_vi": {
-    "why_correct": "Automated backups với retention 14 ngày cho phép Restore to point in time tới bất kỳ thời điểm nào trong 14 ngày; chọn 3:14 PM của 5 ngày trước là trạng thái tốt cuối cùng ngay trước khi tấn công bắt đầu lúc 3:15 PM.",
+    "why_correct": "Khôi phục đúng cluster bằng PITR tới 3:14 PM của ngày cách đây 5 ngày, trước thời điểm tấn công và trong retention 14 ngày. PITR tạo cluster mới; cần quy đổi timezone đúng khi nhập timestamp.",
     "others": {
-      "Q018:B": "Snapshot chỉ có theo mốc (hằng ngày), snapshot gần 3:14 PM có thể đã chứa dữ liệu bị tấn công hoặc thiếu nhiều giờ dữ liệu hợp lệ.",
-      "Q018:C": "Liệt kê snapshot của mọi database có thể chọn nhầm database khác và vẫn mắc vấn đề độ chi tiết theo mốc snapshot như B.",
-      "Q018:D": "Quay về 14 ngày trước bỏ mất 9 ngày dữ liệu hợp lệ trước tấn công, không phải phiên bản tốt cuối cùng."
+      "Q018:B": "Sai: snapshot gần nhất có thể sau tấn công hoặc mất dữ liệu hơn PITR.",
+      "Q018:C": "Sai: khôi phục database khác không phục hồi cluster bị ảnh hưởng.",
+      "Q018:D": "Sai: 14 ngày gây mất dữ liệu không cần thiết."
     }
   },
   "keywords": [
     {
       "phrase": "last known good version",
-      "meaning_vi": "Trạng thái sạch gần nhất ngay trước thời điểm bị tấn công."
+      "meaning_vi": "PITR tới ngay trước tấn công."
     },
     {
-      "phrase": "retention period of 14 days",
-      "meaning_vi": "Có thể point-in-time restore tới bất kỳ lúc nào trong 14 ngày."
+      "phrase": "14 days",
+      "meaning_vi": "Thời điểm phải trong restorable range."
     },
     {
-      "phrase": "5 days ago at exactly 3:15 PM",
-      "meaning_vi": "Mốc tấn công chính xác: đặt target time ngay trước đó (3:14 PM)."
+      "phrase": "3:15 PM",
+      "meaning_vi": "3:14 PM là lựa chọn sạch trước 3:15 PM."
     }
   ],
-  "memory_tip_vi": "Nếu cần khôi phục RDS/Aurora về đúng thời điểm ngay trước sự cố và thời điểm đó nằm trong backup retention -> nghĩ đến Restore to point in time; kiểm tra snapshot chỉ có theo mốc và PITR tạo cluster mới.",
+  "memory_tip_vi": "Nếu thời điểm bắt đầu tấn công đã biết và nằm trong retention, PITR tới ngay trước thời điểm đó.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -246,7 +254,38 @@
       "previous_answer": [
         "Q018:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ A; PITR tạo cluster mới và timestamp cần timezone/earliest-latest restorable range.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q018:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q018:A"
+      ],
+      "note_vi": "Giữ A; PITR tạo cluster mới và timestamp cần timezone/earliest-latest restorable range.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "PITR tạo cluster mới; sau đó chuyển ứng dụng sang cluster đã khôi phục."
+  "notes_vi": "Giữ A; PITR tạo cluster mới và timestamp cần timezone/earliest-latest restorable range.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q018:A",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q134",
   "question_content_hash": "076a576a69cec277709ab8747ffa6b8b6b4cb71332140f66ebc503543647bc0b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:22:21+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,59 +34,58 @@
       "unit_id": "Q134:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Tạo IAM OIDC identity provider rồi sửa trust policy của role để tin principal federated từ IdP đó là cơ chế chuẩn của OIDC federation (ví dụ GitHub Actions) cho workload ngoài AWS lấy credential tạm thời qua AssumeRoleWithWebIdentity.",
+      "reason_vi": "A thiết lập đúng OIDC federation và trust target role.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3"
+        "ref5"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q134:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM Roles Anywhere dựa trên chứng chỉ X.509 do CA cấp; trust anchor tham chiếu tới CA (AWS Private CA hoặc CA ngoài), không phải OIDC.",
+      "reason_vi": "B Roles Anywhere trust anchor dùng X.509/CA, không dùng OIDC token.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5",
-        "ref9"
+        "ref2",
+        "ref5"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q134:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Customer managed application của IAM Identity Center phục vụ user/group workforce truy cập ứng dụng (SAML/OAuth, trusted identity propagation), không phải để workload assume IAM role; account instance lại không hỗ trợ permission set/truy cập AWS account.",
+      "reason_vi": "C Identity Center application assignment không thay IAM OIDC role federation cho repository workload.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref2",
+        "ref5"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q134:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS RAM dùng để chia sẻ resource giữa các account/OU/principal; không có cơ chế xác thực OIDC cho hệ thống bên ngoài.",
+      "reason_vi": "D RAM share không tạo OIDC trust provider.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref8"
+        "ref2",
+        "ref5"
       ],
       "evidence_kind": "inference"
     }
@@ -124,16 +123,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu IAM nêu trực tiếp IAM OIDC identity provider + trust policy của role là cách cho workload CI/CD bên ngoài AWS (ví dụ GitHub Actions) assume role; API Roles Anywhere cho thấy trust anchor chỉ có loại dựa trên CA/chứng chỉ, không có OIDC.",
+    "reason_vi": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại B (đối thủ mạnh nhất vì cũng nhắm tới workload ngoài AWS): bằng chứng mới – API Source của IAM Roles Anywhere chỉ cho sourceType AWS_ACM_PCA, CERTIFICATE_BUNDLE, SELF_SIGNED_REPOSITORY (ref9), tức trust anchor luôn là CA X.509, không thể 'uses OIDC'. C: account instance của IAM Identity Center không hỗ trợ truy cập AWS account (ref7) và customer managed app phục vụ workforce user. D: RAM chỉ chia sẻ resource. Giữ A, verified, high.",
+  "reconciliation_vi": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
   "explanation_vi": {
-    "why_correct": "A tạo IAM OIDC identity provider cho nền tảng Git (ví dụ token.actions.githubusercontent.com) và sửa trust policy của IAM role để tin principal federated đó; repository đổi OIDC token lấy credential tạm thời qua AssumeRoleWithWebIdentity, không cần access key lâu dài.",
+    "why_correct": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
     "others": {
-      "Q134:B": "IAM Roles Anywhere xác thực bằng chứng chỉ X.509; trust anchor chỉ là CA (AWS Private CA hoặc certificate bundle), không có loại OIDC.",
-      "Q134:C": "Customer managed application của IAM Identity Center dành cho workforce user đăng nhập ứng dụng, và account instance không cấp quyền truy cập AWS account hay IAM role.",
-      "Q134:D": "AWS RAM chỉ chia sẻ resource giữa các account/OU, không có cơ chế xác thực OIDC cho hệ thống bên ngoài."
+      "Q134:B": "B Roles Anywhere trust anchor dùng X.509/CA, không dùng OIDC token.",
+      "Q134:C": "C Identity Center application assignment không thay IAM OIDC role federation cho repository workload.",
+      "Q134:D": "D RAM share không tạo OIDC trust provider."
     }
   },
   "keywords": [
@@ -150,7 +149,7 @@
       "meaning_vi": "Dùng IAM OIDC identity provider (web identity federation)."
     }
   ],
-  "memory_tip_vi": "Nếu workload ngoài AWS có OIDC token (GitHub Actions, GitLab, CI/CD) cần assume role -> nghĩ đến IAM OIDC identity provider + trust policy (điều kiện aud/sub); kiểm tra nếu workload chỉ có chứng chỉ X.509 thì mới là IAM Roles Anywhere.",
+  "memory_tip_vi": "Nếu CI bên ngoài phát OIDC token, IAM OIDC provider + role trust; giới hạn aud/sub.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -283,7 +282,7 @@
     }
   ],
   "source_issues": [],
-  "notes_vi": "Trust policy của role nên có điều kiện trên claim sub/aud của IdP để giới hạn đúng repository.",
+  "notes_vi": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
   "history": [
     {
       "version": "r1",
@@ -298,6 +297,39 @@
       "previous_answer": [
         "Q134:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q134:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q134:A"
+      ],
+      "note_vi": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

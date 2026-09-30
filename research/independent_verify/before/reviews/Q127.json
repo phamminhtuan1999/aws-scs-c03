@@ -1,0 +1,349 @@
+{
+  "question_id": "Q127",
+  "question_content_hash": "a9f76500303e11a502f8220658e6b6808394669eb08001891138233fe3d04c35",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:19:39+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "1e52a440d5182cde026ef3ee2f2560e59726254389113a274101db1bf805462a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Dữ liệu DynamoDB phải được mã hóa at rest.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Key phải được tạo và quản lý bằng HSM on-premises (key material do công ty sinh ra) -> cần KMS key có imported key material (origin EXTERNAL).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Bước tiếp theo sau khi đã sinh key trên HSM; ứng dụng vẫn phải dùng được bảng DynamoDB.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q127:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Tạo customer managed key (origin EXTERNAL), import key material từ HSM, cấp quyền cho DynamoDB (key policy/grant) rồi tạo bảng mới chọn key đó và import dữ liệu. DynamoDB hỗ trợ customer managed key có imported key material.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q127:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Disable KMS key sau khi tạo bảng làm bảng chuyển sang Inaccessible nên bước import dữ liệu thất bại, và nếu key vẫn bị disable quá 7 ngày thì bảng bị archive.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q127:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS managed key do AWS service tạo và quản lý thay khách hàng; khách hàng không tự 'Generate' được và không import key material vào đó được (import cần key origin EXTERNAL do khách hàng tạo).",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref2",
+        "ref8",
+        "ref9",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q127:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cũng dựa trên AWS managed key (không tạo/import được) và disable key sau khi tạo bảng làm bảng Inaccessible; mã hóa client-side thêm cũng không sửa các lỗi này.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref5",
+        "ref8",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q127:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu DynamoDB nói rõ hỗ trợ customer managed key có imported key material; disable key làm bảng Inaccessible; AWS managed key không do khách hàng tạo/quản lý.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6",
+      "ref7"
+    ],
+    "recorded_at": "2026-09-30T20:19:39+00:00"
+  },
+  "source_answer": [
+    "Q127:A"
+  ],
+  "researched_answer": [
+    "Q127:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A. Tài liệu DynamoDB nói trực tiếp hỗ trợ customer managed key có imported key material và disable key làm bảng Inaccessible; tài liệu KMS nói AWS managed key do AWS service tạo và import cần key origin EXTERNAL do khách hàng tạo.",
+    "open_issues": [
+      "Nếu chính sách hiểu là key không được có bản sao trong AWS thì KMS external key store (key nằm trong HSM ngoài AWS) phù hợp hơn imported key material, nhưng phương án này không có trong lựa chọn; trong 4 phương án chỉ A khả thi."
+    ]
+  },
+  "reconciliation_vi": "Source key = A, trùng blind. Xét lại đối thủ gần nhất B (cũng dùng customer managed key + imported key material): trang DynamoDB how-it-works nói disable key làm bảng Inaccessible và bảng bị archive nếu key không truy cập được quá 7 ngày, nên bước import dữ liệu sau khi disable thất bại. Bổ sung bằng chứng trực tiếp cho C/D (blind có một trích dẫn chỉ là suy luận): trang KMS concepts nói AWS managed key được AWS service tạo, quản lý thay khách hàng và là loại key legacy; trang Step 1 nói import key material phải tạo key origin EXTERNAL. Ghi nhận external key store là giải pháp khác nhưng không có trong lựa chọn. Giữ A, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Key material sinh từ HSM on-premises đưa vào AWS bằng cách tạo customer managed key origin EXTERNAL rồi import key material; DynamoDB hỗ trợ customer managed key có imported key material, nên cấp quyền cho DynamoDB và tạo bảng dùng key này đáp ứng mã hóa at rest bằng key do công ty tự sinh.",
+    "others": {
+      "Q127:B": "Disable KMS key sau khi tạo bảng làm bảng Inaccessible, không import được dữ liệu và bảng bị archive sau 7 ngày.",
+      "Q127:C": "AWS managed key do AWS service tự tạo và quản lý, khách hàng không tạo được và không import key material vào đó được.",
+      "Q127:D": "Vừa dùng AWS managed key (không import được) vừa disable key làm bảng Inaccessible; mã hóa client-side thêm không sửa được hai lỗi này."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "on-premises hardware security module (HSM)",
+      "meaning_vi": "Key material do công ty tự sinh bên ngoài AWS -> KMS imported key material (origin EXTERNAL)."
+    },
+    {
+      "phrase": "encrypted at rest",
+      "meaning_vi": "DynamoDB mã hóa at rest bằng KMS key; chọn customer managed key để tự quản lý."
+    },
+    {
+      "phrase": "What should the security engineer do next",
+      "meaning_vi": "Key đã sinh xong trên HSM, bước tiếp theo là tạo KMS key rỗng và import."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề yêu cầu key sinh từ HSM on-premises cho dịch vụ AWS -> nghĩ đến KMS customer managed key origin EXTERNAL + import key material; kiểm tra: AWS managed key không import được, disable key làm tài nguyên mất truy cập.",
+  "tags": {
+    "domains": [
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "Amazon DynamoDB"
+    ],
+    "reason_vi": "Chọn loại KMS key và cơ chế import key material để mã hóa at rest theo yêu cầu tự quản lý key."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html",
+      "title": "Importing key material for AWS KMS keys",
+      "section": "Importing key material",
+      "snapshot_id": "1e3ebbced033",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To use key material from your own infrastructure with AWS services, and to use AWS KMS to manage the lifecycle of that key material within AWS.",
+      "supports": "Imported key material cho phép dùng key sinh từ hạ tầng riêng (HSM on-premises) với các AWS service.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-create-cmk.html",
+      "title": "Step 1: Create an AWS KMS key without key material",
+      "section": "Step 1",
+      "snapshot_id": "aafde289d0d5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To import your own key material instead, start by creating a KMS key with no key material. Then import the key material.",
+      "supports": "Quy trình: tạo KMS key (origin EXTERNAL) rồi import key material - khớp bước của phương án A.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/encryption.usagenotes.html",
+      "title": "DynamoDB encryption at rest usage notes",
+      "section": "Customer managed key features",
+      "snapshot_id": "4920ce615dec",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use a customer managed key with imported key material or a customer managed key in a custom key store that you own and manage.",
+      "supports": "DynamoDB chấp nhận customer managed key có imported key material.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/encryption.usagenotes.html",
+      "title": "DynamoDB encryption at rest usage notes",
+      "section": "Key policy for a customer managed key",
+      "snapshot_id": "4920ce615dec",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "That principal, a user or role, must have the permissions on the KMS key that DynamoDB requires. You can provide these permissions in a key policy, an IAM policy, or a grant.",
+      "supports": "Cần cấp quyền trên KMS key để DynamoDB dùng được key (bước 'Grant DynamoDB access').",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/encryption.howitworks.html",
+      "title": "DynamoDB encryption at rest: How it works",
+      "section": "Customer managed keys",
+      "snapshot_id": "5ad927b9fe1d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you disable your customer managed key or schedule it for deletion, your table status becomes Inaccessible.",
+      "supports": "Disable key sau khi tạo bảng (B, D) làm bảng không truy cập được, không import dữ liệu được.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys",
+      "section": "Customer keys and AWS keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The KMS keys that you create are customer managed keys.",
+      "supports": "Key do khách hàng tạo luôn là customer managed key; AWS managed key do AWS service tạo, nên 'Generate a new AWS managed key' (C, D) không khả thi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys",
+      "section": "AWS managed keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you cannot change any properties of AWS managed keys, rotate them, change their key policies, or schedule them for deletion.",
+      "supports": "AWS managed key không cho phép khách hàng quản lý key (không import key material, không đổi policy).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys",
+      "section": "AWS managed keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "that are created, managed, and used on your behalf by an AWS service integrated with AWS KMS.",
+      "supports": "AWS managed key do AWS service tạo và quản lý thay khách hàng - khách hàng không 'Generate' được AWS managed key (C, D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys",
+      "section": "Customer keys and AWS keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS managed keys are a legacy key type that is no longer being created for new AWS services as of 2021.",
+      "supports": "AWS managed key là loại key legacy do service tạo, không phải loại key khách hàng chủ động tạo để import key material.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-create-cmk.html",
+      "title": "Step 1: Create an AWS KMS key without key material",
+      "section": "Step 1",
+      "snapshot_id": "aafde289d0d5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To create a key with no key material, specify an origin of EXTERNAL.",
+      "supports": "Import key material yêu cầu khách hàng tự tạo KMS key origin EXTERNAL (tức customer managed key) - khớp A.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/encryption.howitworks.html",
+      "title": "DynamoDB encryption at rest: How it works",
+      "section": "Customer managed keys (Note)",
+      "snapshot_id": "5ad927b9fe1d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If your customer managed key remains inaccessible to the DynamoDB service for longer than seven days, the table is archived and can no longer be accessed.",
+      "supports": "Disable key (B, D) không chỉ chặn import dữ liệu mà còn khiến bảng bị archive sau 7 ngày.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref12",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html",
+      "title": "External key stores",
+      "section": "External key stores",
+      "snapshot_id": "a4991b2774b8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Your external key manager can be a physical or virtual hardware security modules (HSMs)",
+      "supports": "Nếu yêu cầu key luôn nằm ngoài AWS thì external key store là lựa chọn khác, nhưng không có trong 4 phương án.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:19:39+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q127:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:31+00:00",
+      "change": "Reconciliation: khớp source key A; thêm ref8-ref12 (KMS: AWS managed key do service tạo/legacy, origin EXTERNAL; DynamoDB: archive sau 7 ngày; external key store là phương án ngoài lựa chọn); status verified (high).",
+      "previous_answer": [
+        "Q127:A"
+      ]
+    }
+  ],
+  "notes_vi": "Điểm phân biệt: chỉ customer managed key mới có imported key material; không disable key đang bảo vệ bảng DynamoDB."
+}

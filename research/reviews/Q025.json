@@ -2,9 +2,9 @@
   "question_id": "Q025",
   "question_content_hash": "6ed3056fb3c5b1461eeade509cc0813b4d7283dd575d96d828a590c4908eafd8",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:08Z",
-  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,64 +39,57 @@
       "unit_id": "Q025:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Inbound chỉ allow cổng đích 443; traffic phản hồi từ server HTTPS đi về cổng ephemeral của instance (không phải 443) nên bị rule * deny mặc định chặn -> kết nối outbound TLS không hoạt động. Rule deny 3306 thì có tác dụng.",
+      "reason_vi": "Sai: inbound 443 không cho return traffic tới ephemeral port của client.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q025:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Rule 100 deny 3306 được đánh giá trước rule 200 allow 1024-65535 nên 3306 bị chặn; dải ephemeral cho phép traffic phản hồi của kết nối outbound 443; outbound 443 cho phép request. Đúng khuyến nghị AWS: đặt rule deny trước rule allow dải ephemeral.",
+      "reason_vi": "Đúng: deny 3306 số nhỏ hơn rule allow ephemeral; outbound 443.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q025:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Rule 100 allow 1024-65535 bao gồm cổng 3306 và được đánh giá trước; traffic 3306 khớp rule 100 và được allow, rule 200 deny 3306 không bao giờ được áp dụng.",
+      "reason_vi": "Sai: allow 1024–65535 trước deny 3306 sẽ match 3306 và bỏ qua deny sau.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref4"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q025:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Deny 3306 đúng thứ tự, nhưng inbound chỉ allow cổng đích 443 nên traffic phản hồi về cổng ephemeral của instance bị chặn -> outbound TLS không hoạt động.",
+      "reason_vi": "Sai: không mở inbound ephemeral nên response TLS bị chặn.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -128,33 +121,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Tài liệu VPC nêu trực tiếp: NACL stateless, rule số nhỏ khớp trước thắng, instance làm client cần rule inbound cho dải ephemeral, và phải đặt deny trước rule allow dải ephemeral.",
+    "reason_vi": "Giữ B; stateless return/ephemeral và thứ tự rule đúng.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất là D (deny 3306 đúng thứ tự, allow inbound 443): D thất bại vì phản hồi từ dịch vụ HTTPS có cổng đích là cổng ephemeral của instance, không phải 443, nên bị rule * deny mặc định chặn (tài liệu custom-network-acl nêu trực tiếp phải có inbound rule cho cổng ephemeral khi instance là client). C sai thứ tự: allow 1024-65535 ở rule 100 bao gồm 3306 và được áp dụng trước deny ở rule 200. A vừa sai inbound 443 như D. Không có bằng chứng phản bác B. Giữ B, verified, high.",
+  "reconciliation_vi": "Giữ B; stateless return/ephemeral và thứ tự rule đúng.",
   "explanation_vi": {
-    "why_correct": "NACL là stateless nên kết nối outbound TLS cần cả outbound allow 443 lẫn inbound allow dải ephemeral 1024-65535 cho gói phản hồi; rule 100 deny 3306 có số nhỏ hơn nên được đánh giá trước rule 200 và chặn MySQL dù 3306 nằm trong dải ephemeral.",
+    "why_correct": "B deny inbound 3306 trước allow inbound ephemeral 1024–65535, đồng thời allow outbound 443. Thứ tự này vừa chặn MySQL vừa cho phép response TLS trong NACL stateless.",
     "others": {
-      "Q025:A": "Inbound chỉ allow cổng 443 nên gói phản hồi HTTPS đi về cổng ephemeral của instance bị chặn, kết nối outbound TLS không hoạt động.",
-      "Q025:C": "Rule 100 allow 1024-65535 (bao gồm 3306) được đánh giá trước nên traffic MySQL được allow; rule 200 deny 3306 không bao giờ có tác dụng.",
-      "Q025:D": "Deny 3306 đúng thứ tự, nhưng inbound allow 443 không cho gói phản hồi về cổng ephemeral đi vào nên TLS outbound vẫn hỏng."
+      "Q025:A": "Sai: inbound 443 không cho return traffic tới ephemeral port của client.",
+      "Q025:C": "Sai: allow 1024–65535 trước deny 3306 sẽ match 3306 và bỏ qua deny sau.",
+      "Q025:D": "Sai: không mở inbound ephemeral nên response TLS bị chặn."
     }
   },
   "keywords": [
     {
       "phrase": "custom network ACL",
-      "meaning_vi": "NACL stateless, rule đánh giá theo số tăng dần, custom NACL mặc định deny tất cả."
+      "meaning_vi": "NACL stateless và xét rule số nhỏ trước."
     },
     {
-      "phrase": "allow outbound traffic to an internet service that uses TLS through port 443",
-      "meaning_vi": "Instance là client: cần outbound 443 VÀ inbound dải ephemeral cho phản hồi."
+      "phrase": "port 443",
+      "meaning_vi": "Outbound HTTPS response trở về ephemeral port."
     },
     {
-      "phrase": "deny inbound traffic that is destined for MySQL port 3306",
-      "meaning_vi": "Rule deny 3306 phải có số nhỏ hơn rule allow dải ephemeral."
+      "phrase": "port 3306",
+      "meaning_vi": "Deny 3306 phải trước allow ephemeral range."
     }
   ],
-  "memory_tip_vi": "Nếu NACL cần cho instance gọi ra ngoài (client) -> nghĩ đến inbound allow dải ephemeral 1024-65535 cho phản hồi; kiểm tra rule deny cổng cụ thể có số nhỏ hơn rule allow dải rộng.",
+  "memory_tip_vi": "Nếu dùng NACL cho outbound HTTPS, mở inbound ephemeral và đặt deny đặc biệt trước range allow.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -243,9 +236,26 @@
       "previous_answer": [
         "Q025:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; stateless return/ephemeral và thứ tự rule đúng.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q025:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q025:B"
+      ],
+      "note_vi": "Giữ B; stateless return/ephemeral và thứ tự rule đúng.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Cổng trong rule NACL là cổng đích của gói tin; phản hồi HTTPS về instance có cổng đích là ephemeral port của client.",
+  "notes_vi": "Giữ B; stateless return/ephemeral và thứ tự rule đúng.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -255,5 +265,19 @@
         "corrected": "2026-09-30T19:49:06Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q025:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

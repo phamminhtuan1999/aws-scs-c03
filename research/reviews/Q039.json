@@ -2,9 +2,9 @@
   "question_id": "Q039",
   "question_content_hash": "bcc96e2377375908e6f570ef286ca59c5ad23b3ef4bf08ee3ae566f3e45d907c",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -28,41 +28,42 @@
     {
       "unit_id": "Q039:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Một IAM user dùng chung và chia sẻ password là credential dài hạn dùng chung, mất khả năng quy trách nhiệm từng người; trái best practice dùng temporary credentials qua role.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Dùng chung mật khẩu IAM user làm mất truy vết cá nhân.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1",
+        "Q039-r2-2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q039:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Role đặt ở developer account chỉ có identity policy trong account đó; truy cập cross-account cần tài nguyên/account production (trusting account) cấp quyền, nên chỉ quyền của role ở dev account không đủ để truy cập tài nguyên production.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Role trong development không tự cấp quyền tài nguyên production.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1",
+        "Q039-r2-2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q039:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Dùng chung một IAM user ở production cho nhiều người là credential dài hạn dùng chung, kém an toàn và không truy vết từng user; không phải cơ chế cross-account chuẩn.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Dùng chung IAM user production tạo rủi ro thông tin xác thực dài hạn.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1",
+        "Q039-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -70,16 +71,16 @@
       "unit_id": "Q039:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đúng mô hình AWS: tạo role trong production account, trust policy chỉ định developer account, permissions policy giới hạn tài nguyên cần thiết; user dev được cấp sts:AssumeRole và nhận temporary credentials.",
+      "reason_vi": "Role production hỗ trợ trust cross-account và least privilege.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref3"
+        "Q039-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -110,16 +111,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. IAM User Guide mô tả đúng kịch bản development -> production: role đặt trong production account với trust policy chỉ định development account, user nhận temporary credentials.",
+    "reason_vi": "Role production đúng trong các lựa chọn; câu 'role cross-account phải luôn ở account tài nguyên' quá tuyệt đối vì còn resource policies.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại đối thủ B (cũng dùng role nhưng đặt ở developer account): role trong account dev chỉ mang quyền của account dev; để chạm tới tài nguyên production cần account production cấp quyền (role tin cậy ở production hoặc resource-based policy), nên B không phải mô hình cross-account role chuẩn. A và C chia sẻ IAM user dài hạn, trái best practice dùng temporary credentials và mất khả năng truy vết từng người. Giữ D, verified, high.",
+  "reconciliation_vi": "Role production đúng trong các lựa chọn; câu 'role cross-account phải luôn ở account tài nguyên' quá tuyệt đối vì còn resource policies.",
   "explanation_vi": {
-    "why_correct": "Tạo IAM role trong production account (account sở hữu tài nguyên) với permissions giới hạn vào tài nguyên cần thiết và trust policy chỉ định developer account; user dev được cấp sts:AssumeRole và nhận temporary credentials, không chia sẻ credential dài hạn.",
+    "why_correct": "Tạo role trong production với trust cho tài khoản development và quyền chỉ tới tài nguyên cần dùng; developer assume role để lấy thông tin xác thực tạm thời.",
     "others": {
-      "Q039:A": "Một IAM user dùng chung với password chia sẻ là credential dài hạn, không truy vết được từng người và trái best practice.",
-      "Q039:B": "Role đặt ở developer account không tự có quyền trên tài nguyên production; role cross-account phải nằm ở account sở hữu tài nguyên.",
-      "Q039:C": "Dùng chung một IAM user ở production vẫn là credential dài hạn chia sẻ, kém an toàn hơn role với temporary credentials."
+      "Q039:A": "Dùng chung mật khẩu IAM user làm mất truy vết cá nhân.",
+      "Q039:B": "Role trong development không tự cấp quyền tài nguyên production.",
+      "Q039:C": "Dùng chung IAM user production tạo rủi ro thông tin xác thực dài hạn."
     }
   },
   "keywords": [
@@ -132,7 +133,7 @@
       "meaning_vi": "Ưu tiên temporary credentials qua AssumeRole thay vì IAM user/password dùng chung."
     }
   ],
-  "memory_tip_vi": "Nếu user account A cần truy cập tài nguyên account B -> nghĩ đến IAM role trong account B (trust account A) + sts:AssumeRole; kiểm tra role phải nằm ở account sở hữu tài nguyên, không phải account của user.",
+  "memory_tip_vi": "Nếu người dùng tài khoản khác cần truy cập AWS, đặt role có quyền tại tài khoản chứa tài nguyên.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -195,6 +196,18 @@
       "quote": "managing credentials for multiple accounts makes identity management difficult",
       "supports": "Tạo IAM user riêng ở production là cách kém hơn so với role.",
       "kind": "direct"
+    },
+    {
+      "id": "Q039-r2-2",
+      "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html",
+      "title": "AssumeRole - AWS Security Token Service",
+      "accessed_at": "2026-09-30",
+      "quote": "The temporary security credentials created by AssumeRole can be used",
+      "supports": "AssumeRole dùng RoleArn, tùy chọn ExternalId và thông tin xác thực caller; trả temporary security credentials.",
+      "kind": "direct",
+      "snapshot_id": "f4520419abc3",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -231,6 +244,23 @@
       "previous_answer": [
         "Q039:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Role production đúng trong các lựa chọn; câu 'role cross-account phải luôn ở account tài nguyên' quá tuyệt đối vì còn resource policies.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q039:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q039:D"
+      ],
+      "note_vi": "Role production đúng trong các lựa chọn; câu 'role cross-account phải luôn ở account tài nguyên' quá tuyệt đối vì còn resource policies.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -242,5 +272,24 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "notes_vi": "Role production đúng trong các lựa chọn; câu 'role cross-account phải luôn ở account tài nguyên' quá tuyệt đối vì còn resource policies.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q039:D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q039:D"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

@@ -1,0 +1,258 @@
+{
+  "question_id": "Q038",
+  "question_content_hash": "1ea7abbe6025b36e2965201307a5e6eef7ca95792e68756fc892f9ab9b4787c0",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "9c0f549368a67f35af2181b2400e4a3890271954ebce3c1269aa1bcb3627f07e",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Hai VPC ở hai account khác nhau, cùng Region, đã VPC peering.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chỉ những EC2 instance cần truy cập DB (instance được tạo/hủy thường xuyên) mới được kết nối qua mạng.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chỉ mở TCP port 1521 tới database.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q038:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security group DB cho phép mọi traffic từ toàn bộ CIDR của application VPC, nên mọi instance trong VPC ứng dụng đều truy cập được; network ACL cũng chỉ lọc theo CIDR ở mức subnet, không phân biệt từng instance.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q038:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Rule DB dựa trên toàn bộ CIDR application VPC nên mọi instance ứng dụng đều qua được; inbound rule trên SG ứng dụng là thừa (SG stateful) và việc gắn một SG cho cả DB và app không giới hạn theo instance.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q038:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Với peering cùng Region (khác account) có thể tham chiếu SG của VPC peer (dạng account/sg-id); DB SG chỉ cho TCP 1521 từ SG ứng dụng, nên chỉ instance được gắn SG đó mới truy cập, kể cả instance mới tạo. SG ứng dụng không cần inbound vì outbound mặc định cho phép và SG stateful.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q038:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không thay đổi SG của database; NACL mới cho phép mọi traffic từ toàn CIDR ứng dụng; inbound rule trên SG ứng dụng không hạn chế ai kết nối tới DB. Không có kiểm soát theo instance ở phía DB.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q038:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu VPC peering xác nhận tham chiếu SG của VPC peer ở account khác cùng Region; đây là cách duy nhất trong các lựa chọn giới hạn truy cập theo instance.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "source_answer": [
+    "Q038:C"
+  ],
+  "researched_answer": [
+    "Q038:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu VPC peering xác nhận có thể tham chiếu security group của VPC peer ở account khác cùng Region (account/sg-id); đây là lựa chọn duy nhất giới hạn truy cập theo instance thay vì theo CIDR cả VPC.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ B: B cũng dùng security group nhưng rule phía DB cho phép toàn bộ CIDR của application VPC, nên mọi instance ứng dụng (kể cả instance không cần DB) đều kết nối được; inbound rule trên SG ứng dụng là thừa vì SG stateful. A và D dựa trên CIDR/NACL ở mức subnet, không phân biệt từng instance. Điều kiện cần cho C (peering cùng Region, khác account) được tài liệu hỗ trợ trực tiếp. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Security group DB chỉ cho TCP 1521 từ security group ứng dụng (tham chiếu qua peering cùng Region bằng account/sg-id); chỉ instance nào được gắn SG ứng dụng mới vào được DB, kể cả instance mới tạo, và SG ứng dụng không cần inbound vì SG stateful.",
+    "others": {
+      "Q038:A": "SG DB mở mọi traffic từ toàn CIDR application VPC và NACL cũng lọc theo CIDR, nên mọi instance ứng dụng đều truy cập được DB.",
+      "Q038:B": "Rule DB theo CIDR của cả application VPC nên không giới hạn theo instance; inbound rule trên SG ứng dụng là thừa.",
+      "Q038:D": "Không siết SG của DB, NACL còn mở mọi traffic từ toàn CIDR ứng dụng; inbound rule trên SG ứng dụng không kiểm soát ai kết nối tới DB."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "only some of them will need access to the databases",
+      "meaning_vi": "Cần kiểm soát theo từng instance -> tham chiếu security group, không dùng CIDR."
+    },
+    {
+      "phrase": "regularly be created and terminated",
+      "meaning_vi": "IP thay đổi liên tục -> gắn SG cho instance thay vì quản lý IP."
+    },
+    {
+      "phrase": "another account in the same AWS Region",
+      "meaning_vi": "Peering cùng Region khác account vẫn tham chiếu được SG của peer (account/sg-id)."
+    }
+  ],
+  "memory_tip_vi": "Nếu chỉ một nhóm instance (IP động) được vào DB qua VPC peering -> nghĩ đến rule SG phía DB tham chiếu SG ứng dụng; kiểm tra peering phải cùng Region (khác Region thì chỉ dùng CIDR).",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "Amazon VPC",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Kiểm soát truy cập mạng giữa các VPC peer bằng security group theo nguyên tắc least privilege."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html",
+      "title": "Update your security groups to reference peer security groups",
+      "section": "Requirements",
+      "snapshot_id": "33541fea10e2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To reference a security group that is in another AWS account but the same Region, include the account number with the ID of the security group.",
+      "supports": "Có thể tham chiếu SG ứng dụng từ SG DB qua peering khác account cùng Region.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+      "title": "Control traffic to your AWS resources using security groups",
+      "section": "Security group basics",
+      "snapshot_id": "6761ddae28b8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Security groups are stateful.",
+      "supports": "Traffic trả về được cho phép nên SG ứng dụng không cần inbound rule.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html",
+      "title": "Update your security groups to reference peer security groups",
+      "section": "Overview",
+      "snapshot_id": "33541fea10e2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Doing so allows traffic to flow to and from instances that are associated with the referenced security group in the peered VPC.",
+      "supports": "Tham chiếu SG giới hạn theo instance gắn SG, khác với rule theo CIDR của cả VPC.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+      "title": "Security group rules",
+      "section": "Security group rule basics",
+      "snapshot_id": "5594f61a25d6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you first create a security group, it has an outbound rule that allows all outbound traffic from the resource.",
+      "supports": "SG ứng dụng mới tạo không có inbound nhưng vẫn cho kết nối ra tới DB.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q038:C",
+      "detail_vi": "'application VPAttach' bị dính chữ, đúng là 'application VPC. Attach'."
+    },
+    {
+      "type": "typo",
+      "location": "Q038:stem:0",
+      "detail_vi": "Thiếu dấu chấm sau 'for database access'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:43:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q038:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key C; đã xét lại B và giữ kết luận; status verified (high).",
+      "previous_answer": [
+        "Q038:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:57+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:52:36Z",
+      "previous_answer": [
+        "Q038:C"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:57+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:52:36Z"
+      }
+    }
+  }
+}

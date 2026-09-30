@@ -2,9 +2,9 @@
   "question_id": "Q123",
   "question_content_hash": "b727309a2e36381f0a28f1ddc049d8051a88aca9206fa00e6b9f844e93ac20b6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:22:20+00:00",
-  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,21 +34,22 @@
       "unit_id": "Q123:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "cloudformation-stack-drift-detection-check chỉ kiểm tra stack ĐÃ deploy có bị drift so với cấu hình mong đợi hay không; không validate template trước deploy, không chặn deploy và không sinh rule.",
+      "reason_vi": "A drift detection kiểm tra tài nguyên đã triển khai, không sinh pre-deploy policy rules.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q123:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "cfn-guard rulegen tự sinh bộ Guard rule từ template đã biết là tuân thủ (giải quyết R2); sau đó cfn-guard validate trong pipeline trả về vi phạm/exit status khác 0 để pipeline dừng, ngăn deploy template không tuân thủ (R1).",
+      "reason_vi": "B rulegen sinh rules từ mẫu compliant; vẫn cần rà và test rules trước khi enforce.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -56,38 +57,38 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref5",
-        "ref6",
-        "ref7",
-        "ref8"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q123:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Detective dùng để điều tra nguyên nhân gốc của security finding/hoạt động đáng ngờ từ log; không phân tích template CloudFormation, không sinh rule validate và không chặn deploy.",
+      "reason_vi": "C Detective không phân tích template thành rules tuân thủ IaC.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q123:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lambda đọc template để tìm phần chồng lặp chỉ là phân tích tùy biến, không tạo ra bộ rule validate và không có cơ chế ngăn deploy template không tuân thủ; lại phải tự viết logic (tương đương viết tay).",
+      "reason_vi": "D chỉ đọc và tìm overlap chưa tạo validation/enforcement theo mô tả.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "ref1",
+        "ref6"
+      ],
       "evidence_kind": "inference"
     }
   ],
@@ -121,18 +122,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Hai tài liệu độc lập (Guard User Guide và CloudFormation User Guide) mô tả rulegen sinh rule từ template đã biết là tuân thủ và Guard validate dừng build bằng exit code. A, C, D không validate template trước deploy.",
-    "open_issues": [
-      "B không nói rõ bước chặn deploy; ngầm hiểu chạy cfn-guard validate trong pipeline (hoặc Guard Hooks để chặn phía server)."
-    ]
+    "reason_vi": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Kiểm tra thêm để tìm phản bác: CloudFormation User Guide (ref6, ref7) xác nhận rulegen tạo bộ rule khởi đầu từ template đã tuân thủ và khuyến nghị rà lại vì rule sinh ra thường quá chặt – khớp ý 'mix of known compliant templates'; exit code của Guard dùng để dừng build (ref8) đáp ứng 'prevent the deployment'. A (Config drift) chỉ xét stack đã deploy; C (Detective) là công cụ điều tra finding; D (Lambda tìm overlap) không sinh rule cũng không chặn deploy. Không có lựa chọn cạnh tranh hợp lý. Giữ B, verified, high.",
+  "reconciliation_vi": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
   "explanation_vi": {
-    "why_correct": "CloudFormation Guard có lệnh rulegen tự sinh rule từ các template đã biết là tuân thủ, nên security team có ngay bộ rule đầu tiên mà không phải viết tay; sau đó cfn-guard validate trong pipeline trả exit code lỗi để dừng deploy template không tuân thủ.",
+    "why_correct": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
     "others": {
-      "Q123:A": "cloudformation-stack-drift-detection-check chỉ phát hiện stack đã deploy bị drift, không validate template trước deploy và không sinh rule.",
-      "Q123:C": "Amazon Detective dùng để điều tra security finding từ log hoạt động, không phân tích template hay chặn deploy.",
-      "Q123:D": "Lambda đọc template tìm phần chồng lặp chỉ là phân tích tự viết, không tạo bộ rule validate và không có cơ chế chặn deploy."
+      "Q123:A": "A drift detection kiểm tra tài nguyên đã triển khai, không sinh pre-deploy policy rules.",
+      "Q123:C": "C Detective không phân tích template thành rules tuân thủ IaC.",
+      "Q123:D": "D chỉ đọc và tìm overlap chưa tạo validation/enforcement theo mô tả."
     }
   },
   "keywords": [
@@ -149,7 +148,7 @@
       "meaning_vi": "Vi phạm phải làm fail pipeline trước bước deploy."
     }
   ],
-  "memory_tip_vi": "Nếu cần bộ rule kiểm tra template CloudFormation mà không muốn viết tay từ đầu -> nghĩ đến cfn-guard rulegen từ template đã tuân thủ rồi cfn-guard validate trong pipeline; kiểm tra: Config/Detective chỉ xét tài nguyên đã deploy.",
+  "memory_tip_vi": "Nếu có mẫu IaC compliant, rulegen khởi tạo rules; review trước enforce.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance"
@@ -267,7 +266,7 @@
     }
   ],
   "source_issues": [],
-  "notes_vi": "Lựa chọn B không nói rõ bước chặn deploy, nhưng dùng Guard validate trong pipeline là cơ chế chuẩn để fail pipeline.",
+  "notes_vi": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
   "history": [
     {
       "version": "r1",
@@ -282,6 +281,39 @@
       "previous_answer": [
         "Q123:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q123:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q123:B"
+      ],
+      "note_vi": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

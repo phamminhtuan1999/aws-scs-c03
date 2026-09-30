@@ -2,9 +2,9 @@
   "question_id": "Q136",
   "question_content_hash": "e895d01fcf5d009925bfd8e69b4ef19faed50adf5e4eccd6bac6964f2bd317bf",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:23:29+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -40,43 +40,43 @@
       "unit_id": "Q136:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Quyền hiệu lực là giao của SCP với identity-based/resource-based policy; resource policy không vượt qua được explicit Deny ses:* trong root SCP.",
+      "reason_vi": "A resource allow không thắng root SCP deny.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
+        "Q136-r2-1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q136:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM group không thể làm Principal trong resource-based policy, và dù có resource policy thì explicit Deny trong SCP vẫn chặn; chuỗi ARN trong phương án còn bị sai định dạng.",
+      "reason_vi": "B IAM group không là resource-policy principal và không thắng SCP deny.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
+        "Q136-r2-1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q136:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Đề không nêu AWS Control Tower; nguyên nhân chặn là statement DenySES trong root SCP được hiển thị, nên gỡ một control của Control Tower không xử lý được deny này.",
+      "reason_vi": "C đề không nêu Control Tower guardrail gây lỗi; deny có sẵn ở root SCP.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "Q136-r2-1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -84,17 +84,17 @@
       "unit_id": "Q136:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Deny ở SCP gắn root áp dụng cho mọi OU và account bên dưới, bất kể SCP ở OU cho phép; bỏ SES (statement DenySES) khỏi root SCP là thay đổi cần thiết, sau đó Allow * ở root, allow SES ở OU và IAM policy ses:* cho phép truy cập.",
+      "reason_vi": "D bỏ SES explicit deny khỏi root SCP giải quyết restriction đã cho.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4"
+        "Q136-r2-1",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -129,18 +129,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. Đọc lại ảnh: root SCP có Allow */* và statement DenySES (Deny ses:* trên *). Tài liệu Organizations nêu Deny ở bất kỳ cấp nào áp dụng cho mọi OU/account bên dưới và hiệu lực là giao giữa SCP với identity/resource policy.",
-    "open_issues": [
-      "Giả định account của developer là member account (SCP không áp dụng cho management account); đề nói account là con của OU nên hợp lý."
-    ]
+    "reason_vi": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã đọc lại ảnh Q136_image_01.png: transcription của blind đúng (Sid AllowsAllActions: Allow * / *; Sid DenySES: Deny ses:* / *). Xét lại A/B (resource policy): quyền hiệu lực là giao của SCP với identity- và resource-based policy (ref2) nên không policy nào vượt được explicit Deny; B còn dùng IAM group làm Principal – không hợp lệ (ref3). C: đề không có AWS Control Tower, deny đến từ root SCP hiển thị. Giữ D, verified, high.",
+  "reconciliation_vi": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
   "explanation_vi": {
-    "why_correct": "Statement DenySES trong root SCP là explicit Deny áp dụng cho mọi OU và account bên dưới, SCP cho phép SES ở OU hay IAM policy ses:* đều không ghi đè được; bỏ SES khỏi root SCP (xóa statement DenySES) thì Allow * ở root, allow SES ở OU và IAM policy mới có hiệu lực.",
+    "why_correct": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
     "others": {
-      "Q136:A": "Resource policy không vượt qua được explicit Deny trong SCP vì quyền hiệu lực là giao giữa SCP và các policy khác.",
-      "Q136:B": "IAM group không thể làm Principal trong resource-based policy, và dù có resource policy thì Deny ses:* ở root SCP vẫn chặn.",
-      "Q136:C": "Đề không có AWS Control Tower; lệnh chặn đến từ statement DenySES trong root SCP nên gỡ một control không giải quyết được."
+      "Q136:A": "A resource allow không thắng root SCP deny.",
+      "Q136:B": "B IAM group không là resource-policy principal và không thắng SCP deny.",
+      "Q136:C": "C đề không nêu Control Tower guardrail gây lỗi; deny có sẵn ở root SCP."
     }
   },
   "keywords": [
@@ -157,7 +155,7 @@
       "meaning_vi": "Có explicit Deny trong chuỗi đánh giá (ở đây là DenySES trong root SCP)."
     }
   ],
-  "memory_tip_vi": "Nếu IAM policy đã cho phép mà vẫn bị not-authorized trong member account -> nghĩ đến explicit Deny trong SCP ở root/OU trên đường đi; kiểm tra Allow ở cấp thấp không ghi đè được Deny và SCP không áp dụng cho management account.",
+  "memory_tip_vi": "Nếu OU allow nhưng vẫn deny, kiểm tra SCP ở mọi ancestor; explicit deny thắng.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -235,6 +233,18 @@
       "quote": "AWS Control Tower implements preventive, detective, and proactive controls that help you govern your resources and monitor compliance across groups of AWS accounts.",
       "supports": "Control Tower control là cơ chế riêng; đề không cho thấy có Control Tower hay control nào chặn SES.",
       "kind": "inference"
+    },
+    {
+      "id": "Q136-r2-1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html",
+      "title": "Policy evaluation logic - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+      "quote": "completes several steps to determine whether to allow or deny",
+      "supports": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+      "kind": "direct",
+      "snapshot_id": "76d60163edfe",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -244,7 +254,7 @@
       "detail_vi": "Chuỗi policy có khoảng trắng thừa: \"AWS \" và \"arn:aws :iam ::account-number:group/Dev\" (ARN không hợp lệ về cú pháp)."
     }
   ],
-  "notes_vi": "Account-level SCP không được nêu; giả định account có FullAWSAccess mặc định hoặc allow tương đương.",
+  "notes_vi": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
   "history": [
     {
       "version": "r1",
@@ -259,6 +269,39 @@
       "previous_answer": [
         "Q136:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q136:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q136:D"
+      ],
+      "note_vi": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q112",
   "question_content_hash": "98154befcfa54a34c300049ccdc7426ca58f7366e8179a42ebd1ada851051c39",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,25 +33,23 @@
     {
       "unit_id": "Q112:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Không thể bật KMS encryption trên repository ECR đã có (encryption đặt lúc tạo, đổi cần replacement). Inspector Agent/assessment CVE rules là Inspector Classic, quét host chứ không quét image trong ECR.",
+      "verdict": "undetermined",
+      "reason_vi": "A không thể đổi encryption repository hiện có theo cách mô tả.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref6",
-        "ref11"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q112:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Tạo lại repository với KMS encryption và bật scanning (scan on push); sau khi push image, ECR tạo báo cáo CVE để phân tích.",
+      "verdict": "undetermined",
+      "reason_vi": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -59,38 +57,36 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref4",
-        "ref5",
-        "ref11"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q112:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Phần tạo lại repo đúng, nhưng bước phân tích được nêu là chạy SSM inventory report trên container instance - chỉ thu metadata phần mềm của node, không phân tích CVE của image.",
+      "verdict": "undetermined",
+      "reason_vi": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref8"
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q112:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Không bật KMS được trên repo hiện có; Trusted Advisor là công cụ khuyến nghị best practice, không quét container image theo CVE.",
+      "verdict": "undetermined",
+      "reason_vi": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref9",
-        "ref11"
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -118,27 +114,25 @@
   "source_answer": [
     "Q112:B"
   ],
-  "researched_answer": [
-    "Q112:B"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Tài liệu ECR nói rõ encryption configuration không đổi được sau khi tạo repository, và ECR scanning dùng cơ sở dữ liệu CVE với scan on push.",
+    "level": "medium",
+    "reason_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
     "open_issues": [
-      "Cấu hình scanning ở mức repository (imageScanningConfiguration) đang bị deprecate để chuyển sang cấu hình mức registry (ref10); B vẫn đúng về bản chất (bật ECR scanning).",
-      "Tài liệu Inspector Classic (docs.aws.amazon.com/inspector/v1/...) trả 404 lúc blind nghiên cứu; phần sai của A dựa trên FAQ Inspector (ref6, ref7)."
+      "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem."
     ]
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã fetch lại trang ECR encryption và thấy câu trực tiếp 'Repository Encryption Configuration can't be changed after a repository is created' (ref11) → loại A và D ngay từ vế đầu. Xét lại C (đối thủ mạnh nhất vì cũng tạo lại repo và bật scanning): bước phân tích C nêu là chạy SSM Inventory trên container instance – chỉ thu metadata phần mềm của node (ref8), không phân tích CVE của image; B phân tích trực tiếp scan report của ECR (ref4, ref5). Giữ B, verified, high.",
+  "reconciliation_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
   "explanation_vi": {
-    "why_correct": "Encryption của ECR repository chỉ đặt được lúc tạo, nên phải tạo lại repository với KMS encryption; bật ECR image scanning (scan on push) thì sau lần push kế tiếp ECR tạo báo cáo CVE cho image.",
+    "why_correct": "Chưa có đáp án chắc chắn: B và C đều tạo repository với KMS và bật ECR scanning. C thêm SSM Inventory nhưng không làm mất khả năng quét CVE đã bật; đề không nêu tiêu chí loại phần việc thừa nên chưa có đáp án duy nhất.",
     "others": {
-      "Q112:A": "Không bật KMS encryption được trên repository đã tồn tại, và Inspector Agent/CVE rules package là Inspector Classic quét host chứ không quét image trong ECR.",
-      "Q112:C": "Tạo lại repo đúng, nhưng SSM Inventory report chỉ liệt kê phần mềm trên container instance, không phân tích CVE của container image.",
-      "Q112:D": "Không bật KMS được trên repository hiện có, và Trusted Advisor đưa khuyến nghị best practice chứ không quét image theo CVE."
+      "Q112:A": "A không thể đổi encryption repository hiện có theo cách mô tả.",
+      "Q112:B": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
+      "Q112:C": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
+      "Q112:D": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner."
     }
   },
   "keywords": [
@@ -155,7 +149,7 @@
       "meaning_vi": "Đối tượng cần mã hoá và quét là repository/image, không phải host."
     }
   ],
-  "memory_tip_vi": "Nếu cần KMS encryption cho ECR repository đã tồn tại -> nghĩ đến tạo lại repository (encryption chỉ đặt lúc tạo) + bật ECR image scanning để tìm CVE; kiểm tra Trusted Advisor/SSM Inventory không quét CVE của image.",
+  "memory_tip_vi": "Nếu cần đổi ECR encryption, tạo repository mới; đọc image scan report.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -319,9 +313,14 @@
       "type": "outdated",
       "location": "Q112:A",
       "detail_vi": "Phương án A dựa trên Amazon Inspector Classic (agent + assessment + CVE rules package), mô hình đã bị thay bởi Amazon Inspector mới; trang tài liệu Inspector Classic hiện trả 404."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q112",
+      "detail_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem."
     }
   ],
-  "notes_vi": "Enhanced scanning (Amazon Inspector) cũng là lựa chọn hiện đại cho ECR, nhưng B vẫn đúng với 'ECR scanning enabled'.",
+  "notes_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
   "history": [
     {
       "version": "r1",
@@ -336,6 +335,37 @@
       "previous_answer": [
         "Q112:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q112:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,89 @@
+URL: https://docs.aws.amazon.com/ja_jp/whitepapers/latest/aws-security-incident-response-guide/collect-relevant-artifacts.html
+TITLE: Collect relevant artifacts - AWS Security Incident Response Guide
+
+# Collect relevant artifacts
+
+With these characteristics in mind, and based on the relevant alerts and assessment of
+impact and scope, you will need to collect the data that will be relevant to further
+investigation and analysis. Various types and sources of data that might be relevant to
+investigation, including service/control plane logs (CloudTrail, Amazon S3 data events, VPC Flow Logs), data (Amazon S3
+metadata and objects), and resources (databases, Amazon EC2 instances).
+
+Service/control plane logs can be collected for local analysis or, ideally, directly
+queried using native AWS services (where applicable). Data (including metadata) can be
+directly queried to obtain relevant information or to acquire the source objects; for
+example, use the AWS CLI to acquire Amazon S3 bucket and object metadata and directly
+acquire source objects. Resources need to be collected in a manner consistent
+with the resource type and intended method of analysis. For example, databases
+can be collected by creating a copy/snapshot of the system running the database,
+creating a copy/snapshot of the entire database itself, or querying and extracting
+certain data and logs from the database relevant to the investigation.
+
+For Amazon EC2 instances, there is a specific set of data that should be collected and a
+specific order to collection that should be performed in order to acquire and
+preserve the most amount of data for analysis and investigation.
+
+Specifically, the order for response to acquire and preserve the most amount of data from an Amazon EC2 instance is the following:
+
+- Acquire instance metadata – Acquire instance metadata
+relevant to the investigation and data queries (instance ID, type, IP address,
+VPC/subnet ID, Region, Amazon Machine Image (AMI) ID, security groups attached, launch
+time).
+
+- Enable instance protections and tags – Enable
+instance protections like termination protection, setting shutdown behavior to stop
+(if set to terminate), disabling Delete on Termination attributes for the attached EBS
+volumes, and applying appropriate tags for both visual denotation and use in possible
+response automations (for example, upon applying a tag with name of Status and value
+of Quarantine, perform forensic acquisition of data and isolate the instance).
+
+- Acquire disk (EBS snapshots) – Acquire an EBS
+snapshot of the attached EBS volumes. Each snapshot contains the information that you
+need to restore your data (from the moment when the snapshot was taken) to a new EBS
+volume. See the step to perform live response/artifact collection if you’re using
+instance store volumes.
+
+- Acquire memory – Because EBS snapshots only
+capture data that has been written to your Amazon EBS volume, which might exclude data
+that is stored or cached in memory by your applications or OS, it is imperative to
+acquire a system memory image using an appropriate third-party open-source or
+commercial tool in order to acquire available data from the system.
+
+- (Optional) Perform live response/artifact
+collection – Perform targeted data collection (disk/memory/logs) through
+live response on the system only if disk or memory is unable to be acquired otherwise,
+or there is a valid business or operational reason. Doing this will modify valuable
+system data and artifacts.
+
+- Decommission the instance – Detach the instance
+from auto scaling groups, deregister the instance from load balancers, and adjust or
+apply a pre-built instance profile with minimized or no permissions.
+
+- Isolate or contain the instance – Verify that
+the instance is effectively isolated from other systems and resources within the
+environment by ending and preventing current and future connections to and from the
+instance. Refer to the Containment section of this document for more
+details.
+
+- Responder’s choice – Based on the situation and
+goals, select one of the following:
+
+- Decommission and shut down the system (recommended).
+
+Shut the system down once the available evidence has been acquired in order to
+verify the most effective mitigation against a possible future impact to the environment by the instance.
+
+- Continue running the instance within an isolated environment instrumented for monitoring.
+
+Though it is not recommended as a standard approach, if a situation merits continued
+observation of the instance (such as when additional data or indicators are needed to
+perform comprehensive investigation and analysis of the instance), you might consider
+shutting down the instance, creating an AMI of the instance, and re-launching the
+instance in your dedicated forensics account within a sandbox environment that is
+pre-instrumented to be completely isolated and configured with instrumentation to
+facilitate continuous monitoring of the instance (for example, VPC Flow Logs or VPC
+Traffic Mirroring).
+
+Note
+
+It is essential to capture memory before live response activities or system isolation or shutdown in order to capture available volatile (and valuable) data.

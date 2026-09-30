@@ -2,9 +2,9 @@
   "question_id": "Q064",
   "question_content_hash": "d8dca07a3ca8606da5c02169f48dcb47ca870627adf2a3cf9e5613d9e7817f17",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:36Z",
-  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -28,56 +28,59 @@
     {
       "unit_id": "Q064:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Macie là dịch vụ bảo mật dữ liệu, phát hiện dữ liệu nhạy cảm trong S3; không phát hiện sự kiện DDoS.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Macie phân loại dữ liệu nhạy cảm, không phát hiện DDoS.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "Q064-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q064:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Inspector quét lỗ hổng phần mềm và network exposure; đó là đánh giá lỗ hổng, không phải cảnh báo khi có tấn công DDoS đang diễn ra.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Inspector tìm vulnerability, không báo active DDoS.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1",
+        "Q064-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q064:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Firewall Manager không ghi metric nào nên không thể tạo CloudWatch alarm dựa trên metric của Firewall Manager.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Firewall Manager không enabled CloudWatch metrics/alarms để alarm trực tiếp như phương án.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1",
+        "Q064-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q064:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Shield Advanced publish metric DDoSDetected (namespace AWS/DDoSProtection) cho resource được bảo vệ; tạo CloudWatch alarm khi metric khác 0 để nhận cảnh báo.",
+      "reason_vi": "Shield Advanced xuất DDoSDetected cho CloudWatch alarm.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "Q064-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -108,16 +111,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu Shield Advanced nêu metric DDoSDetected (AWS/DDoSProtection) và khuyến nghị alarm khi metric khác 0; tài liệu Firewall Manager nói rõ dịch vụ không ghi metric nên không thể tạo alarm (loại C).",
+    "reason_vi": "Đúng; Firewall Manager hiện không enabled CloudWatch metrics/alarms.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đối thủ mạnh nhất là C (Firewall Manager quản lý policy Shield Advanced). Trang 'AWS Firewall Manager notifications' nói trực tiếp Firewall Manager không ghi metric nên không thể tạo CloudWatch alarm riêng cho nó -> C không làm được. A (Macie) và B (Inspector) là dịch vụ phát hiện dữ liệu nhạy cảm / quét lỗ hổng, không phát hiện tấn công đang diễn ra. D được trang Shield Advanced metrics hỗ trợ trực tiếp. Giữ D, verified, high.",
+  "reconciliation_vi": "Đúng; Firewall Manager hiện không enabled CloudWatch metrics/alarms.",
   "explanation_vi": {
-    "why_correct": "Shield Advanced publish metric DDoSDetected vào CloudWatch cho từng resource được bảo vệ; tạo CloudWatch alarm khi metric khác 0 sẽ gửi cảnh báo ngay khi có sự kiện DDoS.",
+    "why_correct": "Tạo CloudWatch alarm trên Shield Advanced DDoSDetected cho resource được bảo vệ để báo có DDoS đang diễn ra.",
     "others": {
-      "Q064:A": "Macie phát hiện dữ liệu nhạy cảm trong S3, không phát hiện sự kiện DDoS.",
-      "Q064:B": "Inspector quét lỗ hổng phần mềm và network exposure, không báo khi đang bị tấn công DDoS.",
-      "Q064:C": "Firewall Manager không ghi metric nào, nên không thể tạo CloudWatch alarm dựa trên metric của nó."
+      "Q064:A": "Macie phân loại dữ liệu nhạy cảm, không phát hiện DDoS.",
+      "Q064:B": "Inspector tìm vulnerability, không báo active DDoS.",
+      "Q064:C": "Firewall Manager không enabled CloudWatch metrics/alarms để alarm trực tiếp như phương án."
     }
   },
   "keywords": [
@@ -130,7 +133,7 @@
       "meaning_vi": "Dịch vụ duy nhất trong đề publish metric DDoSDetected."
     }
   ],
-  "memory_tip_vi": "Nếu cần cảnh báo khi đang bị DDoS và có Shield Advanced -> nghĩ đến CloudWatch alarm trên metric DDoSDetected (namespace AWS/DDoSProtection); kiểm tra Firewall Manager không có metric, metric của CloudFront/Route 53 nằm ở us-east-1.",
+  "memory_tip_vi": "Nếu cần cảnh báo active DDoS trên protected resource, alarm DDoSDetected của AWS/DDoSProtection.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -210,6 +213,18 @@
       "quote": "you could create an alarm for each protected resource that reports when the DDoSDetected detection metric is non zero.",
       "supports": "AWS khuyến nghị CloudWatch alarm trên DDoSDetected.",
       "kind": "direct"
+    },
+    {
+      "id": "Q064-r2-2",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html",
+      "title": "Monitoring with Amazon CloudWatch - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director",
+      "accessed_at": "2026-09-30",
+      "quote": "CloudWatch metrics and alarms are not enabled for Firewall Manager.",
+      "supports": "CloudWatch metrics and alarms are not enabled for Firewall Manager.",
+      "kind": "direct",
+      "snapshot_id": "8155fa8dd69d",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -217,9 +232,19 @@
       "type": "typo",
       "location": "Q064:stem:0",
       "detail_vi": "'Amazon Made' là lỗi gõ của 'Amazon Macie'; dấu chấm sau 'Firewall Manager.' nên là dấu phẩy."
+    },
+    {
+      "type": "data",
+      "location": "Q064",
+      "detail_vi": "Stem 'Amazon Made' là lỗi OCR của Macie."
+    },
+    {
+      "type": "data",
+      "location": "Q064",
+      "detail_vi": "Search snippet metric có thể trộn các trường; actual opened Shield metrics page là căn cứ."
     }
   ],
-  "notes_vi": "Metric Shield cho CloudFront/Route 53 được báo ở us-east-1.",
+  "notes_vi": "Đúng; Firewall Manager hiện không enabled CloudWatch metrics/alarms.",
   "history": [
     {
       "version": "r1",
@@ -234,6 +259,41 @@
       "previous_answer": [
         "Q064:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; Firewall Manager hiện không enabled CloudWatch metrics/alarms.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q064:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q064:D"
+      ],
+      "note_vi": "Đúng; Firewall Manager hiện không enabled CloudWatch metrics/alarms.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q064:D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q064:D"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

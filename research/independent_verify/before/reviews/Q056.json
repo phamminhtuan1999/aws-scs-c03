@@ -1,0 +1,378 @@
+{
+  "question_id": "Q056",
+  "question_content_hash": "54fc7060418ca1fb5ed8a95bb80f4320453481825340123c2d0b4afe941fdbf6",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "95f32f9bf744fa0183994d2d518a12cda6f3cba4b1d4c8c2d2025c4c82242c9a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Chặn mọi traffic vào/ra instance mục tiêu, bao gồm cả phiên SSH đang tồn tại (tracked connection) vẫn còn hoạt động.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Vẫn cho phép traffic từ forensics team (port 22 qua security group).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Mỗi instance có security group riêng; một subnet chứa nhiều instance, nên không được ảnh hưởng các instance khác.",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Hiện tượng: xóa rule SG không cắt phiên SSH đang mở, ping mới thì bị chặn (connection tracking).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q056:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Thêm rule inbound và outbound 0.0.0.0/0 mọi port đáp ứng điều kiện untracked; luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa, nên xóa ngay hai rule sẽ cắt phiên SSH cũ, chỉ còn rule port 22 cho forensics và chỉ tác động SG riêng của instance. AWS dùng cùng mô hình trong runbook AWSSupport-ContainEC2Instance (SG 'all access' tạm thời rồi SG containment).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref7",
+        "ref8",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q056:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Xóa rule port 22 không cắt kết nối SSH đang được track (giống hiện tượng đã quan sát); ngoài ra khi SG không còn outbound, SSM Agent không ra được HTTPS 443 tới endpoint để dùng Session Manager.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref11",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q056:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "NACL stateless cắt được kết nối đang tồn tại (đây là điểm mạnh của C), nhưng rule deny all 0.0.0.0/0 đặt đầu chặn cả forensics team và áp dụng cho mọi instance trong subnet (subnet có nhiều instance) — vi phạm hai ràng buộc của đề.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q056:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Firewall host-level chặn toàn bộ inbound/outbound cũng chặn forensics team (và chính kết nối SSM), đồng thời chạy lệnh thay đổi trên máy có thể đã bị compromise, attacker có quyền trên OS có thể gỡ rule.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q056:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu EC2 nêu trực tiếp: rule mở 0.0.0.0/0 hai chiều làm luồng untracked và luồng untracked bị ngắt ngay khi rule bị xóa; B/C/D đều vi phạm rõ ràng một ràng buộc. Việc một kết nối đang tracked chuyển sang untracked khi thêm rule là suy luận, tài liệu không nói nguyên văn.",
+      "open_issues": [
+        "Không tìm thấy câu nguyên văn trong tài liệu AWS khẳng định kết nối đã tracked sẽ chuyển thành untracked ngay khi thêm rule 0.0.0.0/0 hai chiều.",
+        "Trong khoảnh khắc rule 0.0.0.0/0 tồn tại, instance mở cho mọi nguồn (rủi ro ngắn)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:49:10Z"
+  },
+  "source_answer": [
+    "Q056:C"
+  ],
+  "researched_answer": [
+    "Q056:A"
+  ],
+  "comparison": "mismatch",
+  "status": "verified",
+  "differs_from_source": true,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "B, C, D bị loại bằng bằng chứng trực tiếp hoặc bởi chính nội dung option (C/D chặn cả forensics; C ảnh hưởng cả subnet; B không cắt được kết nối tracked). Cơ chế của A được EC2 doc nêu trực tiếp (điều kiện untracked, ngắt ngay khi xóa rule) và runbook chính thức AWSSupport-ContainEC2Instance dùng đúng bước SG 'all access' tạm thời trước SG containment. Giữ medium vì không có câu nguyên văn nói kết nối đang tracked chuyển thành untracked khi thêm rule.",
+    "open_issues": [
+      "Tài liệu runbook mô tả bước SG 'all access' tạm thời nhưng không nêu nguyên văn lý do (chuyển kết nối tracked sang untracked); đây vẫn là suy luận có căn cứ.",
+      "Trong khoảnh khắc rule 0.0.0.0/0 tồn tại, instance mở cho mọi nguồn (rủi ro ngắn); A chấp nhận điều này theo đúng mô tả 'immediately delete'."
+    ]
+  },
+  "reconciliation_vi": "Mismatch: blind = A (verified, medium), source = C. Đã tìm cách đọc đề để C đúng: EC2 doc (connection tracking) nói trực tiếp NACL chặn một chiều sẽ cắt kết nối đang có, và trang GuardDuty 'Remediating a potentially compromised EC2 instance' trỏ tới NACL để chặn kết nối hiện có — đây là cơ sở của C. Tuy nhiên C tạo rule deny ALL từ/tới 0.0.0.0/0 ở đầu NACL của subnet: chặn luôn forensics team (đề yêu cầu 'except for traffic from the company's forensics team') và, theo AWS Security Incident Response Guide (PDF snapshot 199d3825e018), NACL ảnh hưởng mọi tài nguyên trong subnet, trong khi đề nhấn mạnh 'A subnet can contain multiple instances' và mỗi instance có SG riêng. Phía A: EC2 doc nêu điều kiện untracked (rule 0.0.0.0/0 hai chiều mọi port) và luồng untracked bị ngắt ngay khi rule bị xóa; bằng chứng MỚI: runbook AWSSupport-ContainEC2Instance (snapshot 56dcb7b610f7) chuyển instance sang SG 'all access' tạm thời rồi mới sang SG containment — đúng kỹ thuật của A. Đã fetch lại hai trích dẫn từ IR guide bằng tools/fetch_doc.py (không còn WebFetch). Kết luận: A là phương án duy nhất thỏa mọi ràng buộc; giữ A, verified (medium), differs_from_source = true.",
+  "explanation_vi": {
+    "why_correct": "Phiên SSH cũ là kết nối tracked nên xóa rule SG không cắt nó. Thêm rule inbound và outbound 0.0.0.0/0 mọi port làm luồng trở thành untracked, và luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa; xóa ngay hai rule đó thì phiên cũ bị cắt, chỉ còn rule port 22 cho forensics, và chỉ SG riêng của instance này bị thay đổi (AWS dùng cùng mô hình SG 'all access' tạm thời trong runbook AWSSupport-ContainEC2Instance).",
+    "others": {
+      "Q056:B": "Xóa rule port 22 không cắt phiên SSH đã tracked (đúng hiện tượng đã thấy) và bỏ luôn đường SSH của forensics; Session Manager còn cần outbound HTTPS 443 mà SG hiện không có.",
+      "Q056:C": "NACL cắt được kết nối đang có, nhưng deny all 0.0.0.0/0 chặn cả forensics team và ảnh hưởng mọi instance khác trong cùng subnet.",
+      "Q056:D": "Firewall host chặn toàn bộ inbound/outbound cũng chặn forensics team (và kênh SSM), lại phụ thuộc OS có thể đã bị attacker kiểm soát."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "SSH connection is still active and usable",
+      "meaning_vi": "Dấu hiệu connection tracking: kết nối tracked không bị cắt khi đổi rule SG."
+    },
+    {
+      "phrase": "has its own dedicated security group",
+      "meaning_vi": "Có thể sửa SG của riêng instance mà không ảnh hưởng instance khác."
+    },
+    {
+      "phrase": "A subnet can contain multiple instances",
+      "meaning_vi": "Gợi ý loại NACL vì NACL tác động cả subnet."
+    }
+  ],
+  "memory_tip_vi": "Nếu đổi security group mà phiên cũ vẫn sống → nghĩ đến connection tracking: làm luồng thành untracked (rule 0.0.0.0/0 hai chiều mọi port) rồi xóa rule; kiểm tra NACL chỉ phù hợp khi được phép ảnh hưởng cả subnet và không cần chừa nguồn nào.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "Amazon EC2",
+      "Amazon VPC",
+      "AWS Systems Manager"
+    ],
+    "reason_vi": "Cô lập (containment) EC2 trong incident response dựa trên hành vi connection tracking của security group so với NACL."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html",
+      "title": "Amazon EC2 security group connection tracking",
+      "section": "Security group connection tracking",
+      "snapshot_id": "6dd3de8df183",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you change a security group rule, its tracked connections are not immediately interrupted. The security group continues to allow packets until existing connections time out.",
+      "supports": "Giải thích vì sao SSH vẫn còn sau khi xóa rule (tracked); B không cắt được phiên SSH hiện có.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html",
+      "title": "Amazon EC2 security group connection tracking",
+      "section": "Untracked connections",
+      "snapshot_id": "6dd3de8df183",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An untracked flow of traffic is immediately interrupted if the rule that enables the flow is removed or modified.",
+      "supports": "Cơ chế của A: luồng untracked bị ngắt ngay khi rule bị xóa.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html",
+      "title": "Amazon EC2 security group connection tracking",
+      "section": "Untracked connections",
+      "snapshot_id": "6dd3de8df183",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If a security group rule permits TCP or UDP flows for all traffic (0.0.0.0/0 or ::/0) and there is a corresponding rule in the other direction that permits all response traffic",
+      "supports": "Điều kiện để luồng không bị track: rule 0.0.0.0/0 hai chiều mọi port (đúng các rule A thêm vào).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide (PDF)",
+      "section": "Containment - Destination containment (Network ACLs)",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "every resource on the subnet, not only the resources that are being accessed without authorization.",
+      "supports": "Guide nói áp dụng NACL sẽ ảnh hưởng mọi tài nguyên trong subnet, không chỉ tài nguyên bị truy cập trái phép (C ảnh hưởng các instance khác cùng subnet).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://aws.amazon.com/blogs/security/automate-amazon-ec2-instance-isolation-by-using-tags/",
+      "title": "Automate Amazon EC2 instance isolation by using tags (AWS Security Blog)",
+      "section": "Solution overview note",
+      "snapshot_id": "4d461d406cb8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2024-07-22T13:47:16-07:00",
+      "quote": "if you have a narrower inbound rule that initially allows the SSH connection, the existing connection will not be broken by changing the group.",
+      "supports": "Bối cảnh (blog): SG hẹp -> kết nối SSH tracked không bị cắt khi đổi SG.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html",
+      "title": "Complete Session Manager prerequisites - AWS Systems Manager",
+      "section": "Connectivity to endpoints",
+      "snapshot_id": "4fa0689b36b3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The managed nodes you connect to must also allow HTTPS (port 443) outbound traffic to the following endpoints:",
+      "supports": "Session Manager cần outbound 443; SG đã xóa rule/ firewall chặn outbound sẽ làm hỏng truy cập (B, D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-awssupport-containec2instance.html",
+      "title": "AWSSupport-ContainEC2Instance - AWS Systems Manager Automation Runbook Reference",
+      "section": "How does it work?",
+      "snapshot_id": "56dcb7b610f7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The runbook creates two security groups: a temporary \"all access\" security group and a final \"containment\" security group.",
+      "supports": "Runbook containment EC2 chính thức của AWS dùng đúng mô hình của A: chuyển instance sang SG 'all access' tạm thời rồi mới sang SG containment hạn chế.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-awssupport-containec2instance.html",
+      "title": "AWSSupport-ContainEC2Instance - AWS Systems Manager Automation Runbook Reference",
+      "section": "Steps: CreateAllAccessSecurityGroup / CreateContainmentSecurityGroup",
+      "snapshot_id": "56dcb7b610f7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Creates a restrictive containment security group with the specified ingress and egress rules, and replaces the temporary all-access group with it.",
+      "supports": "Bước cuối thay SG all-access tạm thời bằng SG containment chỉ có rule được chỉ định (tương ứng việc xóa rule 0.0.0.0/0 và chỉ giữ rule cho forensics trong A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html",
+      "title": "Amazon EC2 security group connection tracking",
+      "section": "Security group connection tracking",
+      "snapshot_id": "6dd3de8df183",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Adding a network ACL that blocks traffic in either direction breaks existing connections.",
+      "supports": "Luận điểm mạnh nhất cho C: NACL cắt được kết nối đang tồn tại — nhưng NACL áp dụng cho cả subnet và rule deny all của C không chừa forensics team.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/compromised-ec2.html",
+      "title": "Remediating a potentially compromised Amazon EC2 instance - Amazon GuardDuty",
+      "section": "Isolate the potentially compromised Amazon EC2 instance",
+      "snapshot_id": "0cb119da269e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Make sure that there is no inbound or outbound rule that allows traffic for 0.0.0.0/0",
+      "supports": "SG cô lập cuối cùng không được còn rule 0.0.0.0/0 — A chỉ thêm tạm rồi xóa ngay, trạng thái cuối chỉ còn rule port 22 cho forensics.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide (PDF)",
+      "section": "Containment - Source containment (Security groups)",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "It is important to note that existing tracked connections won’t be shut down as a result of changing security groups",
+      "supports": "Giải thích hiện tượng trong đề: đổi/xóa rule SG không cắt phiên SSH đã tracked (B không đủ).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q056:C",
+      "detail_vi": "Đáp án nguồn C (NACL deny all 0.0.0.0/0 hai chiều trên subnet) chặn cả traffic của forensics team và ảnh hưởng mọi instance trong subnet, mâu thuẫn trực tiếp với yêu cầu 'except for traffic from the company's forensics team' và chi tiết 'A subnet can contain multiple instances'."
+    }
+  ],
+  "notes_vi": "Kỹ thuật ở A dựa trên hành vi untracked connection của security group; tài liệu nói trực tiếp điều kiện untracked và việc ngắt ngay khi xóa rule.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:10Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q056:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "Option review Q056:A revised; blind values: {\"reason_vi\": \"Thêm rule inbound và outbound 0.0.0.0/0 mọi port làm luồng TCP trở thành untracked; luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa, nên xóa ngay hai rule đó sẽ cắt phiên SSH cũ, chỉ còn rule port 22 cho forensics và không ảnh hưởng instance khác.\", \"reference_ids\": [\"ref1\", \"ref2\", \"ref3\"]}",
+      "previous_answer": [
+        "Q056:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "Option review Q056:B revised; blind values: {\"reference_ids\": [\"ref1\", \"ref6\"]}",
+      "previous_answer": [
+        "Q056:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "Option review Q056:C revised; blind values: {\"reason_vi\": \"NACL stateless cắt được kết nối đang tồn tại, nhưng deny all 0.0.0.0/0 sẽ chặn cả forensics team và áp dụng cho mọi instance trong subnet (subnet có nhiều instance).\", \"reference_ids\": [\"ref1\", \"ref4\"]}",
+      "previous_answer": [
+        "Q056:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "References ref4 chuyển từ WebFetch sang snapshot PDF 199d3825e018 (quote đổi sang đoạn không chứa ký tự ligature 'ﬀ' của PDF để kiểm bằng máy); thêm ref7–ref11 (runbook AWSSupport-ContainEC2Instance, EC2 NACL breaks existing connections, GuardDuty isolation SG, IR guide tracked connections).",
+      "previous_answer": [
+        "Q056:A"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "Reconciliation: mismatch (blind A, source C). C chặn cả forensics team và cả subnet; bằng chứng mới (runbook AWSSupport-ContainEC2Instance dùng SG 'all access' tạm thời) củng cố A. Giữ A; status verified, confidence medium; differs_from_source true.",
+      "previous_answer": [
+        "Q056:A"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+URL: https://docs.aws.amazon.com/sns/latest/dg/sns-message-delivery-retries.html
+TITLE: Amazon SNS message delivery retries - Amazon Simple Notification Service
+
+# Amazon SNS message delivery retries
+
+Amazon SNS defines a delivery policy for each delivery protocol. The
+delivery policy defines how Amazon SNS retries the delivery of messages when server-side errors
+occur (when the system that hosts the subscribed endpoint becomes unavailable). When the
+delivery policy is exhausted, Amazon SNS stops retrying the delivery and discards the
+message—unless a dead-letter queue is attached to the subscription. For more
+information, see Amazon SNS dead-letter queues.
+
+## Delivery protocols and policies
+
+Note
+
+- Except for HTTP/S, you can't change Amazon SNS-defined delivery
+policies. Only HTTP/S supports custom policies. See Creating an HTTP/S delivery policy.
+
+- Amazon SNS applies jittering to delivery retries. For more information, see the
+Exponential Backoff and Jitter post on the AWS
+Architecture Blog.
+
+- The total policy retry time for an HTTP/S endpoint
+cannot be greater than 3,600 seconds. This is a hard limit and cannot be
+increased.
+
+Endpoint type
+
+Delivery protocols
+
+Immediate retry (no delay) phase
+
+Pre-backoff phase
+
+Backoff phase
+
+Post-backoff phase
+
+Total attempts
+
+AWS managed endpoints
+
+¹
+
+3 times, without delay
+
+2 times, 1 second apart
+
+10 times, with exponential backoff, from 1 second to 20
+seconds
+
+100,000 times, 20 seconds apart
+
+100,015 times, over 23 days
+
+AWS Lambda
+
+Amazon SQS
+
+Customer managed endpoints
+
+SMTP
+
+0 times, without delay
+
+2 times, 10 seconds apart
+
+10 times, with exponential backoff, from 10 seconds to
+600 seconds (10 minutes)
+
+38 times, 600 seconds (10 minutes) apart
+
+50 attempts, over 6 hours
+
+SMS
+
+Mobile push
+
+¹ For throttling errors with the Firehose protocol, Amazon SNS uses the same delivery
+policy as for customer managed endpoints.
+
+## Delivery policy stages
+
+The following diagram shows the phases of a delivery policy.
+
+Each delivery policy is comprised of four phases.
+
+- Immediate retry phase (no delay) –
+This phase occurs immediately after the initial delivery attempt. There is no
+delay between retries in this phase.
+
+- Pre-backoff phase – This phase follows
+the Immediate Retry Phase. Amazon SNS uses this phase to attempt a set of retries
+before applying a backoff function. This phase specifies the number of retries
+and the amount of delay between them.
+
+- Backoff phase – This phase controls
+the delay between retries by using the retry-backoff function. This phase sets a
+minimum delay, a maximum delay, and a retry-backoff function that defines how
+quickly the delay increases from the minimum to the maximum delay. The backoff
+function can be arithmetic, exponential, geometric, or linear.
+
+- Post-backoff phase – This phase
+follows the backoff phase. It specifies a number of retries and the amount of
+delay between them. This is the final phase.
+
+## Creating an HTTP/S delivery policy
+
+You can define how Amazon SNS retries message delivery to HTTP/S endpoints using a delivery
+policy with four phases: no-delay, pre-backoff, backoff,
+and post-backoff. This policy allows you to override
+the default retry settings and customize them to match the capacity of your HTTP
+server.
+
+You can define your HTTP/S delivery policy as a JSON object at either the topic or subscription
+level:
+
+- Topic-level policy – Applies to all
+HTTP/S subscriptions linked to the topic. Use the CreateTopic
+or SetTopicAttributes API action to set this
+policy.
+
+- Subscription-level policy – Applies
+only to a specific subscription. Use the Subscribe or
+SetSubscriptionAttributes API action to set this
+policy.
+
+Alternatively, you can also use the AWS::SNS::Subscription resource in your CloudFormation templates.
+
+You should customize your delivery policy based on your HTTP/S server's
+capacity:
+
+- Single server for all subscriptions –
+If all HTTP/S subscriptions in a topic use the same server, set the delivery
+policy as a topic attribute to ensure consistency across all
+subscriptions.
+
+- Different servers for subscriptions –
+If subscriptions target different servers, create a unique delivery policy for
+each subscription, tailored to the capacity of the specific server.
+
+You can also set the Content-Type header in the request policy to specify
+the media type of the notification. By default, Amazon SNS sends all the notifications to
+HTTP/S endpoints with content type set to text/plain; charset=UTF-8.
+However, you can override this default using the headerContentType field in the request policy.
+
+The following JSON object defines a delivery policy with retries structured in four
+phases:
+
+- No-delay phase – Retry 3 times
+immediately.
+
+- Pre-backoff phase – Retry 2 times with
+a 1 second interval.
+
+- Backoff phase – Retry 10 times with
+exponential delays ranging from 1 to 60 seconds.
+
+- Post-backoff phase – Retry 35 times
+with a fixed 60-second interval.
+
+Amazon SNS makes a total of 50 attempts to deliver a
+message before discarding it. To retain messages that can't be delivered after all
+retries, configure your subscription to move undeliverable messages to a dead-letter
+queue (DLQ). For more information, see Amazon SNS dead-letter queues.
+
+Amazon SNS considers all 5XX errors and 429 (too many requests sent) errors as retryable. These errors are subject to the delivery policy. All other errors are considered as permanent failures and retries will not be attempted. However, messages that Amazon SNS self-throttles due to the maxReceivesPerSecond setting are not subject to the delivery retry policy. Self-throttled messages are re-queued and continue to be delivered as capacity allows, without consuming retry attempts.
+
+Note
+
+This delivery policy uses the maxReceivesPerSecond property to
+throttle delivery traffic to an average of 10 messages per second per subscription.
+While this mechanism helps prevent your HTTP/S endpoint from being overwhelmed by
+high traffic, it's designed to maintain an average delivery rate and doesn't enforce
+a strict cap. Occasional delivery traffic spikes above the specified limit may
+occur, especially if your publishing rate is significantly higher than the
+throttling limit.
+
+When the publishing (inbound) traffic exceeds the delivery (outbound) rate, it can
+result in a message backlog and higher delivery latency. To avoid such issues,
+make sure the maxReceivesPerSecond value aligns with your HTTP/S server's
+capacity and workload requirements.
+
+The following delivery policy example overrides the default content type for HTTP/S
+notification to application/json.
+
+{
+"healthyRetryPolicy": {
+"minDelayTarget": 1,
+"maxDelayTarget": 60,
+"numRetries": 50,
+"numNoDelayRetries": 3,
+"numMinDelayRetries": 2,
+"numMaxDelayRetries": 35,
+"backoffFunction": "exponential"
+},
+"throttlePolicy": {
+"maxReceivesPerSecond": 10
+},
+"requestPolicy": {
+"headerContentType": "application/json"
+}
+}
+
+The delivery policy is composed of a retry policy,
+throttle policy and a request
+policy. In total, there are 9 attributes in
+a delivery policy.
+
+Policy
+
+Description
+
+Constraint
+
+minDelayTarget
+
+The minimum delay for a retry.
+Unit: Seconds
+
+1 to maximum delay
+Default:
+20
+
+maxDelayTarget
+
+The maximum delay for a retry.
+Unit: Seconds
+
+Minimum delay to 3,600
+Default:
+20
+
+numRetries
+
+The total number of retries, including immediate, pre-backoff, backoff,
+and post-backoff retries.
+
+0 to 100
+Default: 3
+
+numNoDelayRetries
+
+The number of retries to be done immediately, with no delay between
+them.
+
+0 or greater
+Default:
+0
+
+numMinDelayRetries
+
+The number of retries in the pre-backoff phase, with the specified
+minimum delay between them.
+
+0 or greater
+Default:
+0
+
+numMaxDelayRetries
+
+The number of retries in the post-backoff phase, with the maximum delay
+between them.
+
+0 or greater
+Default:
+0
+
+backoffFunction
+
+The model for backoff between retries.
+
+One of four options:
+
+- arithmetic
+
+- exponential
+
+- geometric
+
+- linear
+
+Default: linear
+
+maxReceivesPerSecond
+
+The maximum average number of message deliveries per second, per
+subscription.
+
+1 or greater
+Default: No throttling
+(no limit on delivery rate)
+
+headerContentType
+
+The content type of the notification being sent to HTTP/S
+endpoints.
+
+If the request policy is not defined, the content type defaults to
+text/plain; charset=UTF-8.
+
+When the raw message delivery is disabled for a subscription
+(default), or when the delivery policy is defined on the topic-level,
+the supported header content types are application/json and
+text/plain.
+
+When the raw message delivery is enabled for a subscription, the
+following content types are supported:
+
+- text/css
+
+- text/csv
+
+- text/html
+
+- text/plain
+
+- text/xml
+
+- application/atom+xml
+
+- application/json
+
+- application/octet-stream
+
+- application/soap+xml
+
+- application/x-www-form-urlencoded
+
+- application/xhtml+xml
+
+- application/xml
+
+Amazon SNS uses the following formula to calculate the number of retries in the backoff
+phase:
+
+numRetries - numNoDelayRetries - numMinDelayRetries - numMaxDelayRetries
+
+You can control the frequency of retries during the backoff phase using three
+parameters:
+
+- minDelayTarget – Sets the
+delay for the first retry attempt in the backoff phase.
+
+- maxDelayTarget – Sets the
+delay for the final retry attempt in the backoff phase.
+
+- backoffFunction – Determines
+the algorithm Amazon SNS uses to calculate the delays for all retry attempts between the
+first and last retries. You can choose from four available retry-backoff
+functions.
+
+The following diagram illustrates how different retry backoff functions affect the delays
+between retries during the backoff phase. The delivery policy used for this example includes
+the following settings: 10 total retries, a minimum delay of 5 seconds, and a maximum
+delay of 260 seconds.
+
+- The vertical axis shows the delay (in seconds)
+for each retry attempt.
+
+- The horizontal axis represents the retry
+sequence, ranging from the first to the tenth attempt.

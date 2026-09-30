@@ -2,9 +2,9 @@
   "question_id": "Q093",
   "question_content_hash": "1cea47eeeafc31f44e34fda1e17f56b6aad1edd49dbe60c5497b0f18a476cb72",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:56:06Z",
-  "last_reviewed_at": "2026-09-30T20:21:58+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,13 +33,12 @@
     {
       "unit_id": "Q093:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Account không bắt buộc nằm trong OU; account có thể nằm trực tiếp dưới root. Quyền truy cập IAM Identity Center được gán theo từng account, không phụ thuộc việc account có ở trong OU hay không.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Account ở organization root vẫn có thể được assign truy cập.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
         "ref2"
       ],
       "evidence_kind": "inference"
@@ -48,13 +47,13 @@
       "unit_id": "Q093:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Group Cloud đã hoạt động vì nhân viên truy cập được các account khác bằng chính group này; AD Connector cấu hình đúng. Vấn đề đồng bộ group sẽ ảnh hưởng mọi account chứ không riêng Account A.",
+      "reason_vi": "Nếu group sync chung hỏng thì không chỉ Account A bị thiếu.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -62,29 +61,28 @@
       "unit_id": "Q093:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Truy cập account qua IAM Identity Center chỉ có khi user/group được assign vào account đó cùng permission set; thiếu assignment cho Account A thì account không xuất hiện trong access portal, đúng triệu chứng.",
+      "reason_vi": "account assignment + permission set quyết định truy cập.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q093:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Permissions boundary chỉ áp dụng cho IAM entity (user hoặc role), không gắn được cho cả một AWS account; phương án mô tả một cơ chế không tồn tại.",
+      "reason_vi": "Permissions boundary gắn IAM identity, không gắn trực tiếp toàn AWS account.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -116,16 +114,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. IAM Identity Center cấp quyền vào account bằng assignment user/group + permission set cho TỪNG account; triệu chứng chỉ một account bị thiếu khớp đúng với thiếu assignment.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ B (group chưa sync): nhân viên dùng chính group Cloud để vào các account khác nên group đã có trong IAM Identity Center; lỗi sync sẽ ảnh hưởng mọi account. A: account không cần nằm trong OU (có thể ở root) và assignment theo account. D: permissions boundary chỉ gắn cho IAM user/role, không gắn cho account. Giữ C, verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Trong IAM Identity Center, user/group chỉ vào được một account khi đã được assign vào account đó kèm permission set. Group Cloud hoạt động ở các account khác, nên nguyên nhân hợp lý nhất là thiếu assignment cho riêng Account A.",
+    "why_correct": "Group Cloud phải được assign vào Account A cùng permission set hợp lệ trong IAM Identity Center.",
     "others": {
-      "Q093:A": "Account có thể nằm trực tiếp dưới root mà vẫn được assign bình thường; assignment làm theo từng account, không cần OU.",
-      "Q093:B": "Group Cloud đang cấp quyền vào các account khác nên đã có trong IAM Identity Center; lỗi đồng bộ sẽ ảnh hưởng mọi account chứ không riêng Account A.",
-      "Q093:D": "Permissions boundary chỉ áp cho IAM user hoặc role, không thể gắn cho cả một AWS account."
+      "Q093:A": "Account ở organization root vẫn có thể được assign truy cập.",
+      "Q093:B": "Nếu group sync chung hỏng thì không chỉ Account A bị thiếu.",
+      "Q093:D": "Permissions boundary gắn IAM identity, không gắn trực tiếp toàn AWS account."
     }
   },
   "keywords": [
@@ -138,7 +136,7 @@
       "meaning_vi": "Account là thành viên org nhưng vẫn cần assignment group + permission set riêng."
     }
   ],
-  "memory_tip_vi": "Nếu user IAM Identity Center vào được các account khác nhưng thiếu một account -> nghĩ đến assignment group + permission set cho account đó; kiểm tra: permissions boundary không gắn cho account, OU không bắt buộc.",
+  "memory_tip_vi": "Nếu group vào được account khác nhưng thiếu Account A, kiểm tra assignment group + permission set của Account A.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -232,6 +230,46 @@
       "previous_answer": [
         "Q093:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q093:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q093:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q093:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q093:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

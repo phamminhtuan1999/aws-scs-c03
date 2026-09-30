@@ -1,0 +1,311 @@
+{
+  "question_id": "Q142",
+  "question_content_hash": "81fdb96ee334b54d894f5d132d5c865ce9e2993604369e2efe9452fc916c3263",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:24:08+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Kiến trúc: CloudFront -> API Gateway REST API (Regional endpoint) làm origin; access log API Gateway chỉ thấy IP edge của CloudFront, thiếu HTTP headers.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Cần thu được IP gốc của client (viewer).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Cần thu được thông tin header của request.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q142:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CloudFront standard logging (v2) ghi c-ip/x-forwarded-for (IP client gốc) và một số header (Host, Referer, User-Agent, Cookie, x-host-header) rồi gửi tới S3; đây là option duy nhất lấy được IP client. Tuy nhiên v2 không có field cs-headers (toàn bộ header chỉ có ở real-time logs), nên 'full header information' là nói quá.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref7",
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q142:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "$context.identity.sourceIp là IP của kết nối TCP trực tiếp tới API Gateway, tức vẫn là IP edge của CloudFront; cũng không thêm header vào log.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q142:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "API Gateway đã ghi được access log (quyền đã có); thêm logs:PutLogEvents cho 'CloudFront log group' không làm thay đổi nội dung log hay lộ IP client.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q142:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cache policy chỉ cho None hoặc 'Include the following headers' (không có tuỳ chọn all headers); đưa header vào cache key chỉ ảnh hưởng cache/forward, không khiến API Gateway access log ghi header hay IP client, và còn làm giảm cache hit.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q142:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Doc xác nhận CloudFront log có c-ip/x-forwarded-for và API Gateway sourceIp chỉ là kết nối TCP trực tiếp; B, C, D không giải quyết được. Tuy nhiên cụm 'full header information' của A là nói quá: standard log chỉ có một số header cụ thể.",
+      "open_issues": [
+        "Trường cs-headers (toàn bộ header, cắt ở 800 byte) được doc mô tả cho real-time logs; chưa xác minh được standard logging v2 có cho chọn cs-headers trong 'subset of real-time access log fields' hay không."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T20:24:08+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logs-reference.html",
+      "title": "Standard logging reference",
+      "section": "Log file fields - c-ip",
+      "snapshot_id": "355676682e53",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The IP address of the viewer that made the request",
+      "supports": "CloudFront log ghi IP của viewer (client gốc).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html",
+      "title": "Configure standard logging (v2)",
+      "section": "intro",
+      "snapshot_id": "aaadd4654edc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Select the log fields that you want. You can also select a subset of real-time access log fields.",
+      "supports": "Standard logging v2 cho chọn field log, gửi tới S3/CloudWatch Logs/Firehose.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logs-reference.html",
+      "title": "Standard logging reference",
+      "section": "Log file fields - cs(User-Agent)",
+      "snapshot_id": "355676682e53",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The value of the User-Agent header in the request.",
+      "supports": "Standard log có một số header cụ thể (không phải toàn bộ header).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-variables-for-access-logging.html",
+      "title": "Variables for access logging for API Gateway",
+      "section": "$context.identity.sourceIp",
+      "snapshot_id": "f34a174de2e1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The source IP address of the immediate TCP connection making the request to the API Gateway endpoint.",
+      "supports": "sourceIp sau CloudFront vẫn là IP edge của CloudFront (lựa chọn B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html",
+      "title": "Set up CloudWatch logging for REST APIs in API Gateway",
+      "section": "Permissions for CloudWatch logging",
+      "snapshot_id": "90629a253bbe",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To enable CloudWatch Logs, you must grant API Gateway permission to read and write logs to CloudWatch for your account.",
+      "supports": "Quyền IAM chỉ quyết định API Gateway có ghi log được hay không, không quyết định nội dung log (lựa chọn C).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cache-key-understand-cache-policy.html",
+      "title": "Understand cache policies",
+      "section": "Headers",
+      "snapshot_id": "c3aff7408c60",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You specify which of the HTTP headers in viewer requests are included in the cache key and automatically included in origin requests.",
+      "supports": "Cache policy chỉ có None/Include the following headers; mục đích là cache key, không phải logging (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html",
+      "title": "Configure standard logging (v2)",
+      "section": "Access log fields",
+      "snapshot_id": "aaadd4654edc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In addition, you can select the following real-time access log fields.",
+      "supports": "Danh sách field real-time mà standard logging v2 được chọn thêm chỉ gồm timestamp(ms), origin-fbl, origin-lbl, asn, c-country, cache-behavior-path-pattern, viewer-request/response-log-data; không có cs-headers.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html",
+      "title": "Use real-time access logs",
+      "section": "cs-headers",
+      "snapshot_id": "d83a0ffd9e52",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The HTTP headers (names and values) in the viewer request.",
+      "supports": "Field cs-headers (toàn bộ header, cắt ở 800 byte) thuộc real-time logs, không thuộc standard logging v2 -> 'full header information' trong A là nói quá.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logs-reference.html",
+      "title": "Standard logging reference",
+      "section": "Log file fields - x-forwarded-for",
+      "snapshot_id": "355676682e53",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In that case, this field is the IP address of the viewer that originated the request.",
+      "supports": "Standard log có c-ip và x-forwarded-for để lấy IP client gốc (lựa chọn A).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q142:stem:0",
+      "detail_vi": "'as the source, address' có dấu phẩy thừa (ý là 'source address')."
+    },
+    {
+      "type": "data",
+      "location": "Q142:A",
+      "detail_vi": "'full header information' không chính xác: standard logging v2 chỉ có một số header cụ thể (Host, Referer, User-Agent, Cookie, x-host-header); field cs-headers (toàn bộ header) chỉ có ở real-time logs. Không làm đổi đáp án vì các option khác không đáp ứng."
+    }
+  ],
+  "notes_vi": "Khi API Gateway đứng sau CloudFront, IP client gốc nằm ở CloudFront log (c-ip) hoặc header X-Forwarded-For, không ở $context.identity.sourceIp.",
+  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "blind_record_sha256": "0afd90cad6c6d61c9bdcd76f68e518d2a53e3e5538b60a5d6cbed7710589d20c",
+  "source_answer": [
+    "Q142:A"
+  ],
+  "researched_answer": [
+    "Q142:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Doc xác nhận CloudFront standard log có c-ip/x-forwarded-for và một số header, còn $context.identity.sourceIp của API Gateway chỉ là IP kết nối TCP trực tiếp (edge CloudFront); B, C, D không giải quyết được. Doc cũng xác nhận standard logging v2 KHÔNG có cs-headers, nên cụm 'full header information' của A không chính xác, nhưng A vẫn là option duy nhất đáp ứng yêu cầu 'original client IP address and header information'.",
+    "open_issues": [
+      "'full header information' trong A vượt quá khả năng thực tế của standard logging v2 (chỉ có một số header cụ thể; toàn bộ header cs-headers chỉ có ở real-time logs)."
+    ]
+  },
+  "reconciliation_vi": "Source key = A, trùng blind. Đã giải quyết open issue của blind về cs-headers: trang Configure standard logging (v2) liệt kê rõ các field real-time có thể chọn thêm (timestamp(ms), origin-fbl, origin-lbl, asn, c-country, cache-behavior-path-pattern, viewer-request-log-data, viewer-response-log-data) và không có cs-headers (ref7); cs-headers chỉ được mô tả trong real-time logs (ref8). Như vậy phần 'full header information' của A là nói quá. Tìm bằng chứng cho phía khác: B dùng $context.identity.sourceIp - doc nói là IP của kết nối TCP trực tiếp (ref4), sau CloudFront đó là IP edge, và không thêm header; C chỉ là quyền ghi log; D cache policy không có tuỳ chọn all headers và không ảnh hưởng nội dung access log. Không option nào khác đáp ứng, còn A đáp ứng yêu cầu của stem (IP gốc qua c-ip/x-forwarded-for + header Host/Referer/User-Agent/Cookie). Giữ A, verified, medium; ghi source issue về 'full header'.",
+  "explanation_vi": {
+    "why_correct": "CloudFront là nơi nhận kết nối trực tiếp từ client, nên standard logging (v2) của CloudFront ghi được IP client gốc (c-ip, x-forwarded-for) và các header như Host, Referer, User-Agent, Cookie; lưu vào S3 để phân tích. Lưu ý: v2 không ghi toàn bộ header (cs-headers chỉ có ở real-time logs), nên 'full header information' là nói quá, nhưng A vẫn là phương án duy nhất đáp ứng.",
+    "others": {
+      "Q142:B": "$context.identity.sourceIp là IP của kết nối TCP trực tiếp tới API Gateway, tức vẫn là IP edge CloudFront, và không thêm header vào log.",
+      "Q142:C": "API Gateway đã ghi access log được; thêm logs:PutLogEvents cho log group khác không làm lộ IP client hay header.",
+      "Q142:D": "Cache policy không có tuỳ chọn đưa tất cả header vào cache key, và cache key chỉ ảnh hưởng cache/forward chứ không làm API Gateway log IP client hay header."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "CloudFront edge location's IP address as the source",
+      "meaning_vi": "API Gateway chỉ thấy kết nối từ CloudFront -> IP client gốc phải lấy ở phía CloudFront."
+    },
+    {
+      "phrase": "original client IP address and header information",
+      "meaning_vi": "CloudFront log: c-ip / x-forwarded-for + các field header."
+    }
+  ],
+  "memory_tip_vi": "Nếu origin sau CloudFront chỉ thấy IP edge -> nghĩ đến CloudFront access logs (c-ip, x-forwarded-for) hoặc header X-Forwarded-For; kiểm tra standard log v2 chỉ có một số header, toàn bộ header (cs-headers) chỉ có ở real-time logs.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "2 Incident Response"
+    ],
+    "services": [
+      "Amazon CloudFront",
+      "Amazon API Gateway",
+      "Amazon S3",
+      "Amazon CloudWatch Logs"
+    ],
+    "reason_vi": "Cấu hình logging để điều tra chuỗi request (thu IP client gốc và header)."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:24:08+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q142:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:30:46+00:00",
+      "change": "Reconciliation: khớp source key A; status verified (medium); đáp án không đổi; thêm ref7-ref9 xác nhận standard logging v2 không có cs-headers (giải quyết open issue của blind) và x-forwarded-for; đổi loại source issue của A từ 'ambiguous' sang 'data'.",
+      "previous_answer": [
+        "Q142:A"
+      ]
+    }
+  ]
+}

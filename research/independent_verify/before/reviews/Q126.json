@@ -1,0 +1,360 @@
+{
+  "question_id": "Q126",
+  "question_content_hash": "9be79ba1ac70330bf53140b79ef6fcf27523c45a640764008b430c7c8c48f118",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:25:52+00:00",
+  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "bec4c188960d1bf11feb9e781ad5edf6fe545068ed9068acb22b57a3eedc3583",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phân phối web content với độ trễ thấp (người dùng đang gặp latency).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Khắc phục lỗi HTTP security audit: bổ sung HTTP security headers, tăng bảo mật và privacy cho user và content provider.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Không được thay đổi application code.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Hai ứng dụng chạy trên EC2 và S3 (hai loại origin). Choose TWO.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q126:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "API Gateway caching chỉ cache response của REST API endpoint trong một Region; không phải CDN phân phối web content (EC2 + S3) tại edge và không giải quyết HTTP security headers.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q126:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Lambda authorizer dùng để kiểm soát truy cập API (nhận identity, trả IAM policy), không phải cơ chế thêm HTTP security headers vào response từ origin.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q126:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Lambda@Edge gắn vào origin-response trigger có thể sửa HTTP response từ origin (thêm/ghi đè header như HSTS, CSP, X-Frame-Options) trước khi CloudFront cache, không cần sửa code ứng dụng.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4",
+        "ref9",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q126:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CloudFront distribution với origin S3 và origin HTTP server (EC2) phân phối nội dung qua edge location có độ trễ thấp nhất, đồng thời là nền để chạy Lambda@Edge/HTTPS - không đổi code ứng dụng.",
+      "requirement_ids": [
+        "R1",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q126:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Việc 'honor connection header' không phải cơ chế bảo mật hay giảm latency; ALB không làm origin cho S3 và không phân phối tại edge. (ALB có tính năng thêm response security headers, nhưng lựa chọn này không mô tả tính năng đó.)",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q126:C",
+      "Q126:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "CloudFront giải quyết latency cho cả S3 và EC2 origin; Lambda@Edge origin-response trigger sửa được response headers mà không đổi code. Các lựa chọn API Gateway/ALB không đáp ứng đồng thời hai origin, edge delivery và security headers.",
+      "open_issues": [
+        "Hiện nay CloudFront response headers policy có thể thêm security headers không cần code (cách đơn giản hơn Lambda@Edge) nhưng không nằm trong các lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6",
+      "ref7",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T20:25:52+00:00"
+  },
+  "source_answer": [
+    "Q126:C",
+    "Q126:D"
+  ],
+  "researched_answer": [
+    "Q126:C",
+    "Q126:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C+D. Blog AWS về Lambda@Edge + CloudFront thêm security headers mô tả gần nguyên văn yêu cầu đề (security/privacy cho viewer và content provider, không sửa ứng dụng ở origin); CloudFront hỗ trợ cả S3 và HTTP origin và giảm latency qua edge.",
+    "open_issues": [
+      "Từ 11/2021 CloudFront response headers policy thêm security headers không cần code (ref11) – cách đơn giản hơn C nhưng không có trong lựa chọn; C+D vẫn hợp lệ hiện nay."
+    ]
+  },
+  "reconciliation_vi": "Source key = C+D, trùng blind. Tìm thêm: blog AWS 'Adding HTTP Security Headers Using Lambda@Edge and Amazon CloudFront' (ref9, ref10) dùng origin response trigger để thêm security headers cho site trên S3 mà không sửa ứng dụng, và cụm 'security and privacy of both viewers and content providers' trùng yêu cầu đề – xác nhận ý đồ C+D. Kiểm tra phản bác: response headers policy (What's New 2021-11-02, ref11) là cách mới hơn nhưng không có trong lựa chọn và không làm Lambda@Edge sai (không phải outdated). A/B (API Gateway cache, Lambda authorizer) không phải CDN cho S3/EC2 và authorizer không thêm header; E (ALB honor connection header) không liên quan security headers/latency và không làm origin cho S3. Giữ C+D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "D: CloudFront distribution với origin S3 và EC2 phục vụ nội dung từ edge location gần người dùng nhất nên giảm latency. C: Lambda@Edge ở origin-response trigger thêm HTTP security headers (HSTS, CSP, X-Frame-Options…) vào response rồi CloudFront cache lại – khắc phục lỗi audit mà không sửa code ứng dụng.",
+    "others": {
+      "Q126:A": "API Gateway caching chỉ cache response của REST API trong một Region, không phải CDN cho web content từ S3/EC2 và không thêm security headers.",
+      "Q126:B": "Lambda authorizer dùng để xác thực/ủy quyền request API (trả về IAM policy), không phải cơ chế thêm security headers vào response.",
+      "Q126:E": "'Honor connection header' của ALB không phải biện pháp bảo mật hay giảm latency; ALB cũng không làm origin cho S3 và không phân phối tại edge."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "low latencies",
+      "meaning_vi": "Phân phối qua edge location -> CloudFront."
+    },
+    {
+      "phrase": "HTTP security audit",
+      "meaning_vi": "Thiếu HTTP security headers (HSTS, CSP, X-Frame-Options…) trong response."
+    },
+    {
+      "phrase": "does not require changes to the application code",
+      "meaning_vi": "Thêm header ở tầng CDN (Lambda@Edge/response headers policy), không sửa ứng dụng."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần thêm HTTP security headers cho web trên S3/EC2 mà không sửa code và cần giảm latency -> nghĩ đến CloudFront + Lambda@Edge origin-response (hoặc response headers policy nếu có trong lựa chọn); kiểm tra: Lambda authorizer là xác thực API, không sửa header.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon CloudFront",
+      "AWS Lambda@Edge",
+      "Amazon S3",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Bảo vệ tầng edge cho ứng dụng web: security headers (HSTS…) và phân phối nội dung qua CloudFront."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html",
+      "title": "What is Amazon CloudFront?",
+      "section": "intro",
+      "snapshot_id": "b7b1b46faa48",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the request is routed to the edge location that provides the lowest latency (time delay), so that content is delivered with the best possible performance",
+      "supports": "CloudFront giảm latency khi phân phối web content.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html",
+      "title": "What is Amazon CloudFront?",
+      "section": "intro",
+      "snapshot_id": "b7b1b46faa48",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "an origin that you've defined—such as an Amazon S3 bucket, a MediaPackage channel, or an HTTP server",
+      "supports": "CloudFront dùng được S3 bucket và HTTP server (EC2) làm origin.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-cloudfront-trigger-events.html",
+      "title": "CloudFront events that can trigger a Lambda@Edge function",
+      "section": "Origin response",
+      "snapshot_id": "8a37493c6888",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The function executes after CloudFront receives a response from the origin and before it caches the object in the response",
+      "supports": "Lambda@Edge origin-response trigger chạy trên response từ origin (đúng vị trí thêm security headers).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-examples.html",
+      "title": "Lambda@Edge example functions",
+      "section": "Example: Override a response header",
+      "snapshot_id": "3428bbe617d2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The following example shows how to change the value of a response header based on the value of another header",
+      "supports": "Lambda@Edge có thể sửa/thêm response header mà không đổi code ứng dụng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html",
+      "title": "Use API Gateway Lambda authorizers",
+      "section": "intro",
+      "snapshot_id": "cef4c01f0438",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Lambda authorizer takes the caller's identity as the input and returns an IAM policy as the output",
+      "supports": "Lambda authorizer là cơ chế authorization, không thêm response headers.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html",
+      "title": "Cache settings for REST APIs in API Gateway",
+      "section": "intro",
+      "snapshot_id": "b4557f7928c2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can enable API caching in API Gateway to cache your endpoint's responses",
+      "supports": "API Gateway caching áp dụng cho REST API stage, không phải CDN cho web content S3/EC2.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/header-modification.html",
+      "title": "HTTP header modification for your Application Load Balancer",
+      "section": "Add response headers",
+      "snapshot_id": "edc5df6c72d9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can configure your Application Load Balancer to add security-related headers to responses",
+      "supports": "ALB có tính năng thêm security headers, nhưng lựa chọn E không mô tả tính năng này và ALB không giải quyết latency/S3 origin.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/modifying-response-headers.html",
+      "title": "Add or remove HTTP headers in CloudFront responses with a policy",
+      "section": "intro",
+      "snapshot_id": "d9d816f0e959",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A set of common security headers, such as Strict-Transport-Security, Content-Security-Policy, and X-Frame-Options",
+      "supports": "Bối cảnh: CloudFront hiện có response headers policy thêm security headers không cần code - lựa chọn thay thế không có trong đề.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://aws.amazon.com/blogs/networking-and-content-delivery/adding-http-security-headers-using-lambdaedge-and-amazon-cloudfront/",
+      "title": "Adding HTTP Security Headers Using Lambda@Edge and Amazon CloudFront | Networking & Content Delivery",
+      "section": "intro",
+      "snapshot_id": "21fce7355c1f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2026-02-24T09:07:51-08:00",
+      "quote": "add response headers that are specifically targeted to improve the security and privacy of both viewers and content providers",
+      "supports": "Mẫu kiến trúc AWS: CloudFront + Lambda@Edge thêm security headers để tăng security/privacy cho viewer và content provider – trùng gần nguyên văn yêu cầu đề.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://aws.amazon.com/blogs/networking-and-content-delivery/adding-http-security-headers-using-lambdaedge-and-amazon-cloudfront/",
+      "title": "Adding HTTP Security Headers Using Lambda@Edge and Amazon CloudFront | Networking & Content Delivery",
+      "section": "Solution",
+      "snapshot_id": "21fce7355c1f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2026-02-24T09:07:51-08:00",
+      "quote": "I will be making use of the origin response trigger to execute our Lambda@Edge function.",
+      "supports": "Lambda@Edge ở origin response thêm header mà không sửa ứng dụng ở origin (ví dụ S3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2021/11/amazon-cloudfront-supports-cors-security-custom-http-response-headers/",
+      "title": "Amazon CloudFront now supports configurable CORS, security, and custom HTTP response headers",
+      "section": "Posted on: Nov 2, 2021",
+      "snapshot_id": "89d41f97bc22",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You no longer need to configure your origins or use custom Lambda@Edge or CloudFront functions to insert these headers.",
+      "supports": "Từ 11/2021 có response headers policy đơn giản hơn Lambda@Edge, nhưng không có trong lựa chọn; Lambda@Edge vẫn hoạt động nên C+D vẫn đúng.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Đáp án C+D phản ánh cách làm trước khi có CloudFront response headers policy (2021); vẫn hợp lệ hiện nay.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:25:52+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q126:C\", \"Q126:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:36:52+00:00",
+      "change": "Reconciliation: khớp source key C+D; status verified (high); đáp án không đổi. Thêm ref9–ref11 (blog AWS Lambda@Edge security headers ở origin response; What's New 2021-11 response headers policy); cập nhật reference_ids của Q126:C, Q126:D (verdict không đổi).",
+      "previous_answer": [
+        "Q126:C",
+        "Q126:D"
+      ]
+    }
+  ]
+}

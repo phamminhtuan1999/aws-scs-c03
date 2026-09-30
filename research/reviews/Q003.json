@@ -2,9 +2,9 @@
   "question_id": "Q003",
   "question_content_hash": "481de70f5e41ca33790d3b5ed478e18560b20080b4e48fc51daa29bc5fd89be7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:42:00Z",
-  "last_reviewed_at": "2026-09-30T19:42:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -43,13 +43,13 @@
       "unit_id": "Q003:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Đổi thành true sẽ Deny chính các request ĐÃ dùng MFA, và với BoolIfExists request bằng access key (không có key) vẫn bị Deny; vừa không sửa lỗi vừa phá yêu cầu MFA.",
+      "reason_vi": "Sai: true deny phiên MFA; BoolIfExists cũng deny khi key vắng, nên vẫn chặn access key dài hạn.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -57,46 +57,43 @@
       "unit_id": "Q003:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CLI dùng access key dài hạn nên không có aws:MultiFactorAuthPresent và bị BoolIfExists Deny. Gọi sts get-session-token với --serial-number và --token-code trả về credentials tạm thời có thông tin MFA, nên lệnh EC2 được phép mà vẫn giữ MFA.",
+      "reason_vi": "Đúng: token tạm thời xác thực MFA đáp ứng policy.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q003:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "aws:MultiFactorAuthPresent không có mặt với federated identities; hơn nữa người dùng SAML federation không thuộc IAM group nên policy của group không áp dụng. Đây là thay đổi kiến trúc lớn, không giải quyết vấn đề với policy hiện có.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Có thể thiết kế MFA qua SAML nhưng cần federation/role mới, không phải sửa trực tiếp ít thay đổi nhất.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q003:D",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "AssumeRole với MFA trong trust policy có thể bảo vệ truy cập, nhưng khi đó quyền EC2 đến từ permission policy của role (đề không nêu) và credentials của role không mang thông tin MFA cho từng API; 'thêm sts:AssumeRole vào NotAction' cũng không khớp policy hiện tại. Phức tạp hơn và không giải quyết trực tiếp policy của group.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không chọn: phương án nhắc NotAction không có trong policy ảnh và thêm role không cần thiết.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -175,6 +172,11 @@
       "type": "typo",
       "location": "Q003:B",
       "detail_vi": "Ghi '-token-code' (một gạch) thay vì '--token-code'."
+    },
+    {
+      "type": "data",
+      "location": "Q003",
+      "detail_vi": "D tham chiếu NotAction không tồn tại; SAML/AssumeRole có thể là giải pháp khác nếu cấu hình đầy đủ."
     }
   ],
   "source_answer": [
@@ -188,29 +190,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu IAM nói rõ Deny + BoolIfExists aws:MultiFactorAuthPresent=false cũng chặn request dùng access key dài hạn (CLI), và GetSessionToken với MFA là cách dành cho gọi API trong cùng account; CLI reference có --serial-number và --token-code.",
+    "reason_vi": "Giữ B; ghi rõ D nhắc NotAction không tồn tại, và BoolIfExists=true vẫn deny khi key vắng.",
     "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là B. Đã kiểm tra lại phương án D (AssumeRole có MFA) với mục 'Choosing between GetSessionToken and AssumeRole': AssumeRole phù hợp khi muốn ủy quyền qua role, MFA được kiểm tại lúc assume role và credentials role không mang MFA context cho từng API; quyền EC2 khi đó phụ thuộc permission policy của role mà đề không nêu, nên D không phải cách sửa đúng cho policy của group. Giữ B, verified mức high.",
+  "reconciliation_vi": "Giữ B; ghi rõ D nhắc NotAction không tồn tại, và BoolIfExists=true vẫn deny khi key vắng.",
   "explanation_vi": {
-    "why_correct": "CLI dùng access key dài hạn nên không có aws:MultiFactorAuthPresent và bị statement Deny (BoolIfExists=false) chặn. Gọi aws sts get-session-token với --serial-number và --token-code trả về credentials tạm thời có thông tin MFA, nên lệnh EC2 được phép mà vẫn bắt buộc MFA.",
+    "why_correct": "Dùng GetSessionToken kèm serial MFA và mã OTP, rồi dùng bộ thông tin xác thực tạm thời trả về cho CLI. Đổi điều kiện deny sang true sẽ đảo mục tiêu bảo vệ.",
     "others": {
-      "Q003:A": "Đổi thành true sẽ Deny chính các request đã dùng MFA, còn request bằng access key (không có key) vẫn bị Deny do BoolIfExists; vừa không sửa lỗi vừa phá yêu cầu MFA.",
-      "Q003:C": "Chuyển sang SAML federation là thay đổi kiến trúc lớn; người dùng federated không thuộc IAM group này và aws:MultiFactorAuthPresent không có mặt với federated identity.",
-      "Q003:D": "Dùng AssumeRole đổi sang quyền của một role chưa được định nghĩa quyền EC2, và 'thêm sts:AssumeRole vào NotAction' không khớp policy hiện tại; phức tạp hơn GetSessionToken cho truy cập cùng account."
+      "Q003:A": "Sai: true deny phiên MFA; BoolIfExists cũng deny khi key vắng, nên vẫn chặn access key dài hạn.",
+      "Q003:C": "Có thể thiết kế MFA qua SAML nhưng cần federation/role mới, không phải sửa trực tiếp ít thay đổi nhất.",
+      "Q003:D": "Không chọn: phương án nhắc NotAction không có trong policy ảnh và thêm role không cần thiết."
     }
   },
   "keywords": [
     {
-      "phrase": "unable to perform Amazon EC2 commands using the AWS CLI",
-      "meaning_vi": "CLI dùng access key dài hạn → không có ngữ cảnh MFA → bị Deny."
+      "phrase": "multi-factor authentication",
+      "meaning_vi": "MFA phải được xác thực trong STS session."
     },
     {
-      "phrase": "while still enforcing multi-factor authentication",
-      "meaning_vi": "Không được nới policy; người dùng phải lấy credentials tạm thời có MFA."
+      "phrase": "AWS CLI",
+      "meaning_vi": "Dùng credentials tạm thời cho CLI."
+    },
+    {
+      "phrase": "Amazon EC2 commands",
+      "meaning_vi": "Policy deny chỉ xét EC2 actions."
     }
   ],
-  "memory_tip_vi": "Nếu policy Deny khi aws:MultiFactorAuthPresent=false (BoolIfExists) làm CLI bị chặn -> nghĩ đến sts get-session-token với --serial-number/--token-code; kiểm tra: cần ủy quyền qua role/cross-account thì mới dùng AssumeRole với MFA trong trust policy.",
+  "memory_tip_vi": "Nếu CLI bị deny bởi aws:MultiFactorAuthPresent, lấy và dùng thông tin xác thực tạm thời có MFA.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -245,9 +251,26 @@
       "previous_answer": [
         "Q003:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; ghi rõ D nhắc NotAction không tồn tại, và BoolIfExists=true vẫn deny khi key vắng.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q003:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q003:B"
+      ],
+      "note_vi": "Giữ B; ghi rõ D nhắc NotAction không tồn tại, và BoolIfExists=true vẫn deny khi key vắng.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Mẫu Deny + BoolIfExists + false là mẫu AWS khuyến nghị; hệ quả là CLI với access key phải lấy session token có MFA.",
+  "notes_vi": "Giữ B; ghi rõ D nhắc NotAction không tồn tại, và BoolIfExists=true vẫn deny khi key vắng.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -257,5 +280,19 @@
         "corrected": "2026-09-30T19:42:11Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q003:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

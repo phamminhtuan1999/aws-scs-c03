@@ -2,9 +2,9 @@
   "question_id": "Q053",
   "question_content_hash": "2e44ccbf1c23c82b1716326c091bd84b48723e0f8127e6a7ae80aba3063ab9e6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q053:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS Backup hỗ trợ lịch backup hằng giờ cho EC2 và S3 (đáp ứng RPO 1 giờ), backup trong vault bất biến và được giữ kể cả khi nguồn bị xóa; CloudFormation template trong CodeCommit cho phép dựng lại kiến trúc để khôi phục.",
+      "reason_vi": "Bao phủ compute, S3 và khả năng dựng lại với tần suất phù hợp.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -48,55 +48,56 @@
       "reference_ids": [
         "ref1",
         "ref2",
-        "ref3",
-        "ref4",
-        "ref8",
-        "ref9"
+        "Q053-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q053:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Backup mỗi ngày cho RPO khoảng 24 giờ, không đạt RPO 1 giờ; Security Lake là data lake log bảo mật (phát hiện/phản ứng), không phải cơ chế khôi phục.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Backup hàng ngày không đáp ứng RPO 1 giờ.",
       "requirement_ids": [
         "R2",
         "R1"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "ref2",
+        "Q053-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q053:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Không có backup dữ liệu nào nên không thể khôi phục dữ liệu EBS/S3 bị mã hóa bởi ransomware; Security Lake và Security Hub là công cụ phát hiện/đánh giá posture, không phải DR.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Dịch vụ phát hiện không cung cấp backup/recovery repository cho workload.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref2",
+        "Q053-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q053:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Snapshot EBS mỗi 4 giờ cho RPO tới 4 giờ, không đạt 1 giờ; không bảo vệ S3; và dựa vào finding GuardDuty (kiểm soát phát hiện) trong khi đề giả định kẻ tấn công đã vượt qua kiểm soát phát hiện.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Snapshot 4 giờ không đáp ứng RPO và thiếu S3.",
       "requirement_ids": [
         "R2",
         "R3",
         "R1"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1",
+        "ref2",
+        "Q053-r2-3"
       ],
       "evidence_kind": "inference"
     }
@@ -132,24 +133,22 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Chỉ A backup hằng giờ bao phủ cả EC2 (EBS) và S3 — AWS Backup hỗ trợ trực tiếp tần suất 1 giờ cho cả hai — cùng IaC để dựng lại kiến trúc; B (hằng ngày) và D (4 giờ) vi phạm RPO, C không có backup dữ liệu.",
-    "open_issues": [
-      "A không nhắc backup vault lock/cross-account copy vốn tăng khả năng chống ransomware; không ảnh hưởng việc so sánh giữa các lựa chọn."
-    ]
+    "reason_vi": "Factual lỗi: hourly schedule không bảo đảm hard RPO và backup vault không mặc định bất biến; Vault Lock là optional.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A. Đã kiểm tra thêm: trang AWS Backup S3 xác nhận periodic backup S3 lên lịch mỗi 1 giờ (không chỉ EC2), nên A đạt RPO 1 giờ cho cả hai loại dữ liệu; CodeCommit trong A đã trở lại GA (11/2025) nên không còn là điểm yếu thời gian. Đối thủ D gần nhất nhưng snapshot 4 giờ vi phạm RPO, bỏ sót S3 và dựa vào detective control mà đề giả định đã bị vượt qua. Giữ A, verified, confidence high.",
+  "reconciliation_vi": "Factual lỗi: hourly schedule không bảo đảm hard RPO và backup vault không mặc định bất biến; Vault Lock là optional.",
   "explanation_vi": {
-    "why_correct": "AWS Backup lên lịch backup mỗi giờ cho EC2 (kèm EBS) và S3 nên đạt RPO 1 giờ, backup bất biến trong vault tách khỏi tài nguyên nguồn; CloudFormation template lưu trong CodeCommit cho phép dựng lại kiến trúc để trở lại hoạt động bình thường sau ransomware.",
+    "why_correct": "Backup EC2 và S3 mỗi giờ cùng CloudFormation/code được quản lý phiên bản là lựa chọn duy nhất gần RPO 1 giờ và có cách dựng lại. Lịch chạy mỗi giờ chưa tự bảo đảm RPO: cần kiểm soát start window, backup thành công và thời điểm recovery point.",
     "others": {
-      "Q053:B": "Backup mỗi ngày chỉ cho RPO khoảng 24 giờ, và Security Lake là data lake log để phát hiện/phản ứng chứ không phải cơ chế khôi phục.",
-      "Q053:C": "Không có backup dữ liệu nào nên không khôi phục được EBS/S3 bị mã hóa; Security Lake và Security Hub là công cụ phát hiện/posture, không phải DR.",
-      "Q053:D": "Snapshot EBS mỗi 4 giờ không đạt RPO 1 giờ, không bảo vệ S3, và phụ thuộc finding GuardDuty trong khi đề giả định attacker đã vượt qua kiểm soát phát hiện."
+      "Q053:B": "Backup hàng ngày không đáp ứng RPO 1 giờ.",
+      "Q053:C": "Dịch vụ phát hiện không cung cấp backup/recovery repository cho workload.",
+      "Q053:D": "Snapshot 4 giờ không đáp ứng RPO và thiếu S3."
     }
   },
   "keywords": [
     {
       "phrase": "RPO of 1 hour",
-      "meaning_vi": "Mất tối đa 1 giờ dữ liệu -> backup ít nhất mỗi giờ."
+      "meaning_vi": "Recovery point không được cũ quá1h; hourly schedule chỉ là một điều kiện, chưa đủ."
     },
     {
       "phrase": "bypasses preventive and detective controls",
@@ -160,7 +159,7 @@
       "meaning_vi": "Cần cơ chế khôi phục dữ liệu và hạ tầng, không phải công cụ log/phát hiện."
     }
   ],
-  "memory_tip_vi": "Nếu đề ransomware cho RPO cụ thể và giả định attacker vượt qua phát hiện -> nghĩ đến AWS Backup với tần suất ≤ RPO cho mọi kho dữ liệu (EBS/EC2 và S3) + IaC để dựng lại; kiểm tra tần suất backup và loại dữ liệu có bị bỏ sót không.",
+  "memory_tip_vi": "Nếu RPO tối đa 1 giờ, kiểm tra tuổi recovery point và backup start window thay vì chỉ nhìn lịch hourly.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -292,9 +291,32 @@
       "quote": "CodeCommit is returning to full General Availability, effective immediately.",
       "supports": "CodeCommit (dùng trong A và C) đã trở lại GA từ 24/11/2025 sau giai đoạn đóng với khách hàng mới từ 07/2024.",
       "kind": "direct"
+    },
+    {
+      "id": "Q053-r2-3",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html",
+      "title": "AWS Backup Vault Lock - AWS Backup",
+      "accessed_at": "2026-09-30",
+      "quote": "AWS Backup Vault Lock is an optional feature of a",
+      "supports": "Backup Vault Lock là optional; compliance lock bất biến sau grace period, vault thường không mặc định bất biến.",
+      "kind": "direct",
+      "snapshot_id": "16072b8660f4",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q053",
+      "detail_vi": "AWS Backup start window mặc định có thể dài; hourly schedule không phải bảo đảm cứng."
+    },
+    {
+      "type": "data",
+      "location": "Q053",
+      "detail_vi": "Cần bảo vệ bản sao khỏi ransomware để DR thực tế hiệu quả."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -307,6 +329,42 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key A khớp blind; thêm bằng chứng S3 periodic backup 1 giờ và trạng thái GA của CodeCommit; giữ A, status verified (confidence high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Factual lỗi: hourly schedule không bảo đảm hard RPO và backup vault không mặc định bất biến; Vault Lock là optional.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q053:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q053:A"
+      ],
+      "note_vi": "Factual lỗi: hourly schedule không bảo đảm hard RPO và backup vault không mặc định bất biến; Vault Lock là optional.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Factual lỗi: hourly schedule không bảo đảm hard RPO và backup vault không mặc định bất biến; Vault Lock là optional.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q053:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q053:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

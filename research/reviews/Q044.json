@@ -2,9 +2,9 @@
   "question_id": "Q044",
   "question_content_hash": "a8218fc8e8964ef53265ba61cf93c4674454abeae9659dabd4799d6e8bdc9e94",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:44:00Z",
-  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,28 +33,30 @@
     {
       "unit_id": "Q044:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Key material của KMS key không bao giờ rời HSM của AWS KMS ở dạng không mã hóa, nên không thể export sang HSM on-premises; ngoài ra đưa key material cho team khác trái với nguyên tắc bảo mật.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Không thể export symmetric key material KMS để đưa ứng dụng.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "Q044-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q044:B",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Sửa key policy để thêm principal có thể cấp quyền dùng key, nhưng mỗi lần cần/hết cần phải sửa rồi hoàn tác key policy của từng key, dễ sai và tốn công hơn grant.",
+      "reason_vi": "Sửa key policy làm tăng quản lý lâu dài và dễ mở quyền quá mức.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "Q044-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -62,7 +64,7 @@
       "unit_id": "Q044:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "KMS grant được thiết kế cho quyền tạm thời: tạo grant cho principal của application team chỉ với các thao tác mã hóa cần thiết, rồi retire/revoke khi xong mà không phải sửa key policy hay IAM policy; security team vẫn giữ quyền quản trị.",
+      "reason_vi": "Grant giới hạn cryptographic operations và có thể revoke.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -70,21 +72,22 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2"
+        "Q044-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q044:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tạo key mới không cấp quyền truy cập các key hiện có mà security team quản lý; đồng thời việc sinh key material on-premises và import lại mỗi lần cần là overhead lớn, bạn phải tự chịu trách nhiệm key material.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Key mới/import key không cấp quyền xử lý bằng key đang dùng.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1",
+        "Q044-r2-2"
       ],
       "evidence_kind": "inference"
     }
@@ -116,16 +119,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu KMS nói trực tiếp grants thường dùng cho quyền tạm thời, tạo/xóa mà không phải sửa key policy hay IAM policy; key material KMS không thể export.",
+    "reason_vi": "Đúng; grant dành thao tác cryptographic, không tự hết hạn theo TTL.",
     "open_issues": []
   },
-  "reconciliation_vi": "Blind = C, source key = C (khớp). Đối thủ mạnh nhất là B: sửa key policy thêm principal của application team cũng cấp được quyền, nhưng mỗi lần cần/hết cần phải sửa rồi hoàn tác key policy (rủi ro sửa nhầm quyền quản trị của security team, key policy dùng chung cho mọi quyền), trong khi tài liệu KMS mô tả grant chính là cơ chế cho quyền tạm thời và xóa grant là thu hồi sạch. A không khả thi (key material không rời HSM của KMS dạng không mã hóa), D tạo key mới và tự quản key material — overhead lớn. Giữ nguyên C.",
+  "reconciliation_vi": "Đúng; grant dành thao tác cryptographic, không tự hết hạn theo TTL.",
   "explanation_vi": {
-    "why_correct": "KMS grant cho phép security team cấp cho principal của application team đúng các thao tác cần dùng trên key mà không sửa key policy, rồi revoke/retire grant khi xong; security team vẫn là người duy nhất quản trị key — phù hợp quyền tạm thời, thỉnh thoảng với overhead thấp nhất.",
+    "why_correct": "KMS grant cho phép cấp tạm các thao tác mật mã cần thiết trên key rồi revoke grant, không trao quyền quản trị key cho nhóm ứng dụng.",
     "others": {
-      "Q044:A": "Key material của KMS key không thể export ra ngoài HSM của AWS KMS, và giao key material cho team khác phá vỡ kiểm soát của security team.",
-      "Q044:B": "Sửa key policy rồi hoàn tác mỗi lần là thao tác thủ công, dễ sai và tốn công hơn tạo/thu hồi grant.",
-      "Q044:D": "Tạo key mới với key material tự sinh và import lại mỗi lần không cấp quyền vào các key hiện có, lại bắt công ty tự chịu trách nhiệm key material — overhead lớn."
+      "Q044:A": "Không thể export symmetric key material KMS để đưa ứng dụng.",
+      "Q044:B": "Sửa key policy làm tăng quản lý lâu dài và dễ mở quyền quá mức.",
+      "Q044:D": "Key mới/import key không cấp quyền xử lý bằng key đang dùng."
     }
   },
   "keywords": [
@@ -142,7 +145,7 @@
       "meaning_vi": "Ưu tiên cơ chế có sẵn tạo/thu hồi nhanh (grant) thay vì sửa policy thủ công."
     }
   ],
-  "memory_tip_vi": "Nếu cần cấp quyền dùng KMS key tạm thời, có thể thu hồi -> nghĩ đến KMS grant (CreateGrant/RevokeGrant); kiểm tra nếu quyền là lâu dài thì key policy/IAM policy mới hợp lý hơn.",
+  "memory_tip_vi": "Nếu cần quyền dùng KMS key tạm thời, cấp grant với thao tác tối thiểu rồi thu hồi.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -205,6 +208,18 @@
       "quote": "When you use imported key material, you remain responsible for the key material while allowing AWS KMS to use a copy of it.",
       "supports": "Imported key material đòi hỏi tự quản lý key material, overhead cao (D).",
       "kind": "direct"
+    },
+    {
+      "id": "Q044-r2-2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys - AWS Key Management Service",
+      "accessed_at": "2026-09-30",
+      "quote": "conjunction with AWS services that use KMS keys to encrypt",
+      "supports": "Symmetric KMS key material không xuất ra plaintext; KMS tạo và giữ khóa trong service.",
+      "kind": "direct",
+      "snapshot_id": "51ffc263dff1",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -219,7 +234,7 @@
       "detail_vi": "\"on promises\" nên là \"on premises\"."
     }
   ],
-  "notes_vi": "Quyền tạm thời trên KMS key -> nghĩ đến KMS grant.",
+  "notes_vi": "Đúng; grant dành thao tác cryptographic, không tự hết hạn theo TTL.",
   "history": [
     {
       "version": "r1",
@@ -242,6 +257,23 @@
       "previous_answer": [
         "Q044:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; grant dành thao tác cryptographic, không tự hết hạn theo TTL.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q044:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q044:C"
+      ],
+      "note_vi": "Đúng; grant dành thao tác cryptographic, không tự hết hạn theo TTL.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -253,5 +285,23 @@
         "corrected": "2026-09-30T19:51:17Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q044:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q044:C"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q029",
   "question_content_hash": "e2fcd439fc62d85dbd7df6c6adf5bdc7c41307b95f9b6a3e33f38c86aca189a6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:08Z",
-  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,14 +34,14 @@
       "unit_id": "Q029:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SSE-S3 dùng key do S3 quản lý; không có KMS key của khách hàng để security team kiểm soát bằng IAM policy. Ai có quyền S3 đọc object đều nhận plaintext, nên chỉ cần operations team cấu hình sai là lộ dữ liệu.",
+      "reason_vi": "Sai: SSE-S3 không có customer KMS policy riêng để chia hai tầng quyền.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref3",
+        "ref7"
       ],
       "evidence_kind": "inference"
     },
@@ -49,33 +49,30 @@
       "unit_id": "Q029:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Với SSE-KMS dùng customer managed key, đọc object cần cả quyền S3 (operations team quản lý qua bucket policy) lẫn kms:Decrypt trên key (security team quản lý qua key policy). Lỗi của một team đơn lẻ không đủ để cấp quyền đọc plaintext.",
+      "reason_vi": "Đúng: enforce customer-key SSE-KMS và tách S3/key policy administration.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
         "ref3",
-        "ref4",
-        "ref5",
-        "ref6"
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q029:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Bắt buộc SSE-S3 qua bucket policy vẫn dùng key do S3 quản lý; IAM policy của security team không có key nào để kiểm soát, nên truy cập plaintext chỉ phụ thuộc quyền S3.",
+      "reason_vi": "Sai: SSE-S3 do S3 quản lý key không đáp ứng tách quyền decrypt này.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref3",
+        "ref7"
       ],
       "evidence_kind": "inference"
     },
@@ -83,14 +80,14 @@
       "unit_id": "Q029:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SSE-C yêu cầu client gửi key trong mỗi request; KMS key không bao giờ rời KMS ở dạng không mã hoá nên không thể 'lưu key SSE-C trong KMS' rồi lấy ra đưa cho S3 như mô tả. Ngoài ra SSE-C bị tắt mặc định trên bucket mới từ 04/2026 và tăng gánh quản lý key.",
+      "reason_vi": "Sai: SSE-C dùng key khách hàng cung cấp và không buộc kms:Decrypt như SSE-KMS, nên không tạo hai tầng quyền theo mô tả.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref7",
-        "ref8"
+        "ref3",
+        "ref7"
       ],
       "evidence_kind": "inference"
     }
@@ -124,33 +121,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Tài liệu S3/KMS nêu trực tiếp đọc object SSE-KMS cần kms:Decrypt trên key và key policy là cơ chế chính kiểm soát key; SSE-S3 không có lớp kiểm soát key riêng.",
+    "reason_vi": "Giữ B; sửa D tránh khẳng định KMS không bao giờ trả plaintext keys; SSE-C không chịu KMS decrypt authorization như SSE-KMS.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất là D (SSE-C + lưu key trong KMS): SSE-C cũng tạo hai lớp (quyền S3 + phải có key), nhưng KMS không lưu và trả ra key tùy ý cho client – KMS key không bao giờ rời KMS ở dạng không mã hoá – nên không thể dùng 'key lưu trong KMS' làm key SSE-C như mô tả; SSE-C còn bị tắt mặc định trên bucket mới từ 04/2026. A/C dùng SSE-S3: không có key của khách hàng để security team kiểm soát, quyền S3 là đủ để đọc plaintext. Giữ B, verified, high. Bỏ source_issue encoding ở stem.",
+  "reconciliation_vi": "Giữ B; sửa D tránh khẳng định KMS không bao giờ trả plaintext keys; SSE-C không chịu KMS decrypt authorization như SSE-KMS.",
   "explanation_vi": {
-    "why_correct": "Với SSE-KMS dùng customer managed key, đọc object cần đồng thời quyền S3 (operations team quản lý qua bucket policy) và kms:Decrypt trên key (security team quản lý qua key policy), nên lỗi cấu hình của chỉ một team không đủ để lộ plaintext.",
+    "why_correct": "SSE-KMS với customer managed key chia quyền S3 cho operations và quyền decrypt cho security. Đọc plaintext cần đồng thời quyền GetObject và kms:Decrypt, nên một bên cấu hình sai không tự đủ quyền.",
     "others": {
-      "Q029:A": "SSE-S3 dùng key do S3 quản lý, không có key nào cho security team kiểm soát bằng IAM policy, nên chỉ cần quyền S3 là đọc được plaintext.",
-      "Q029:C": "Bắt buộc SSE-S3 qua bucket policy vẫn chỉ có một lớp kiểm soát (quyền S3); IAM policy của security team không có key để quản lý.",
-      "Q029:D": "SSE-C yêu cầu client gửi key trong mỗi request, còn KMS không trả key ra ngoài dạng plaintext nên không thể 'lưu key SSE-C trong KMS' như mô tả; cách này cũng tăng gánh quản lý key."
+      "Q029:A": "Sai: SSE-S3 không có customer KMS policy riêng để chia hai tầng quyền.",
+      "Q029:C": "Sai: SSE-S3 do S3 quản lý key không đáp ứng tách quyền decrypt này.",
+      "Q029:D": "Sai: SSE-C dùng key khách hàng cung cấp và không buộc kms:Decrypt như SSE-KMS, nên không tạo hai tầng quyền theo mô tả."
     }
   },
   "keywords": [
     {
-      "phrase": "security team manages access to encryption keys",
-      "meaning_vi": "Cần key do khách hàng kiểm soát bằng key policy -> SSE-KMS customer managed key."
+      "phrase": "separate the duties",
+      "meaning_vi": "Tách quyền S3 và quyền KMS decrypt."
     },
     {
-      "phrase": "separate the duties of the two teams",
-      "meaning_vi": "Hai lớp quyền độc lập: bucket policy (S3) và key policy (KMS)."
+      "phrase": "plaintext data",
+      "meaning_vi": "Plaintext cần đồng thời hai tầng authorization."
     },
     {
-      "phrase": "configuration errors by only one of these teams",
-      "meaning_vi": "Đọc plaintext phải cần cả quyền S3 lẫn kms:Decrypt."
+      "phrase": "encryption keys",
+      "meaning_vi": "Customer key do security team quản lý policy."
     }
   ],
-  "memory_tip_vi": "Nếu đề cần tách nhiệm vụ giữa team quản lý S3 và team quản lý key -> nghĩ đến SSE-KMS với customer managed key (bucket policy + key policy); kiểm tra SSE-S3 không có lớp kiểm soát key riêng, SSE-C thì client phải tự giữ key.",
+  "memory_tip_vi": "Nếu cần hai nhóm cùng cho phép mới đọc được plaintext, dùng customer-key SSE-KMS và tách quyền S3/KMS.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -291,6 +288,23 @@
       "previous_answer": [
         "Q029:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; sửa D tránh khẳng định KMS không bao giờ trả plaintext keys; SSE-C không chịu KMS decrypt authorization như SSE-KMS.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q029:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q029:B"
+      ],
+      "note_vi": "Giữ B; sửa D tránh khẳng định KMS không bao giờ trả plaintext keys; SSE-C không chịu KMS decrypt authorization như SSE-KMS.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -302,5 +316,20 @@
         "corrected": "2026-09-30T19:49:06Z"
       }
     }
+  },
+  "notes_vi": "Giữ B; sửa D tránh khẳng định KMS không bao giờ trả plaintext keys; SSE-C không chịu KMS decrypt authorization như SSE-KMS.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q029:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

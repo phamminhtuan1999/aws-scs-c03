@@ -2,9 +2,9 @@
   "question_id": "Q109",
   "question_content_hash": "c86d8f01079cbacbf47215d48ea19d6d5221b205e68a876bca99136794dbd711",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -44,7 +44,7 @@
       "unit_id": "Q109:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "ALB mở 80/443 cho Internet; sgWeb chỉ nhận từ sgLB; sgDB nhận 3306 từ sgWeb và sgBastion; bastion chỉ nhận SSH từ dải IP công ty. Đáp ứng đủ R1-R4 với nguồn hẹp nhất.",
+      "reason_vi": "A mở đúng luồng ALB → web → DB và nguồn SSH công ty.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -53,27 +53,22 @@
         "R5"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q109:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "sgDB cho phép từ sgLB (ALB không cần truy cập DB) và không cho sgBastion nên bastion không chạy được schema update; sgBastion chỉ nhận SSH từ dải VPC nên admin từ máy trạm công ty không SSH được.",
+      "reason_vi": "B thiếu đường bastion → DB và nguồn SSH công ty.",
       "requirement_ids": [
         "R3",
         "R4",
         "R5"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -81,12 +76,12 @@
       "unit_id": "Q109:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Phần ALB/web/DB đúng, nhưng sgBastion chỉ cho SSH từ dải IP của VPC; máy trạm công ty kết nối từ bên ngoài VPC nên bị chặn, admin không vào được bastion.",
+      "reason_vi": "C chỉ cho SSH từ CIDR VPC, không đáp ứng workstation công ty đã nêu.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -94,14 +89,14 @@
       "unit_id": "Q109:D",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Chức năng vẫn chạy nhưng sgWeb mở 80/443 từ 0.0.0.0/0, cho phép vượt qua ALB truy cập trực tiếp EC2 (nếu có đường Internet), kém an toàn hơn so với chỉ tham chiếu sgLB.",
+      "reason_vi": "D mở web cho toàn Internet thay vì giới hạn sgLB.",
       "requirement_ids": [
         "R5"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -135,18 +130,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu ALB khuyến nghị target chỉ nhận traffic từ load balancer, RDS khuyến nghị dùng SG của tầng ứng dụng làm nguồn, EC2 khuyến nghị SSH chỉ từ IP/dải IP mạng của mình; A là phương án duy nhất thỏa mọi luồng với nguồn hẹp nhất.",
-    "open_issues": [
-      "Đề nói 'these requirements' nhưng không liệt kê yêu cầu; yêu cầu được suy ra từ kiến trúc mô tả (ALB công khai, bastion cho admin từ máy trạm công ty)."
-    ]
+    "reason_vi": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại C (đối thủ mạnh nhất, giống hệt A trừ sgBastion): C chỉ cho SSH từ dải IP của VPC, nhưng admin kết nối từ máy trạm công ty – địa chỉ nguồn là IP công ty (kể cả khi qua VPN, dải mạng công ty khác CIDR của VPC), nên admin không vào được bastion; tài liệu EC2 (ref2) khuyến nghị nguồn SSH là IP/dải IP mạng cục bộ của bạn. D mở sgWeb cho 0.0.0.0/0, trái khuyến nghị ALB chỉ nhận từ load balancer (ref3). B cho DB nhận từ sgLB (ALB không cần DB) và bỏ sgBastion. Giữ A, verified, high.",
+  "reconciliation_vi": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
   "explanation_vi": {
-    "why_correct": "A xây chuỗi tham chiếu security group: Internet → sgLB (80/443), chỉ sgLB → sgWeb, chỉ sgWeb và sgBastion → sgDB (3306), và SSH vào bastion chỉ từ dải IP công ty – mỗi tầng chỉ nhận đúng nguồn nó cần.",
+    "why_correct": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
     "others": {
-      "Q109:B": "sgDB cho ALB vào cổng 3306 (không cần thiết) nhưng lại không cho bastion, và SSH chỉ từ dải VPC nên admin ở công ty không kết nối được.",
-      "Q109:C": "SSH vào bastion chỉ từ dải IP của VPC nên máy trạm công ty (ngoài VPC) bị chặn, admin không chạy được schema update.",
-      "Q109:D": "sgWeb mở 80/443 cho 0.0.0.0/0, cho phép vòng qua ALB đến thẳng EC2 – chạy được nhưng kém an toàn hơn A."
+      "Q109:B": "B thiếu đường bastion → DB và nguồn SSH công ty.",
+      "Q109:C": "C chỉ cho SSH từ CIDR VPC, không đáp ứng workstation công ty đã nêu.",
+      "Q109:D": "D mở web cho toàn Internet thay vì giới hạn sgLB."
     }
   },
   "keywords": [
@@ -163,7 +156,7 @@
       "meaning_vi": "sgDB phải cho sgBastion vào cổng 3306."
     }
   ],
-  "memory_tip_vi": "Nếu hỏi cấu hình security group 'MOST securely' cho kiến trúc nhiều tầng -> nghĩ đến tham chiếu SG theo chuỗi (sgLB→sgWeb→sgDB, sgBastion→sgDB) và SSH chỉ từ dải IP công ty; kiểm tra nguồn SSH có khớp nơi admin thật sự kết nối (không phải dải VPC).",
+  "memory_tip_vi": "Nếu có nhiều tầng, giới hạn SG theo tầng gọi trực tiếp; SSH theo nguồn quản trị.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -248,14 +241,9 @@
       "type": "typo",
       "location": "Q109:stem:0",
       "detail_vi": "'MySOL' là lỗi chính tả của 'MySQL'."
-    },
-    {
-      "type": "ambiguous",
-      "location": "Q109:stem:5",
-      "detail_vi": "Câu hỏi nhắc 'these requirements' nhưng không nêu danh sách yêu cầu cụ thể; yêu cầu phải suy ra từ kiến trúc (ALB công khai, bastion cho admin từ mạng công ty)."
     }
   ],
-  "notes_vi": "Điểm phân biệt: sgWeb chỉ từ sgLB, sgDB từ sgWeb+sgBastion, SSH từ dải IP công ty.",
+  "notes_vi": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
   "history": [
     {
       "version": "r1",
@@ -270,6 +258,39 @@
       "previous_answer": [
         "Q109:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q109:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q109:A"
+      ],
+      "note_vi": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

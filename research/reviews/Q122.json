@@ -2,9 +2,9 @@
   "question_id": "Q122",
   "question_content_hash": "95631204768850fddd5bc9c2462e3bacd8d72e86acce63a32567de18801ea94a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:21:26+00:00",
-  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,61 +38,56 @@
     {
       "unit_id": "Q122:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Count với rate-based rule chỉ đếm các request vượt ngưỡng mà không chặn; AWS khuyến nghị test và tune rule ở count mode với production traffic trước khi bật, nên đây là cách xác định ngưỡng mà không chặn traffic hợp lệ.",
+      "verdict": "undetermined",
+      "reason_vi": "A Count giúp quan sát rate nhưng WAF không attach trực tiếp NLB.",
       "requirement_ids": [
         "R1",
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref9"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q122:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Block là hành động chặn khi vượt ngưỡng; khi chưa biết ngưỡng phù hợp thì Block có thể chặn nhầm traffic hợp lệ, trái với R1 (Block là bước sau khi đã tune bằng Count).",
+      "verdict": "undetermined",
+      "reason_vi": "B Block có thể chặn legitimate traffic khi chưa xác định ngưỡng và vẫn không attach NLB.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3",
-        "ref9"
+        "ref6"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q122:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS WAF không có rule action tên 'Monitor'; các action là Allow, Block, Count, CAPTCHA, Challenge.",
+      "verdict": "undetermined",
+      "reason_vi": "C WAF không có rule action Monitor như mô tả.",
       "requirement_ids": [
         "R4"
       ],
       "reference_ids": [
-        "ref4"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q122:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Rate-based rule cho phép mọi rule action trừ Allow, nên không thể cấu hình Allow cho rule này.",
+      "verdict": "undetermined",
+      "reason_vi": "WAF không gắn NLB; rate-based rule dùng count/block/challenge, không cấu hình Allow làm action trực tiếp.",
       "requirement_ids": [
         "R4"
       ],
       "reference_ids": [
-        "ref5"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -121,27 +116,25 @@
   "source_answer": [
     "Q122:A"
   ],
-  "researched_answer": [
-    "Q122:A"
-  ],
-  "comparison": "match",
+  "researched_answer": null,
+  "comparison": "not_comparable",
   "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Phần hỏi thực chất (chọn action để tìm ngưỡng không chặn traffic hợp lệ) có đáp án duy nhất Count, trùng source key: Monitor không tồn tại, Allow bị cấm cho rate-based rule, Block có thể chặn nhầm. Nhưng tiền đề đề sai: đã đọc lại (refresh 2026-09-30) danh sách resource AWS WAF – không có Network Load Balancer; NLB có EIP chỉ được Shield Advanced bảo vệ ở tầng mạng. Không có bằng chứng mới nào làm tiền đề đúng, nên giữ ambiguous theo blind.",
+    "level": "high",
+    "reason_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
     "open_issues": [
-      "Tiền đề sai: AWS WAF web ACL không associate được với Network Load Balancer (ref6 đọc lại 2026-09-30); rate-based rule không thể 'protect the NLB'.",
-      "Nếu đề gốc là ALB/CloudFront thì Count là đáp án rõ ràng; không tự sửa đề."
+      "Không thay NLB thành ALB trong đề để hợp thức hóa A."
     ]
   },
-  "reconciliation_vi": "Source key = A (Count), trùng đáp án blind; blind đề xuất ambiguous vì tiền đề WAF trên NLB. Theo quy tắc bias-guard, chỉ nâng lên verified nếu có bằng chứng trực tiếp mới cho thấy WAF hỗ trợ NLB. Đã refresh trang 'Resources that you can protect with AWS WAF' (ref6): danh sách regional vẫn chỉ có API Gateway REST, ALB, AppSync, Cognito, App Runner, Verified Access, Amplify… – không có NLB. Trang Shield Advanced (ref7) chỉ bảo vệ NLB qua EIP ở tầng mạng; blog AWS về rate-based rule cũng giả định WAF gắn CloudFront/ALB (ref8). Vì vậy tiền đề vẫn sai và không nâng status. Về phần action: tài liệu xác nhận Count chỉ đếm request vượt ngưỡng (ref1), AWS khuyến nghị tune ở count mode (ref2), ngưỡng phải lớn hơn traffic bình thường của một IP (ref9) – nên A là lựa chọn hợp lý duy nhất. Kết luận: researched_answer = A (trùng source), status ambiguous, không chấm điểm.",
+  "reconciliation_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
   "explanation_vi": {
-    "why_correct": "CHƯA KẾT LUẬN CHẮC CHẮN (ambiguous): đề giả định gắn AWS WAF web ACL vào Network Load Balancer, nhưng AWS WAF không hỗ trợ NLB (chỉ ALB, API Gateway, CloudFront…), nên tiền đề sai. Nếu bỏ qua tiền đề, A (Count) là đúng: rate-based rule ở Count chỉ đếm request vượt ngưỡng mà không chặn, giúp quan sát traffic thật để chọn rate limit không chặn nhầm người dùng hợp lệ, sau đó mới chuyển sang Block.",
+    "why_correct": "Chưa có đáp án chắc chắn: AWS WAF không attach trực tiếp NLB; Count là cách thử rate rule ở resource được hỗ trợ, nhưng không giải quyết tiền đề NLB.",
     "others": {
-      "Q122:B": "Block chặn ngay các IP vượt ngưỡng khi ngưỡng còn chưa được kiểm chứng, dễ chặn nhầm traffic hợp lệ – đây là bước sau khi đã tune bằng Count.",
-      "Q122:C": "AWS WAF không có rule action tên 'Monitor' (chỉ có Allow, Block, Count, CAPTCHA, Challenge).",
-      "Q122:D": "Rate-based rule cho phép mọi action trừ Allow, nên không thể cấu hình Allow cho rule này."
+      "Q122:A": "A Count giúp quan sát rate nhưng WAF không attach trực tiếp NLB.",
+      "Q122:B": "B Block có thể chặn legitimate traffic khi chưa xác định ngưỡng và vẫn không attach NLB.",
+      "Q122:C": "C WAF không có rule action Monitor như mô tả.",
+      "Q122:D": "WAF không gắn NLB; rate-based rule dùng count/block/challenge, không cấu hình Allow làm action trực tiếp."
     }
   },
   "keywords": [
@@ -158,7 +151,7 @@
       "meaning_vi": "AWS WAF không gắn được vào NLB – tiền đề của đề sai; NLB/EIP dùng Shield Advanced."
     }
   ],
-  "memory_tip_vi": "Nếu cần tìm ngưỡng rate-based rule mà không chặn người dùng thật -> nghĩ đến action Count rồi xem metric/log trước khi đổi sang Block; kiểm tra resource có thực sự gắn được WAF (ALB/CloudFront/API Gateway, không phải NLB).",
+  "memory_tip_vi": "Nếu WAF + NLB, kiểm tra resource support; Count chỉ áp dụng sau khi chọn kiến trúc hỗ trợ.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -292,11 +285,11 @@
   "source_issues": [
     {
       "type": "ambiguous",
-      "location": "Q122:stem:0",
-      "detail_vi": "Đề giả định gắn AWS WAF web ACL (rate-based rule) để bảo vệ NLB, nhưng AWS WAF không hỗ trợ associate web ACL với Network Load Balancer; câu hỏi chỉ còn ý nghĩa ở phần chọn action để tìm ngưỡng."
+      "location": "Q122",
+      "detail_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A."
     }
   ],
-  "notes_vi": "Nếu bỏ qua tiền đề NLB, đáp án Count là rõ ràng. Status để ambiguous vì tiền đề kỹ thuật sai.",
+  "notes_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
   "history": [
     {
       "version": "r1",
@@ -311,6 +304,39 @@
       "previous_answer": [
         "Q122:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không thay NLB thành ALB trong đề để hợp thức hóa A.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": [
+        "Q122:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": null,
+    "candidate_answers": [
+      [
+        "A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

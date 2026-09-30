@@ -2,9 +2,9 @@
   "question_id": "Q079",
   "question_content_hash": "16934c2ea65e13cdb9233de29d68b1a1219f7cf55914e5db0b1bd16cd6435235",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:48Z",
-  "last_reviewed_at": "2026-09-30T20:09:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -45,58 +45,71 @@
       "unit_id": "Q079:P1",
       "unit_type": "prompt",
       "verdict": "meets",
-      "reason_vi": "Audit Manager tự động thu thập evidence cho control, với data source là CloudTrail, Security Hub CSPM, AWS Config và API calls, rồi tạo assessment report; AWS Config không thu thập CloudTrail log hay Security Hub control.",
+      "reason_vi": "Ghép row1: thu thập evidence từ CloudTrail, Config, Security Hub.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
         "ref3"
       ],
-      "evidence_kind": "direct",
-      "matched_response": "Q079:R2"
+      "evidence_kind": "inference",
+      "matched_response": "Q079:R2",
+      "matched_response_id": "Q079:R2"
     },
     {
       "unit_id": "Q079:P2",
       "unit_type": "prompt",
       "verdict": "meets",
-      "reason_vi": "IAM Access Analyzer internal access analyzer xác định IAM user/role nào trong account hoặc organization có thể truy cập resource được chỉ định.",
+      "reason_vi": "Ghép row2: phân tích IAM principals nội bộ cho supported resources.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "matched_response": "Q079:R6"
+      "evidence_kind": "inference",
+      "matched_response": "Q079:R6",
+      "matched_response_id": "Q079:R6"
     },
     {
       "unit_id": "Q079:P3",
       "unit_type": "prompt",
       "verdict": "meets",
-      "reason_vi": "AWS Artifact cung cấp tải về on-demand các tài liệu security và compliance của AWS (ISO, PCI, SOC reports).",
+      "reason_vi": "Ghép row3: tải báo cáo bảo mật/tuân thủ AWS.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "matched_response": "Q079:R1"
+      "evidence_kind": "inference",
+      "matched_response": "Q079:R1",
+      "matched_response_id": "Q079:R1"
     },
     {
       "unit_id": "Q079:R1",
       "unit_type": "response",
       "verdict": "meets",
-      "reason_vi": "AWS Artifact reports là tài liệu compliance của AWS tải on demand -> đúng P3; không thu thập evidence từ tài nguyên của khách hàng và không phân tích quyền truy cập.",
+      "reason_vi": "Ghép row3: tải báo cáo bảo mật/tuân thủ AWS.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q079:P3"
       ]
@@ -105,15 +118,17 @@
       "unit_id": "Q079:R2",
       "unit_type": "response",
       "verdict": "meets",
-      "reason_vi": "Audit Manager controls có thể cấu hình thu thập automated evidence từ CloudTrail, Security Hub CSPM, AWS Config -> đúng P1. Lưu ý: từ 30/04/2026 Audit Manager ở chế độ maintenance, không nhận khách hàng mới.",
+      "reason_vi": "Ghép row1: thu thập evidence từ CloudTrail, Config, Security Hub.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2",
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
         "ref3"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q079:P1"
       ]
@@ -122,48 +137,55 @@
       "unit_id": "Q079:R3",
       "unit_type": "response",
       "verdict": "does_not_meet",
-      "reason_vi": "Conformance pack là tập Config rules + remediation; chỉ ghi Configuration Item làm evidence, không thu thập CloudTrail log hay Security Hub control, không phân tích principal có quyền, không phải tài liệu AWS để tải.",
+      "reason_vi": "Không chọn: gói rules/remediation, không tạo evidence assessment này.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref6"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": []
     },
     {
       "unit_id": "Q079:R4",
       "unit_type": "response",
       "verdict": "does_not_meet",
-      "reason_vi": "Config rules đánh giá cấu hình resource so với cấu hình mong muốn; không thu thập evidence đa nguồn cho assessment report, không liệt kê principal có quyền truy cập, không cung cấp tài liệu compliance của AWS.",
+      "reason_vi": "Không chọn: đánh giá cấu hình, không phân tích đường truy cập IAM.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref7",
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
         "ref3"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": []
     },
     {
       "unit_id": "Q079:R5",
       "unit_type": "response",
       "verdict": "does_not_meet",
-      "reason_vi": "Detective investigations điều tra IAM user/role theo indicators of compromise (hành vi bất thường), không xác định ai có quyền truy cập resource theo policy, không thu thập evidence audit, không cung cấp tài liệu.",
+      "reason_vi": "Không chọn: điều tra hành vi bảo mật, không tải compliance documents.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref8"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
       "evidence_kind": "inference",
       "used_for": []
@@ -172,14 +194,17 @@
       "unit_id": "Q079:R6",
       "unit_type": "response",
       "verdict": "meets",
-      "reason_vi": "Internal access analyzer xác định principal nội bộ có quyền truy cập resource được chọn -> đúng P2.",
+      "reason_vi": "Ghép row2: phân tích IAM principals nội bộ cho supported resources.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "Q079-r2-1",
+        "ref4",
+        "Q079-r2-3",
+        "ref3"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q079:P2"
       ]
@@ -223,18 +248,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key trùng mapping. Mỗi yêu cầu khớp gần nguyên văn với tài liệu: Audit Manager control thu thập evidence tự động từ CloudTrail, Security Hub CSPM, AWS Config cho assessment report; internal access analyzer xác định IAM user/role trong account có thể truy cập resource chỉ định; AWS Artifact cho tải tài liệu compliance on demand.",
-    "open_issues": [
-      "Điều kiện thời gian: AWS Audit Manager đang chuyển sang maintenance mode, từ 30/04/2026 không thiết lập được cho account/Region mới; khách hàng hiện hữu vẫn dùng bình thường. Mapping vẫn đúng về chức năng vì AWS nêu rõ conformance packs (phương án thay thế được khuyến nghị) KHÔNG thu thập CloudTrail log hay Security Hub control."
-    ]
+    "reason_vi": "Maintenance mode từ 30/04/2026 đã được review nêu; phải giữ caveat account/Region mới.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = P1->Audit Manager controls, P2->IAM Access Analyzer internal access analyzers, P3->AWS Artifact reports, trùng blind. Đã đọc lại trang 'AWS Audit Manager availability change' (re-fetch cùng ngày): dịch vụ không còn nhận khách hàng mới từ 30/04/2026 và AWS gợi ý Config conformance packs làm thay thế, nhưng chính trang đó nêu conformance pack chỉ ghi Configuration Item làm evidence, không thu thập CloudTrail log hay Security Hub control và không có tính năng báo cáo tương đương. Vì vậy đối thủ mạnh nhất cho P1 (conformance packs) không đáp ứng P1 kể cả trong bối cảnh hiện tại; mapping vẫn duy nhất. Không chọn 'outdated' vì hành vi chức năng của Audit Manager không đổi và khách hàng hiện hữu vẫn dùng được; điều kiện thời gian được ghi rõ. Giữ verified, high.",
+  "reconciliation_vi": "Maintenance mode từ 30/04/2026 đã được review nêu; phải giữ caveat account/Region mới.",
   "explanation_vi": {
-    "why_correct": "P1 -> AWS Audit Manager controls: control của Audit Manager tự động thu thập evidence từ CloudTrail, AWS Config, Security Hub để tạo assessment report. P2 -> IAM Access Analyzer internal access analyzers: xác định IAM user/role TRONG account có thể truy cập resource được chỉ định. P3 -> AWS Artifact reports: tải on demand tài liệu security/compliance của AWS (SOC, ISO, PCI). Lưu ý: từ 30/04/2026 Audit Manager ở maintenance mode, không thiết lập được cho account mới, nhưng chức năng vẫn như mô tả.",
+    "why_correct": "Ghép P1→R2 Audit Manager, P2→R6 internal Access Analyzer, P3→R1 Artifact. Audit Manager thu thập evidence nhưng từ 30/04/2026 bị giới hạn thiết lập mới theo account/Region.",
     "others": {
-      "Q079:R3": "AWS Config conformance packs là tập Config rules/remediation; chỉ ghi Configuration Item làm evidence, không thu thập CloudTrail log hay Security Hub control, không phân tích quyền truy cập, không phải tài liệu AWS.",
-      "Q079:R4": "AWS Config rules chỉ đánh giá cấu hình resource so với cấu hình mong muốn, không tạo assessment report đa nguồn và không liệt kê principal có quyền truy cập.",
-      "Q079:R5": "Amazon Detective investigations điều tra hành vi đáng ngờ của IAM user/role theo indicators of compromise, không xác định ai có quyền truy cập theo policy."
+      "Q079:R3": "Không chọn: gói rules/remediation, không tạo evidence assessment này.",
+      "Q079:R4": "Không chọn: đánh giá cấu hình, không phân tích đường truy cập IAM.",
+      "Q079:R5": "Không chọn: điều tra hành vi bảo mật, không tải compliance documents."
     }
   },
   "keywords": [
@@ -251,7 +274,7 @@
       "meaning_vi": "Access Analyzer loại internal: ai TRONG account/org truy cập được resource chỉ định."
     }
   ],
-  "memory_tip_vi": "Nếu đề nói 'collect evidence ... for an assessment report' -> nghĩ đến Audit Manager; 'download AWS compliance documents' -> AWS Artifact; 'principals within the account have access' -> Access Analyzer internal access; kiểm tra: Audit Manager không nhận khách hàng mới từ 30/04/2026.",
+  "memory_tip_vi": "Nếu cần audit evidence, dùng Audit Manager trong phạm vi còn được hỗ trợ; quyền nội bộ dùng Access Analyzer, tài liệu AWS dùng Artifact.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -370,6 +393,30 @@
       "quote": "You can use Amazon Detective Investigation to investigate IAM users and IAM roles using indicators of compromise",
       "supports": "Detective investigations dùng cho điều tra dấu hiệu xâm phạm, không phải phân tích quyền truy cập theo policy.",
       "kind": "inference"
+    },
+    {
+      "id": "Q079-r2-1",
+      "url": "https://docs.aws.amazon.com/audit-manager/latest/userguide/how-evidence-is-collected.html",
+      "title": "Understanding how AWS Audit Manager collects evidence - AWS Audit Manager",
+      "accessed_at": "2026-09-30",
+      "quote": "sources. In each assessment, you define which AWS accounts Audit",
+      "supports": "Active assessment controls collect automated evidence from listed sources.",
+      "kind": "direct",
+      "snapshot_id": "1484bc1aba6b",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q079-r2-3",
+      "url": "https://docs.aws.amazon.com/artifact/latest/ug/downloading-documents.html",
+      "title": "Downloading reports in AWS Artifact - AWS Artifact",
+      "accessed_at": "2026-09-30",
+      "quote": "You can download reports from the AWS Artifact console. When",
+      "supports": "Artifact allows on-demand downloading AWS compliance reports.",
+      "kind": "direct",
+      "snapshot_id": "34f4f4f19745",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -395,7 +442,56 @@
         "Q079:P2": "Q079:R6",
         "Q079:P3": "Q079:R1"
       }
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Maintenance mode từ 30/04/2026 đã được review nêu; phải giữ caveat account/Region mới.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": {
+        "Q079:P1": "Q079:R2",
+        "Q079:P2": "Q079:R6",
+        "Q079:P3": "Q079:R1"
+      },
+      "status": "verified",
+      "answer": {
+        "Q079:P1": "Q079:R2",
+        "Q079:P2": "Q079:R6",
+        "Q079:P3": "Q079:R1"
+      },
+      "note_vi": "Maintenance mode từ 30/04/2026 đã được review nêu; phải giữ caveat account/Region mới.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Mapping: P1 Audit Manager controls, P2 IAM Access Analyzer internal access analyzers, P3 AWS Artifact reports. Config conformance packs, Config rules, Detective investigations không dùng."
+  "notes_vi": "Maintenance mode từ 30/04/2026 đã được review nêu; phải giữ caveat account/Region mới.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": {
+      "row1": "AWS Audit Manager controls",
+      "row2": "AWS Identity and Access Management Access Analyzer internal access analyzers",
+      "row3": "AWS Artifact reports"
+    },
+    "independent_status": "verified",
+    "intended_answer": {
+      "Q079:P1": "Q079:R2",
+      "Q079:P2": "Q079:R6",
+      "Q079:P3": "Q079:R1"
+    },
+    "candidate_answers": [
+      {
+        "Q079:P1": "Q079:R2",
+        "Q079:P2": "Q079:R6",
+        "Q079:P3": "Q079:R1"
+      }
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

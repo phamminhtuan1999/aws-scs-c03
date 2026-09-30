@@ -2,9 +2,9 @@
   "question_id": "Q042",
   "question_content_hash": "e62090a808d0f62071cc737bfcdd9e39684bdabca6c34d1343c77a5ae5cdf7e4",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,41 +34,42 @@
       "unit_id": "Q042:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Access logging trên stage ghi 'ai truy cập API và bằng cách nào' vào log group CloudWatch Logs với format tùy chọn (ví dụ JSON với $context variables) — nguồn dữ liệu cần thiết cho phân tích access pattern.",
+      "reason_vi": "Access logs ghi dữ liệu từng request cần phân tích.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
         "ref1",
-        "ref2"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q042:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "CloudTrail ghi các lệnh gọi API quản lý (control plane) của dịch vụ API Gateway, không ghi các request của client gọi vào REST API, nên không cho biết access pattern của API.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CloudTrail chủ yếu ghi quản trị API Gateway, không thay thế access log request.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q042:C",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Access log của REST API chỉ gửi tới CloudWatch Logs hoặc Firehose, không trực tiếp tới S3 (chỉ execution log qua CloudWatch Logs delivery mới gửi thẳng S3). Đưa log vào S3 rồi phải tạo bảng Athena là nhiều công hơn Logs Insights.",
+      "reason_vi": "S3/Athena cần thêm giao nhận và cấu hình schema.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -76,27 +77,29 @@
       "unit_id": "Q042:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CloudWatch Logs Insights truy vấn tương tác trực tiếp trên log group và tự nhận diện field của log JSON, nên phân tích access log mà không phải tự parse file.",
+      "reason_vi": "Logs Insights có thể tự phát hiện trường log JSON.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
+        "ref1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q042:E",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Detailed CloudWatch metrics chỉ cho số liệu tổng hợp theo method/resource (Count, latency, lỗi), không có thông tin caller, IP, user agent để phân tích ai truy cập và bằng cách nào; lại phát sinh chi phí thêm.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Detailed metrics là số liệu tổng hợp, không đầy đủ bản ghi caller/request.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     }
@@ -135,18 +138,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A + D. Access logging ghi ai truy cập API và bằng cách nào vào CloudWatch Logs log group; Logs Insights truy vấn trực tiếp và tự nhận diện field JSON. CloudTrail chỉ ghi management events, detailed metrics không có thông tin caller, S3 + Athena tốn công hơn.",
-    "open_issues": [
-      "Nếu hiểu 'access patterns' chỉ là số lượt gọi theo method, E cung cấp một phần thông tin nhưng không ghép thành cặp hợp lý với lựa chọn khác."
-    ]
+    "reason_vi": "Đúng; JSON structured log là điều kiện để tự nhận diện trường mà không parse tùy chỉnh.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, D, trùng blind. Đã xét lại đối thủ C (S3 + Athena): access log của REST API có đích là CloudWatch Logs log group hoặc Firehose; trang execution logging nêu đích S3 chỉ áp dụng cho execution log qua CloudWatch Logs delivery, còn standard execution logging không gửi thẳng S3. Đưa log sang S3 cần thêm Firehose và phải tạo bảng Athena, tức nhiều công hơn Logs Insights. B sai nguồn dữ liệu (CloudTrail chỉ ghi management events của API Gateway), E chỉ là metric tổng hợp. Giữ A + D, verified, high.",
+  "reconciliation_vi": "Đúng; JSON structured log là điều kiện để tự nhận diện trường mà không parse tùy chỉnh.",
   "explanation_vi": {
-    "why_correct": "A: bật access logging trên stage để ghi ai gọi API và bằng cách nào (IP, caller, user agent...) vào CloudWatch Logs. D: CloudWatch Logs Insights truy vấn tương tác trên log group đó và tự nhận diện field của log JSON, nên phân tích access pattern mà không phải tự parse file.",
+    "why_correct": "Bật API Gateway access logging và truy vấn CloudWatch Logs Insights trên log JSON; tự khám phá trường giúp xem mẫu truy cập mà không viết bộ phân tích tùy chỉnh.",
     "others": {
-      "Q042:B": "CloudTrail chỉ ghi management events của dịch vụ API Gateway, không ghi các request client gọi vào REST API.",
-      "Q042:C": "Access log không gửi thẳng S3 (cần thêm Firehose) và phải định nghĩa bảng Athena, tốn công hơn Logs Insights.",
-      "Q042:E": "Detailed CloudWatch metrics chỉ là số liệu tổng hợp theo method (Count, latency, lỗi), không có thông tin caller để phân tích ai truy cập."
+      "Q042:B": "CloudTrail chủ yếu ghi quản trị API Gateway, không thay thế access log request.",
+      "Q042:C": "S3/Athena cần thêm giao nhận và cấu hình schema.",
+      "Q042:E": "Detailed metrics là số liệu tổng hợp, không đầy đủ bản ghi caller/request."
     }
   },
   "keywords": [
@@ -163,7 +164,7 @@
       "meaning_vi": "Chọn đường CloudWatch Logs gốc thay vì S3 + Athena."
     }
   ],
-  "memory_tip_vi": "Nếu cần phân tích ai gọi API Gateway REST API mà ít công nhất -> nghĩ đến access logging vào CloudWatch Logs + Logs Insights; kiểm tra: CloudTrail chỉ ghi management events, detailed metrics không có thông tin caller.",
+  "memory_tip_vi": "Nếu muốn phân tích request không viết parser, ghi access log có cấu trúc JSON và dùng Logs Insights.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -305,6 +306,25 @@
         "Q042:A",
         "Q042:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; JSON structured log là điều kiện để tự nhận diện trường mà không parse tùy chỉnh.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q042:A",
+        "Q042:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q042:A",
+        "Q042:D"
+      ],
+      "note_vi": "Đúng; JSON structured log là điều kiện để tự nhận diện trường mà không parse tùy chỉnh.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -316,5 +336,26 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "notes_vi": "Đúng; JSON structured log là điều kiện để tự nhận diện trường mà không parse tùy chỉnh.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q042:A",
+      "Q042:D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q042:A",
+      "Q042:D"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

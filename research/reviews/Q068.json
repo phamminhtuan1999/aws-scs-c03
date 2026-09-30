@@ -2,9 +2,9 @@
   "question_id": "Q068",
   "question_content_hash": "d301b2e2b80ab36a74a288dfead5aa9a6e6fc7eab00da1dfc4913ef82b84b9bb",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:50Z",
-  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -36,60 +36,56 @@
     {
       "unit_id": "Q068:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty là dịch vụ phát hiện mối đe dọa, sinh findings; bản thân nó không tự chặn truy cập hay giảm thiểu lưu lượng DDoS, nên không giảm downtime khi bị tấn công.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "GuardDuty không tự block unauthorized access hoặc thay mitigation DDoS.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "Q068-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q068:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Shield Advanced mở rộng bảo vệ DDoS cho tài nguyên và cho phép làm việc với Shield Response Team (SRT) khi có sự cố (cần gói Business/Enterprise Support); SRT có thể phân tích log và áp rule WAF để chặn tấn công, giúp giảm downtime.",
+      "reason_vi": "Shield Advanced và hỗ trợ SRT giảm thời gian xử lý attack.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref10"
+        "Q068-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q068:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Security group chỉ có rule allow, không có rule deny nên Lambda không thể 'chặn IP attacker' bằng security group; ngoài ra VPC Flow Logs thu thập ngoài luồng traffic, không phải cơ chế giảm thiểu DDoS nhanh (DDoS thường từ nhiều IP).",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Security group chỉ có Allow; Lambda không thể thêm deny-IP rule.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "Q068-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q068:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "EventBridge theo dõi sự kiện API CloudTrail, AWS Config audit cấu hình, Systems Manager remediation cấu hình; các công cụ này xử lý thay đổi control plane, không hấp thụ hay lọc lưu lượng DDoS vào website.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CloudTrail/Config theo dõi cấu hình không trực tiếp chặn DDoS request.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7",
-        "ref8"
+        "Q068-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -97,17 +93,15 @@
       "unit_id": "Q068:E",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS WAF (trên CloudFront/ALB/API Gateway...) cho phép tạo rule, ví dụ rate-based rule giới hạn request đến quá nhanh, để giảm thiểu DDoS tầng ứng dụng; Shield Advanced còn dùng WAF cho automatic application layer DDoS mitigation.",
+      "reason_vi": "WAF có rules lọc/rate-limit tấn công tầng ứng dụng.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref2",
-        "ref9"
+        "Q068-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -263,6 +257,18 @@
       "quote": "To use the services of the Shield Response Team (SRT), you must be subscribed to the Business Support plan or the Enterprise Support plan.",
       "supports": "Điều kiện để 'reach out to AWS Support' (SRT) trong phương án B: cần Business/Enterprise Support.",
       "kind": "direct"
+    },
+    {
+      "id": "Q068-r2-1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-responding.html",
+      "title": "Responding to DDoS events in AWS - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director",
+      "accessed_at": "2026-09-30",
+      "quote": "ACL. For information about automatic application layer mitigation, see Automating",
+      "supports": "Shield Advanced hỗ trợ DDoS mitigation và liên hệ SRT/AWS Support; WAF giảm attack tầng ứng dụng.",
+      "kind": "direct",
+      "snapshot_id": "7fd9ac1f5ed4",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [],
@@ -279,19 +285,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Shield Advanced + SRT (áp rule web ACL chặn tấn công khi có sự cố) và AWS WAF rate-based rule là cơ chế giảm thiểu DDoS được tài liệu hóa trực tiếp; A chỉ phát hiện, C dùng security group không có deny, D xử lý thay đổi cấu hình control plane.",
-    "open_issues": [
-      "E giả định website đứng sau tài nguyên WAF hỗ trợ (CloudFront, ALB, API Gateway…).",
-      "SRT yêu cầu Business hoặc Enterprise Support plan."
-    ]
+    "reason_vi": "Đúng; Shield response plus WAF layer7, SG không có deny rules.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là B+E. Đã kiểm tra lại phương án cạnh tranh mạnh nhất là C (tự động chặn IP bằng Lambda): tài liệu VPC nói security group chỉ có allow rule, không có deny, nên không thể 'block an attacker's IP' bằng security group; Flow Logs cũng nằm ngoài luồng traffic và DDoS thường đến từ nhiều IP. A (GuardDuty) chỉ sinh findings, D chỉ giám sát/khắc phục cấu hình. Đã xác nhận thêm điều kiện SRT cần Business/Enterprise Support (không mâu thuẫn với B). Giữ B+E, verified, high.",
+  "reconciliation_vi": "Đúng; Shield response plus WAF layer7, SG không có deny rules.",
   "explanation_vi": {
-    "why_correct": "B: Shield Advanced mở rộng bảo vệ DDoS và cho phép liên hệ Shield Response Team qua AWS Support khi bị tấn công; SRT có thể áp rule vào web ACL để chặn tấn công nhanh. E: AWS WAF cho phép tạo rule (ví dụ rate-based rule) để chặn/giới hạn flood tầng ứng dụng, giảm downtime.",
+    "why_correct": "Shield Advanced cung cấp DDoS protection và hỗ trợ SRT qua AWS Support; WAF rules, đặc biệt rate-based rules, giảm tấn công HTTP tầng ứng dụng.",
     "others": {
-      "Q068:A": "GuardDuty là dịch vụ phát hiện mối đe dọa, chỉ tạo findings, không tự lọc hay hấp thụ lưu lượng DDoS.",
-      "Q068:C": "Security group không có rule deny nên không 'chặn IP' được; Flow Logs chỉ ghi nhận ngoài luồng traffic và DDoS đến từ rất nhiều IP.",
-      "Q068:D": "EventBridge/CloudTrail/Config/Systems Manager theo dõi và sửa thay đổi cấu hình API, không lọc lưu lượng tấn công vào website."
+      "Q068:A": "GuardDuty không tự block unauthorized access hoặc thay mitigation DDoS.",
+      "Q068:C": "Security group chỉ có Allow; Lambda không thể thêm deny-IP rule.",
+      "Q068:D": "CloudTrail/Config theo dõi cấu hình không trực tiếp chặn DDoS request."
     }
   },
   "keywords": [
@@ -304,7 +307,7 @@
       "meaning_vi": "Cần cơ chế giảm thiểu/phản ứng nhanh (SRT, WAF rules), không chỉ phát hiện."
     }
   ],
-  "memory_tip_vi": "Nếu đề nói DDoS vào website và cần giảm downtime -> nghĩ đến Shield Advanced (SRT, bảo vệ chi phí) + AWS WAF rate-based rules; kiểm tra GuardDuty/Config/Flow Logs chỉ phát hiện, còn security group không có deny.",
+  "memory_tip_vi": "Nếu website bị DDoS, kết hợp Shield Advanced/SRT với WAF rules phù hợp lớp tấn công.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -333,7 +336,46 @@
         "Q068:B",
         "Q068:E"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; Shield response plus WAF layer7, SG không có deny rules.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q068:B",
+        "Q068:E"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q068:B",
+        "Q068:E"
+      ],
+      "note_vi": "Đúng; Shield response plus WAF layer7, SG không có deny rules.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Shield Advanced (SRT, bảo vệ DDoS mở rộng) + AWS WAF (rate-based rules, L7) là cặp giảm downtime khi bị DDoS."
+  "notes_vi": "Đúng; Shield response plus WAF layer7, SG không có deny rules.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q068:B",
+      "Q068:E"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q068:B",
+      "Q068:E"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

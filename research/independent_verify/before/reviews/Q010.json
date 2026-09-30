@@ -1,0 +1,287 @@
+{
+  "question_id": "Q010",
+  "question_content_hash": "70ed77e5500092e29bf77f2c1bd91845316282c78a3c194a22416a60d79dd32d",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "08bd268cfb5f99c75b4f8b18a9af45468124c274aa85d33fd0b6351760a144f7",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Xóa KMS key do attacker tạo càng nhanh càng tốt.",
+      "kind": "optimization"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Key ID có tiền tố 'mrk-' => multi-Region key; attack trải trên nhiều Region, nên có thể tồn tại replica key.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Key đã được lên lịch xóa từ hôm trước nhưng vẫn chưa bị xóa; key policy đã cho IAM principal kms:* (quyền không phải vấn đề).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q010:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Dùng root user không giải quyết nguyên nhân: primary multi-Region key có replica sẽ không bị xóa cho tới khi mọi replica bị xóa, bất kể ai gửi yêu cầu. Key policy đã cho kms:* nên root không cần thiết.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q010:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Primary key có replica bị giữ ở trạng thái PendingReplicaDeletion vô thời hạn; phải lên lịch xóa các replica key ở các Region khác (tối thiểu 7 ngày). Khi replica cuối cùng bị xóa, waiting period của primary mới bắt đầu.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q010:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Vấn đề không phải thiếu quyền: key policy đã cho kms:* và việc lên lịch xóa đã thành công. Thêm IAM permission rồi gửi lại yêu cầu không xử lý các replica key.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q010:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Disable rồi lên lịch 30 ngày vừa chậm hơn (30 > 7 ngày tối thiểu) vừa không xử lý replica key, nên primary vẫn không bị xóa.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q010:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu KMS nêu rõ primary multi-Region key chỉ bị xóa sau khi mọi replica bị xóa; chỉ B xử lý điều này. Độ tin cậy giảm vì đề có nhiều lỗi dữ liệu và mô tả 'still enabled and usable' mâu thuẫn với tài liệu hiện tại.",
+      "open_issues": [
+        "Tài liệu API nói key ở trạng thái PendingReplicaDeletion không dùng được cho cryptographic operations, trái với câu 'still enabled and usable' trong đề.",
+        "ARN trong đề sai định dạng ('arn:aws;kms'), account ID trong đề (1234156789012) không khớp ARN (123456789012)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "source_answer": [
+    "Q010:B"
+  ],
+  "researched_answer": [
+    "Q010:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Tài liệu KMS nêu trực tiếp primary multi-Region key chỉ bị xóa sau khi mọi replica bị xóa, và key ID 'mrk-' cùng attack đa Region chỉ tới đúng tình huống này; chỉ B xử lý replica. Độ tin cậy giảm vì đề có nhiều lỗi dữ liệu và mô tả 'still enabled and usable' mâu thuẫn với tài liệu.",
+    "open_issues": [
+      "Theo tài liệu, key đã lên lịch xóa ở trạng thái PendingDeletion hoặc PendingReplicaDeletion đều không dùng được cho cryptographic operations, trái với câu 'still enabled and usable' trong đề.",
+      "ARN sai định dạng ('arn:aws;kms'), account ID trong đề (1234156789012) không khớp ARN (123456789012)."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn B. Đã tìm cách đọc để phương án khác đúng: A (root user) và C (thêm IAM permission) chỉ đúng nếu vấn đề là thiếu quyền, nhưng đề nói key policy đã cho kms:* và việc lên lịch xóa đã thực hiện; D chậm hơn (30 ngày) và không xử lý replica. Trang ScheduleKeyDeletion xác nhận KMS không xóa primary key còn replica và waiting period của primary chỉ bắt đầu khi replica cuối cùng bị xóa; trang Deleting keys xác nhận phải lên lịch xóa mọi replica trước. Giữ B, confidence medium do lỗi dữ liệu trong đề.",
+  "explanation_vi": {
+    "why_correct": "Key ID có tiền tố mrk- là multi-Region key; KMS không xóa primary key khi còn replica (primary ở PendingReplicaDeletion vô thời hạn), nên phải tìm các Region có replica và lên lịch xóa chúng với waiting period tối thiểu 7 ngày — khi replica cuối cùng bị xóa, waiting period của primary mới bắt đầu.",
+    "others": {
+      "Q010:A": "Root user không thay đổi quy tắc 'primary chỉ bị xóa sau khi mọi replica bị xóa'; key policy đã cho kms:* nên không cần root.",
+      "Q010:C": "Quyền không phải vấn đề (key policy đã cho kms:*); gửi lại yêu cầu xóa không xử lý các replica key.",
+      "Q010:D": "Disable rồi lên lịch 30 ngày chậm hơn mức tối thiểu 7 ngày và vẫn không xử lý replica, nên primary vẫn không bị xóa."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "key/mrk-",
+      "meaning_vi": "Tiền tố mrk- trong key ID = multi-Region key (có thể có replica ở Region khác)."
+    },
+    {
+      "phrase": "multiple AWS Regions",
+      "meaning_vi": "Attack đa Region -> có thể attacker đã tạo replica key ở Region khác."
+    },
+    {
+      "phrase": "as quickly as possible",
+      "meaning_vi": "Chọn waiting period tối thiểu 7 ngày và xử lý đúng nguyên nhân chặn việc xóa."
+    }
+  ],
+  "memory_tip_vi": "Nếu KMS key đã lên lịch xóa mà chưa bị xóa và key ID bắt đầu bằng mrk- -> nghĩ đến replica của multi-Region key; kiểm tra phải lên lịch xóa hết replica trước (waiting period 7–30 ngày).",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS"
+    ],
+    "reason_vi": "Dọn dẹp tài nguyên attacker tạo sau sự cố, cần hiểu vòng đời xóa multi-Region KMS key."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html#deleting-mrks",
+      "title": "Delete an AWS KMS key",
+      "section": "Deleting multi-Region keys",
+      "snapshot_id": "68e1ee0d15dc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To delete a primary key, you must schedule the deletion all of its replica keys, and then wait for the replica keys to be deleted.",
+      "supports": "Phải xóa các replica key trước thì primary key mới bị xóa (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_ScheduleKeyDeletion.html",
+      "title": "ScheduleKeyDeletion",
+      "section": "Description",
+      "snapshot_id": "939830904bce",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS KMS will not delete a multi-Region primary key with existing replica keys.",
+      "supports": "Lý do key 'đã lên lịch xóa' nhưng vẫn tồn tại: còn replica key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html",
+      "title": "Key states of AWS KMS keys",
+      "section": "Key states",
+      "snapshot_id": "00fb1e93f120",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the primary key is in the PendingReplicaDeletion state until all of its replica keys are deleted.",
+      "supports": "Primary key bị kẹt ở PendingReplicaDeletion cho tới khi mọi replica bị xóa.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html#deleting-mrks",
+      "title": "Delete an AWS KMS key",
+      "section": "About the waiting period",
+      "snapshot_id": "68e1ee0d15dc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS KMS requires you to set a waiting period of 7 – 30 days. The default waiting period is 30 days.",
+      "supports": "7 ngày là tối thiểu; chọn 30 ngày (D) chậm hơn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_ScheduleKeyDeletion.html",
+      "title": "ScheduleKeyDeletion",
+      "section": "Description",
+      "snapshot_id": "939830904bce",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "PendingReplicaDeletion and it cannot be replicated or used in cryptographic operations.",
+      "supports": "Mâu thuẫn với mô tả 'still enabled and usable' trong đề (source issue).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q010:stem:2",
+      "detail_vi": "ARN ghi 'arn:aws;kms' (dấu ';' thay ':'); key ID 'mrk-0bb0212cd9864fdea0dcamzo26efb5670' chứa ký tự không phải hex."
+    },
+    {
+      "type": "data",
+      "location": "Q010:stem:0",
+      "detail_vi": "Account ID 1234156789012 (13 chữ số) không khớp với 123456789012 trong ARN."
+    },
+    {
+      "type": "data",
+      "location": "Q010:stem:2",
+      "detail_vi": "Đề nói key 'still enabled and usable', nhưng tài liệu hiện tại nói primary key ở PendingReplicaDeletion không dùng được cho cryptographic operations."
+    },
+    {
+      "type": "typo",
+      "location": "Q010:C",
+      "detail_vi": "'lo allow' — đúng ra là 'to allow'."
+    }
+  ],
+  "notes_vi": "Dấu hiệu then chốt là tiền tố 'mrk-' trong key ID (multi-Region key) và việc attack trải trên nhiều Region.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q010:B\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key B khớp blind; giữ B, status verified (confidence medium)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:45:00Z → 2026-09-30T19:41:20Z",
+      "previous_answer": [
+        "Q010:B"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:45:00Z",
+        "corrected": "2026-09-30T19:41:20Z"
+      }
+    }
+  }
+}

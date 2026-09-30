@@ -2,9 +2,9 @@
   "question_id": "Q034",
   "question_content_hash": "3098aef344bfe62619054791ffb044ce3955a0c3fc028efaacc93ca8718ab5e6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q034:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "ALB với target group gồm cả hai EC2 giữ nguyên năng lực phục vụ; WAF gắn được với ALB và có rule/managed rule group chặn SQL injection; kiểm thử trước rồi mới chuyển Route 53, sau đó khóa security group để không truy cập thẳng EC2.",
+      "reason_vi": "Đúng: ALB/WAF trước hai backend và chuyển DNS có kiểm soát.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,24 +47,23 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "Q034-r2-1",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q034:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Chỉ dùng một EC2 làm origin nên bỏ một instance và giảm năng lực/độ sẵn sàng; đồng thời không chặn truy cập trực tiếp tới EC2 nên kẻ tấn công vẫn có thể bỏ qua CloudFront/WAF.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chưa đủ: CloudFront một EC2 làm giảm HA và direct EC2 path cần chặn riêng.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref5"
+        "Q034-r2-1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -72,25 +71,29 @@
       "unit_id": "Q034:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Nền tảng legacy không còn nhận bản vá bảo mật, nên việc tự sửa mã nguồn tốn công sức lớn và khó hoàn thành trong 24 giờ; không phải giải pháp ít công sức nhất.",
+      "reason_vi": "Sai: tự vá legacy source khó đạt yêu cầu ít công sức trong 24 giờ.",
       "requirement_ids": [
         "R2"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "Q034-r2-1",
+        "ref2"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q034:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS WAF không gắn trực tiếp với EC2 instance (chỉ CloudFront, ALB, API Gateway...); thêm nữa chặn cổng SQL trên EC2 không liên quan tới SQL injection qua ứng dụng web và việc khôi phục security group làm mất bảo vệ.",
+      "reason_vi": "Sai: WAF không gắn trực tiếp EC2; đóng DB port không ngăn SQLi qua ứng dụng.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
+        "Q034-r2-1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -123,35 +126,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Chỉ A đặt WAF (có managed rule group SQL database chặn SQL injection) trên tài nguyên WAF hỗ trợ (ALB) trước cả hai EC2, kiểm thử trước khi chuyển Route 53 để không gián đoạn, và khóa truy cập trực tiếp vào EC2. WAF không gắn trực tiếp được với EC2 (D).",
-    "open_issues": [
-      "A cần thêm bước tạo ALB; B cũng có WAF nhưng chỉ một origin và không khóa đường vòng trực tiếp tới EC2."
-    ]
+    "reason_vi": "Giữ A; gắn WAF trước cả hai instance và restrict direct path để tránh bypass.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại đối thủ mạnh nhất B (CloudFront + WAF): B cũng dùng managed rule WAF và test trước khi chuyển DNS, nhưng chỉ lấy một EC2 làm origin (giảm năng lực/độ sẵn sàng so với hai instance hiện có – trái 'maintain normal operations') và không hạn chế truy cập trực tiếp vào EC2, nên kẻ tấn công vẫn bỏ qua WAF. Re-fetch danh sách tài nguyên WAF: regional resources có ALB, không có EC2, nên D không khả thi. Giữ A, verified, high.",
+  "reconciliation_vi": "Giữ A; gắn WAF trước cả hai instance và restrict direct path để tránh bypass.",
   "explanation_vi": {
-    "why_correct": "Đặt ALB trước cả hai EC2 và gắn AWS WAF web ACL (managed rule SQL injection) lên ALB giúp chặn SQL injection mà không sửa phần mềm legacy; kiểm thử trước khi chuyển Route 53 giữ hoạt động bình thường, rồi khóa security group để không ai đi vòng qua WAF.",
+    "why_correct": "Đặt hai EC2 sau ALB, gắn WAF SQL injection rule rồi chuyển DNS khi sẵn sàng; hạn chế EC2 chỉ nhận web traffic từ ALB để tránh bypass. Cách này giữ hai backend đang hoạt động và không cần sửa legacy code trong 24 giờ.",
     "others": {
-      "Q034:B": "Chỉ dùng một EC2 làm origin nên giảm năng lực phục vụ, và không chặn truy cập trực tiếp tới EC2 nên WAF có thể bị bỏ qua.",
-      "Q034:C": "Phần mềm legacy không còn bản vá; tự sửa mã nguồn tốn công và rủi ro, khó xong trong 24 giờ.",
-      "Q034:D": "AWS WAF không gắn trực tiếp vào EC2 instance, và chặn cổng database không ngăn SQL injection đi qua ứng dụng web."
+      "Q034:B": "Chưa đủ: CloudFront một EC2 làm giảm HA và direct EC2 path cần chặn riêng.",
+      "Q034:C": "Sai: tự vá legacy source khó đạt yêu cầu ít công sức trong 24 giờ.",
+      "Q034:D": "Sai: WAF không gắn trực tiếp EC2; đóng DB port không ngăn SQLi qua ứng dụng."
     }
   },
   "keywords": [
     {
-      "phrase": "no longer receives security updates",
-      "meaning_vi": "Không vá được mã -> dùng lớp bảo vệ bên ngoài (virtual patching bằng WAF)."
+      "phrase": "24 hours",
+      "meaning_vi": "WAF virtual patch có thể triển khai nhanh."
     },
     {
-      "phrase": "within 24 hours",
-      "meaning_vi": "Cần giải pháp triển khai nhanh như WAF managed rule."
+      "phrase": "least amount of effort",
+      "meaning_vi": "Đặt WAF trước cả hai EC2 qua ALB."
     },
     {
-      "phrase": "maintain normal operations during implementation",
-      "meaning_vi": "Kiểm thử trước rồi mới chuyển DNS, giữ đủ hai instance."
+      "phrase": "normal operations",
+      "meaning_vi": "Kiểm thử trước DNS switch và chặn direct bypass."
     }
   ],
-  "memory_tip_vi": "Nếu ứng dụng web trên EC2 bị SQL injection và không vá được -> nghĩ đến AWS WAF trên ALB/CloudFront trước tất cả instance; kiểm tra: WAF không gắn trực tiếp EC2, phải khóa security group để không đi vòng qua WAF.",
+  "memory_tip_vi": "Nếu cần giảm SQLi nhanh cho legacy app, WAF ở ALB và chặn mọi direct-backend bypass.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -229,13 +230,25 @@
       "quote": "make sure that viewers can only access your web servers through CloudFront and not by accessing the load balancer directly",
       "supports": "Khi đặt CloudFront phía trước cần chặn truy cập trực tiếp tới origin; phương án B không làm việc này và chỉ dùng một EC2.",
       "kind": "inference"
+    },
+    {
+      "id": "Q034-r2-1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-sqli-match.html",
+      "title": "SQL injection attack rule statement - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director",
+      "accessed_at": "2026-09-30",
+      "quote": "If you inspect the request components Body, JSON body, Headers,",
+      "supports": "WAF SQL injection statements inspect request components for SQL injection patterns.",
+      "kind": "direct",
+      "snapshot_id": "d998a46ec633",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
       "type": "data",
-      "location": "Q034:stem:0",
-      "detail_vi": "'Route 53 weighted load balancing' là cách gọi không chuẩn của weighted routing policy; không ảnh hưởng đáp án."
+      "location": "Q034",
+      "detail_vi": "WAF giảm thiểu theo rule; cần staging/rule validation với mẫu attack và traffic hợp lệ."
     }
   ],
   "history": [
@@ -260,6 +273,23 @@
       "previous_answer": [
         "Q034:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ A; gắn WAF trước cả hai instance và restrict direct path để tránh bypass.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q034:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q034:A"
+      ],
+      "note_vi": "Giữ A; gắn WAF trước cả hai instance và restrict direct path để tránh bypass.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -271,5 +301,20 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "notes_vi": "Giữ A; gắn WAF trước cả hai instance và restrict direct path để tránh bypass.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q034:A",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

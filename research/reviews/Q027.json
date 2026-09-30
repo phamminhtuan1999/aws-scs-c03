@@ -2,9 +2,9 @@
   "question_id": "Q027",
   "question_content_hash": "b0510697d7fb3410caca94d6cb2b37595d98cc354124def7ecc2cbde439ab7aa",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:08Z",
-  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,27 +34,27 @@
       "unit_id": "Q027:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Điều kiện aws:sourceVpce trong key policy chỉ cho phép (hoặc deny ngoài) request đi qua VPC endpoint đã chỉ định, cưỡng chế việc không dùng public endpoint.",
+      "reason_vi": "Đúng: SourceVpce kiểm tra endpoint ID, với policy enforce đầy đủ.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref3",
-        "ref4"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q027:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Virtual private gateway dùng cho Site-to-Site VPN tới mạng on-premises; nó không cung cấp đường riêng tới KMS, và bỏ internet gateway chỉ làm mất kết nối tới public endpoint của KMS chứ không tạo đường thay thế.",
+      "reason_vi": "Sai: thêm virtual private gateway không tự cung cấp KMS private endpoint.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref1"
+        "ref3",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -62,42 +62,44 @@
       "unit_id": "Q027:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Interface VPC endpoint (PrivateLink) cho KMS khiến giao tiếp VPC–KMS đi hoàn toàn trong mạng AWS; private DNS làm hostname KMS mặc định resolve tới endpoint nên SDK/CLI dùng endpoint mà không cần sửa code.",
+      "reason_vi": "Đúng: endpoint và private DNS cho đường gọi private.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
+        "ref3",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q027:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Import key material (BYOK) là tính năng đưa key material của khách hàng vào KMS, không liên quan tới đường mạng dùng để gọi API KMS từ VPC.",
+      "reason_vi": "Sai: import key material không thay đường network của KMS API.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6"
+        "ref3",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q027:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "aws:SourceIp không hiệu lực khi request đến qua VPC endpoint; còn nếu request qua public endpoint thì source IP là IP public, không phải 10.0.0.0/16. Điều kiện này không cưỡng chế được đường riêng.",
+      "reason_vi": "Sai: SourceIp 10.0.0.0/16 không nhận diện request qua interface endpoint.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref3",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -132,29 +134,29 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A, C. Tài liệu KMS nêu trực tiếp interface VPC endpoint giữ giao tiếp hoàn toàn trong mạng AWS, private DNS làm hostname KMS chuẩn trỏ tới endpoint, aws:sourceVpce giới hạn truy cập key, và aws:sourceIP không hiệu lực với request qua VPC endpoint.",
+    "reason_vi": "Giữ AC; conditional Allow đơn lẻ không buộc tất cả requests dùng VPCE nếu còn Allow khác.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, C, trùng blind. Đã xét lại đối thủ mạnh nhất là E (aws:SourceIp 10.0.0.0/16): tài liệu KMS nêu trực tiếp aws:sourceIP không hiệu lực khi request đến từ VPC endpoint, còn qua public endpoint thì source IP là IP public, nên E không cưỡng chế được đường riêng. B (virtual private gateway) chỉ phục vụ VPN tới on-premises, D (import key material) không liên quan tới đường mạng. Giữ A, C, verified, high. Giữ typo 'slates'; bỏ source_issue encoding ở Q027:A.",
+  "reconciliation_vi": "Giữ AC; conditional Allow đơn lẻ không buộc tất cả requests dùng VPCE nếu còn Allow khác.",
   "explanation_vi": {
-    "why_correct": "C: interface VPC endpoint cho KMS (bật private DNS) làm mọi lời gọi KMS từ VPC đi hoàn toàn trong mạng AWS mà không cần đổi endpoint trong code. A: điều kiện aws:sourceVpce trong key policy cưỡng chế chỉ chấp nhận request đi qua VPC endpoint đó, chặn việc dùng public endpoint.",
+    "why_correct": "KMS interface endpoint với private DNS đưa kết nối vào private endpoint; key policy ràng buộc SourceVpce buộc request qua endpoint đó. Để cưỡng chế thật sự, dùng deny ngoài endpoint hoặc loại bỏ mọi đường allow thay thế.",
     "others": {
-      "Q027:B": "Virtual private gateway dùng cho VPN tới on-premises, không tạo đường riêng tới KMS; bỏ internet gateway chỉ làm mất kết nối chứ không thay thế.",
-      "Q027:D": "Import key material (BYOK) là cách đưa key material vào KMS, không liên quan tới đường mạng gọi API KMS.",
-      "Q027:E": "aws:SourceIp không hiệu lực với request qua VPC endpoint, còn qua public endpoint thì IP nguồn là IP public, nên điều kiện 10.0.0.0/16 không cưỡng chế được đường riêng."
+      "Q027:B": "Sai: thêm virtual private gateway không tự cung cấp KMS private endpoint.",
+      "Q027:D": "Sai: import key material không thay đường network của KMS API.",
+      "Q027:E": "Sai: SourceIp 10.0.0.0/16 không nhận diện request qua interface endpoint."
     }
   },
   "keywords": [
     {
-      "phrase": "travel entirely within the AWS network",
-      "meaning_vi": "Dùng interface VPC endpoint (PrivateLink) cho KMS."
+      "phrase": "within the AWS network",
+      "meaning_vi": "Dùng interface endpoint để gọi KMS private."
     },
     {
-      "phrase": "not use public service endpoints",
-      "meaning_vi": "Cưỡng chế bằng aws:sourceVpce trong key policy + private DNS."
+      "phrase": "public service endpoints",
+      "meaning_vi": "Cưỡng chế SourceVpce, xét mọi Allow khác."
     }
   ],
-  "memory_tip_vi": "Nếu đề yêu cầu traffic tới dịch vụ AWS không đi qua public endpoint -> nghĩ đến interface VPC endpoint + điều kiện aws:sourceVpce trong resource/key policy; kiểm tra aws:SourceIp không dùng được với private IP qua VPC endpoint.",
+  "memory_tip_vi": "Nếu phải bắt buộc VPCE, deny requests không có SourceVpce phù hợp; xét ngoại lệ service integrations cần thiết.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -278,6 +280,25 @@
         "Q027:A",
         "Q027:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ AC; conditional Allow đơn lẻ không buộc tất cả requests dùng VPCE nếu còn Allow khác.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q027:A",
+        "Q027:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q027:A",
+        "Q027:C"
+      ],
+      "note_vi": "Giữ AC; conditional Allow đơn lẻ không buộc tất cả requests dùng VPCE nếu còn Allow khác.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -289,5 +310,23 @@
         "corrected": "2026-09-30T19:49:06Z"
       }
     }
+  },
+  "notes_vi": "Giữ AC; conditional Allow đơn lẻ không buộc tất cả requests dùng VPCE nếu còn Allow khác.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": [
+      "Q027:A",
+      "Q027:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

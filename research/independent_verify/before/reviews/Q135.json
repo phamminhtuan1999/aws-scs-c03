@@ -1,0 +1,275 @@
+{
+  "question_id": "Q135",
+  "question_content_hash": "b3d2ecd944f1240ee8071d7583c08dd38eed035259646a425f2b1d693f9174cb",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:22:55+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "d959c7019fe87b4817ca7dc92337f8ded10f943a33af0066191b75cb50f67aaf",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Security team phải tự tạo, xóa và quản lý key material.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Key material không được lưu trong môi trường dùng chung (shared/multi-tenant) -> cần HSM single-tenant.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Giữ nguyên access control policy và tích hợp dịch vụ của KMS; ứng dụng vẫn dùng KMS API, AWS CLI, AWS Encryption SDK (tức là KMS key dùng cho encrypt/decrypt).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Giải pháp nằm trong AWS Cloud.",
+      "kind": "scope"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Giải pháp phải highly available.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q135:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "CloudHSM key store yêu cầu cluster có ít nhất hai HSM active ở các AZ khác nhau; cluster chỉ một HSM không đáp ứng yêu cầu kết nối custom key store và không highly available.",
+      "requirement_ids": [
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q135:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Custom key store không hỗ trợ imported key material nên không thể 'upload' key material vào đó; ngoài ra key manager tự dựng trên một EC2 instance không bảo đảm HA.",
+      "requirement_ids": [
+        "R1",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q135:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Key trong standard key store (kể cả key import) nằm trên fleet HSM tenant-agnostic của KMS (môi trường dùng chung); hơn nữa HMAC key chỉ dùng cho GenerateMac/VerifyMac, không mã hóa dữ liệu được.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q135:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CloudHSM key store dùng HSM single-tenant do khách hàng sở hữu, có hai HSM để đạt HA và thỏa yêu cầu kết nối; KMS key vẫn dùng key policy/IAM, KMS API và tích hợp dịch vụ, còn security team quản lý HSM và key material qua CloudHSM.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q135:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu KMS nêu rõ CloudHSM key store cần ít nhất hai HSM ở AZ khác nhau, dùng HSM single-tenant và giữ nguyên trải nghiệm KMS; custom key store không hỗ trợ import và HMAC key.",
+      "open_issues": [
+        "D không nói rõ hai HSM ở hai AZ khác nhau; giả định triển khai đúng yêu cầu."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T20:22:55+00:00"
+  },
+  "source_answer": [
+    "Q135:D"
+  ],
+  "researched_answer": [
+    "Q135:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn D. Tài liệu KMS nêu trực tiếp cluster của CloudHSM key store phải có ít nhất hai HSM active ở AZ khác nhau, HSM là single-tenant, và KMS key vẫn dùng key policy/IAM, KMS API như bình thường; custom key store không hỗ trợ imported key material, HMAC key không mã hóa dữ liệu.",
+    "open_issues": [
+      "D không ghi rõ hai HSM ở hai AZ khác nhau; giả định triển khai đúng yêu cầu của CloudHSM key store."
+    ]
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại A (đối thủ mạnh nhất, khác D duy nhất ở số HSM): trang CloudHSM key stores ghi rõ cluster phải có ít nhất hai HSM active ở các AZ khác nhau (ref1) – A một HSM vừa không kết nối được custom key store vừa không highly available. B: custom key store không hỗ trợ imported key material (ref2) và key manager trên một EC2 không HA. C: standard key store là fleet HSM tenant-agnostic (ref3) và HMAC key chỉ GenerateMac/VerifyMac (ref4). Giữ D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "D dùng AWS KMS CloudHSM key store: key material nằm trên HSM single-tenant do công ty sở hữu và quản lý, cluster hai HSM đáp ứng yêu cầu tối thiểu và high availability, còn ứng dụng vẫn gọi KMS API/CLI/Encryption SDK với key policy và tích hợp dịch vụ như cũ.",
+    "others": {
+      "Q135:A": "Cluster chỉ một HSM không đạt yêu cầu tối thiểu hai HSM active ở hai AZ của CloudHSM key store và không highly available.",
+      "Q135:B": "Custom key store không hỗ trợ import key material, và key manager tự dựng trên một EC2 instance không bảo đảm HA.",
+      "Q135:C": "Key trong standard key store vẫn nằm trên fleet HSM dùng chung của KMS, và HMAC key chỉ tạo/kiểm tra MAC chứ không mã hóa dữ liệu."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "must not store the customer's key material in a shared environment",
+      "meaning_vi": "Cần HSM single-tenant -> CloudHSM key store thay vì standard key store."
+    },
+    {
+      "phrase": "maintain existing access control policies and KMS service integration",
+      "meaning_vi": "Vẫn dùng KMS key (key policy, IAM, tích hợp dịch vụ) -> custom key store của KMS."
+    },
+    {
+      "phrase": "highly available",
+      "meaning_vi": "Cluster CloudHSM cần ít nhất hai HSM ở hai AZ khác nhau."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần key material trên HSM single-tenant mà vẫn dùng KMS API/tích hợp dịch vụ -> nghĩ đến CloudHSM key store; kiểm tra cluster có ít nhất hai HSM ở hai AZ và custom key store không hỗ trợ import key/HMAC/asymmetric.",
+  "tags": {
+    "domains": [
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "AWS CloudHSM"
+    ],
+    "reason_vi": "Chọn key store KMS single-tenant, highly available cho yêu cầu tuân thủ."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-cloudhsm.html",
+      "title": "AWS CloudHSM key stores - AWS KMS",
+      "section": "Where do I start?",
+      "snapshot_id": "e5b78c44d756",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The cluster must have at least two active HSMs in different Availability Zones.",
+      "supports": "Một HSM (A) không đủ; hai HSM (D) đáp ứng yêu cầu và HA.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-store-overview.html",
+      "title": "Key stores - AWS KMS",
+      "section": "AWS KMS custom key stores – Supported features",
+      "snapshot_id": "1fd8aa3a27a9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Other AWS KMS features—such as asymmetric keys, HMAC keys, automatic key rotation, multi-Region keys, and imported key material—are not available in custom key stores.",
+      "supports": "Không thể upload/import key material vào custom key store (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-store-overview.html",
+      "title": "Key stores - AWS KMS",
+      "section": "AWS KMS standard key store",
+      "snapshot_id": "1fd8aa3a27a9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This HSM type can be thought of as a tenant-agnostic fleet of HSMs",
+      "supports": "Standard key store (C) là môi trường HSM dùng chung.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/hmac.html",
+      "title": "HMAC keys in AWS KMS",
+      "section": "Overview",
+      "snapshot_id": "19c9cca7bbdf",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use an HMAC KMS key with the GenerateMac and VerifyMac operations to verify the integrity and authenticity of data within AWS KMS.",
+      "supports": "HMAC key không dùng cho mã hóa dữ liệu (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-store-overview.html",
+      "title": "Key stores - AWS KMS",
+      "section": "AWS CloudHSM key store",
+      "snapshot_id": "1fd8aa3a27a9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Although AWS CloudHSM clusters are hosted within AWS, they provide single-tenant HSM instances that are owned and managed by you.",
+      "supports": "CloudHSM key store nằm trong AWS Cloud nhưng single-tenant (R2, R4).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-cloudhsm.html",
+      "title": "AWS CloudHSM key stores - AWS KMS",
+      "section": "How do AWS CloudHSM key stores work?",
+      "snapshot_id": "e5b78c44d756",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can control access with IAM and key policies, create tags and aliases, enable and disable the KMS keys, and schedule key deletion.",
+      "supports": "KMS key trong CloudHSM key store giữ nguyên key policy/IAM và cách dùng KMS (R3).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Tài liệu cũng nêu người dùng có toàn quyền với cluster CloudHSM (tạo/xóa HSM, backup) và có thể dùng CloudHSM client để xem, audit, quản lý key material.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:55+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q135:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:56+00:00",
+      "change": "Reconciliation: khớp source key D; status verified (high); đáp án không đổi; không cần tham chiếu mới (đã xét lại A bằng ref1).",
+      "previous_answer": [
+        "Q135:D"
+      ]
+    }
+  ]
+}

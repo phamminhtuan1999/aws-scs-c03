@@ -2,9 +2,9 @@
   "question_id": "Q103",
   "question_content_hash": "e9a699c0b06d842d15230097f2713b463cbeb87a0e46fc293cd86ff04c745d46",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,16 +34,13 @@
       "unit_id": "Q103:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Trusted Advisor chạy các check cấu hình ở mức từng tài nguyên (vd. RDS security group access risk, S3 bucket permissions) nên phát hiện được một số rủi ro, nhưng không phải quy trình đánh giá kiến trúc workload so với AWS security best practices; ngoài ra 'all security checks' chỉ có với gói Business Support trở lên. Định dạng xuất (.xls trên console) không phải lý do quyết định.",
+      "reason_vi": "Trusted Advisor kiểm tra selected configurations, không thay workload architecture review.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7",
-        "ref8",
-        "ref9"
+        "Q103-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -51,48 +48,44 @@
       "unit_id": "Q103:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Macie phát hiện dữ liệu nhạy cảm và đánh giá bảo mật cho dữ liệu trong Amazon S3; tài liệu không mô tả Macie quét RDS DB instance, và Macie không tạo 'improvement plan' so với best practices kiến trúc, cũng không bao quát EC2.",
+      "reason_vi": "Macie khám phá sensitive data trong S3, không scan RDS như mô tả.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "Q103-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q103:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS WA Tool cho phép define workload, trả lời câu hỏi review theo Well-Architected Framework (pillar Security), tự xác định HRI/MRI so với best practices và tạo improvement plan — đúng mục tiêu đánh giá kiến trúc và nhận diện rủi ro.",
+      "reason_vi": "workload review, security questions và improvement plan.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "Q103-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q103:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng phần mềm/network exposure cho EC2, ECR image, Lambda (hybrid scanning = agent-based + agentless cho EC2); không đánh giá kiến trúc, không bao phủ RDS/S3, việc tự đối chiếu findings với security pillar là thủ công.",
+      "reason_vi": "Inspector tìm vulnerabilities/network exposure, không hoàn chỉnh đánh giá architecture design.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref10",
-        "ref11"
+        "Q103-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -126,16 +119,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu WA Tool nêu trực tiếp: define workload, trả lời câu hỏi theo pillar, xác định HRI/MRI và tạo improvement plan để đo kiến trúc theo AWS best practices; A, B, D là công cụ phát hiện ở mức tài nguyên/dữ liệu/lỗ hổng.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất là A (Trusted Advisor): nó có check bảo mật cho RDS/S3/EC2 và tìm được rủi ro, nhưng là check cấu hình từng tài nguyên, không 'evaluate whether the workload architecture aligns with AWS security best practices'; bỏ lập luận về CSV trong blind vì không phải điểm quyết định (console xuất .xls, nhưng định dạng không liên quan yêu cầu). B: Macie chỉ quét dữ liệu S3, không quét RDS và không tạo improvement plan. D: Inspector (hybrid scanning = agent + agentless cho EC2) quét lỗ hổng phần mềm, không bao phủ RDS/S3 và không phải review kiến trúc. Không có bằng chứng bác bỏ C. Giữ verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "AWS Well-Architected Tool cho phép define workload, trả lời bộ câu hỏi của Security pillar; công cụ tự xác định rủi ro (HRI/MRI) so với AWS best practices và tạo improvement plan — đúng yêu cầu đánh giá kiến trúc và nhận diện rủi ro bảo mật.",
+    "why_correct": "Well-Architected Tool đánh giá workload qua security pillar questions và tạo improvement plan cho rủi ro kiến trúc.",
     "others": {
-      "Q103:A": "Trusted Advisor chỉ chạy các check cấu hình từng tài nguyên (và 'all checks' cần Business Support+), không đánh giá kiến trúc workload theo best practices.",
-      "Q103:B": "Macie chỉ khám phá dữ liệu nhạy cảm trong Amazon S3, không quét RDS/EC2 và không tạo improvement plan về kiến trúc.",
-      "Q103:D": "Inspector quét lỗ hổng phần mềm/network exposure của EC2 (hybrid = agent + agentless), không bao phủ RDS/S3; tự đối chiếu với security pillar là thủ công."
+      "Q103:A": "Trusted Advisor kiểm tra selected configurations, không thay workload architecture review.",
+      "Q103:B": "Macie khám phá sensitive data trong S3, không scan RDS như mô tả.",
+      "Q103:D": "Inspector tìm vulnerabilities/network exposure, không hoàn chỉnh đánh giá architecture design."
     }
   },
   "keywords": [
@@ -152,7 +145,7 @@
       "meaning_vi": "Bẫy dẫn tới Macie; nhưng yêu cầu là đánh giá kiến trúc, không phải khám phá dữ liệu."
     }
   ],
-  "memory_tip_vi": "Nếu đề hỏi đánh giá KIẾN TRÚC workload so với AWS best practices -> nghĩ đến AWS Well-Architected Tool (pillar + improvement plan); kiểm tra: nếu chỉ cần check cấu hình tài nguyên thì Trusted Advisor/Security Hub, dữ liệu nhạy cảm trong S3 thì Macie, lỗ hổng phần mềm thì Inspector.",
+  "memory_tip_vi": "Nếu đánh giá kiến trúc theo security best practices, dùng Well-Architected Tool; vulnerability/data scanners giải quyết yêu cầu khác.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance"
@@ -308,6 +301,18 @@
       "quote": "Hybrid scanning mode includes agent-based and agentless scans and is automatically enabled when you activate Amazon EC2 scanning.",
       "supports": "Hybrid scanning là chế độ quét lỗ hổng EC2 (agent + agentless), không liên quan review kiến trúc.",
       "kind": "direct"
+    },
+    {
+      "id": "Q103-r2-1",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/tutorial.html",
+      "title": "Tutorial: Document an AWS Well-Architected Tool workload - AWS Well-Architected Tool",
+      "accessed_at": "2026-09-30",
+      "quote": "tutorial, we are not defining a workload from a review",
+      "supports": "Define workload, answer pillar questions, review improvement plan.",
+      "kind": "direct",
+      "snapshot_id": "50aaae1d8f46",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [],
@@ -325,7 +330,46 @@
       "previous_answer": [
         "Q103:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q103:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q103:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Từ khóa: 'evaluate whether the workload architecture aligns with AWS security best practices' -> AWS Well-Architected Tool (Security pillar) + improvement plan."
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q103:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q103:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

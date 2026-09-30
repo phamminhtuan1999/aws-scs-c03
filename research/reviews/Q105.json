@@ -2,9 +2,9 @@
   "question_id": "Q105",
   "question_content_hash": "3cfe48d868afb901ac079768d4b9bbead5bb52050b03761f485a9de1fe61e43f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,13 +29,13 @@
       "unit_id": "Q105:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Cognito identity pool cấp credential tạm cho người dùng của ứng dụng, không phải giải pháp SSO workforce vào console/tài khoản; role tạo ở management account không trực tiếp cấp quyền vào các member account.",
+      "reason_vi": "Cognito identity pool/roles management account không provision organizational member access như yêu cầu.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -43,13 +43,13 @@
       "unit_id": "Q105:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Federation SAML của IAM là để người dùng assume role mà không cần tạo IAM user; IAM user không 'xác thực qua IdP' bên ngoài. Tạo IAM user trong từng account bằng EventBridge/Lambda vừa sai cơ chế vừa tốn vận hành.",
+      "reason_vi": "SAML federation không authenticate IAM users; tạo IAM user từng account không là thiết kế tập trung này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -57,32 +57,29 @@
       "unit_id": "Q105:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Identity Center kết nối IdP bên ngoài qua SAML 2.0, đồng bộ user/group bằng SCIM, và permission set gán cho user/group trên các account trong Organization — đúng giải pháp IdP trung tâm cho đa tài khoản.",
+      "reason_vi": "AWS Organizations workforce federation qua Identity Center.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q105:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Verified Permissions là dịch vụ phân quyền (Cedar) cho ứng dụng tự xây dựng; nó không cung cấp đăng nhập/credential vào các AWS account và không cấp IAM role trong member account.",
+      "reason_vi": "Verified Permissions là application authorization, không cấp IAM role account federation.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -114,16 +111,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu IAM Identity Center mô tả trực tiếp kết nối external IdP qua SAML 2.0 + SCIM và permission set cấp quyền vào nhiều account trong Organization.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất: B (IAM SAML IdP trong từng member account) — federation SAML của IAM là để assume role mà không cần tạo IAM user, nên việc tạo IAM user bằng EventBridge/Lambda và 'authenticate IAM users against the IdP' là sai cơ chế và phải cấu hình riêng từng account. A (Cognito identity pool) dành cho người dùng ứng dụng; role nằm ở management account không cấp quyền vào member account. D (Verified Permissions) là phân quyền cho ứng dụng tự xây. Việc đề nhắc IdP hỗ trợ cả OIDC không làm C sai vì IAM Identity Center dùng SAML 2.0 cho xác thực workforce. Giữ verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "IAM Identity Center dùng external IdP làm identity source qua SAML 2.0, SCIM tự động đồng bộ user/group, và permission set được gán cho user/group trên các member account trong Organization — một IdP trung tâm cho toàn bộ tổ chức.",
+    "why_correct": "IAM Identity Center dùng SAML để authenticate với IdP, SCIM provision users/groups và permission sets/accounts để quản lý workforce truy cập tập trung.",
     "others": {
-      "Q105:A": "Cognito identity pool cấp credential tạm cho người dùng ứng dụng, không phải SSO workforce; role ở management account không cấp quyền vào member account.",
-      "Q105:B": "Phải cấu hình SAML IdP riêng từng account và tạo IAM user bằng Lambda là sai cơ chế — SAML federation dùng để assume role thay vì tạo IAM user.",
-      "Q105:D": "Verified Permissions là dịch vụ phân quyền (Cedar) cho ứng dụng tự xây, không cung cấp đăng nhập/credential vào AWS account."
+      "Q105:A": "Cognito identity pool/roles management account không provision organizational member access như yêu cầu.",
+      "Q105:B": "SAML federation không authenticate IAM users; tạo IAM user từng account không là thiết kế tập trung này.",
+      "Q105:D": "Verified Permissions là application authorization, không cấp IAM role account federation."
     }
   },
   "keywords": [
@@ -140,7 +137,7 @@
       "meaning_vi": "Điều kiện để dùng IAM Identity Center với Organizations."
     }
   ],
-  "memory_tip_vi": "Nếu cần IdP bên ngoài làm đăng nhập trung tâm cho nhiều account trong Organizations -> nghĩ đến IAM Identity Center + SAML 2.0 + SCIM + permission set; kiểm tra: Cognito dành cho người dùng ứng dụng, Verified Permissions dành cho phân quyền trong ứng dụng.",
+  "memory_tip_vi": "Nếu workforce dùng IdP tập trung vào nhiều AWS accounts, dùng IAM Identity Center với SAML, SCIM và permission sets.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -261,7 +258,46 @@
       "previous_answer": [
         "Q105:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q105:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q105:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Từ khóa: central IdP + nhiều member account trong Organizations -> IAM Identity Center + SAML + SCIM + permission sets."
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q105:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q105:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

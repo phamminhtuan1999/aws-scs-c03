@@ -1,0 +1,316 @@
+{
+  "question_id": "Q062",
+  "question_content_hash": "f423875998bd11bd3be150faa642101d14ec3009c86401fb5516048da150e46c",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:36Z",
+  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "6b12083eaf1838bca5893db1282ec99150c2cbbd8749fbec70e3a042f8064e17",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Xác định xem access key bị lộ đã bị sử dụng trái phép hay chưa.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ngăn mọi lần sử dụng tiếp theo của access key bị lộ.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn đúng HAI bước (Choose two), mỗi bước phục vụ một yêu cầu.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q062:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM Access Analyzer phân tích policy (external/internal/unused access, validate) và chỉ generate policy từ hoạt động CloudTrail của một identity; không có tính năng xác định key bị lộ đã truy cập resource nào và bên nào dùng key — việc đó cần CloudTrail.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q062:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Deactivate access key làm key không còn dùng được cho API call, chặn ngay việc dùng tiếp key bị lộ.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q062:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty là dịch vụ phát hiện mối đe dọa; không có loại rule để chặn một access key (suppression rule chỉ archive finding).",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q062:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tạo key mới không vô hiệu hóa key cũ bị lộ và cũng không cho biết key cũ đã bị dùng hay chưa.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q062:E",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Credential report có access_key_N_last_used_date/service/region (và password_last_used) giúp xác định key có bị dùng sau thời điểm lộ hay không; câu chữ 'last logged in' nghĩa đen là password_last_used nên chưa chính xác, nhưng đây là lựa chọn duy nhất phục vụ việc phát hiện.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q062:B",
+      "Q062:E"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "B chắc chắn đáp ứng việc ngăn sử dụng; E là lựa chọn phát hiện duy nhất có cơ sở tài liệu (thông tin last used trong credential report), dù câu chữ nói về 'last logged in' (password_last_used) chứ không nói rõ access key last used.",
+      "open_issues": [
+        "Công cụ điều tra đầy đủ (CloudTrail) không có trong đáp án; E chỉ cho thời điểm/dịch vụ/Region lần dùng gần nhất, không cho toàn bộ lịch sử."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:49:36Z"
+  },
+  "source_answer": [
+    "Q062:B",
+    "Q062:E"
+  ],
+  "researched_answer": [
+    "Q062:B",
+    "Q062:E"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn B+E. B được tài liệu IAM nêu trực tiếp (key bị deactivate không dùng được cho API call). E là lựa chọn phát hiện duy nhất có cơ sở: credential report có access_key_N_last_used_date/region/service. Mức medium vì E viết 'last logged in' (đúng nghĩa đen là password_last_used, đăng nhập website) thay vì thời điểm access key được dùng, và credential report chỉ cho lần dùng gần nhất.",
+    "open_issues": [
+      "Câu chữ E ('last logged in') không khớp chính xác trường cần xem (access_key_last_used_date); chỉ đúng khi hiểu rộng là 'lần cuối credential của user được dùng'.",
+      "Công cụ điều tra đầy đủ (CloudTrail lọc theo access key ID) không có trong các lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Source key = B+E, trùng blind. B chắc chắn (deactivate chặn mọi API call bằng key). Lựa chọn thứ hai phải phục vụ việc phát hiện, nên đối thủ thật của E là A. Đã đọc lại trang Access Analyzer: các tính năng là phân tích external/internal/unused access và generate policy dựa trên hoạt động trong CloudTrail — không có tính năng cho biết key bị lộ đã truy cập resource nào và 'ai' (bên nào/IP nào) dùng key, nên A không đáp ứng như mô tả. C: GuardDuty không có rule chặn key (suppression rule chỉ archive finding). D: tạo key mới không vô hiệu key cũ và không phát hiện gì. Với E, đã đọc lại trang credential report: trường password_last_used là thời điểm đăng nhập website (đúng nghĩa 'last logged in'), còn access_key_1_last_used_date là lần key ký API request — báo cáo có cả hai nên E vẫn cho thấy key có bị dùng sau thời điểm lộ hay không. Vấn đề câu chữ được ghi vào source_issues; giữ B+E, verified, medium.",
+  "explanation_vi": {
+    "why_correct": "B: deactivate access key bị lộ làm key không thể ký API call nữa, chặn mọi lần dùng tiếp theo. E: IAM credential report cho biết thời điểm access key (và password) của user được dùng gần nhất, nên so với thời điểm lộ có thể biết key đã bị dùng trái phép hay chưa.",
+    "others": {
+      "Q062:A": "IAM Access Analyzer phân tích quyền/policy, không truy vết key bị lộ đã truy cập resource nào và ai dùng nó (cần CloudTrail).",
+      "Q062:C": "GuardDuty chỉ phát hiện mối đe dọa; không có rule nào chặn một access key (suppression rule chỉ archive finding).",
+      "Q062:D": "Tạo key mới không vô hiệu hóa key cũ đang bị lộ và cũng không cho biết key cũ đã bị dùng hay chưa."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "identify whether unauthorized usage of the exposed credentials has occurred",
+      "meaning_vi": "Cần bước phát hiện: xem key đã được dùng khi nào (credential report / CloudTrail)."
+    },
+    {
+      "phrase": "prevent any additional usage of the exposed credentials",
+      "meaning_vi": "Cần vô hiệu key ngay: deactivate (hoặc delete) access key."
+    }
+  ],
+  "memory_tip_vi": "Nếu access key bị lộ và cần vừa phát hiện vừa chặn -> nghĩ đến deactivate key + xem last used (credential report/CloudTrail); kiểm tra: tạo key mới không vô hiệu key cũ, GuardDuty/Access Analyzer không chặn hay truy vết key.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "IAM Access Analyzer",
+      "Amazon GuardDuty"
+    ],
+    "reason_vi": "Ứng cứu sự cố access key bị lộ: điều tra việc sử dụng và vô hiệu hóa credential."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access-keys-admin-managed.html",
+      "title": "How an IAM administrator can manage IAM user access keys - AWS Identity and Access Management",
+      "section": "To deactivate an access key for an IAM user",
+      "snapshot_id": "18da56d48392",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "After an access key is deactivated, it can no longer be used by API calls.",
+      "supports": "Deactivate key ngăn mọi sử dụng tiếp theo.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html",
+      "title": "Generate credential reports for your AWS account - AWS Identity and Access Management",
+      "section": "access_key_1_last_used_date",
+      "snapshot_id": "895c91c4ec36",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "when the user's access key was most recently used to sign an AWS API request.",
+      "supports": "Credential report cho biết thời điểm access key được dùng gần nhất, giúp phát hiện sử dụng sau khi lộ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+      "title": "Using AWS Identity and Access Management Access Analyzer",
+      "section": "Capabilities list",
+      "snapshot_id": "2d162cedc10e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IAM Access Analyzer external access analyzers help identify resources in your organization and accounts that are shared with an external entity.",
+      "supports": "Access Analyzer tập trung phân tích quyền/policy, không phải truy vết việc sử dụng một access key cụ thể.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html",
+      "title": "What is Amazon GuardDuty?",
+      "section": "Overview",
+      "snapshot_id": "667e4665f388",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon GuardDuty is a threat detection service that continuously monitors, analyzes, and processes AWS data sources and logs",
+      "supports": "GuardDuty là dịch vụ phát hiện, không chặn credential.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html",
+      "title": "Suppression rules in GuardDuty",
+      "section": "Overview",
+      "snapshot_id": "ede1200305cb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "used to filter findings by automatically archiving new findings that match the specified criteria.",
+      "supports": "Rule trong GuardDuty chỉ lọc/archive finding, không chặn truy cập.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html",
+      "title": "Generate credential reports for your AWS account - AWS Identity and Access Management",
+      "section": "password_last_used",
+      "snapshot_id": "895c91c4ec36",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "password was last used to sign in to an AWS website",
+      "supports": "'Last logged in' đúng nghĩa đen là password_last_used; credential report có cả trường này lẫn access key last used.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+      "title": "Using AWS Identity and Access Management Access Analyzer",
+      "section": "Capabilities list",
+      "snapshot_id": "2d162cedc10e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IAM Access Analyzer generates IAM policies based on access activity in your AWS CloudTrail logs.",
+      "supports": "Tính năng gần nhất của Access Analyzer chỉ dùng CloudTrail để tạo policy, không phải để điều tra ai đã dùng key bị lộ.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q062:E",
+      "detail_vi": "E nói 'last logged in' (đăng nhập console, password_last_used) trong khi việc cần kiểm tra là access key last used; credential report có cả hai trường."
+    },
+    {
+      "type": "typo",
+      "location": "Q062:stem:1",
+      "detail_vi": "Câu thiếu dấu chấm cuối; 'user's IAM account' ở B nên là IAM user."
+    }
+  ],
+  "notes_vi": "Trong thực tế nên điều tra bằng CloudTrail (lọc theo access key ID) và deactivate/xóa key, rồi rotate.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q062:B\", \"Q062:E\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reason cho Q062:A được cập nhật (thêm tài liệu reconciliation); blind reason: IAM Access Analyzer phân tích policy (truy cập external/internal/unused, validate, generate policy) chứ không truy vết key đã truy cập resource nào và ai dùng key; việc đó cần CloudTrail.",
+      "previous_answer": [
+        "Q062:B",
+        "Q062:E"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reason cho Q062:E được cập nhật (thêm tài liệu reconciliation); blind reason: Credential report có access_key_N_last_used_date/service/region (và password_last_used) giúp xác định key có bị dùng sau thời điểm lộ hay không; cách diễn đạt 'last logged in' chưa chính xác nhưng đây là lựa chọn duy nhất phục vụ việc phát hiện.",
+      "previous_answer": [
+        "Q062:B",
+        "Q062:E"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reconciliation: khớp source key B+E; đối chiếu A vs E (ref7 Access Analyzer chỉ generate policy từ CloudTrail; ref6 trường password_last_used vs access key last used). Giữ B+E, verified (medium); giữ source_issue về câu chữ E.",
+      "previous_answer": [
+        "Q062:B",
+        "Q062:E"
+      ]
+    }
+  ]
+}

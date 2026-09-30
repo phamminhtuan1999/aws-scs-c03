@@ -2,9 +2,9 @@
   "question_id": "Q060",
   "question_content_hash": "ecd552bd8417ba18761e99cff3a4193a220ce1b8bd91d06bfe28b268613c462c",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:12:44Z",
-  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,57 +29,56 @@
       "unit_id": "Q060:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Amazon Detective Investigation điều tra IAM user/IAM role bằng indicators of compromise và tạo report tóm tắt hành vi bất thường/độc hại cùng khuyến nghị.",
+      "reason_vi": "Detective hỗ trợ điều tra IAM role và báo cáo IOC.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q060:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Audit Manager tạo assessment theo framework tuân thủ để thu thập bằng chứng kiểm toán control, không phân tích hành vi bất thường hay IoC của một IAM role (và hiện không nhận khách hàng mới).",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Audit Manager assessment là bằng chứng compliance.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q060:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng cho EC2, ECR image và Lambda; không có assessment cho IAM role và không báo cáo IoC hành vi.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Inspector đánh giá vulnerability/workload, không báo cáo hành vi IAM role.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q060:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Inspector không quét IAM role (chỉ EC2, container image ECR, Lambda) và kết quả là finding lỗ hổng/phơi nhiễm mạng, không phải điều tra hành vi.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "IAM role không phải resource cho Inspector on-demand scan.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -109,16 +108,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu Detective nói trực tiếp: Detective Investigation điều tra IAM user và IAM role bằng indicators of compromise và tạo report tóm tắt hành vi bất thường/độc hại. Inspector không quét IAM role; Audit Manager là kiểm toán tuân thủ.",
+    "reason_vi": "Đúng; Detective IAM investigation/report.",
     "open_issues": []
   },
-  "reconciliation_vi": "Khớp: blind = A; source key = A. Kiểm tra phương án cạnh tranh: C/D (Amazon Inspector) — trang What is Amazon Inspector chỉ liệt kê EC2, container image ECR và Lambda, không có IAM role, và finding là lỗ hổng/phơi nhiễm mạng chứ không phải điều tra hành vi. B (Audit Manager) tạo assessment report cho bằng chứng tuân thủ theo framework, không phân tích IoC; ngoài ra dịch vụ hiện không nhận khách hàng mới. Không có bằng chứng phản bác A; giữ kết luận.",
+  "reconciliation_vi": "Đúng; Detective IAM investigation/report.",
   "explanation_vi": {
-    "why_correct": "Amazon Detective Investigation được thiết kế để điều tra IAM user/IAM role (thường sau finding của GuardDuty), dùng indicators of compromise và tạo investigation report tóm tắt hành vi bất thường hoặc độc hại.",
+    "why_correct": "Detective investigations phân tích IAM role/user, đưa ra hành vi bất thường và indicators of compromise trong investigation report.",
     "others": {
-      "Q060:B": "Audit Manager tạo assessment report để thu thập bằng chứng tuân thủ theo framework, không phân tích hành vi bất thường hay IoC của một IAM role.",
-      "Q060:C": "Amazon Inspector không có assessment cho IAM role; nó quét lỗ hổng của EC2, image ECR và Lambda.",
-      "Q060:D": "Inspector không quét IAM role và kết quả là finding lỗ hổng, không phải báo cáo điều tra hành vi."
+      "Q060:B": "Audit Manager assessment là bằng chứng compliance.",
+      "Q060:C": "Inspector đánh giá vulnerability/workload, không báo cáo hành vi IAM role.",
+      "Q060:D": "IAM role không phải resource cho Inspector on-demand scan."
     }
   },
   "keywords": [
@@ -135,7 +134,7 @@
       "meaning_vi": "Hành vi bất thường so với baseline — Detective phân tích từ dữ liệu log."
     }
   ],
-  "memory_tip_vi": "Nếu cần điều tra một IAM user/role sau finding GuardDuty và có report IoC → nghĩ đến Amazon Detective Investigation; kiểm tra Inspector chỉ dành cho lỗ hổng EC2/ECR/Lambda.",
+  "memory_tip_vi": "Nếu cần báo cáo hành vi và IOC của IAM role, chạy Detective investigation.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -210,7 +209,7 @@
       "detail_vi": "Thiếu dấu chấm: 'Specify the IAM role Run an assessment report.'"
     }
   ],
-  "notes_vi": "AWS Audit Manager hiện không còn mở cho khách hàng mới (theo trang What is AWS Audit Manager), không ảnh hưởng đáp án.",
+  "notes_vi": "Đúng; Detective IAM investigation/report.",
   "history": [
     {
       "version": "r1",
@@ -225,6 +224,41 @@
       "previous_answer": [
         "Q060:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; Detective IAM investigation/report.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q060:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q060:A"
+      ],
+      "note_vi": "Đúng; Detective IAM investigation/report.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q060:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q060:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

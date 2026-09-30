@@ -1,0 +1,293 @@
+{
+  "question_id": "Q027",
+  "question_content_hash": "b0510697d7fb3410caca94d6cb2b37595d98cc354124def7ecc2cbde439ab7aa",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "665d27ba082b9e5296c4e90706dae6bb0ea8948748ce2ec99dac047a82161875",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giao tiếp giữa VPC và AWS KMS phải đi hoàn toàn trong mạng AWS, không dùng public service endpoint.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Nên cưỡng chế (enforce) chỉ cho phép dùng KMS key qua đường riêng này.",
+      "kind": "optimization"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Choose TWO – tổ hợp hành động đáp ứng tốt nhất.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q027:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Điều kiện aws:sourceVpce trong key policy chỉ cho phép (hoặc deny ngoài) request đi qua VPC endpoint đã chỉ định, cưỡng chế việc không dùng public endpoint.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q027:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Virtual private gateway dùng cho Site-to-Site VPN tới mạng on-premises; nó không cung cấp đường riêng tới KMS, và bỏ internet gateway chỉ làm mất kết nối tới public endpoint của KMS chứ không tạo đường thay thế.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q027:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Interface VPC endpoint (PrivateLink) cho KMS khiến giao tiếp VPC–KMS đi hoàn toàn trong mạng AWS; private DNS làm hostname KMS mặc định resolve tới endpoint nên SDK/CLI dùng endpoint mà không cần sửa code.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q027:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Import key material (BYOK) là tính năng đưa key material của khách hàng vào KMS, không liên quan tới đường mạng dùng để gọi API KMS từ VPC.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q027:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "aws:SourceIp không hiệu lực khi request đến qua VPC endpoint; còn nếu request qua public endpoint thì source IP là IP public, không phải 10.0.0.0/16. Điều kiện này không cưỡng chế được đường riêng.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q027:A",
+      "Q027:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu KMS nêu trực tiếp VPC endpoint giữ traffic trong mạng AWS, private DNS, aws:sourceVpce để giới hạn truy cập, và aws:sourceIP không hiệu lực với VPC endpoint.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "source_answer": [
+    "Q027:A",
+    "Q027:C"
+  ],
+  "researched_answer": [
+    "Q027:A",
+    "Q027:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A, C. Tài liệu KMS nêu trực tiếp interface VPC endpoint giữ giao tiếp hoàn toàn trong mạng AWS, private DNS làm hostname KMS chuẩn trỏ tới endpoint, aws:sourceVpce giới hạn truy cập key, và aws:sourceIP không hiệu lực với request qua VPC endpoint.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = A, C, trùng blind. Đã xét lại đối thủ mạnh nhất là E (aws:SourceIp 10.0.0.0/16): tài liệu KMS nêu trực tiếp aws:sourceIP không hiệu lực khi request đến từ VPC endpoint, còn qua public endpoint thì source IP là IP public, nên E không cưỡng chế được đường riêng. B (virtual private gateway) chỉ phục vụ VPN tới on-premises, D (import key material) không liên quan tới đường mạng. Giữ A, C, verified, high. Giữ typo 'slates'; bỏ source_issue encoding ở Q027:A.",
+  "explanation_vi": {
+    "why_correct": "C: interface VPC endpoint cho KMS (bật private DNS) làm mọi lời gọi KMS từ VPC đi hoàn toàn trong mạng AWS mà không cần đổi endpoint trong code. A: điều kiện aws:sourceVpce trong key policy cưỡng chế chỉ chấp nhận request đi qua VPC endpoint đó, chặn việc dùng public endpoint.",
+    "others": {
+      "Q027:B": "Virtual private gateway dùng cho VPN tới on-premises, không tạo đường riêng tới KMS; bỏ internet gateway chỉ làm mất kết nối chứ không thay thế.",
+      "Q027:D": "Import key material (BYOK) là cách đưa key material vào KMS, không liên quan tới đường mạng gọi API KMS.",
+      "Q027:E": "aws:SourceIp không hiệu lực với request qua VPC endpoint, còn qua public endpoint thì IP nguồn là IP public, nên điều kiện 10.0.0.0/16 không cưỡng chế được đường riêng."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "travel entirely within the AWS network",
+      "meaning_vi": "Dùng interface VPC endpoint (PrivateLink) cho KMS."
+    },
+    {
+      "phrase": "not use public service endpoints",
+      "meaning_vi": "Cưỡng chế bằng aws:sourceVpce trong key policy + private DNS."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề yêu cầu traffic tới dịch vụ AWS không đi qua public endpoint -> nghĩ đến interface VPC endpoint + điều kiện aws:sourceVpce trong resource/key policy; kiểm tra aws:SourceIp không dùng được với private IP qua VPC endpoint.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "Amazon VPC",
+      "AWS PrivateLink"
+    ],
+    "reason_vi": "Kết nối riêng tới KMS qua VPC endpoint và giới hạn key policy theo endpoint."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/kms-vpc-endpoint.html",
+      "title": "Connect to AWS KMS through a VPC endpoint",
+      "section": "intro",
+      "snapshot_id": "eb2a3c2427a8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you use an interface VPC endpoint, communication between your VPC and AWS KMS is conducted entirely within the AWS network.",
+      "supports": "VPC endpoint cho KMS đáp ứng yêu cầu traffic đi hoàn toàn trong mạng AWS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-connect.html",
+      "title": "Connect to an AWS KMS VPC endpoint",
+      "section": "private hostnames",
+      "snapshot_id": "bb8c34565aa5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The standard AWS KMS DNS hostname resolves to your VPC endpoint.",
+      "supports": "Bật private DNS làm hostname KMS mặc định trỏ tới endpoint, tránh public endpoint.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-policy-condition.html",
+      "title": "Use VPC endpoints to control access to AWS KMS resources",
+      "section": "intro",
+      "snapshot_id": "9f2db6d851a4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Also, the aws:sourceIP condition key is not effective when the request comes from an Amazon VPC endpoint.",
+      "supports": "aws:SourceIp không dùng được để giới hạn request qua VPC endpoint; phải dùng aws:sourceVpce/aws:sourceVpc.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-policy-condition.html",
+      "title": "Use VPC endpoints to control access to AWS KMS resources",
+      "section": "aws:sourceVpce example",
+      "snapshot_id": "9f2db6d851a4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the VPC endpoint ID in the request is compared to the aws:sourceVpce condition key value in the policy. If they do not match, the request is denied.",
+      "supports": "aws:sourceVpce trong key policy cưỡng chế chỉ dùng key qua VPC endpoint chỉ định.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html",
+      "title": "What is AWS Site-to-Site VPN?",
+      "section": "intro",
+      "snapshot_id": "659f28eee44d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "a VPN connection refers to the connection between your VPC and your own on-premises network.",
+      "supports": "Virtual private gateway/VPN kết nối VPC với on-premises, không phải đường riêng tới dịch vụ AWS như KMS.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html",
+      "title": "Importing key material for AWS KMS keys",
+      "section": "intro",
+      "snapshot_id": "1e3ebbced033",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can create a KMS key without key material and then import your own key material into that KMS key",
+      "supports": "Import key material là BYOK, không phải cơ chế định tuyến traffic API.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q027:stem:0",
+      "detail_vi": "'slates' nên là 'states'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:08Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q027:A\", \"Q027:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key AC; status verified (high). Bỏ source_issue 'ký tự lỗi mã hoá �' của blind: đã kiểm tra code point là U+2019 (’), chỉ là lỗi hiển thị console cp1252, không phải lỗi dữ liệu nguồn (xem SOURCE_FACTS.md). Vị trí đã bỏ: Q027:A.",
+      "previous_answer": [
+        "Q027:A",
+        "Q027:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:49:06Z",
+      "previous_answer": [
+        "Q027:A",
+        "Q027:C"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:49:06Z"
+      }
+    }
+  }
+}

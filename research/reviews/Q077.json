@@ -2,9 +2,9 @@
   "question_id": "Q077",
   "question_content_hash": "0f7a4328ff68d9f25c18c68f2f1a3e26a22ee7544f989035ec0db3ee1c4dfa87",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,56 +38,55 @@
     {
       "unit_id": "Q077:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "CloudTrail + metric filter + CloudWatch alarm + SNS chỉ gửi email thông báo khi rule được thêm; không ngăn chặn cũng không tự khắc phục, nên không đáp ứng yêu cầu tự động ngăn rule SSH mở.",
+      "verdict": "undetermined",
+      "reason_vi": "Chỉ gửi email sau sự kiện, không ngăn hoặc sửa rule.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "Q077-r2-1"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q077:B",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Security Hub control EC2.13 (change triggered, Config rule restricted-ssh) phát hiện security group cho phép 0.0.0.0/0 hoặc ::/0 tới port 22; finding tự động tới EventBridge, rule gọi Lambda xóa rule vi phạm. Tự động và đúng loại rule, nhưng là phát hiện rồi xóa SAU khi rule đã được tạo, không ngăn (prevent) lệnh tạo.",
+      "verdict": "undetermined",
+      "reason_vi": "Có thể tự xóa rule sau finding, nhưng là remediation sau tạo.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q077-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q077:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Service Authorization Reference: ec2:AuthorizeSecurityGroupIngress chỉ hỗ trợ condition key ec2:SecurityGroupID, ec2:Vpc, ec2:Region, tag (resource security-group-rule chỉ có key tag), và toàn bộ danh sách condition key EC2 không có key nào cho CIDR nguồn, port hay protocol. SCP vì vậy không thể chặn riêng rule 0.0.0.0/0 port 22 như option mô tả; chỉ có thể chặn mọi thao tác thêm rule (vd theo ec2:Vpc), vượt quá yêu cầu.",
+      "verdict": "undetermined",
+      "reason_vi": "IAM/SCP không có condition keys cho CIDR, port hay protocol của AuthorizeSecurityGroupIngress.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref5",
-        "ref6"
+        "Q077-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q077:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Network Firewall lọc traffic ở biên VPC, không kiểm soát việc tạo security group rule; chặn mọi traffic port 22 cũng vượt quá yêu cầu và vẫn để rule 0.0.0.0/0 được tạo.",
+      "verdict": "undetermined",
+      "reason_vi": "Chặn traffic không ngăn tạo security group rule.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "Q077-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -115,28 +114,26 @@
   "source_answer": [
     "Q077:C"
   ],
-  "researched_answer": [
-    "Q077:B"
-  ],
-  "comparison": "mismatch",
+  "researched_answer": null,
+  "comparison": "not_comparable",
   "status": "ambiguous",
-  "differs_from_source": true,
+  "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Bằng chứng trực tiếp (Service Authorization Reference, fetch ngày 30/9/2026) cho thấy SCP không có condition key cho CIDR/port nên đáp án nguồn C không triển khai được như mô tả. B là option duy nhất khả thi và tự động xử lý đúng loại rule, nhưng chỉ phát hiện-rồi-xóa, không đáp ứng nghĩa đen 'prevent the creation'. Không option nào đáp ứng mọi ràng buộc -> câu hỏi lỗi, ghi ambiguous.",
+    "level": "high",
+    "reason_vi": "Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation.",
     "open_issues": [
-      "Không option nào thực sự ngăn (prevent) việc tạo rule 0.0.0.0/0:22: SCP không lọc được CIDR/port; B xóa sau khi tạo; D chỉ lọc traffic; A chỉ cảnh báo.",
-      "Người ra đề có thể nhắm C (chi tiết 'all features enabled' + chữ 'prevent' gợi ý preventive control bằng SCP) — nhưng khả năng này không tồn tại trong IAM/SCP; hoặc nhắm B (chi tiết Security Hub bật mọi account/Region) với 'prevent' dùng lỏng. Tài liệu không phân xử được ý định.",
-      "SCP có thể Deny toàn bộ ec2:AuthorizeSecurityGroupIngress trong VPC (ec2:Vpc) — ngăn được cả rule xấu nhưng cũng chặn mọi rule hợp lệ; đó không phải điều option C mô tả."
+      "Literal requirement prevent creation không được đáp ứng.",
+      "Không được sáng tạo ec2:CidrIp, ec2:FromPort hoặc ec2:IpProtocol IAM condition."
     ]
   },
-  "reconciliation_vi": "Mismatch: blind = B (proposed verified, medium), source = C. Đã tìm cách đọc đề để C đúng: fetch lại Service Authorization Reference cho EC2 (snapshot e09ff3211f53, 30/9/2026) — hành động AuthorizeSecurityGroupIngress chỉ có key ec2:SecurityGroupID/ec2:Vpc/ec2:Region/tag, resource security-group-rule chỉ có key tag, và danh sách 'Condition keys for Amazon EC2' không có key nào cho CIDR, FromPort/ToPort hay IpProtocol; trang IAM Condition xác nhận SCP/IAM chỉ dùng được global key hoặc key do service định nghĩa. Cũng kiểm tra declarative policy cho EC2 (Organizations): chỉ gồm VPC BPA, serial console, image BPA, allowed images, IMDS, snapshot BPA, VPC encryption controls — không có kiểm soát security group rule. Vậy C không triển khai được như mô tả. Phía B: EC2.13 (Config rule restricted-ssh, change triggered) + EventBridge + Lambda tự động xóa rule vi phạm, nhưng rule vẫn tồn tại một khoảng ngắn nên không 'prevent the creation' theo nghĩa đen. Không option nào thỏa mọi ràng buộc -> hạ proposed verified của blind xuống ambiguous (không phải thay đổi theo hướng source key). researched_answer giữ B là option khả thi duy nhất; differs_from_source = true.",
+  "reconciliation_vi": "Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation.",
   "explanation_vi": {
-    "why_correct": "CHƯA KẾT LUẬN CHẮC CHẮN (ambiguous): đề đòi 'prevent the creation' nhưng không option nào ngăn được thật sự. B là option khả thi duy nhất: Security Hub control EC2.13 phát hiện security group mở 0.0.0.0/0 tới port 22, finding đi qua EventBridge tới Lambda để tự động xóa rule — tức là phát hiện-rồi-khắc phục chứ không chặn lệnh tạo. Đáp án nguồn C (SCP) không làm được vì EC2 không có condition key cho CIDR/port.",
+    "why_correct": "Không option nào chặn trước việc tạo rule theo CIDR/port. B chỉ phát hiện rồi xóa bằng Lambda, nên chỉ chọn được nếu đổi yêu cầu thành remediation.",
     "others": {
-      "Q077:A": "Chỉ gửi email cảnh báo khi rule đã được thêm; không ngăn, cũng không tự xóa rule.",
-      "Q077:C": "SCP chỉ lọc theo condition key; ec2:AuthorizeSecurityGroupIngress không có key cho CIDR nguồn hay port, nên không thể chặn riêng rule 0.0.0.0/0 port 22 (chỉ có thể chặn mọi thao tác thêm rule).",
-      "Q077:D": "Network Firewall lọc traffic đi qua nó, không kiểm soát việc tạo security group rule; chặn mọi SSH inbound còn vượt quá yêu cầu."
+      "Q077:A": "Chỉ gửi email sau sự kiện, không ngăn hoặc sửa rule.",
+      "Q077:B": "Có thể tự xóa rule sau finding, nhưng là remediation sau tạo.",
+      "Q077:C": "IAM/SCP không có condition keys cho CIDR, port hay protocol của AuthorizeSecurityGroupIngress.",
+      "Q077:D": "Chặn traffic không ngăn tạo security group rule."
     }
   },
   "keywords": [
@@ -153,7 +150,7 @@
       "meaning_vi": "Đã có control EC2.13 để sinh finding cho rule SSH mở."
     }
   ],
-  "memory_tip_vi": "Nếu đề đòi 'prevent' một security group rule theo CIDR/port -> kiểm tra Service Authorization Reference xem có condition key không (EC2 không có key CIDR/port, SCP bất lực); khi đó nghĩ đến phát hiện-khắc phục tự động (Security Hub EC2.13/Config restricted-ssh -> EventBridge -> Lambda) hoặc Firewall Manager.",
+  "memory_tip_vi": "Nếu đề đòi chặn tạo rule theo CIDR/port, kiểm tra condition keys; phát hiện rồi xóa không đáp ứng preventive.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -259,21 +256,33 @@
       "quote": "The following are the AWS services and attributes that EC2 policies support.",
       "supports": "Declarative policy cho EC2 chỉ gồm VPC BPA, serial console, image BPA, allowed images, IMDS, snapshot BPA, VPC encryption controls — không có kiểm soát security group rule.",
       "kind": "inference"
+    },
+    {
+      "id": "Q077-r2-1",
+      "url": "https://aws.amazon.com/blogs/security/can-i-do-that-with-policy-understanding-the-aws-service-authorization-reference/",
+      "title": "Can I do that with policy? Understanding the AWS Service Authorization Reference | AWS Security Blog",
+      "accessed_at": "2026-09-30",
+      "quote": "Take a reactive approach using the AWS Config managed rule",
+      "supports": "AWS explicitly states IAM cannot prevent 0.0.0.0/0 TCP22 rules and recommends reactive Config/EventBridge/Lambda.",
+      "kind": "direct",
+      "snapshot_id": "1a52351b1d22",
+      "page_last_updated": "2026-04-27T09:01:46-07:00",
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
       "type": "ambiguous",
       "location": "Q077",
-      "detail_vi": "Yêu cầu 'prevent the creation' không option nào đáp ứng theo nghĩa chặn trước: SCP không có condition key CIDR/port; B chỉ tự động xóa sau khi tạo. B là lựa chọn khả thi duy nhất."
+      "detail_vi": "Literal requirement prevent creation không được đáp ứng."
     },
     {
-      "type": "data",
-      "location": "Q077:C",
-      "detail_vi": "Đáp án nguồn C giả định SCP lọc được security group rule theo CIDR 0.0.0.0/0 và TCP port 22, nhưng Service Authorization Reference cho ec2:AuthorizeSecurityGroupIngress không có condition key nào như vậy."
+      "type": "ambiguous",
+      "location": "Q077",
+      "detail_vi": "Không được sáng tạo ec2:CidrIp, ec2:FromPort hoặc ec2:IpProtocol IAM condition."
     }
   ],
-  "notes_vi": "Đã kiểm tra toàn bộ danh sách condition key EC2 trong Service Authorization Reference (snapshot e09ff3211f53): không có key cho CIDR, FromPort/ToPort hay IpProtocol.",
+  "notes_vi": "Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation.",
   "history": [
     {
       "version": "r1",
@@ -304,6 +313,37 @@
       "previous_answer": [
         "Q077:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": [
+        "Q077:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q077:B"
+    ],
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

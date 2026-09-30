@@ -2,7 +2,7 @@
   "question_id": "Q140",
   "question_content_hash": "665077dfef00acc6cf5e73da5695e7327eda33f2c65ebc21709b6cccb4b1efab",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:22:58+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
@@ -32,14 +32,14 @@
       "unit_id": "Q140:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Container Insights chủ yếu tạo metric hiệu năng (CPU, memory, network...); alarm mô tả không gắn với nội dung application log nên không phát hiện bất thường trong log; thêm Lambda để báo tin là tự xây thêm code.",
+      "reason_vi": "A Container Insights thu thập logs/metrics nhưng option không nêu metric/filter nào biến application logs thành signal cần chấm.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref8"
+        "ref2",
+        "Q140-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -47,46 +47,47 @@
       "unit_id": "Q140:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đưa log container vào CloudWatch Logs (Fluent Bit), metric filter biến log thành metric, alarm dùng threshold type Anomaly detection trên metric đó và action SNS để báo security team: tự động, gần real time.",
+      "reason_vi": "B định nghĩa rõ log-derived metric, anomaly alarm và SNS.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref4"
+        "Q140-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q140:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Export log sang S3 rồi chạy Athena query và xem dashboard QuickSight là phân tích theo lô/thủ công, không tự động phát hiện bất thường gần real time; cũng không nêu cái gì kích hoạt SNS.",
+      "reason_vi": "C batch Athena/visualization không tự cung cấp near-real-time anomaly alarm theo mô tả.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "ref2",
+        "Q140-r2-2"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q140:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Detective dùng CloudTrail, VPC Flow Logs, GuardDuty findings (tuỳ chọn EKS audit logs) để điều tra, không phân tích application log và không phải dịch vụ gửi cảnh báo; App Mesh còn bị ngừng hỗ trợ từ 30/09/2026.",
+      "reason_vi": "D CloudTrail/Detective không dùng để học arbitrary EKS application-log anomalies qua App Mesh.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref2",
+        "Q140-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -214,11 +215,29 @@
       "quote": "Invoke a Lambda function. This is the easiest way for you to automate custom actions on alarm state changes.",
       "supports": "Alarm có thể gọi Lambda (A khả thi về mặt action) nhưng đây là custom action, SNS là cách thông báo trực tiếp.",
       "kind": "direct"
+    },
+    {
+      "id": "Q140-r2-2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html",
+      "title": "Using CloudWatch anomaly detection - Amazon CloudWatch",
+      "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+      "quote": "the \"normal\" range of values for the metric. A higher",
+      "supports": "Log metric filter tạo metric; anomaly threshold theo metric và SNS alarm gửi notification. Đây là numeric anomaly, không tự phát hiện mọi bất thường ngữ nghĩa trong log.",
+      "kind": "direct",
+      "snapshot_id": "cfc32367b2e0",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Chuỗi chuẩn: log -> CloudWatch Logs -> metric filter -> alarm (Anomaly detection) -> SNS.",
-  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q140",
+      "detail_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs."
+    }
+  ],
+  "notes_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "blind_record_sha256": "0517b501f70ac680b9a81ce976be62aa6f56bce27cc19e4a5a45ccd9b839d434",
   "source_answer": [
     "Q140:B"
@@ -230,26 +249,23 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Doc CloudWatch xác nhận từng mắt xích của B: metric filter biến log thành metric có thể đặt alarm, alarm dùng anomaly detection làm ngưỡng, alarm action gửi SNS. A không phân tích nội dung log, C là phân tích theo lô/thủ công, D dùng dịch vụ không xử lý application log.",
-    "open_issues": [
-      "'Configure Amazon EKS to send application logs' thực tế cần Fluent Bit / CloudWatch Observability add-on, không phải EKS control plane logging.",
-      "CloudWatch Logs có tính năng log anomaly detection riêng nhưng không xuất hiện trong các option."
-    ]
+    "level": "medium",
+    "reason_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại A (đối thủ mạnh nhất vì Container Insights trên EKS cũng thu log qua Fluent Bit): alarm trong A không gắn với metric nào lấy từ nội dung application log; metric của Container Insights là metric hiệu năng (CPU, memory...), nên 'anomaly' ở A là bất thường hiệu năng chứ không phải bất thường trong log, và còn phải tự viết Lambda để báo tin. B có chuỗi đầy đủ được doc xác nhận: log -> metric filter -> alarm threshold type anomaly detection -> SNS. C (S3 + Athena + QuickSight) không tự động, không near real time. D: Detective không phân tích application log, App Mesh ngừng hỗ trợ 30/09/2026. Giữ B, verified, high.",
+  "reconciliation_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
   "explanation_vi": {
-    "why_correct": "Log ứng dụng EKS được đưa vào CloudWatch Logs; metric filter biến log thành metric, alarm dùng threshold type Anomaly detection trên metric đó sẽ tự động phát hiện bất thường gần thời gian thực, và alarm action gửi thông báo qua Amazon SNS tới security team.",
+    "why_correct": "Log metric filter tạo metric; anomaly threshold theo metric và SNS alarm gửi notification. Đây là numeric anomaly, không tự phát hiện mọi bất thường ngữ nghĩa trong log.",
     "others": {
-      "Q140:A": "Container Insights chủ yếu tạo metric hiệu năng; alarm không dựa trên nội dung application log nên không phát hiện bất thường trong log, lại phải tự viết Lambda để báo tin.",
-      "Q140:C": "Export sang S3 rồi chạy Athena và xem QuickSight là phân tích theo lô, thủ công, không tự động phát hiện bất thường gần thời gian thực.",
-      "Q140:D": "Detective điều tra dựa trên CloudTrail, VPC Flow Logs, GuardDuty findings chứ không phân tích application log hay gửi cảnh báo; App Mesh cũng đã ngừng hỗ trợ."
+      "Q140:A": "A Container Insights thu thập logs/metrics nhưng option không nêu metric/filter nào biến application logs thành signal cần chấm.",
+      "Q140:C": "C batch Athena/visualization không tự cung cấp near-real-time anomaly alarm theo mô tả.",
+      "Q140:D": "D CloudTrail/Detective không dùng để học arbitrary EKS application-log anomalies qua App Mesh."
     }
   },
   "keywords": [
     {
       "phrase": "automatic detection of anomalies in application logs",
-      "meaning_vi": "Tự động phát hiện bất thường trong log -> metric filter + alarm anomaly detection."
+      "meaning_vi": "Metric filter biến log thành metric; anomaly detection học baseline số liệu, không tự hiểu mọi nội dung log."
     },
     {
       "phrase": "near real time",
@@ -260,7 +276,7 @@
       "meaning_vi": "Alarm action gửi SNS tới security team."
     }
   ],
-  "memory_tip_vi": "Nếu cần tự động phát hiện bất thường trong log ứng dụng gần real time và báo tin -> nghĩ đến CloudWatch Logs + metric filter + alarm anomaly detection + SNS; kiểm tra Athena/QuickSight là phân tích theo lô, Detective không đọc application log.",
+  "memory_tip_vi": "Nếu anomaly trên số lượng log events, metric filter → anomaly alarm → SNS.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -287,6 +303,39 @@
       "previous_answer": [
         "Q140:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q140:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q140:B"
+      ],
+      "note_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

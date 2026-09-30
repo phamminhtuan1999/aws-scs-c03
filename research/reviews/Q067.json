@@ -2,9 +2,9 @@
   "question_id": "Q067",
   "question_content_hash": "8c1d600929cc4edbec1382a65c9433b416e0785b429c587adfeabe62d0e9b9b8",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:50Z",
-  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -37,61 +37,54 @@
       "unit_id": "Q067:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Amazon Q Developer Pro dùng IAM Identity Center (organization instance ở management account) để quản lý identity người dùng; khi tạo Q Developer profile, một managed application QDevProfile-region được tạo trong IAM Identity Center và người dùng/nhóm được subscribe tập trung.",
+      "reason_vi": "Identity Center và AWS managed application phù hợp truy cập Q Developer tập trung.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q067:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Cognito identity pool dùng để cấp temporary AWS credentials cho người dùng của ứng dụng do mình xây; tài liệu Q Developer không dùng Cognito làm nguồn identity cho workforce users, nên không cấp được quyền dùng Q Developer tập trung.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Cognito identity pool phục vụ app identity, không cấp Q Developer workforce subscriptions.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref1",
-        "ref8"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q067:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS managed application là khái niệm của IAM Identity Center, không phải của Amazon Cognito; không thể cấu hình Q Developer làm managed application trong Cognito.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Cognito không quản lý Q Developer như AWS managed application.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref2",
-        "ref8"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q067:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Identity pool là tính năng của Amazon Cognito, không tồn tại trong IAM Identity Center; bước này trộn lẫn hai dịch vụ nên không thực hiện được.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Identity pool là khái niệm Cognito, không phải resource Identity Center.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -246,18 +239,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu Q Developer nêu trực tiếp: dùng IAM Identity Center (organization instance ở management account) để quản lý người dùng subscribe Q Developer Pro, và tự tạo managed application QDevProfile-region. Q Developer chỉ hỗ trợ Builder ID hoặc IAM Identity Center, không có Cognito.",
-    "open_issues": [
-      "Điều kiện thời gian: từ khi rebrand sang Kiro (trước 2026-09), console và bảng managed applications dùng tên Kiro; câu hỏi viết theo tên cũ Amazon Q Developer nhưng cơ chế không đổi."
-    ]
+    "reason_vi": "Đúng; đừng mở rộng tip sang mọi managed app hoặc khẳng định Cognito chỉ customer identities tuyệt đối.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là A. Đã kiểm tra thêm phía phản bác: (1) trang 'Upgrade to Kiro' xác nhận Q Developer CLI/console được rebrand thành Kiro với cùng chức năng, việc quản lý subscription vẫn qua IAM Identity Center; (2) trang Getting started của Q Developer chỉ nêu hai cách đăng nhập là Builder ID và IAM Identity Center, không có Amazon Cognito, nên B/C không có cơ sở; (3) identity pool là khái niệm của Cognito nên D trộn sai dịch vụ. Việc đổi tên chỉ là điều kiện thời gian ghi vào source_issues, không làm đổi đáp án; giữ A, verified, high.",
+  "reconciliation_vi": "Đúng; đừng mở rộng tip sang mọi managed app hoặc khẳng định Cognito chỉ customer identities tuyệt đối.",
   "explanation_vi": {
-    "why_correct": "Amazon Q Developer Pro dùng IAM Identity Center (organization instance trong management account) làm nguồn identity; khi tạo profile, Q Developer được đăng ký như một AWS managed application (QDevProfile-region) để subscribe người dùng/nhóm tập trung cho cả organization.",
+    "why_correct": "IAM Identity Center quản lý workforce identity tập trung và Amazon Q Developer là AWS managed application được cấu hình/subscription cho người dùng.",
     "others": {
-      "Q067:B": "Cognito identity pool cấp temporary credentials cho người dùng ứng dụng của bạn; Q Developer không dùng Cognito làm nguồn đăng nhập (chỉ Builder ID hoặc IAM Identity Center).",
-      "Q067:C": "'AWS managed application' là khái niệm của IAM Identity Center, Cognito không có cơ chế đăng ký Q Developer làm managed application.",
-      "Q067:D": "IAM Identity Center không có 'identity pool' (đó là tính năng của Cognito), nên bước này không thực hiện được."
+      "Q067:B": "Cognito identity pool phục vụ app identity, không cấp Q Developer workforce subscriptions.",
+      "Q067:C": "Cognito không quản lý Q Developer như AWS managed application.",
+      "Q067:D": "Identity pool là khái niệm Cognito, không phải resource Identity Center."
     }
   },
   "keywords": [
@@ -270,7 +261,7 @@
       "meaning_vi": "Nhiều account → dùng organization instance của IAM Identity Center ở management account."
     }
   ],
-  "memory_tip_vi": "Nếu cần cấp quyền workforce users dùng một ứng dụng AWS (Q Developer/Kiro, Q Business…) tập trung cho organization -> nghĩ đến IAM Identity Center + AWS managed application; kiểm tra Cognito chỉ dành cho người dùng ứng dụng tự xây (customer identity).",
+  "memory_tip_vi": "Nếu cấp Q Developer cho workforce nhiều tài khoản, dùng IAM Identity Center và cấu hình application/subscriptions tương ứng.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -298,7 +289,42 @@
       "previous_answer": [
         "Q067:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; đừng mở rộng tip sang mọi managed app hoặc khẳng định Cognito chỉ customer identities tuyệt đối.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q067:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q067:A"
+      ],
+      "note_vi": "Đúng; đừng mở rộng tip sang mọi managed app hoặc khẳng định Cognito chỉ customer identities tuyệt đối.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Cơ chế: Q Developer Pro -> IAM Identity Center organization instance -> managed application QDevProfile-region -> subscribe users/groups."
+  "notes_vi": "Đúng; đừng mở rộng tip sang mọi managed app hoặc khẳng định Cognito chỉ customer identities tuyệt đối.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q067:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q067:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

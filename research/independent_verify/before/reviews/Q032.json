@@ -1,0 +1,339 @@
+{
+  "question_id": "Q032",
+  "question_content_hash": "5dbddce946b6efd5c7d7ab8ee5b29f023bfdf7ba8901be4d7bdf932b5fcb7a9b",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "6e247f0e74ddcd3f228071ba14bb7f937ca45b8ff56e460cb47de2bffe442f3a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Áp dụng độ dài mật khẩu tối thiểu cho người dùng đăng nhập qua IAM federation với Active Directory on-premises (mật khẩu nằm ở AD).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Áp dụng độ dài mật khẩu tối thiểu cho người dùng trong Amazon Cognito user pools.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn đúng HAI hành động.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q032:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM password policy chỉ áp dụng cho mật khẩu IAM user; người dùng federated xác thực tại IdP (AD) nên không chịu policy này, và nó không ảnh hưởng Cognito.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref9"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q032:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Cognito user pool có password policy với thiết lập Password minimum length, áp dụng cho người dùng của user pool.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q032:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Với SAML federation, IdP xác thực người dùng dựa trên kho định danh của tổ chức (AD), nên độ dài mật khẩu phải được cấu hình trong AD on-premises.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref9"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q032:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SCP không cấp quyền mà chỉ đặt giới hạn quyền tối đa cho IAM user/role; nó dùng cùng condition key như IAM policy, và không key nào của IAM hay Cognito liên quan độ dài mật khẩu, nên SCP không thể 'enforce' độ dài mật khẩu.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref8",
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q032:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM policy chỉ cho phép/từ chối API call; danh sách condition key chính thức của IAM và Cognito User Pools (Service Authorization Reference) không có key nào về độ dài mật khẩu, nên không thể 'enforce' độ dài mật khẩu bằng IAM policy.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q032:B",
+      "Q032:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Hai kho mật khẩu thực sự là AD on-premises (IdP của federation) và Cognito user pool; chỉ B và C cấu hình tại đúng nơi lưu mật khẩu. SCP/IAM policy không có cơ chế đặt độ dài mật khẩu.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "source_answer": [
+    "Q032:B",
+    "Q032:C"
+  ],
+  "researched_answer": [
+    "Q032:B",
+    "Q032:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B, C. Mật khẩu thực sự nằm ở AD on-premises (IdP của federation) và Cognito user pool; Cognito có thiết lập Password minimum length. Service Authorization Reference xác nhận IAM và Cognito không có condition key về độ dài mật khẩu, nên D/E không khả thi.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = B, C, trùng blind. Đã xét lại đối thủ mạnh nhất A: IAM account password policy chỉ áp dụng cho mật khẩu IAM user, trong khi người dùng federated xác thực tại IdP (AD) và đề không nhắc tới IAM user nào. Blind pass không mở được trang Service Authorization Reference (sai tên trang); lần này đã đọc list_iam.html và list_cognito-idp.html: condition key của IAM chỉ gồm tag, iam:PassedToService, iam:PolicyARN, FIDO..., của Cognito User Pools chỉ gồm tag – không có key độ dài mật khẩu. Vì vậy E (và D, vốn dùng cùng ngôn ngữ policy và 'never grants permissions') được chuyển từ inference sang direct. Giữ B, C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "B: Cognito user pool có password policy với 'Password minimum length', áp dụng cho người dùng của ứng dụng. C: người dùng federated xác thực bằng mật khẩu tại Active Directory on-premises, nên độ dài tối thiểu phải đặt trong chính sách mật khẩu của AD.",
+    "others": {
+      "Q032:A": "IAM password policy chỉ áp dụng cho IAM user; người dùng federated dùng mật khẩu AD nên không chịu policy này, và nó không ảnh hưởng Cognito.",
+      "Q032:D": "SCP chỉ giới hạn quyền của IAM principal, không có condition key nào về độ dài mật khẩu để 'enforce' cho IAM hay Cognito.",
+      "Q032:E": "IAM policy kiểm soát API call; IAM và Cognito không có condition key về độ dài mật khẩu nên không thể áp độ dài mật khẩu bằng IAM policy."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "federated with on-premises Active Directory",
+      "meaning_vi": "Mật khẩu nằm ở AD, IAM chỉ nhận assertion -> đặt policy ở AD."
+    },
+    {
+      "phrase": "Amazon Cognito user pools",
+      "meaning_vi": "Cognito tự lưu mật khẩu người dùng -> đặt password policy trong user pool."
+    },
+    {
+      "phrase": "required minimum length",
+      "meaning_vi": "Thiết lập password policy tại nơi lưu mật khẩu, không phải bằng quyền (SCP/IAM policy)."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần áp chính sách mật khẩu -> đặt ở nơi thực sự lưu/xác thực mật khẩu (AD cho federation, Cognito user pool, IAM chỉ cho IAM user); kiểm tra: SCP/IAM policy không có condition key về độ dài mật khẩu.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "Amazon Cognito",
+      "AWS IAM",
+      "AWS Directory Service / Active Directory",
+      "AWS Organizations"
+    ],
+    "reason_vi": "Quản lý chính sách xác thực (mật khẩu) cho các identity provider khác nhau."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html",
+      "title": "Set an account password policy for IAM users",
+      "section": "Set an account password policy for IAM users",
+      "snapshot_id": "74dbcc0fd2ee",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "specify complexity requirements and mandatory rotation periods for your IAM users' passwords.",
+      "supports": "IAM account password policy chỉ áp dụng cho mật khẩu IAM user.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_saml.html",
+      "title": "SAML 2.0 federation",
+      "section": "Using SAML-based federation for API access to AWS",
+      "snapshot_id": "d7c37f725ee2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The IdP authenticates the user against your organization's identity store.",
+      "supports": "Người dùng federated xác thực bằng mật khẩu tại IdP/AD, nên chính sách mật khẩu phải đặt ở AD.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html",
+      "title": "Passwords, account recovery, and password policies - Amazon Cognito",
+      "section": "To set a user pool password policy",
+      "snapshot_id": "80744717a90d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Set a Password minimum length. All users must sign up or be created with a password whose length is greater than or equal to this value.",
+      "supports": "Cognito user pool hỗ trợ cấu hình độ dài mật khẩu tối thiểu.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "SCP effects on permissions",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs are access controls that specify the maximum available permissions for the IAM users and IAM roles in your organization.",
+      "supports": "SCP chỉ giới hạn quyền, không cấu hình độ dài mật khẩu.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_iam-condition-keys.html",
+      "title": "IAM and AWS STS condition context keys",
+      "section": "IAM condition keys",
+      "snapshot_id": "86396df3a2e1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use the Condition element in a JSON policy to test the value of keys that are included in the request context of all AWS requests.",
+      "supports": "Condition key chỉ kiểm tra ngữ cảnh request; danh sách key IAM/STS trên trang này không có key về độ dài mật khẩu.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_iam.html",
+      "title": "Actions, resources, and condition keys for AWS Identity and Access Management (IAM)",
+      "section": "Condition keys for AWS Identity and Access Management (IAM)",
+      "snapshot_id": "c40f0bed27fe",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Identity and Access Management (IAM) defines the following condition keys that can be used in the Condition element of an IAM policy.",
+      "supports": "Danh sách đầy đủ condition key của IAM (tag, iam:PassedToService, iam:PolicyARN, FIDO..., v.v.) không có key nào về độ dài mật khẩu; độ dài mật khẩu chỉ đặt qua action UpdateAccountPasswordPolicy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_cognito-idp.html",
+      "title": "Actions, resources, and condition keys for Amazon Cognito User Pools",
+      "section": "Condition keys for Amazon Cognito User Pools",
+      "snapshot_id": "b42b69d2eb7f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Cognito User Pools defines the following condition keys that can be used in the Condition element of an IAM policy.",
+      "supports": "Cognito User Pools chỉ định nghĩa condition key về tag (aws:RequestTag, aws:ResourceTag, aws:TagKeys), không có key về độ dài mật khẩu.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "Overview",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs do not grant permissions to the IAM users and IAM roles in your organization.",
+      "supports": "SCP chỉ đặt giới hạn quyền cho IAM principal, không phải nơi cấu hình chính sách mật khẩu của IAM hay Cognito.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers.html",
+      "title": "Identity providers and federation into AWS",
+      "section": "Overview",
+      "snapshot_id": "0acc623f5b56",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you use an identity provider, you don't have to create custom sign-in code or manage your own user identities.",
+      "supports": "Với federation, danh tính và mật khẩu do IdP (AD) quản lý, không phải IAM.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:23Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q032:B\", \"Q032:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key B, C. Bỏ source_issue 'ký tự lỗi mã hóa' ở stem:0 – ký tự thật là U+2019 (dấu nháy phải), lỗi hiển thị console, không phải lỗi nguồn (SOURCE_FACTS.md). Thêm ref6/ref7 (Service Authorization Reference list_iam.html, list_cognito-idp.html), ref8 (SCP không cấp quyền), ref9 (IdP quản lý danh tính); D, E chuyển evidence_kind inference -> direct. Status verified (high).",
+      "previous_answer": [
+        "Q032:B",
+        "Q032:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:49:24Z",
+      "previous_answer": [
+        "Q032:B",
+        "Q032:C"
+      ]
+    }
+  ],
+  "notes_vi": "Nguyên tắc: đặt chính sách mật khẩu ở nơi thực sự lưu và xác thực mật khẩu.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:49:24Z"
+      }
+    }
+  }
+}

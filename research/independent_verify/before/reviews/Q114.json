@@ -1,0 +1,386 @@
+{
+  "question_id": "Q114",
+  "question_content_hash": "870b95419f5a38ac4c3a7699e771f446c8cc13a53aad2e47d216ead16c2dc41a",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "811782bf8326f0c1734443a764e10328cca5d306f817555972a8a648ee1b8b9c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Xác thực (validate) finding GuardDuty về đào tiền mã hoá trên EC2 - cần bằng chứng hoạt động thực tế.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Đánh giá tác động (impact) - hoạt động mạng/tiến trình liên quan.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn các nguồn dữ liệu (data sources) phù hợp để phân tích.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q114:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CPU cao là một dấu hiệu gián tiếp được AWS nêu, quyền IAM role giúp đánh giá phạm vi ảnh hưởng; nhưng phân loại MITRE ATT&CK/threat purpose chỉ là nhãn của chính finding nên không xác thực được gì. Thiếu bằng chứng trực tiếp (tiến trình, DNS, kết nối mạng) như C.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref9",
+        "ref10",
+        "ref11",
+        "ref14"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q114:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đếm số finding, thời điểm launch và alert của Security Hub CSPM không cho thấy tiến trình hay lưu lượng đào coin; không xác thực được finding.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q114:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Chi tiết tiến trình trong finding, truy vấn DNS tới domain mining và kết nối outbound qua VPC Flow Logs là đúng các nguồn mà finding crypto dựa vào, cho phép xác thực và đánh giá phạm vi.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref8",
+        "ref9",
+        "ref10",
+        "ref12",
+        "ref13"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q114:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Route 53 DNS records là cấu hình domain, không phải log truy vấn; severity GuardDuty chỉ là mức phân loại; lịch sử Session Manager chỉ cho biết phiên quản trị, không xác thực hoạt động đào coin.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q114:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu GuardDuty cho thấy finding crypto dựa trên DNS logs, VPC flow logs và (Runtime Monitoring) thông tin tiến trình - trùng khớp C. Các phương án khác dựa trên suy luận về tính gián tiếp.",
+      "open_issues": [
+        "Phương án A có phần hữu ích (CPU, IAM role cho impact) nên đánh giá dựa trên mức độ trực tiếp của bằng chứng, không phải sai hoàn toàn.",
+        "Thông tin process chỉ có khi bật GuardDuty Runtime Monitoring (hoặc thu thập từ instance)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "source_answer": [
+    "Q114:C"
+  ],
+  "researched_answer": [
+    "Q114:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu GuardDuty cho thấy finding crypto dựa trên DNS query, kết nối mạng (flow logs) và tiến trình (Runtime Monitoring); blog AWS liệt kê kết nối tới IP/cổng mining pool và tiến trình lạ là dấu hiệu chính. Giữ medium vì 'tốt nhất' giữa A và C là phán đoán mức độ trực tiếp của bằng chứng, không có tài liệu nào xếp hạng đúng ba nguồn này.",
+    "open_issues": [
+      "A không hoàn toàn vô dụng: CPU cao là dấu hiệu được AWS nêu (ref14) và quyền IAM role giúp đánh giá impact; A thua C vì một vế (MITRE tactic) chỉ là metadata của finding.",
+      "Process details chỉ có khi bật GuardDuty Runtime Monitoring; VPC Flow Logs phải do khách hàng bật vì GuardDuty dùng luồng flow log riêng (ref12)."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind (câu medium nên đã xét kỹ A). Tìm thêm: blog AWS Security (cập nhật 2026-09-22) liệt kê dấu hiệu đào coin là kết nối tới IP lạ/cổng mining pool, CPU/GPU cao bất thường, lưu lượng mạng bất thường và tiến trình lạ (ref9, ref10) – ba vế của C trùng các dấu hiệu trực tiếp; A chỉ trùng vế CPU. Trang GuardDuty finding format cho thấy tactic/threat purpose là nhãn phân loại của finding (ref11), nên 'examine MITRE ATT&CK tactic' không giúp xác thực. Runtime Monitoring finding gắn với tiến trình cụ thể (ref13). Lưu ý điều kiện: flow logs phải được bật riêng (ref12). B và D dựa trên metadata/cấu hình (số finding, launch time, severity, Route 53 records) nên không xác thực. Giữ C, verified, medium.",
+  "explanation_vi": {
+    "why_correct": "C phân tích đúng dữ liệu gốc mà finding crypto dựa vào: tiến trình liên quan finding (Runtime Monitoring), DNS query tới domain mining và kết nối outbound (VPC Flow Logs) – vừa xác nhận có đào coin thật, vừa cho thấy phạm vi (đích kết nối, thời gian, lượng dữ liệu).",
+    "others": {
+      "Q114:A": "CPU cao chỉ là dấu hiệu gián tiếp và phân loại MITRE ATT&CK chỉ là nhãn của chính finding, nên A thiếu bằng chứng trực tiếp như tiến trình và kết nối mạng.",
+      "Q114:B": "Số finding, thời điểm launch và alert của Security Hub CSPM là metadata tổng hợp, không cho thấy tiến trình hay lưu lượng đào coin.",
+      "Q114:D": "Route 53 DNS records là cấu hình domain (không phải log truy vấn), severity chỉ là mức phân loại, và lịch sử Session Manager không chứng minh hoạt động đào coin."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "validate the finding and assess the impact",
+      "meaning_vi": "Cần dữ liệu gốc (process, DNS, flow logs), không phải metadata của finding."
+    },
+    {
+      "phrase": "cryptocurrency mining activity",
+      "meaning_vi": "Dấu hiệu: tiến trình miner, DNS tới domain mining, kết nối tới mining pool."
+    },
+    {
+      "phrase": "data sources",
+      "meaning_vi": "Hỏi nguồn dữ liệu để phân tích, không hỏi hành động khắc phục."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần xác thực finding GuardDuty trên EC2 -> nghĩ đến dữ liệu gốc: process (Runtime Monitoring), DNS query logs, VPC Flow Logs; kiểm tra các vế chỉ là metadata của finding (severity, MITRE tactic, số lượng finding) thì không phải bằng chứng.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon GuardDuty",
+      "Amazon VPC",
+      "Amazon Route 53",
+      "Amazon CloudWatch"
+    ],
+    "reason_vi": "Điều tra, xác thực finding GuardDuty về crypto mining bằng log gốc."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings-runtime-monitoring.html",
+      "title": "GuardDuty Runtime Monitoring finding types",
+      "section": "CryptoCurrency:Runtime/BitcoinTool.B",
+      "snapshot_id": "75cce3ca72fd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Additional context, including process and process lineage information, is available in the finding for further investigation.",
+      "supports": "Chi tiết tiến trình trong finding giúp xác thực tiến trình đào coin.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "CryptoCurrency:EC2/BitcoinTool.B!DNS",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "querying a domain name that is associated with Bitcoin or other cryptocurrency-related activity.",
+      "supports": "Finding crypto mining dựa trên truy vấn DNS tới domain liên quan tiền mã hoá (data source: DNS logs).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "CryptoCurrency:EC2/BitcoinTool.B",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "querying an IP Address that is associated with Bitcoin or other cryptocurrency-related activity.",
+      "supports": "Finding còn dựa trên kết nối IP (data source: VPC flow logs) - phân tích kết nối outbound xác thực finding.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html",
+      "title": "Logging IP traffic using VPC Flow Logs",
+      "section": "Overview",
+      "snapshot_id": "6d828a2b0fc8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC.",
+      "supports": "VPC Flow Logs cho thấy kết nối outbound của instance.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-query-logs.html",
+      "title": "Resolver query logging",
+      "section": "Overview",
+      "snapshot_id": "bc79af2e80a2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Queries that originate in Amazon Virtual Private Cloud VPCs that you specify, as well as the responses to those DNS queries.",
+      "supports": "DNS query log (Resolver) là nguồn để xem truy vấn tới domain mining.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/rrsets-working-with.html",
+      "title": "Working with records - Amazon Route 53",
+      "section": "Working with records",
+      "snapshot_id": "caadcb128cc1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you create records to tell the Domain Name System (DNS) how you want traffic to be routed for that domain.",
+      "supports": "Route 53 DNS records là cấu hình định tuyến domain của mình, không phải log truy vấn của instance.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "Notes",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For all EC2 findings, it is recommended that you examine the resource in question to determine if it is behaving in an expected manner.",
+      "supports": "Validate finding bằng cách kiểm tra hành vi thực tế của tài nguyên.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html",
+      "title": "GuardDuty foundational data sources",
+      "section": "Topics",
+      "snapshot_id": "6600ffb9d938",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "- VPC Flow Logs - Route53 Resolver DNS query logs",
+      "supports": "GuardDuty tự dùng VPC Flow Logs và DNS query logs làm nguồn dữ liệu nền tảng - cùng nguồn C đề xuất phân tích.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://aws.amazon.com/blogs/security/detecting-and-preventing-crypto-mining-in-your-aws-environment/",
+      "title": "Detecting and preventing crypto mining in your AWS environment | AWS Security Blog",
+      "section": "Identifying signs of crypto mining activity",
+      "snapshot_id": "b96cd6cbcbfc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "These indicators include connections to unknown IP addresses or the use of known mining pool ports, such as 3333.",
+      "supports": "Kết nối outbound tới IP lạ/cổng mining pool là dấu hiệu chính → phân tích outbound connections (vế của C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://aws.amazon.com/blogs/security/detecting-and-preventing-crypto-mining-in-your-aws-environment/",
+      "title": "Detecting and preventing crypto mining in your AWS environment | AWS Security Blog",
+      "section": "Identifying signs of crypto mining activity",
+      "snapshot_id": "b96cd6cbcbfc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Security teams must monitor for unfamiliar processes or applications that run without authorization on their resources.",
+      "supports": "Tiến trình lạ là dấu hiệu cần kiểm tra → review process details (vế của C). Cùng đoạn cũng nêu CPU cao là dấu hiệu (một phần của A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-format.html",
+      "title": "GuardDuty finding format - Amazon GuardDuty",
+      "section": "Threat Purposes",
+      "snapshot_id": "70560634c762",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "some threat purposes, such as Impact align with MITRE ATT&CK tactics",
+      "supports": "Phân loại tactic/threat purpose chỉ là nhãn của chính finding – không phải dữ liệu độc lập để xác thực finding (vế của A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref12",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html",
+      "title": "GuardDuty foundational data sources - Amazon GuardDuty",
+      "section": "VPC flow logs",
+      "snapshot_id": "6600ffb9d938",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty consumes this data through an independent and duplicate stream of flow logs.",
+      "supports": "GuardDuty dùng luồng flow log riêng; để kỹ sư tự phân tích outbound connections cần bật VPC Flow Logs (hoặc dùng công cụ như Detective) – điều kiện ngầm của C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref13",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings-runtime-monitoring.html",
+      "title": "GuardDuty Runtime Monitoring finding types - Amazon GuardDuty",
+      "section": "Impact:Runtime/CryptoMinerExecuted",
+      "snapshot_id": "75cce3ca72fd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "a process running on the listed EC2 instance or container in your AWS environment is executing a binary file that is associated with a cryptocurrency mining activity",
+      "supports": "Finding crypto mining từ Runtime Monitoring gắn với tiến trình cụ thể → 'process details that relate to the finding'.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref14",
+      "url": "https://aws.amazon.com/blogs/security/detecting-and-preventing-crypto-mining-in-your-aws-environment/",
+      "title": "Detecting and preventing crypto mining in your AWS environment | AWS Security Blog",
+      "section": "Building multilayered protection against crypto mining",
+      "snapshot_id": "b96cd6cbcbfc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Configure Amazon CloudWatch to monitor resource use metrics and set alarms for unusual CPU, network, or GPU usage spikes",
+      "supports": "CloudWatch CPU là tín hiệu phụ trợ (cảnh báo sớm) – vế CPU của A có ích nhưng gián tiếp.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q114:stem:0",
+      "detail_vi": "'Indicates' viết hoa giữa câu (lỗi chính tả nhỏ)."
+    }
+  ],
+  "notes_vi": "Keyword: validate + assess impact -> nguồn dữ liệu gốc (process, DNS, flow logs) thay vì metadata/tổng hợp.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:17:00+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q114:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:25:15Z",
+      "change": "Reconciliation: khớp source key C; status verified (medium); đáp án không đổi. Thêm ref9–ref14 (blog AWS về dấu hiệu crypto mining, GuardDuty threat purpose, flow log stream riêng, Runtime finding CryptoMinerExecuted); cập nhật reason/reference_ids của Q114:A và reference_ids của Q114:C (verdict không đổi).",
+      "previous_answer": [
+        "Q114:C"
+      ]
+    }
+  ]
+}

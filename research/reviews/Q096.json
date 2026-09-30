@@ -2,9 +2,9 @@
   "question_id": "Q096",
   "question_content_hash": "1296715c39ee4c32bb6512072b84557ea0ec8a4f825103a6ecf080168d04dd97",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:07:36Z",
-  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,13 +29,12 @@
       "unit_id": "Q096:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Bước đầu sai: thời hạn (expiration) chỉ đặt cho imported key material lúc import, không phải 'deletion time' khi tạo key; đặt hạn còn khiến key material tự bị xóa. Custom Config rule có thể phát hiện Pending deletion nhưng toàn bộ phương án như mô tả không hợp lý.",
+      "reason_vi": "Không cấu hình thời điểm xóa KMS key khi CreateKey; expiration imported material là khác.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "Q096-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -43,42 +42,39 @@
       "unit_id": "Q096:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "DeleteAlias chỉ xóa alias, không ảnh hưởng KMS key; bắt DeleteAlias không phát hiện việc lên lịch xóa key.",
+      "reason_vi": "DeleteAlias không xóa key.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "Q096-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q096:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "EventBridge nhận event 'AWS API Call via CloudTrail'; rule bắt ScheduleKeyDeletion (và DisableKey) gọi Lambda gửi SNS, nên công ty được báo ngay khi key vào trạng thái Pending deletion, trước khi hết waiting period 7-30 ngày.",
+      "reason_vi": "ScheduleKeyDeletion xảy ra trước việc xóa thực.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref8"
+        "Q096-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q096:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SNS policy là access policy kiểm soát ai được truy cập topic, không thể phát hiện API call KMS và không có 'target' Lambda; RevokeGrant cũng không liên quan đến xóa key.",
+      "reason_vi": "SNS policy không là event detector hay có Lambda target như mô tả.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref7"
+        "Q096-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -113,18 +109,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. ScheduleKeyDeletion khởi động waiting period bắt buộc 7-30 ngày; EventBridge bắt được API call qua CloudTrail và định tuyến tới Lambda/SNS, nên cảnh báo đến trước khi key bị xóa. Event KMS CMK Deletion chỉ đến sau khi xóa. Các phương án khác dùng API sai hoặc cơ chế không tồn tại.",
-    "open_issues": [
-      "Không phương án nào dùng CloudWatch Logs metric filter + alarm như tài liệu KMS mô tả, dù đề nhắc tích hợp CloudTrail-CloudWatch; C vẫn là phương án duy nhất khả thi. Lambda trung gian là thừa (EventBridge có thể target SNS trực tiếp) nhưng không làm C sai."
-    ]
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ A (AWS Config): Config có managed rule kms-cmk-not-scheduled-for-deletion nhưng bước đầu của A ('specify the deletion time of the key material during KMS key creation') không tồn tại – thời hạn chỉ đặt cho imported key material khi import và còn làm key material tự hết hạn. Bổ sung ref8: event KMS CMK Deletion của EventBridge chỉ phát ra sau khi key đã bị xóa, nên muốn báo TRƯỚC phải bắt API ScheduleKeyDeletion như C. B (DeleteAlias không ảnh hưởng key) và D (SNS policy không phát hiện API call) không đáp ứng. Giữ C, verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Xóa KMS key luôn phải qua ScheduleKeyDeletion với waiting period 7–30 ngày; EventBridge rule khớp API call này (ghi bởi CloudTrail) rồi gọi Lambda gửi SNS nên công ty được báo trước khi key thực sự bị xóa. Bắt thêm DisableKey giúp phát hiện sớm việc làm key không dùng được.",
+    "why_correct": "Bắt CloudTrail API events ScheduleKeyDeletion (và DisableKey nếu muốn) bằng EventBridge rồi dùng Lambda/SNS báo trước khi waiting period hết.",
     "others": {
-      "Q096:A": "Không có thiết lập 'deletion time' khi tạo KMS key; thời hạn chỉ áp cho imported key material và còn khiến material tự bị xóa.",
-      "Q096:B": "DeleteAlias chỉ xóa alias, không ảnh hưởng KMS key nên không phát hiện việc lên lịch xóa key.",
-      "Q096:D": "SNS policy là access policy của topic, không phát hiện được API call KMS và không có target Lambda; RevokeGrant cũng không liên quan tới xóa key."
+      "Q096:A": "Không cấu hình thời điểm xóa KMS key khi CreateKey; expiration imported material là khác.",
+      "Q096:B": "DeleteAlias không xóa key.",
+      "Q096:D": "SNS policy không là event detector hay có Lambda target như mô tả."
     }
   },
   "keywords": [
@@ -137,7 +131,7 @@
       "meaning_vi": "API call KMS được ghi lại để EventBridge/CloudWatch dùng làm tín hiệu."
     }
   ],
-  "memory_tip_vi": "Nếu cần cảnh báo trước khi KMS key bị xóa -> nghĩ đến EventBridge bắt API ScheduleKeyDeletion (qua CloudTrail) rồi gửi SNS; kiểm tra: DeleteAlias/RevokeGrant không xóa key, event KMS CMK Deletion đến sau khi đã xóa.",
+  "memory_tip_vi": "Nếu cần báo trước lúc key bị xóa, bắt ScheduleKeyDeletion qua EventBridge; đừng chờ event sau deletion.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -269,9 +263,32 @@
       "quote": "Amazon CloudWatch alarm that notifies you when someone in your account tries to use a KMS key that is pending deletion.",
       "supports": "Cách AWS mô tả với tích hợp CloudTrail–CloudWatch Logs (metric filter + alarm) không có trong phương án; C là phương án khả thi duy nhất.",
       "kind": "inference"
+    },
+    {
+      "id": "Q096-r2-1",
+      "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/monitor-and-remediate-scheduled-deletion-of-aws-kms-keys.html",
+      "title": "Monitor and remediate scheduled deletion of AWS KMS keys - AWS Prescriptive Guidance",
+      "accessed_at": "2026-09-30",
+      "quote": "This pattern sets up monitoring, with notifications when an application",
+      "supports": "Pattern triggers on CloudTrail ScheduleKeyDeletion for notification/remediation before deletion.",
+      "kind": "direct",
+      "snapshot_id": "db145ca180ed",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q096",
+      "detail_vi": "Native KMS CMK Deletion event chỉ sau xóa; phải dùng API Call via CloudTrail event."
+    },
+    {
+      "type": "data",
+      "location": "Q096",
+      "detail_vi": "Lambda không bắt buộc nếu EventBridge target SNS trực tiếp, nhưng hợp lệ."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -286,6 +303,46 @@
       "previous_answer": [
         "Q096:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q096:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q096:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q096:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q096:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

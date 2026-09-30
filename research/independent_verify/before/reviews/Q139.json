@@ -1,0 +1,300 @@
+{
+  "question_id": "Q139",
+  "question_content_hash": "298bed198725585320a6672bf343f2293ce3d14ceaeae7106ad2e7d6bff1df0c",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:22:10+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed. (A directory listing of research/blind/ showed only file names of other records; no content was opened.)",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Lambda function (deploy bằng CloudFormation) không ghi output vào CloudWatch Logs; cần khắc phục để ghi log được.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chọn ĐÚNG HAI bước mà security engineer cần kiểm tra/sửa.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Cơ chế ghi log của Lambda dựa trên execution role (Lambda assume role, role có quyền logs:*).",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q139:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Lambda phải assume được execution role thì mới dùng quyền của role để ghi log; trust policy phải tin cậy service principal lambda.amazonaws.com. Đây là điều kiện tiên quyết cần kiểm tra trong template.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q139:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Lambda chỉ gửi log sang CloudWatch Logs khi execution role có logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents (vd. AWSLambdaBasicExecutionRole); tài liệu troubleshooting chỉ đúng cách sửa này.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q139:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cấu hình X-Ray tracing (Active/PassThrough) chỉ liên quan đến trace gửi tới X-Ray, không quyết định việc ghi log vào CloudWatch Logs.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q139:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Resource-based policy của Lambda cấp cho principal khác quyền truy cập/invoke function, không cấp cho function quyền gọi CloudWatch Logs; quyền đó nằm ở execution role.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q139:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Role mà developer dùng để debug không phải role Lambda assume khi chạy; cho lambda.amazonaws.com assume role của developer không làm function ghi log.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q139:A",
+      "Q139:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "B được tài liệu Lambda nêu trực tiếp là nguyên nhân log không xuất hiện. A là điều kiện để Lambda assume execution role (tài liệu nêu trực tiếp); C, D, E không liên quan cơ chế ghi log nên A là lựa chọn hợp lý duy nhất còn lại.",
+      "open_issues": [
+        "Trên thực tế nếu trust policy sai thì việc tạo/cập nhật function thường bị từ chối, nên A ít khả năng là nguyên nhân khi function đã deploy; chưa tìm được trang doc nêu rõ hành vi kiểm tra này.",
+        "Không option nào nhắc tới LoggingConfig (custom log group) hay log group bị xoá/quyền trên log group tuỳ chỉnh."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T20:22:10+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html",
+      "title": "Defining Lambda function permissions with an execution role",
+      "section": "intro",
+      "snapshot_id": "046160ebb78f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In order for Lambda to properly assume your execution role, the role's trust policy must specify the Lambda service principal (lambda.amazonaws.com) as a trusted service.",
+      "supports": "Trust policy của execution role phải tin cậy lambda.amazonaws.com (lựa chọn A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html",
+      "title": "Sending Lambda function logs to CloudWatch Logs",
+      "section": "Required IAM permissions",
+      "snapshot_id": "37748b80bb0a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Your execution role needs the following permissions to upload logs to CloudWatch Logs:",
+      "supports": "Quyền ghi log nằm ở execution role (logs:CreateLogGroup/CreateLogStream/PutLogEvents) - lựa chọn B.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html",
+      "title": "Troubleshoot execution issues in Lambda",
+      "section": "Lambda: Logs or traces don't appear",
+      "snapshot_id": "0ca1c0acc2b7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Your function needs permission to call CloudWatch Logs and X-Ray. Update its execution role to grant it permission.",
+      "supports": "Cách khắc phục khi log không xuất hiện là cấp quyền cho execution role.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html",
+      "title": "Visualize Lambda function invocations using AWS X-Ray",
+      "section": "intro",
+      "snapshot_id": "e5bc3b9476de",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "PassThrough mode, on the other hand, simply propagates the tracing context to downstream services.",
+      "supports": "Tracing mode chỉ liên quan tới X-Ray trace, không phải CloudWatch Logs (lựa chọn C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html",
+      "title": "Working with resource-based policies in Lambda",
+      "section": "intro",
+      "snapshot_id": "110fd8282a99",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With resource-based permissions policies, you can grant other AWS accounts, users, organizations, and AWS services access to your Lambda functions.",
+      "supports": "Resource-based policy điều khiển ai truy cập function, không cấp quyền cho function ghi log (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html",
+      "title": "Defining Lambda function permissions with an execution role",
+      "section": "intro",
+      "snapshot_id": "046160ebb78f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Lambda automatically assumes your execution role when you invoke your function.",
+      "supports": "Lambda chỉ assume execution role của function, không phải role của developer (lựa chọn E).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/lambda/latest/api/API_CreateFunction.html",
+      "title": "CreateFunction - AWS Lambda",
+      "section": "intro",
+      "snapshot_id": "9ae56c1c771d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The execution role grants the function permission to use AWS services, such as Amazon CloudWatch Logs for log streaming",
+      "supports": "Quyền ghi log của function đến từ execution role được khai báo khi tạo function (thuộc tính Role trong template).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-execution.html",
+      "title": "Troubleshoot execution issues in Lambda",
+      "section": "Lambda: Logs or traces don't appear",
+      "snapshot_id": "0ca1c0acc2b7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This forces running instances of your function, which have outdated credentials, to stop and be replaced.",
+      "supports": "Function dùng credential lấy từ execution role; sau khi sửa role cần cập nhật nhẹ function để instance cũ được thay.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Cơ chế: log Lambda -> CloudWatch Logs cần (1) Lambda assume được execution role (trust lambda.amazonaws.com) và (2) role có quyền logs:*.",
+  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "blind_record_sha256": "fcd7962bda22b7086e584afae7adf45392d36e827c94022c6840280099d75f11",
+  "source_answer": [
+    "Q139:A",
+    "Q139:B"
+  ],
+  "researched_answer": [
+    "Q139:A",
+    "Q139:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "B được doc Lambda nêu trực tiếp (execution role cần logs:CreateLogGroup/CreateLogStream/PutLogEvents; troubleshooting 'Logs don't appear'). A dựa trên doc trực tiếp rằng Lambda chỉ assume được execution role khi trust policy tin lambda.amazonaws.com, nhưng việc A là 'nguyên nhân' của lỗi log là suy luận. C, D, E bị loại bằng doc, nên cặp A+B là cặp duy nhất phù hợp Choose two.",
+    "open_issues": [
+      "Trên thực tế nếu trust policy không tin lambda.amazonaws.com thì CreateFunction/UpdateFunctionConfiguration thường bị từ chối và invoke cũng lỗi, nên A ít khả năng là nguyên nhân thực sự khi function đã deploy; chưa có trang doc mô tả rõ hành vi kiểm tra này. A vẫn là bước kiểm tra hợp lệ duy nhất còn lại trong các option."
+    ]
+  },
+  "reconciliation_vi": "Source key = A,B, trùng blind. Đã tìm bằng chứng phản bác A (đối thủ yếu nhất trong cặp): doc CreateFunction (ref7) cho thấy execution role là nơi cấp quyền CloudWatch Logs; doc execution role (ref1) nói trực tiếp Lambda chỉ assume được role khi trust policy có lambda.amazonaws.com, nên kiểm tra trust policy là bước hợp lệ trong chuỗi 'function -> assume role -> quyền logs:*'. Không tìm được trang doc nói trust policy sai vẫn cho function chạy nhưng không ghi log, nên phần 'A là nguyên nhân' vẫn là suy luận (giữ trong open_issues). C (X-Ray tracing), D (resource-based policy chỉ kiểm soát ai gọi function) và E (role của developer không phải execution role) đều bị doc loại trực tiếp, nên với Choose two chỉ còn A+B. Giữ A,B; verified, medium.",
+  "explanation_vi": {
+    "why_correct": "B: Lambda chỉ gửi log sang CloudWatch Logs khi execution role có quyền logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents (vd. AWSLambdaBasicExecutionRole). A: Lambda phải assume được chính execution role đó, nên trust policy của role phải cho lambda.amazonaws.com thực hiện sts:AssumeRole.",
+    "others": {
+      "Q139:C": "X-Ray tracing (Active/PassThrough) chỉ điều khiển việc gửi trace tới X-Ray, không quyết định function có ghi log vào CloudWatch Logs hay không.",
+      "Q139:D": "Resource-based policy của Lambda chỉ cho principal khác quyền gọi/truy cập function, không cấp cho function quyền gọi CloudWatch Logs.",
+      "Q139:E": "Role developer dùng để debug không phải role Lambda assume khi chạy; sửa trust policy của role đó không làm function ghi log."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "not logging its output to Amazon CloudWatch Logs",
+      "meaning_vi": "Function không ghi log -> kiểm tra execution role (quyền logs:* và trust lambda.amazonaws.com)."
+    },
+    {
+      "phrase": "AWS CloudFormation",
+      "meaning_vi": "Role của function được khai báo trong template (thuộc tính Role của AWS::Lambda::Function)."
+    }
+  ],
+  "memory_tip_vi": "Nếu Lambda không ghi log vào CloudWatch Logs -> nghĩ đến execution role: quyền logs:CreateLogGroup/CreateLogStream/PutLogEvents và trust policy cho lambda.amazonaws.com; kiểm tra resource-based policy hay X-Ray không liên quan việc ghi log.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS Lambda",
+      "Amazon CloudWatch Logs",
+      "AWS IAM",
+      "AWS CloudFormation"
+    ],
+    "reason_vi": "Khắc phục việc thiếu log (Detection) bằng cách sửa execution role và trust policy (IAM)."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:10+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q139:A\", \"Q139:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:30:46+00:00",
+      "change": "Reconciliation: khớp source key A,B; status verified (medium); đáp án không đổi; thêm ref7 (CreateFunction) và ref8 (troubleshooting) để củng cố cơ chế execution role.",
+      "previous_answer": [
+        "Q139:A",
+        "Q139:B"
+      ]
+    }
+  ]
+}

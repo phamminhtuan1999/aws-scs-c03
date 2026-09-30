@@ -1,0 +1,323 @@
+{
+  "question_id": "Q026",
+  "question_content_hash": "21aaf8c8309a5597eded4f20af9984b7830bedacc357694f3a4ed103ca333e1b",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:08Z",
+  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "8f18eff7d8695f863f04c960a707fbefa4ce00674dfa695ec1716999dfb24284",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Lưu trữ credential RDS an toàn (không nằm trong source code).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Credential phải được rotate định kỳ.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chỉ ứng dụng (container ECS cụ thể) truy cập được credential.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Ngăn DBA chia sẻ credential dạng plaintext với đồng nghiệp.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Giảm thiểu administrative overhead.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q026:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Parameter Store không có tính năng generate/rotate tự động credential (AWS khuyến nghị Secrets Manager cho việc này); 'IAM profile' là instance profile của EC2, không phải cơ chế cấp quyền cho từng ECS task.",
+      "requirement_ids": [
+        "R2",
+        "R3",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q026:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Secrets Manager đáp ứng lưu trữ và rotation, nhưng inline policy chỉ gắn được vào một IAM identity (user/group/role); bản thân ECS task nhận quyền qua task IAM role, nên 'inline policy cho ECS tasks' không tự nó là cơ chế giới hạn truy cập theo container.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref4",
+        "ref5",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q026:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM role cho ECS task là đúng cơ chế, nhưng Parameter Store SecureString không có automatic rotation; phải tự xây rotation -> không đáp ứng rotate định kỳ với overhead thấp.",
+      "requirement_ids": [
+        "R2",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q026:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Secrets Manager lưu credential, hỗ trợ automatic rotation (managed rotation cho nhiều loại secret), ứng dụng lấy secret lúc runtime nên DBA không cần truyền mật khẩu plaintext; task IAM role giới hạn quyền truy cập secret cho container của task đó.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref4",
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q026:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu ECS và Systems Manager nêu rõ chỉ Secrets Manager có automatic rotation; tài liệu ECS nêu task IAM role cấp quyền cho container trong task.",
+      "open_issues": [
+        "Yêu cầu 'ngăn DBA chia sẻ plaintext' không được giải quyết hoàn toàn bởi bất kỳ lựa chọn nào (DBA có quyền vẫn đọc được secret); đây là cách hiểu thông thường của đề."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:41:08Z"
+  },
+  "source_answer": [
+    "Q026:D"
+  ],
+  "researched_answer": [
+    "Q026:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn D. Tài liệu ECS/SSM nêu trực tiếp chỉ Secrets Manager có automatic rotation; tài liệu ECS nêu task IAM role vend quyền cho container của task và khuyến nghị role riêng cho từng task definition/service.",
+    "open_issues": [
+      "Yêu cầu 'ngăn DBA chia sẻ plaintext' không lựa chọn nào giải quyết tuyệt đối (DBA có quyền vẫn đọc được secret); đề hiểu theo nghĩa ứng dụng lấy secret lúc runtime nên không cần truyền tay mật khẩu."
+    ]
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại đối thủ mạnh nhất là B (cũng dùng Secrets Manager): về mặt kỹ thuật inline policy vẫn có thể gắn vào task role, nhưng B không nêu role nào; ECS task không nhận policy trực tiếp mà nhận quyền qua task IAM role, và tài liệu ECS khuyến nghị tạo role riêng cho từng task definition/service với quyền tối thiểu – đúng như D mô tả. A/C dùng Parameter Store: tài liệu ECS và SSM xác nhận automatic rotation/generate secret là tính năng của Secrets Manager, không phải Parameter Store. Giữ D, verified, high. Giữ source_issue typo 'wore' (thật).",
+  "explanation_vi": {
+    "why_correct": "Secrets Manager lưu credential RDS và hỗ trợ automatic rotation theo lịch, ứng dụng lấy secret lúc runtime nên không cần hard-code hay truyền tay mật khẩu; IAM role cho ECS task (task role) cấp quyền đọc secret chỉ cho container của task đó.",
+    "others": {
+      "Q026:A": "Parameter Store không generate và không tự rotate credential, và 'IAM profile' (instance profile) là cơ chế của EC2, không giới hạn quyền theo từng ECS task.",
+      "Q026:B": "Secrets Manager đúng, nhưng ECS task không gắn policy trực tiếp; quyền của task đến từ task IAM role, nên 'inline policy cho ECS tasks' không phải cơ chế giới hạn truy cập theo container.",
+      "Q026:C": "Task IAM role đúng cơ chế, nhưng Parameter Store SecureString không có automatic rotation nên phải tự xây rotation, tăng overhead."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "rotated periodically",
+      "meaning_vi": "Cần automatic rotation -> Secrets Manager (Parameter Store không có)."
+    },
+    {
+      "phrase": "accessible to the application only",
+      "meaning_vi": "Giới hạn quyền đọc secret bằng IAM role cho ECS task."
+    },
+    {
+      "phrase": "minimize administrative overhead",
+      "meaning_vi": "Dùng rotation có sẵn thay vì tự viết Lambda rotation cho Parameter Store."
+    }
+  ],
+  "memory_tip_vi": "Nếu credential database cần lưu an toàn VÀ rotate định kỳ -> nghĩ đến Secrets Manager + IAM role cho ECS task; kiểm tra nếu đề không cần rotation và cần chi phí thấp thì Parameter Store SecureString mới đáng cân nhắc.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS Secrets Manager",
+      "Amazon ECS",
+      "AWS IAM",
+      "Amazon RDS",
+      "AWS Systems Manager Parameter Store"
+    ],
+    "reason_vi": "Quản lý và rotate secret, giới hạn quyền truy cập secret theo ECS task role."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html",
+      "title": "What is AWS Secrets Manager?",
+      "section": "intro",
+      "snapshot_id": "81b41c17ad57",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With Secrets Manager, you can configure an automatic rotation schedule for your secrets.",
+      "supports": "Secrets Manager hỗ trợ rotation tự động theo lịch.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html",
+      "title": "Pass sensitive data to an Amazon ECS container",
+      "section": "Use AWS Secrets Manager or AWS Systems Manager Parameter Store for storing secret materials",
+      "snapshot_id": "7b46b032ed5b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Secrets Manager, however, also includes the ability to automatically rotate secrets, generate random secrets, and share secrets across accounts.",
+      "supports": "Automatic rotation và generate secret là tính năng của Secrets Manager, không phải Parameter Store.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html",
+      "title": "AWS Systems Manager Parameter Store",
+      "section": "SecureString",
+      "snapshot_id": "9185602979b5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For secrets such as database credentials, API keys, or tokens, we recommend AWS Secrets Manager, which provides purpose built security controls including automatic rotation",
+      "supports": "AWS khuyến nghị Secrets Manager (có automatic rotation) cho database credentials thay vì Parameter Store.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html",
+      "title": "Amazon ECS task IAM role",
+      "section": "intro",
+      "snapshot_id": "e73fabc49549",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The permissions granted in the IAM role are vended to containers running in the task.",
+      "supports": "Task IAM role là cơ chế cấp quyền AWS cho container của một task cụ thể.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html",
+      "title": "Managed policies and inline policies",
+      "section": "Inline policies",
+      "snapshot_id": "ff0932bfe969",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An inline policy is a policy created for a single IAM identity (a user, user group, or role).",
+      "supports": "Inline policy phải gắn vào identity (vd. role), không gắn trực tiếp vào ECS task.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html",
+      "title": "What is AWS Secrets Manager?",
+      "section": "intro",
+      "snapshot_id": "81b41c17ad57",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You replace hard-coded credentials with a runtime call to the Secrets Manager service to retrieve credentials dynamically when you need them.",
+      "supports": "Ứng dụng lấy credential lúc runtime, loại bỏ credential trong code/không cần chia sẻ thủ công.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html",
+      "title": "Amazon ECS task IAM role",
+      "section": "Task IAM role",
+      "snapshot_id": "e73fabc49549",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you should consider creating a role for each specific task definition or service with the minimum required permissions",
+      "supports": "Giới hạn truy cập secret theo từng task/container được thực hiện bằng IAM role riêng cho task (phương án D).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q026:stem:0",
+      "detail_vi": "'wore stored' nên là 'were stored'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:08Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q026:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key D; status verified (high). Thêm tham chiếu mới: ref7.",
+      "previous_answer": [
+        "Q026:D"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:49:06Z",
+      "previous_answer": [
+        "Q026:D"
+      ]
+    }
+  ],
+  "notes_vi": "Nếu inject secret qua tham số 'secrets' của container definition thì quyền đọc secret nằm ở task execution role; nếu ứng dụng gọi SDK thì dùng task role. Cả hai đều là IAM role cho ECS task.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:49:06Z"
+      }
+    }
+  }
+}

@@ -2,9 +2,9 @@
   "question_id": "Q113",
   "question_content_hash": "f8a249275798743794b76143b954efc75556047d15d03e3bedd45a11cf62826b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q113:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "ACM cert miễn phí trên ALB, self-signed trên EC2 (ALB không kiểm tra), TLS tới RDS, bật RDS encryption và EBS encryption: phủ đủ in transit và at rest bằng tính năng managed, chi phí thấp.",
+      "reason_vi": "A đáp ứng các lớp mã hóa nếu ALB → EC2 được cấu hình HTTPS.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,26 +47,24 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "Q113-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q113:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Chứng chỉ bên thứ ba tốn phí và phải tự gia hạn; Secrets Manager không phải công cụ mã hoá dữ liệu ứng dụng phía client, và không bật mã hoá RDS/EBS nên at rest không được đảm bảo.",
+      "reason_vi": "B Secrets Manager lưu secrets, không tự mã hóa dữ liệu ứng dụng client-side.",
       "requirement_ids": [
         "R2",
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref6"
+        "ref2",
+        "Q113-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -74,15 +72,15 @@
       "unit_id": "Q113:C",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Có thể mã hoá in transit và mã hoá dữ liệu ứng dụng bằng khoá CloudHSM, nhưng CloudHSM tính phí theo giờ và đòi hỏi tự quản lý chứng chỉ/khoá; cũng không bật mã hoá storage RDS/EBS. Trái tiêu chí chi phí và vận hành.",
+      "reason_vi": "C thêm HSM và quản lý mã hóa client-side, tăng chi phí và vận hành.",
       "requirement_ids": [
         "R2",
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref7",
-        "ref8"
+        "ref2",
+        "Q113-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -90,13 +88,14 @@
       "unit_id": "Q113:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Gửi HTTP từ CloudFront tới origin EC2 nên đoạn này không mã hoá, vi phạm yêu cầu in transit; client-side encryption bằng KMS còn tăng công sức phát triển.",
+      "reason_vi": "D truyền HTTP đến origin nên không bảo vệ toàn bộ dữ liệu in transit.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref9"
+        "ref2",
+        "Q113-r2-2"
       ],
       "evidence_kind": "inference"
     }
@@ -133,18 +132,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu nêu trực tiếp: ACM cấp certificate miễn phí cho dịch vụ tích hợp, ALB không kiểm tra certificate của target (self-signed được), TLS tới RDS MySQL, RDS/EBS encryption at rest. Chỉ A phủ đủ at rest với chi phí/vận hành thấp.",
-    "open_issues": [
-      "C có thể xếp 'meets_but_suboptimal' hay 'does_not_meet' tuỳ cách hiểu (không bật mã hoá storage RDS/EBS nhưng mã hoá dữ liệu phía client); không ảnh hưởng đáp án."
-    ]
+    "reason_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại C (đối thủ mạnh nhất vì mã hoá cả dữ liệu ứng dụng): CloudHSM tính phí theo giờ cho mỗi HSM (ref7) và đòi hỏi tự quản lý key/chứng chỉ – trái trực tiếp với 'minimizes cost' và 'minimizes operational overhead'. D gửi HTTP từ CloudFront tới origin nên đoạn đó không mã hoá (CloudFront hỗ trợ HTTPS tới origin, ref9, nhưng D không dùng). B: chứng chỉ bên thứ ba có phí, Secrets Manager không phải công cụ mã hoá dữ liệu ứng dụng (ref6). Giữ A, verified, high.",
+  "reconciliation_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
   "explanation_vi": {
-    "why_correct": "A dùng ACM certificate miễn phí trên ALB, self-signed certificate trên EC2 (ALB không kiểm tra) và TLS tới RDS cho in transit; bật RDS encryption và EBS encryption (KMS) cho at rest – toàn tính năng managed, chi phí thấp.",
+    "why_correct": "A dùng TLS cho các đường truyền và encryption cho RDS/EBS, tránh phần quản lý HSM và client-side encryption.",
     "others": {
-      "Q113:B": "Chứng chỉ bên thứ ba tốn phí và phải tự gia hạn; Secrets Manager không dùng để mã hoá dữ liệu ứng dụng, và không bật mã hoá storage RDS/EBS.",
-      "Q113:C": "CloudHSM tính phí theo giờ và phải tự quản lý key/chứng chỉ, trái với yêu cầu tối thiểu chi phí và vận hành.",
-      "Q113:D": "Gửi HTTP từ CloudFront tới EC2 làm đoạn này không được mã hoá, vi phạm yêu cầu in transit; client-side encryption còn thêm công sức phát triển."
+      "Q113:B": "B Secrets Manager lưu secrets, không tự mã hóa dữ liệu ứng dụng client-side.",
+      "Q113:C": "C thêm HSM và quản lý mã hóa client-side, tăng chi phí và vận hành.",
+      "Q113:D": "D truyền HTTP đến origin nên không bảo vệ toàn bộ dữ liệu in transit."
     }
   },
   "keywords": [
@@ -154,10 +151,10 @@
     },
     {
       "phrase": "minimizes operational overhead and minimizes cost",
-      "meaning_vi": "Ưu tiên ACM miễn phí và mã hoá managed thay vì CloudHSM/chứng chỉ trả phí."
+      "meaning_vi": "ACM hỗ trợ TLS phía ALB; HTTPS tới backend và mã hóa EBS/RDS vẫn phải cấu hình. Không suy ra mọi chứng chỉ bên thứ ba đều tốn phí."
     }
   ],
-  "memory_tip_vi": "Nếu cần mã hoá in transit + at rest cho EC2/RDS với chi phí và vận hành thấp nhất -> nghĩ đến ACM trên ALB, TLS tới RDS, bật RDS/EBS encryption bằng KMS; kiểm tra CloudHSM/chứng chỉ bên thứ ba tốn phí và đoạn HTTP tới origin phá yêu cầu in transit.",
+  "memory_tip_vi": "Nếu cần mã hóa end-to-end, kiểm tra riêng từng hop và từng nơi lưu.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -288,10 +285,28 @@
       "quote": "You can require HTTPS for communication between CloudFront and your origin.",
       "supports": "D chọn HTTP tới origin thay vì HTTPS, nên đoạn CloudFront->EC2 không được mã hoá.",
       "kind": "direct"
+    },
+    {
+      "id": "Q113-r2-2",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html",
+      "title": "Using SSL/TLS to encrypt a connection to a DB instance or cluster - Amazon Relational Database Service",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "Using SSL/TLS to encrypt a connection to a DB instance",
+      "supports": "A dùng TLS cho các đường truyền và encryption cho RDS/EBS, tránh phần quản lý HSM và client-side encryption.",
+      "kind": "direct",
+      "snapshot_id": "ce7351347190",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "A là phương án duy nhất bật mã hoá at rest ở cả RDS và EBS bằng tính năng managed.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q113",
+      "detail_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này."
+    }
+  ],
+  "notes_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
   "history": [
     {
       "version": "r1",
@@ -306,6 +321,39 @@
       "previous_answer": [
         "Q113:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q113:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q113:A"
+      ],
+      "note_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

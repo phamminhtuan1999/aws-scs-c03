@@ -1,0 +1,276 @@
+{
+  "question_id": "Q033",
+  "question_content_hash": "52d5294ae0621579fa6789298b1eb371e9432a9e5c7249f66756260e3e54d93b",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "c1d4cf0ba22b381caf456f9738417fbe183ee21d4ceae4852dded257e32f63e0",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giảm thiểu (chặn) tấn công credential stuffing đến ứng dụng sau ALB, không chỉ phát hiện/cảnh báo.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Tấn công đến từ nhiều IP khác nhau nhưng dùng chung user agent của một trình giả lập thiết bị di động đã biết.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Vẫn cho phép người dùng hợp lệ đăng nhập.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q033:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "CloudWatch alarm + SNS chỉ gửi thông báo, không chặn request nên không giảm thiểu được tấn công.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q033:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security group chỉ hỗ trợ rule allow, không có rule deny; ngoài ra tấn công đến từ rất nhiều IP nên chặn theo IP không hiệu quả.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q033:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AWS WAF gắn được với ALB; string match rule có thể so khớp header User-Agent và hành động Block chặn các request dùng user agent của trình giả lập, còn người dùng hợp lệ vẫn đi qua (default Allow).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q033:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Rule Allow cho user agent hợp lệ chỉ chặn được tấn công nếu default action là Block, khi đó phải liệt kê đầy đủ mọi user agent hợp lệ, dễ chặn nhầm người dùng thật; nếu default là Allow thì tấn công vẫn lọt.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q033:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Đặc điểm chung duy nhất của tấn công là user agent; WAF trên ALB chặn theo User-Agent là cách trực tiếp và ít rủi ro chặn nhầm nhất trong các lựa chọn.",
+      "open_issues": [
+        "User agent có thể bị giả mạo; AWS WAF Fraud Control ATP là giải pháp mạnh hơn nhưng không có trong lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "source_answer": [
+    "Q033:C"
+  ],
+  "researched_answer": [
+    "Q033:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Đặc điểm chung duy nhất của tấn công (nhiều IP) là user agent của trình giả lập; WAF trên ALB với string match trên User-Agent + Block chặn đúng nhóm này, default Allow giữ người dùng hợp lệ. B bị loại trực tiếp (security group không có deny), A chỉ cảnh báo.",
+    "open_issues": [
+      "User agent có thể bị kẻ tấn công đổi; AWS WAF Fraud Control ATP (account takeover prevention) mạnh hơn nhưng không có trong lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất D (allowlist user agent hợp lệ): rule Allow chỉ có tác dụng chặn nếu default action là Block, khi đó phải liệt kê đủ mọi user agent hợp lệ (rất nhiều trình duyệt/phiên bản) nên dễ chặn nhầm người dùng thật – trái yêu cầu 'still allow legitimate logins'; nếu default Allow thì tấn công vẫn lọt. Tài liệu default action của WAF khuyến nghị default Allow + rule Block cho request cụ thể khi phần lớn người dùng hợp lệ. Không có bằng chứng mới nào bác bỏ C. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Tấn công đến từ nhiều IP nhưng dùng chung user agent của trình giả lập; AWS WAF gắn vào ALB với rule string match trên header User-Agent và action Block chặn đúng các request này, còn web ACL default Allow vẫn cho người dùng hợp lệ đăng nhập.",
+    "others": {
+      "Q033:A": "CloudWatch alarm + SNS chỉ gửi cảnh báo, không chặn request nên không giảm thiểu được tấn công.",
+      "Q033:B": "Security group không có rule deny, và tấn công đến từ rất nhiều IP nên chặn theo IP không hiệu quả.",
+      "Q033:D": "Allowlist user agent chỉ chặn được khi default Block và phải liệt kê mọi user agent hợp lệ, dễ chặn nhầm người dùng thật."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "coming from many IP addresses",
+      "meaning_vi": "Chặn theo IP (security group/IP set) không hiệu quả."
+    },
+    {
+      "phrase": "user agent string of a known mobile device emulator",
+      "meaning_vi": "Dấu hiệu chung để viết rule WAF match header User-Agent và Block."
+    },
+    {
+      "phrase": "must still allow legitimate logins",
+      "meaning_vi": "Chặn có chọn lọc (blocklist), không allowlist hẹp."
+    }
+  ],
+  "memory_tip_vi": "Nếu tấn công web từ nhiều IP nhưng có dấu hiệu chung trong request (User-Agent, header) -> nghĩ đến AWS WAF rule match + Block trên ALB/CloudFront; kiểm tra: security group không có deny, CloudWatch alarm chỉ cảnh báo.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS WAF",
+      "Elastic Load Balancing (ALB)"
+    ],
+    "reason_vi": "Bảo vệ ứng dụng web ở lớp 7 trước tấn công credential stuffing."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+      "title": "Security group rules",
+      "section": "Security group rule characteristics",
+      "snapshot_id": "5594f61a25d6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can specify allow rules, but not deny rules.",
+      "supports": "Không thể deny IP bằng security group.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html",
+      "title": "Resources that you can protect with AWS WAF",
+      "section": "Regional resources",
+      "snapshot_id": "1dd55ffe60ec",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use AWS WAF to protect the following regional resource types:",
+      "supports": "Application Load Balancer nằm trong danh sách tài nguyên regional được WAF bảo vệ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-string-match.html",
+      "title": "String match rule statement",
+      "section": "String match rule statement",
+      "snapshot_id": "2ccdd05d1766",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "as an exact match for the request's User-agent header.",
+      "supports": "WAF có thể so khớp giá trị header User-Agent.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/web-acl-default-action.html",
+      "title": "Setting the protection pack (web ACL) default action in AWS WAF",
+      "section": "Default action",
+      "snapshot_id": "e41e8601a517",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "add rules that identify and block the specific requests that you want to block.",
+      "supports": "Mô hình default Allow + rule Block cho request cụ thể phù hợp khi muốn cho phần lớn người dùng truy cập.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-action.html",
+      "title": "Using rule actions in AWS WAF",
+      "section": "Rule action options",
+      "snapshot_id": "81fb8fcacca6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Block – AWS WAF blocks the request. This is a terminating action.",
+      "supports": "Rule Block chặn request khớp điều kiện.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q033:A",
+      "detail_vi": "Thiếu dấu chấm giữa hai câu ('user agent string Add')."
+    },
+    {
+      "type": "typo",
+      "location": "Q033:C",
+      "detail_vi": "Thiếu dấu chấm giữa hai câu ('for the ALB Create')."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:23Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q033:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key C; không đổi kết luận, option_reviews và source_issues giữ nguyên; status verified (high).",
+      "previous_answer": [
+        "Q033:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:49:24Z",
+      "previous_answer": [
+        "Q033:C"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:49:24Z"
+      }
+    }
+  }
+}

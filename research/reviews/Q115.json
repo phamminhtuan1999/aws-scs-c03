@@ -2,9 +2,9 @@
   "question_id": "Q115",
   "question_content_hash": "0a0f5fc320976606f42fc024d0e064cab9d0b05657fe0e280771b0d4807790f1",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:53+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,13 +39,13 @@
       "unit_id": "Q115:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Một trail thường chỉ ghi sự kiện của account nơi nó được tạo; EventBridge chỉ báo khi trail bị xóa/dừng chứ không tạo trail cho account khác hay account mới.",
+      "reason_vi": "A trail đơn lẻ và notification không tự phủ mọi account mới.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -53,13 +53,12 @@
       "unit_id": "Q115:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lambda triển khai thủ công ở từng account không có cơ chế tự động áp dụng cho account tạo sau này, và trail do member account tạo vẫn có thể bị member xóa; tốn công vận hành so với organization trail có sẵn.",
+      "reason_vi": "B function ở từng account chưa xử lý tự động onboarding account mới như organization trail.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -67,34 +66,30 @@
       "unit_id": "Q115:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Management account có thể sửa trail hiện có và áp dụng cho tổ chức; organization trail ghi log mọi member account và tự được thêm vào account mới gia nhập, member không thể xóa/tắt.",
+      "reason_vi": "C management account có thể đổi trail hiện có thành organization trail.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q115:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ giới hạn quyền, không cấp quyền và không tạo trail; account chưa có trail vẫn không có trail. SCP cũng không tác động management account.",
+      "reason_vi": "D SCP chống stop/delete không tạo trail đang thiếu.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -127,18 +122,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu CloudTrail nêu trực tiếp: management account có thể sửa trail hiện có thành organization trail; organization trail ghi log cho management account và mọi member account, account mới gia nhập tự được thêm trail, member không xóa/tắt được. A, B, D không tạo được trail cho mọi account hiện có và tương lai.",
-    "open_issues": [
-      "Triển khai thực tế cần bật trusted access của CloudTrail trong Organizations và bucket policy cho phép ghi log tổ chức; option C không nêu nhưng đây là điều kiện chuẩn, không làm C sai."
-    ]
+    "reason_vi": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã fetch lại (refresh) trang 'Creating a trail for an organization' (snapshot afe3adba4cd3): xác nhận 'Organization trails log events for the management account and all member accounts' (ref7) và account mới gia nhập tự có organization trail (ref2). Xét lại đối thủ mạnh nhất: D (SCP chặn cloudtrail:Delete*/Stop*) chỉ bảo vệ trail đã có, không tạo trail cho account đang thiếu và không áp dụng cho management account; A chỉ tạo một trail thông thường (không nói là organization trail) cộng cảnh báo; B phải tự triển khai Lambda vào từng account và không tự bao phủ account mới. Không tìm thấy bằng chứng bác bỏ C. Giữ C, verified, high.",
+  "reconciliation_vi": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
   "explanation_vi": {
-    "why_correct": "Organization trail do management account tạo (hoặc sửa từ trail có sẵn rồi 'apply to organization') tự ghi log cho mọi member account hiện có và tự được thêm vào account mới gia nhập, nên luôn có ít nhất một trail gửi về S3 tập trung; member account không thể xóa hay tắt trail này.",
+    "why_correct": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
     "others": {
-      "Q115:A": "Một trail thường chỉ ghi log cho account nơi tạo nó; EventBridge chỉ cảnh báo khi trail bị xóa/dừng chứ không tạo trail cho account khác hay account mới.",
-      "Q115:B": "Lambda phải tự triển khai vào từng account và không có cơ chế tự áp dụng cho account tạo sau; tốn công vận hành trong khi organization trail đã làm sẵn việc này.",
-      "Q115:D": "SCP chỉ giới hạn quyền, không tạo trail nào; account đang thiếu trail vẫn thiếu, và SCP không tác động management account."
+      "Q115:A": "A trail đơn lẻ và notification không tự phủ mọi account mới.",
+      "Q115:B": "B function ở từng account chưa xử lý tự động onboarding account mới như organization trail.",
+      "Q115:D": "D SCP chống stop/delete không tạo trail đang thiếu."
     }
   },
   "keywords": [
@@ -155,7 +148,7 @@
       "meaning_vi": "Gợi ý dùng tính năng cấp tổ chức (organization trail từ management account)."
     }
   ],
-  "memory_tip_vi": "Nếu cần CloudTrail cho mọi account hiện có và account tạo sau trong AWS Organizations -> nghĩ đến organization trail từ management account (hoặc delegated admin); kiểm tra: SCP chỉ chặn quyền chứ không tạo trail, Lambda từng account không tự phủ account mới.",
+  "memory_tip_vi": "Nếu cần CloudTrail cho account hiện tại và tương lai, dùng organization trail.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -276,7 +269,40 @@
       "previous_answer": [
         "Q115:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q115:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q115:C"
+      ],
+      "note_vi": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Organization trail là cơ chế duy nhất trong các option vừa bao phủ account hiện có vừa tự động áp dụng cho account mới."
+  "notes_vi": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

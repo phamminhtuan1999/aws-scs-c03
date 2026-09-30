@@ -2,9 +2,9 @@
   "question_id": "Q071",
   "question_content_hash": "ef8e80b62f47c055d23f09b57d459454cf8e22428d6f723f365803a8298e568c",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:50Z",
-  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -36,15 +36,14 @@
     {
       "unit_id": "Q071:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Direct Connect + VPN + VPC endpoint chỉ giải quyết đường mạng; certificate (nếu dùng) chỉ xác thực tunnel VPN, còn lời gọi API S3/DynamoDB vẫn cần AWS credentials mà phương án không cung cấp bằng certificate (trước đây dùng instance profile của bastion).",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "DX/VPN cung cấp network, không cấp chứng thực AWS API bằng certificate.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -52,7 +51,7 @@
       "unit_id": "Q071:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Roles Anywhere cho workload ngoài AWS lấy temporary credentials của IAM role bằng X.509 certificate (trust anchor là CA của công ty hoặc AWS Private CA); không cần bastion và không cần long-term keys.",
+      "reason_vi": "Roles Anywhere đổi X.509 certificate thành temporary IAM role credentials.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -61,36 +60,34 @@
       "reference_ids": [
         "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q071:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS Private CA chỉ phát hành certificate; bản thân certificate không được S3/DynamoDB chấp nhận làm xác thực API nếu không có cơ chế đổi sang IAM credentials (như Roles Anywhere). Phương án thiếu bước đó.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Private CA chỉ cấp certificate, không tự trao quyền IAM tới AWS services.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref1",
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q071:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "IAM user dùng access key long-term để assume role; đây không phải certificate-based authentication và AWS khuyến nghị tránh long-term access keys.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "IAM user bootstrap dùng long-term credentials, không certificate-based authentication.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -192,18 +189,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "IAM Roles Anywhere là cơ chế AWS tài liệu hóa trực tiếp để workload ngoài AWS dùng X.509 certificate đổi lấy temporary credentials của IAM role; A chỉ giải quyết mạng, C chỉ phát hành certificate, D dùng access key của IAM user.",
-    "open_issues": [
-      "B giả định on-prem có đường mạng tới endpoint S3/DynamoDB (qua internet có TLS là chấp nhận được vì đề không cấm internet)."
-    ]
+    "reason_vi": "Đúng; certificate identity khác network và certificate issuance.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là B. Đã kiểm tra lại phương án cạnh tranh mạnh nhất: A (Direct Connect + VPN + VPC endpoint) — certificate của Site-to-Site VPN chỉ xác thực tunnel endpoint, còn lời gọi API S3/DynamoDB vẫn phải ký SigV4 bằng AWS credentials mà A không cung cấp (bastion bị gỡ nên mất instance profile). C — AWS Private CA chỉ phát hành certificate; S3/DynamoDB không chấp nhận certificate trực tiếp nếu không có Roles Anywhere. Giữ B, verified, high.",
+  "reconciliation_vi": "Đúng; certificate identity khác network và certificate issuance.",
   "explanation_vi": {
-    "why_correct": "IAM Roles Anywhere cho phép hệ thống on-premises xác thực bằng X.509 certificate (trust anchor là CA của công ty hoặc AWS Private CA) để nhận temporary credentials của IAM role, nên gọi thẳng S3/DynamoDB mà không cần bastion hay access key lâu dài.",
+    "why_correct": "IAM Roles Anywhere dùng X.509 certificate của hệ thống ngoài AWS để lấy temporary role credentials truy cập S3/DynamoDB, loại bỏ nhu cầu bastion.",
     "others": {
-      "Q071:A": "Direct Connect/VPN chỉ tạo đường mạng; certificate (nếu có) chỉ xác thực tunnel, các lời gọi API vẫn thiếu AWS credentials.",
-      "Q071:C": "Private CA chỉ phát hành certificate; S3/DynamoDB không chấp nhận certificate làm xác thực API nếu không có cơ chế như Roles Anywhere.",
-      "Q071:D": "IAM user dùng access key lâu dài để assume role, không phải certificate-based authentication."
+      "Q071:A": "DX/VPN cung cấp network, không cấp chứng thực AWS API bằng certificate.",
+      "Q071:C": "Private CA chỉ cấp certificate, không tự trao quyền IAM tới AWS services.",
+      "Q071:D": "IAM user bootstrap dùng long-term credentials, không certificate-based authentication."
     }
   },
   "keywords": [
@@ -220,7 +215,7 @@
       "meaning_vi": "Không dùng instance profile của bastion làm trung gian nữa."
     }
   ],
-  "memory_tip_vi": "Nếu server/app ngoài AWS (on-prem) cần gọi API AWS mà cấm long-term key hoặc bắt buộc certificate -> nghĩ đến IAM Roles Anywhere (trust anchor + profile + role); kiểm tra Private CA chỉ phát hành cert, VPN/Direct Connect chỉ là đường mạng.",
+  "memory_tip_vi": "Nếu workload ngoài AWS cần temporary IAM credentials từ X.509 certificate, dùng IAM Roles Anywhere.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -248,7 +243,42 @@
       "previous_answer": [
         "Q071:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; certificate identity khác network và certificate issuance.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q071:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q071:B"
+      ],
+      "note_vi": "Đúng; certificate identity khác network và certificate issuance.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Workload ngoài AWS + certificate -> IAM Roles Anywhere (trust anchor, profile, role)."
+  "notes_vi": "Đúng; certificate identity khác network và certificate issuance.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q071:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q071:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,312 @@
+{
+  "question_id": "Q053",
+  "question_content_hash": "2e44ccbf1c23c82b1716326c091bd84b48723e0f8127e6a7ae80aba3063ab9e6",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:24Z",
+  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema (RESEARCH_FORMAT.md, SOURCE_FACTS.md), research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "30267367b1b7bc5e6914ad2e0d7508f1e15121500e31e2bca8c6f4603ac17d78",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giải pháp disaster recovery để khôi phục hoạt động bình thường khi ransomware vượt qua kiểm soát phòng ngừa và phát hiện.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "RPO 1 giờ -> dữ liệu (EBS/EC2 và S3) phải được sao lưu ít nhất mỗi giờ.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phạm vi dữ liệu/kiến trúc: EC2 sau ALB, EBS volume, S3 bucket chứa file lớn.",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn 1 đáp án.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q053:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AWS Backup hỗ trợ lịch backup hằng giờ cho EC2 và S3 (đáp ứng RPO 1 giờ), backup trong vault bất biến và được giữ kể cả khi nguồn bị xóa; CloudFormation template trong CodeCommit cho phép dựng lại kiến trúc để khôi phục.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q053:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Backup mỗi ngày cho RPO khoảng 24 giờ, không đạt RPO 1 giờ; Security Lake là data lake log bảo mật (phát hiện/phản ứng), không phải cơ chế khôi phục.",
+      "requirement_ids": [
+        "R2",
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q053:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không có backup dữ liệu nào nên không thể khôi phục dữ liệu EBS/S3 bị mã hóa bởi ransomware; Security Lake và Security Hub là công cụ phát hiện/đánh giá posture, không phải DR.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q053:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Snapshot EBS mỗi 4 giờ cho RPO tới 4 giờ, không đạt 1 giờ; không bảo vệ S3; và dựa vào finding GuardDuty (kiểm soát phát hiện) trong khi đề giả định kẻ tấn công đã vượt qua kiểm soát phát hiện.",
+      "requirement_ids": [
+        "R2",
+        "R3",
+        "R1"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q053:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Chỉ A có backup tần suất hằng giờ bao phủ cả EC2 và S3; B và D vi phạm RPO, C không có backup dữ liệu.",
+      "open_issues": [
+        "A không nhắc tới backup vault lock/cross-account copy vốn tăng khả năng chống ransomware; không ảnh hưởng tới việc so sánh giữa các lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:46:24Z"
+  },
+  "source_answer": [
+    "Q053:A"
+  ],
+  "researched_answer": [
+    "Q053:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Chỉ A backup hằng giờ bao phủ cả EC2 (EBS) và S3 — AWS Backup hỗ trợ trực tiếp tần suất 1 giờ cho cả hai — cùng IaC để dựng lại kiến trúc; B (hằng ngày) và D (4 giờ) vi phạm RPO, C không có backup dữ liệu.",
+    "open_issues": [
+      "A không nhắc backup vault lock/cross-account copy vốn tăng khả năng chống ransomware; không ảnh hưởng việc so sánh giữa các lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn A. Đã kiểm tra thêm: trang AWS Backup S3 xác nhận periodic backup S3 lên lịch mỗi 1 giờ (không chỉ EC2), nên A đạt RPO 1 giờ cho cả hai loại dữ liệu; CodeCommit trong A đã trở lại GA (11/2025) nên không còn là điểm yếu thời gian. Đối thủ D gần nhất nhưng snapshot 4 giờ vi phạm RPO, bỏ sót S3 và dựa vào detective control mà đề giả định đã bị vượt qua. Giữ A, verified, confidence high.",
+  "explanation_vi": {
+    "why_correct": "AWS Backup lên lịch backup mỗi giờ cho EC2 (kèm EBS) và S3 nên đạt RPO 1 giờ, backup bất biến trong vault tách khỏi tài nguyên nguồn; CloudFormation template lưu trong CodeCommit cho phép dựng lại kiến trúc để trở lại hoạt động bình thường sau ransomware.",
+    "others": {
+      "Q053:B": "Backup mỗi ngày chỉ cho RPO khoảng 24 giờ, và Security Lake là data lake log để phát hiện/phản ứng chứ không phải cơ chế khôi phục.",
+      "Q053:C": "Không có backup dữ liệu nào nên không khôi phục được EBS/S3 bị mã hóa; Security Lake và Security Hub là công cụ phát hiện/posture, không phải DR.",
+      "Q053:D": "Snapshot EBS mỗi 4 giờ không đạt RPO 1 giờ, không bảo vệ S3, và phụ thuộc finding GuardDuty trong khi đề giả định attacker đã vượt qua kiểm soát phát hiện."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "RPO of 1 hour",
+      "meaning_vi": "Mất tối đa 1 giờ dữ liệu -> backup ít nhất mỗi giờ."
+    },
+    {
+      "phrase": "bypasses preventive and detective controls",
+      "meaning_vi": "Không dựa được vào phát hiện; cần backup để khôi phục (recovery control)."
+    },
+    {
+      "phrase": "disaster recovery solution",
+      "meaning_vi": "Cần cơ chế khôi phục dữ liệu và hạ tầng, không phải công cụ log/phát hiện."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề ransomware cho RPO cụ thể và giả định attacker vượt qua phát hiện -> nghĩ đến AWS Backup với tần suất ≤ RPO cho mọi kho dữ liệu (EBS/EC2 và S3) + IaC để dựng lại; kiểm tra tần suất backup và loại dữ liệu có bị bỏ sót không.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Backup",
+      "Amazon S3",
+      "Amazon EBS",
+      "AWS CloudFormation",
+      "AWS CodeCommit"
+    ],
+    "reason_vi": "Khôi phục sau ransomware với RPO 1 giờ bằng backup và hạ tầng dạng code."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/plan-options-and-configuration.html",
+      "title": "Backup plan options and configuration - AWS Backup",
+      "section": "Backup frequency",
+      "snapshot_id": "0929853544d4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Using the console, you can choose a frequency of every hour, 12 hours, daily, weekly, or monthly.",
+      "supports": "AWS Backup cho phép lịch backup mỗi giờ (đáp ứng RPO 1 giờ).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/s3-backups.html",
+      "title": "Amazon S3 backups - AWS Backup",
+      "section": "Introduction",
+      "snapshot_id": "5a56769b1ed5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For S3, you can create continuous backups and restore your application data stored in S3 and restore the backups to a point-in-time with a single click.",
+      "supports": "AWS Backup hỗ trợ backup/restore S3.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html",
+      "title": "What is AWS Backup?",
+      "section": "Backup vaults",
+      "snapshot_id": "afac31a23ad4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "your vault will retain your Amazon EC2 and Amazon EBS backups according to the lifecycle policy you choose, even if you delete the source Amazon EC2 instance",
+      "supports": "AWS Backup hỗ trợ EC2/EBS và giữ backup tách biệt khỏi tài nguyên nguồn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html",
+      "title": "What is AWS Backup?",
+      "section": "Backup vaults",
+      "snapshot_id": "afac31a23ad4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The content of each AWS Backup backup is immutable, meaning that no one can alter that content.",
+      "supports": "Backup bất biến giúp khôi phục sau ransomware.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/security-lake/latest/userguide/what-is-security-lake.html",
+      "title": "What is Amazon Security Lake?",
+      "section": "Introduction",
+      "snapshot_id": "9d8ed9176719",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Security Lake is a fully managed security data lake service.",
+      "supports": "Security Lake là data lake dữ liệu bảo mật, không phải backup/khôi phục.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html",
+      "title": "Introduction to AWS Security Hub CSPM",
+      "section": "Introduction",
+      "snapshot_id": "ce2e8e0fe1c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "provides you with a comprehensive view of your security state in AWS and helps you assess your AWS environment against security industry standards and best practices.",
+      "supports": "Security Hub dùng để xem/đánh giá posture bảo mật, không phải nơi lưu quy trình khôi phục.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings-malware-protection.html",
+      "title": "Malware Protection for EC2 finding types",
+      "section": "Introduction",
+      "snapshot_id": "1925e38076a4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The following findings are specific to GuardDuty Malware Protection for EC2.",
+      "supports": "Execution:EC2/MaliciousFile là finding phát hiện (detective control) của GuardDuty Malware Protection.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/s3-backups.html",
+      "title": "Amazon S3 backups - AWS Backup",
+      "section": "Periodic backups",
+      "snapshot_id": "5a56769b1ed5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can schedule periodic backups in frequencies such as 1 hour, 12 hours, 1 day, 1 week, or 1 month.",
+      "supports": "Backup S3 định kỳ mỗi 1 giờ được hỗ trợ trực tiếp (A đạt RPO 1 giờ cho S3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://aws.amazon.com/blogs/devops/aws-codecommit-returns-to-general-availability/",
+      "title": "The Future of AWS CodeCommit",
+      "section": "Introduction",
+      "snapshot_id": "c0e50502639b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2025-11-24T15:15:56-07:00",
+      "quote": "CodeCommit is returning to full General Availability, effective immediately.",
+      "supports": "CodeCommit (dùng trong A và C) đã trở lại GA từ 24/11/2025 sau giai đoạn đóng với khách hàng mới từ 07/2024.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q053:A\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key A khớp blind; thêm bằng chứng S3 periodic backup 1 giờ và trạng thái GA của CodeCommit; giữ A, status verified (confidence high)",
+      "previous_answer": null
+    }
+  ]
+}

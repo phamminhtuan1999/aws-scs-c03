@@ -1,0 +1,339 @@
+{
+  "question_id": "Q068",
+  "question_content_hash": "d301b2e2b80ab36a74a288dfead5aa9a6e6fc7eab00da1dfc4913ef82b84b9bb",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:48:50Z",
+  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5",
+    "blind_performed_by": {
+      "agent": "scs-researcher (blind)",
+      "model": "claude-opus-5-5"
+    }
+  },
+  "blind_record_sha256": "7366b1726dbc3d04d2d239e1ace22b588ce707e41ace4ddada821f4fde41b048",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Chuẩn bị ứng phó các cuộc tấn công DDoS tương tự trong tương lai vào website ecommerce.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Giảm thiểu thời gian downtime khi bị tấn công (phản ứng/giảm thiểu nhanh).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn đúng 2 bước (Choose two).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q068:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty là dịch vụ phát hiện mối đe dọa, sinh findings; bản thân nó không tự chặn truy cập hay giảm thiểu lưu lượng DDoS, nên không giảm downtime khi bị tấn công.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q068:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Shield Advanced mở rộng bảo vệ DDoS cho tài nguyên và cho phép làm việc với Shield Response Team (SRT) khi có sự cố (cần gói Business/Enterprise Support); SRT có thể phân tích log và áp rule WAF để chặn tấn công, giúp giảm downtime.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q068:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security group chỉ có rule allow, không có rule deny nên Lambda không thể 'chặn IP attacker' bằng security group; ngoài ra VPC Flow Logs thu thập ngoài luồng traffic, không phải cơ chế giảm thiểu DDoS nhanh (DDoS thường từ nhiều IP).",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q068:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "EventBridge theo dõi sự kiện API CloudTrail, AWS Config audit cấu hình, Systems Manager remediation cấu hình; các công cụ này xử lý thay đổi control plane, không hấp thụ hay lọc lưu lượng DDoS vào website.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q068:E",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AWS WAF (trên CloudFront/ALB/API Gateway...) cho phép tạo rule, ví dụ rate-based rule giới hạn request đến quá nhanh, để giảm thiểu DDoS tầng ứng dụng; Shield Advanced còn dùng WAF cho automatic application layer DDoS mitigation.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref2",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q068:B",
+      "Q068:E"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Shield Advanced + SRT và AWS WAF (rate-based rules) là cơ chế giảm thiểu DDoS được AWS tài liệu hóa; A, C, D không lọc/hấp thụ lưu lượng tấn công.",
+      "open_issues": [
+        "E giả định website nằm sau tài nguyên WAF hỗ trợ (CloudFront, ALB, API Gateway...), đề không nói rõ.",
+        "SRT yêu cầu Business hoặc Enterprise Support plan."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:48:50Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-srt-support.html",
+      "title": "Managed DDoS event response with Shield Response Team (SRT) support",
+      "section": "SRT support activities",
+      "snapshot_id": "ce9c0f9b6964",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With your approval during engagement, the SRT can apply changes to your web ACL to block the attacks that they've identified.",
+      "supports": "Shield Advanced + SRT hỗ trợ trực tiếp khi bị DDoS, giảm downtime.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-advanced-summary.html",
+      "title": "AWS Shield Advanced overview",
+      "section": "AWS Shield Advanced overview",
+      "snapshot_id": "975b9a65b106",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you subscribe to Shield Advanced and add protection to your resources, Shield Advanced provides expanded DDoS attack protection for those resources.",
+      "supports": "Shield Advanced cung cấp bảo vệ DDoS mở rộng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based.html",
+      "title": "Using rate-based rule statements in AWS WAF",
+      "section": "Rate-based rule statement",
+      "snapshot_id": "e8438a338e5c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A rate-based rule counts incoming requests and rate limits requests when they are coming at too fast a rate.",
+      "supports": "Rule AWS WAF có thể giới hạn tốc độ request để ứng phó flood tầng ứng dụng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html",
+      "title": "What is Amazon GuardDuty?",
+      "section": "What is Amazon GuardDuty?",
+      "snapshot_id": "667e4665f388",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon GuardDuty is a threat detection service that continuously monitors, analyzes, and processes AWS data sources and logs",
+      "supports": "GuardDuty là dịch vụ phát hiện, không phải cơ chế chặn/giảm thiểu DDoS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+      "title": "Security group rules - Amazon VPC",
+      "section": "Security group rules",
+      "snapshot_id": "5594f61a25d6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can specify allow rules, but not deny rules.",
+      "supports": "Không thể chặn một IP cụ thể bằng security group.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html",
+      "title": "Logging IP traffic using VPC Flow Logs",
+      "section": "Logging IP traffic using VPC Flow Logs",
+      "snapshot_id": "6d828a2b0fc8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Flow log data is collected outside of the path of your network traffic",
+      "supports": "Flow Logs chỉ ghi nhận traffic, không lọc/chặn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-service-event-cloudtrail.html",
+      "title": "AWS service events delivered via AWS CloudTrail - Amazon EventBridge",
+      "section": "AWS API Call via CloudTrail",
+      "snapshot_id": "fe6ea80aa61e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Events that represent a request to a public AWS service API.",
+      "supports": "EventBridge + CloudTrail theo dõi lời gọi API, không phải traffic web DDoS.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/remediation.html",
+      "title": "Remediating Noncompliant Resources with AWS Config",
+      "section": "Remediating Noncompliant Resources",
+      "snapshot_id": "327727d16367",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Config allows you to remediate noncompliant resources that are evaluated by AWS Config Rules.",
+      "supports": "Config/SSM xử lý tuân thủ cấu hình, không giảm thiểu lưu lượng tấn công.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html",
+      "title": "AWS WAF",
+      "section": "AWS WAF",
+      "snapshot_id": "188be6dea18a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS WAF is a web application firewall that lets you monitor the HTTP(S) requests",
+      "supports": "WAF áp dụng cho tài nguyên web như CloudFront, API Gateway, ALB.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-srt-support.html",
+      "title": "Managed DDoS event response with Shield Response Team (SRT) support",
+      "section": "Note",
+      "snapshot_id": "ce9c0f9b6964",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To use the services of the Shield Response Team (SRT), you must be subscribed to the Business Support plan or the Enterprise Support plan.",
+      "supports": "Điều kiện để 'reach out to AWS Support' (SRT) trong phương án B: cần Business/Enterprise Support.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "source_answer": [
+    "Q068:B",
+    "Q068:E"
+  ],
+  "researched_answer": [
+    "Q068:B",
+    "Q068:E"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Shield Advanced + SRT (áp rule web ACL chặn tấn công khi có sự cố) và AWS WAF rate-based rule là cơ chế giảm thiểu DDoS được tài liệu hóa trực tiếp; A chỉ phát hiện, C dùng security group không có deny, D xử lý thay đổi cấu hình control plane.",
+    "open_issues": [
+      "E giả định website đứng sau tài nguyên WAF hỗ trợ (CloudFront, ALB, API Gateway…).",
+      "SRT yêu cầu Business hoặc Enterprise Support plan."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key đều là B+E. Đã kiểm tra lại phương án cạnh tranh mạnh nhất là C (tự động chặn IP bằng Lambda): tài liệu VPC nói security group chỉ có allow rule, không có deny, nên không thể 'block an attacker's IP' bằng security group; Flow Logs cũng nằm ngoài luồng traffic và DDoS thường đến từ nhiều IP. A (GuardDuty) chỉ sinh findings, D chỉ giám sát/khắc phục cấu hình. Đã xác nhận thêm điều kiện SRT cần Business/Enterprise Support (không mâu thuẫn với B). Giữ B+E, verified, high.",
+  "explanation_vi": {
+    "why_correct": "B: Shield Advanced mở rộng bảo vệ DDoS và cho phép liên hệ Shield Response Team qua AWS Support khi bị tấn công; SRT có thể áp rule vào web ACL để chặn tấn công nhanh. E: AWS WAF cho phép tạo rule (ví dụ rate-based rule) để chặn/giới hạn flood tầng ứng dụng, giảm downtime.",
+    "others": {
+      "Q068:A": "GuardDuty là dịch vụ phát hiện mối đe dọa, chỉ tạo findings, không tự lọc hay hấp thụ lưu lượng DDoS.",
+      "Q068:C": "Security group không có rule deny nên không 'chặn IP' được; Flow Logs chỉ ghi nhận ngoài luồng traffic và DDoS đến từ rất nhiều IP.",
+      "Q068:D": "EventBridge/CloudTrail/Config/Systems Manager theo dõi và sửa thay đổi cấu hình API, không lọc lưu lượng tấn công vào website."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "DDoS attack",
+      "meaning_vi": "Tấn công từ chối dịch vụ phân tán → AWS Shield (Advanced) + AWS WAF."
+    },
+    {
+      "phrase": "minimize downtime",
+      "meaning_vi": "Cần cơ chế giảm thiểu/phản ứng nhanh (SRT, WAF rules), không chỉ phát hiện."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề nói DDoS vào website và cần giảm downtime -> nghĩ đến Shield Advanced (SRT, bảo vệ chi phí) + AWS WAF rate-based rules; kiểm tra GuardDuty/Config/Flow Logs chỉ phát hiện, còn security group không có deny.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS Shield Advanced",
+      "AWS WAF",
+      "Amazon GuardDuty",
+      "Amazon VPC"
+    ],
+    "reason_vi": "Đề về chuẩn bị ứng phó sự cố DDoS và bảo vệ biên (edge/application layer)."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:48:50Z",
+      "change": "blind verdict ['Q068:B', 'Q068:E'] (proposed_status=verified)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:05:05+00:00",
+      "change": "reconciliation: source=['Q068:B', 'Q068:E'], final=['Q068:B', 'Q068:E'], status=verified",
+      "previous_answer": [
+        "Q068:B",
+        "Q068:E"
+      ]
+    }
+  ],
+  "notes_vi": "Shield Advanced (SRT, bảo vệ DDoS mở rộng) + AWS WAF (rate-based rules, L7) là cặp giảm downtime khi bị DDoS."
+}

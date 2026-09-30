@@ -2,9 +2,9 @@
   "question_id": "Q090",
   "question_content_hash": "51cc0bee544a98596b99c5207f9cd84bbd26c3f42ec56eef523f3dcc56525e99",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:58:15Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -34,31 +34,29 @@
       "unit_id": "Q090:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Service Catalog cho tạo product từ CloudFormation template trong portfolio, cấp quyền cho end users qua principal của portfolio, và portfolio có thể share với toàn organization qua AWS Organizations để end users mọi account tự launch bucket chuẩn.",
+      "reason_vi": "Đúng nhưng cần share portfolio với tổ chức/OU và grant principal access trong receiving accounts.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q090:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS RAM chỉ share các resource type được hỗ trợ; CloudFormation template không nằm trong danh sách shareable resources của RAM nên không thể tạo resource share cho template.",
+      "reason_vi": "RAM không chia sẻ arbitrary CloudFormation template như loại resource này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
+        "ref2",
         "ref6"
       ],
       "evidence_kind": "inference"
@@ -67,14 +65,14 @@
       "unit_id": "Q090:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Như B, template không share được qua RAM; mục Amazon S3 trong RAM chỉ có S3 Access Grants, không có 'AWS managed permissions for Amazon S3' cho template.",
+      "reason_vi": "RAM permission cho S3 không biến template thành deployable product.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref2",
+        "ref6"
       ],
       "evidence_kind": "inference"
     },
@@ -82,13 +80,14 @@
       "unit_id": "Q090:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Share một bucket đã deploy không phải share template để end users tạo bucket mới; hơn nữa S3 bucket không phải resource type shareable qua RAM (mục S3 chỉ có S3 Access Grants).",
+      "reason_vi": "RAM không chia sẻ S3 bucket/template để người dùng tạo bucket mới.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref7"
+        "ref2",
+        "ref6"
       ],
       "evidence_kind": "inference"
     }
@@ -126,18 +125,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Service Catalog cho tạo product từ CloudFormation template, cấp quyền end users qua portfolio và share portfolio với cả organization; danh sách resource shareable của AWS RAM không có CloudFormation template hay S3 bucket (mục S3 chỉ có S3 Access Grants).",
-    "open_issues": [
-      "Phương án A không nêu rõ bước share portfolio với organization qua AWS Organizations, chỉ nói cấp quyền end users cho portfolio; vẫn là phương án duy nhất khả thi."
-    ]
+    "reason_vi": "Option A phải được triển khai với org portfolio sharing/end-user access, không chỉ product/portfolio.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A. Đã đọc lại toàn bộ mục lục trang Shareable AWS resources của AWS RAM: không có mục AWS CloudFormation; mục Amazon Simple Storage Service chỉ có S3 Access Grants (S3 on Outposts là loại khác), nên B, C (share template) và D (share bucket) đều không thực hiện được. D còn sai mục tiêu vì share một bucket có sẵn chứ không cho end users tạo bucket mới. Giữ A, verified.",
+  "reconciliation_vi": "Option A phải được triển khai với org portfolio sharing/end-user access, không chỉ product/portfolio.",
   "explanation_vi": {
-    "why_correct": "AWS Service Catalog cho upload CloudFormation template thành product trong portfolio, cấp quyền end users và share portfolio với toàn bộ account trong organization, để end users tự launch S3 bucket theo template chuẩn đã phê duyệt.",
+    "why_correct": "Tạo CloudFormation product trong Service Catalog portfolio, share portfolio qua Organizations và cấp quyền end users để họ tự triển khai S3 theo mẫu chuẩn.",
     "others": {
-      "Q090:B": "AWS RAM không hỗ trợ share CloudFormation template (không có trong danh sách resource shareable), nên không tạo được resource share cho template.",
-      "Q090:C": "Giống B, template không share được qua RAM; mục Amazon S3 trong RAM chỉ có S3 Access Grants, không có managed permission để share template.",
-      "Q090:D": "Share một bucket đã deploy không cho end users tạo bucket mới theo template, và S3 bucket thường không phải resource shareable qua RAM."
+      "Q090:B": "RAM không chia sẻ arbitrary CloudFormation template như loại resource này.",
+      "Q090:C": "RAM permission cho S3 không biến template thành deployable product.",
+      "Q090:D": "RAM không chia sẻ S3 bucket/template để người dùng tạo bucket mới."
     }
   },
   "keywords": [
@@ -154,7 +151,7 @@
       "meaning_vi": "End users tự launch tài nguyên từ template - đúng mô hình self-service của Service Catalog."
     }
   ],
-  "memory_tip_vi": "Nếu cần phân phối CloudFormation template đã chuẩn hóa để end users ở nhiều account tự deploy -> nghĩ đến Service Catalog portfolio/product (share qua Organizations); kiểm tra: AWS RAM chỉ share các resource type trong danh sách hỗ trợ, không có CloudFormation template.",
+  "memory_tip_vi": "Nếu cần template chuẩn tự phục vụ nhiều account, tạo Service Catalog product, share portfolio qua Organizations và cấp quyền end users.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance"
@@ -261,7 +258,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q090",
+      "detail_vi": "A thiếu explicit Organizations sharing step trong wording; bổ sung trong giải thích."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -274,6 +277,46 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key A khớp blind; đọc lại danh sách resource shareable của RAM (không có CloudFormation, S3 chỉ Access Grants); giữ A, verified (high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Option A phải được triển khai với org portfolio sharing/end-user access, không chỉ product/portfolio.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q090:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q090:A"
+      ],
+      "note_vi": "Option A phải được triển khai với org portfolio sharing/end-user access, không chỉ product/portfolio.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Option A phải được triển khai với org portfolio sharing/end-user access, không chỉ product/portfolio.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q090:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q090:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

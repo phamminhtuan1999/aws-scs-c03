@@ -1,0 +1,285 @@
+{
+  "question_id": "Q129",
+  "question_content_hash": "24a715968a783884719c5d4e2c9252160583630d247e4fc838726286a28db9a4",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:20:31+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "c245196dd6c5826c53e2940bc2a62f7b96ee5f5a5e93f2f101df1c888d746abc",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "EC2 sau ALB chỉ nhận traffic đi qua CloudFront; chặn truy cập trực tiếp vào ALB public.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chọn đúng HAI bước kết hợp.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q129:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cache policy chỉ chọn header của viewer đưa vào cache key (header đó được chuyển tiếp sang origin với giá trị do client gửi); nó không để CloudFront tự chèn header bí mật, nên ALB không phân biệt được request từ CloudFront với request đi thẳng.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q129:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Origin Custom Headers trong CloudFront thêm header bí mật vào mọi request gửi tới ALB - bước 1 trong hướng dẫn chính thức.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q129:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Listener rule của ALB chỉ forward request có header đó, default action trả 403 - bước 2, chặn request đi thẳng vào ALB.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q129:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "X-Forwarded-For chứa IP của client (viewer), không chứng minh request đi qua CloudFront và có thể bị client giả mạo; không phải cơ chế giới hạn nguồn.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q129:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Certificate server phía ALB/CloudFront chỉ mã hóa và xác thực server, không xác thực người gọi là CloudFront; ACM cert cho CloudFront phải ở us-east-1 nên 'dùng chung một cert' với ALB ở Region khác cũng không phải cách kiểm soát truy cập.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q129:B",
+      "Q129:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Trang CloudFront 'Restrict access to Application Load Balancers' liệt kê đúng hai bước B và C.",
+      "open_issues": [
+        "AWS-managed prefix list cho CloudFront trên security group là biện pháp bổ sung nhưng không có trong các lựa chọn."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:20:31+00:00"
+  },
+  "source_answer": [
+    "Q129:B",
+    "Q129:C"
+  ],
+  "researched_answer": [
+    "Q129:B",
+    "Q129:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B+C. Trang CloudFront 'Restrict access to Application Load Balancers' liệt kê đúng hai bước này và khẳng định sau khi làm xong user chỉ truy cập ALB qua CloudFront.",
+    "open_issues": [
+      "AWS-managed prefix list cho CloudFront trên security group và CloudFront VPC origins là biện pháp bổ sung/thay thế nhưng không có trong các lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, C, trùng blind. Xét lại đối thủ A (cũng nói tới header): trang CloudFront origin request policy nói header đưa vào cache key được tự động chuyển tiếp trong origin request, tức là header lấy từ viewer - client gửi thẳng tới ALB cũng tự đặt được, khác với origin custom header (B) do CloudFront chèn với giá trị bí mật. Trang 'Restrict access to ALB' khẳng định sau hai bước B+C user chỉ truy cập ALB qua CloudFront. D (X-Forwarded-For) và E (certificate) không kiểm soát nguồn request. Giữ B+C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "B: CloudFront thêm custom header có giá trị bí mật vào mọi request gửi tới ALB. C: listener rule của ALB chỉ forward request có header đúng giá trị, còn lại trả lỗi, nên request đi thẳng vào ALB không tới được EC2.",
+    "others": {
+      "Q129:A": "Cache policy chỉ đưa header của viewer vào cache key rồi chuyển tiếp, không chèn header bí mật nên không chứng minh request đến từ CloudFront.",
+      "Q129:D": "X-Forwarded-For chứa IP của client và có thể bị giả mạo, không cho biết request có đi qua CloudFront hay không.",
+      "Q129:E": "Certificate chỉ phục vụ mã hóa và xác thực server, không giới hạn ai được gửi request tới ALB."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "receive traffic only from CloudFront",
+      "meaning_vi": "ALB phải từ chối request không đi qua CloudFront -> custom header + listener rule."
+    },
+    {
+      "phrase": "still coming directly into the ALB",
+      "meaning_vi": "ALB public vẫn bị gọi trực tiếp, cần cơ chế nhận diện request từ CloudFront."
+    },
+    {
+      "phrase": "deployed Amazon CloudFront in front of the ALB",
+      "meaning_vi": "ALB là origin của CloudFront."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần ALB public chỉ nhận traffic từ CloudFront -> nghĩ đến custom origin header bí mật + listener rule ALB kiểm tra header (có thể thêm managed prefix list cho SG hoặc VPC origins); kiểm tra: cache policy hay X-Forwarded-For không chứng minh nguồn CloudFront.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "Amazon CloudFront",
+      "Elastic Load Balancing",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Bảo vệ edge/origin: buộc traffic đi qua CloudFront trước khi tới ALB."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html",
+      "title": "Restrict access to Application Load Balancers",
+      "section": "Introduction",
+      "snapshot_id": "0d7de09bf048",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Configure the Application Load Balancer to only forward requests that contain the custom HTTP header.",
+      "supports": "Bước ALB chỉ forward request có custom header (C), đi cùng bước CloudFront thêm header (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html",
+      "title": "Restrict access to Application Load Balancers",
+      "section": "Configure CloudFront to add a custom HTTP header to requests",
+      "snapshot_id": "0d7de09bf048",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can configure CloudFront to add a custom HTTP header to the requests that it sends to your origin (in this case, an Application Load Balancer).",
+      "supports": "CloudFront thêm custom header vào origin request (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html",
+      "title": "Control the cache key with a policy",
+      "section": "Control the cache key with a policy",
+      "snapshot_id": "f1fccd1cf6b1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With a CloudFront cache policy, you can specify the HTTP headers, cookies, and query strings that CloudFront includes in the cache key",
+      "supports": "Cache policy chỉ chọn giá trị đưa vào cache key, không thêm header bí mật (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html",
+      "title": "HTTP headers and Application Load Balancers",
+      "section": "X-Forwarded-For - Append",
+      "snapshot_id": "227aa20bf999",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, the Application Load Balancer stores the IP address of the client in the X-Forwarded-For request header and passes the header to your server.",
+      "supports": "X-Forwarded-For mang IP client, không phải dấu hiệu request đến từ CloudFront (D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html",
+      "title": "Requirements for using SSL/TLS certificates with CloudFront",
+      "section": "Certificate issuer",
+      "snapshot_id": "c032f992f4a7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To use an ACM certificate with a CloudFront distribution, make sure you request (or import) the certificate in the US East (N. Virginia) Region (us-east-1).",
+      "supports": "Certificate chỉ phục vụ HTTPS; không có cơ chế giới hạn nguồn request (E).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html",
+      "title": "Control origin requests with a policy",
+      "section": "Overview",
+      "snapshot_id": "9f965daf2036",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "HTTP headers, and cookies that you include in the cache key (using a cache policy) are automatically included in origin requests.",
+      "supports": "Header trong cache policy là header của viewer được chuyển tiếp sang origin; giá trị do client gửi nên không chứng minh request đi qua CloudFront (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html",
+      "title": "Restrict access to Application Load Balancers",
+      "section": "Introduction",
+      "snapshot_id": "0d7de09bf048",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "After you complete these steps, users can only access your Application Load Balancer through CloudFront.",
+      "supports": "Hai bước custom header (B) + ALB chỉ forward khi có header (C) đạt đúng yêu cầu chỉ nhận traffic từ CloudFront.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:20:31+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q129:B\", \"Q129:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:31+00:00",
+      "change": "Reconciliation: khớp source key B+C; thêm ref6 (header trong cache key là header của viewer được chuyển tiếp) và ref7 (sau hai bước chỉ truy cập ALB qua CloudFront); status verified (high).",
+      "previous_answer": [
+        "Q129:B",
+        "Q129:C"
+      ]
+    }
+  ],
+  "notes_vi": ""
+}

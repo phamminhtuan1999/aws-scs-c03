@@ -2,9 +2,9 @@
   "question_id": "Q117",
   "question_content_hash": "ec041b36f53cf4e1d398617669816f18b8e0f1ba6146542a9b93e0889fe33e9f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:19:20+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,15 +34,14 @@
       "unit_id": "Q117:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Config tự theo dõi thay đổi cấu hình qua configuration item, không có cơ chế 'Lambda báo cho Config về thay đổi'; RDS event subscription cũng gửi tới SNS topic chứ không nhắm Lambda trực tiếp. Bước này thừa và không phải cơ chế chuẩn.",
+      "reason_vi": "A RDS event notification không phải direct Lambda target như mô tả và không cần Lambda để Config ghi nhận thay đổi.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref9",
-        "ref7"
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
@@ -50,71 +49,71 @@
       "unit_id": "Q117:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Managed rule rds-instance-public-access-check đánh giá NON_COMPLIANT khi publiclyAccessible = true, trigger theo thay đổi cấu hình nên phát hiện gần thời gian thực.",
+      "reason_vi": "B managed rule kiểm tra publiclyAccessible của DB instance.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q117:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "SNS topic là target hợp lệ của EventBridge rule, dùng để gửi thông báo (email/SMS) cho security engineer.",
+      "reason_vi": "C SNS là target gửi thông báo cho security engineer.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q117:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "RDS event notification dùng SNS topic làm đích; hướng 'subscribe SQS queue vào SNS topic' là SNS đẩy sang SQS, không phải SQS đẩy sang SNS, nên luồng thông báo mô tả không hoạt động. Ngoài ra RDS event không phải là đánh giá tuân thủ.",
+      "reason_vi": "D RDS không post trực tiếp vào SQS theo luồng này; chiều SNS → SQS cũng không gửi ngược từ SQS.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7",
-        "ref8"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q117:E",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "EventBridge nhận sự kiện 'Config Rules Compliance Change' gần thời gian thực và có thể lọc theo tên rule cụ thể rds-instance-public-access-check.",
+      "reason_vi": "E EventBridge nhận compliance change của Config rule.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q117:F",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Phụ thuộc vào cơ chế 'Lambda báo cho Config' của option A vốn không phải cơ chế chuẩn; không có loại sự kiện EventBridge tương ứng để kích hoạt.",
+      "reason_vi": "F event flow Lambda → Config không phải luồng managed rule chuẩn cần chọn.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref9"
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -157,18 +156,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B, C, E. Tài liệu Config/EventBridge mô tả trực tiếp chuỗi: managed rule rds-instance-public-access-check (trigger theo thay đổi cấu hình) -> sự kiện Config Rules Compliance Change -> EventBridge rule -> SNS topic.",
-    "open_issues": [
-      "Rule rds-instance-public-access-check chỉ áp dụng cho AWS::RDS::DBInstance; đề nói 'RDS resources' chung chung nhưng các option chỉ có rule này nên không ảnh hưởng lựa chọn."
-    ]
+    "reason_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, C, E, trùng blind. Xét lại các phương án cạnh tranh: A và F dựa trên việc 'Lambda báo cho AWS Config' – Config tự ghi configuration item và tự đánh giá rule change-triggered khi cấu hình thay đổi (ref3, ref9), còn RDS event subscription được định danh bằng SNS topic ARN chứ không nhắm Lambda trực tiếp (ref7); D đảo chiều SNS->SQS (SQS là subscriber của SNS, ref8) và RDS event không phải là đánh giá tuân thủ. Các snapshot đã có đủ trích dẫn trực tiếp; không tìm thấy bằng chứng bác bỏ. Giữ B, C, E, verified, high.",
+  "reconciliation_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
   "explanation_vi": {
-    "why_correct": "B: managed rule rds-instance-public-access-check đánh giá NON_COMPLIANT khi publiclyAccessible = true và chạy ngay khi cấu hình thay đổi. E: EventBridge rule bắt sự kiện Config Rules Compliance Change của rule này gần thời gian thực. C: rule đó gửi tới SNS topic để thông báo cho security engineer.",
+    "why_correct": "Config rule phát hiện DB instance public; EventBridge bắt compliance change và gửi SNS notification.",
     "others": {
-      "Q117:A": "Config tự theo dõi thay đổi cấu hình, không cần Lambda 'báo cho Config'; RDS event subscription cũng gửi tới SNS topic chứ không nhắm Lambda trực tiếp.",
-      "Q117:D": "SQS là subscriber nhận từ SNS, không đẩy sang SNS nên luồng bị ngược; RDS event cũng không phải đánh giá tuân thủ public access.",
-      "Q117:F": "Phụ thuộc cơ chế 'Lambda báo cho Config' không có thật nên không có sự kiện EventBridge tương ứng để kích hoạt."
+      "Q117:A": "A RDS event notification không phải direct Lambda target như mô tả và không cần Lambda để Config ghi nhận thay đổi.",
+      "Q117:D": "D RDS không post trực tiếp vào SQS theo luồng này; chiều SNS → SQS cũng không gửi ngược từ SQS.",
+      "Q117:F": "F event flow Lambda → Config không phải luồng managed rule chuẩn cần chọn."
     }
   },
   "keywords": [
@@ -185,7 +182,7 @@
       "meaning_vi": "Trạng thái NON_COMPLIANT của AWS Config rule."
     }
   ],
-  "memory_tip_vi": "Nếu cần giám sát cấu hình tuân thủ và báo gần thời gian thực -> nghĩ đến AWS Config managed rule + EventBridge (Config Rules Compliance Change) + SNS; kiểm tra: RDS event notification chỉ gửi tới SNS và không đánh giá tuân thủ.",
+  "memory_tip_vi": "Nếu báo vi phạm Config, nghĩ Config → EventBridge → SNS.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -318,7 +315,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q117",
+      "detail_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -335,7 +338,46 @@
         "Q117:C",
         "Q117:E"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q117:B",
+        "Q117:C",
+        "Q117:E"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q117:B",
+        "Q117:C",
+        "Q117:E"
+      ],
+      "note_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Chuỗi chuẩn: Config managed rule -> Config Rules Compliance Change event -> EventBridge rule -> SNS."
+  "notes_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B",
+      "C",
+      "E"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

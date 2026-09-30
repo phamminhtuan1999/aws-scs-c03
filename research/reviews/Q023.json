@@ -2,9 +2,9 @@
   "question_id": "Q023",
   "question_content_hash": "b46f682293ec3f16881d621585e437dbcea5018616146dbfe6275c4cd3dc931c",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -28,8 +28,8 @@
     {
       "unit_id": "Q023:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Với Aurora MySQL, đặt DB cluster parameter require_secure_transport = ON buộc mọi kết nối người dùng dùng TLS, không cần reboot (với Aurora PostgreSQL tham số tương đương là rds.force_ssl).",
+      "verdict": "undetermined",
+      "reason_vi": "Đúng có điều kiện: require_secure_transport thuộc Aurora MySQL.",
       "requirement_ids": [
         "R1",
         "R2"
@@ -38,18 +38,19 @@
         "ref1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q023:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Managed Microsoft AD + Kerberos là cơ chế XÁC THỰC người dùng database, không bắt buộc mã hóa kênh truyền dữ liệu.",
+      "reason_vi": "Sai: Kerberos xác thực không tự bắt buộc TLS cho mọi kết nối.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -57,28 +58,29 @@
       "unit_id": "Q023:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Server certificate của Aurora do các CA của Amazon RDS ký, không cấu hình bằng ACM; dù có certificate, việc cung cấp chứng chỉ không bắt buộc client phải dùng TLS.",
+      "reason_vi": "Sai: ACM certificate không phải cơ chế attach/enforce TLS của Aurora.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q023:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "RDS Proxy có thiết lập Require TLS (API ghi là bắt TLS cho kết nối tới proxy, User Guide ghi là giữa proxy và DB), nhưng nó chỉ áp dụng cho traffic đi qua proxy; client vẫn kết nối thẳng tới cluster endpoint không mã hóa được, nên không enforce cho mọi kết nối tới Aurora cluster, và proxy không 'bật mã hóa' cho cluster.",
+      "verdict": "undetermined",
+      "reason_vi": "Chưa đủ: thêm proxy không tự chặn đường kết nối trực tiếp hoặc bắt buộc TLS nếu chưa cấu hình.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -102,39 +104,41 @@
   "source_answer": [
     "Q023:A"
   ],
-  "researched_answer": [
-    "Q023:A"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu Aurora MySQL nêu trực tiếp require_secure_transport buộc mọi kết nối người dùng dùng TLS; các lựa chọn khác không enforce ở phía cluster. Mức medium vì đề không nêu engine, tham số này chỉ áp dụng cho Aurora MySQL.",
+    "reason_vi": "A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có.",
     "open_issues": [
-      "Nếu cluster là Aurora PostgreSQL thì tham số đúng là rds.force_ssl, không phải require_secure_transport."
+      "Engine không được chỉ định; API/parameter khác giữa hai Aurora engines."
     ]
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã kiểm tra kỹ đối thủ D: API CreateDBProxy có RequireTLS 'enforce encrypted TLS connections to the proxy' (khác với cách User Guide mô tả là giữa proxy và DB) – tức lý do blind 'TLS client-proxy chỉ đặt ở client' chưa đầy đủ. Tuy vậy proxy không chặn kết nối trực tiếp tới cluster endpoint, nên D vẫn không enforce cho TẤT CẢ kết nối; đã sửa reason của D. B (Kerberos) là xác thực, C (ACM) không cấp certificate cho Aurora. Giữ A, verified, medium do đề không nêu engine.",
+  "reconciliation_vi": "A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có.",
   "explanation_vi": {
-    "why_correct": "Với Aurora MySQL, đặt DB cluster parameter require_secure_transport = ON làm cluster từ chối mọi kết nối người dùng không dùng TLS, tức enforce mã hóa in transit ngay tại database (Aurora PostgreSQL dùng rds.force_ssl tương đương).",
+    "why_correct": "require_secure_transport=ON bắt buộc TLS cho Aurora MySQL. Aurora PostgreSQL dùng rds.force_ssl, nên A chỉ đúng khi bổ sung engine MySQL mà đề hiện không nêu.",
     "others": {
-      "Q023:B": "Kerberos qua AWS Managed Microsoft AD là cơ chế xác thực người dùng, không bắt buộc kênh truyền phải mã hóa.",
-      "Q023:C": "Chứng chỉ server của Aurora do CA của Amazon RDS cấp, không cấu hình qua ACM, và có chứng chỉ cũng không bắt client phải dùng TLS.",
-      "Q023:D": "RDS Proxy chỉ bắt TLS với traffic đi qua proxy; client vẫn có thể nối thẳng cluster endpoint không mã hóa."
+      "Q023:B": "Sai: Kerberos xác thực không tự bắt buộc TLS cho mọi kết nối.",
+      "Q023:C": "Sai: ACM certificate không phải cơ chế attach/enforce TLS của Aurora.",
+      "Q023:D": "Chưa đủ: thêm proxy không tự chặn đường kết nối trực tiếp hoặc bắt buộc TLS nếu chưa cấu hình."
     }
   },
   "keywords": [
     {
-      "phrase": "encrypt all data in transit",
-      "meaning_vi": "Mã hóa dữ liệu khi truyền -> TLS."
+      "phrase": "Aurora cluster",
+      "meaning_vi": "Engine chưa được nêu, parameter phụ thuộc engine."
     },
     {
-      "phrase": "enforce encryption for all connections",
-      "meaning_vi": "Phải bắt buộc phía server (tham số DB), không phụ thuộc client hay đường vào."
+      "phrase": "all connections",
+      "meaning_vi": "Enforce tại DB để mọi kết nối chịu TLS policy."
+    },
+    {
+      "phrase": "in transit",
+      "meaning_vi": "Chứng chỉ có sẵn không đồng nghĩa TLS bắt buộc."
     }
   ],
-  "memory_tip_vi": "Nếu cần bắt buộc TLS cho mọi kết nối tới Aurora/RDS -> nghĩ đến tham số DB: require_secure_transport (MySQL) hoặc rds.force_ssl (PostgreSQL); kiểm tra engine trong đề.",
+  "memory_tip_vi": "Nếu Aurora MySQL, bật require_secure_transport; nếu PostgreSQL, bật rds.force_ssl.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -231,8 +235,8 @@
   "source_issues": [
     {
       "type": "ambiguous",
-      "location": "Q023:stem:0",
-      "detail_vi": "Không nêu engine Aurora; require_secure_transport chỉ đúng cho Aurora MySQL (PostgreSQL dùng rds.force_ssl)."
+      "location": "Q023",
+      "detail_vi": "Engine không được chỉ định; API/parameter khác giữa hai Aurora engines."
     }
   ],
   "history": [
@@ -249,6 +253,40 @@
       "previous_answer": [
         "Q023:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q023:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có.",
+      "technical_change": true
     }
-  ]
+  ],
+  "notes_vi": "A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q023:A",
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q023:A"
+    ],
+    "candidate_answers": [
+      "Q023:A"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

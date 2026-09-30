@@ -2,9 +2,9 @@
   "question_id": "Q022",
   "question_content_hash": "b9cc191ae8dc86451bd550b6149b39543fd19fbb721d38fb1d7ad1c12e311356",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,27 +29,25 @@
       "unit_id": "Q022:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Snapshot mã hóa bằng default KMS key (AWS managed key) không chia sẻ được; KMS key không thể sao chép/xuất ra khỏi AWS KMS nên Lambda 'copy key' sang account khác là không khả thi.",
+      "reason_vi": "Sai: không thể export AWS managed KMS key material.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q022:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Dùng customer managed key là đúng hướng, nhưng không thể 'import KMS key' sang account khác: import key material là đưa vật liệu khóa của bạn vào KMS, không phải chuyển một KMS key đã có; key material do KMS tạo không rời KMS ở dạng rõ.",
+      "reason_vi": "Sai: import cùng material vào key mới không giúp giải mã snapshot mã hóa bởi key cũ; phải share key gốc.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -57,31 +55,28 @@
       "unit_id": "Q022:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Không thể chia sẻ snapshot mã hóa bằng default KMS key của account nguồn, và không thể sửa key policy của AWS managed key để cấp quyền cho account khác.",
+      "reason_vi": "Sai: default AWS managed RDS key không hỗ trợ chia sẻ encrypted snapshot.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q022:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Mã hóa bằng customer managed key, cấp quyền dùng key cho hai account qua key policy và IAM policy của principal trong mỗi account, rồi share snapshot; đây là cách RDS hướng dẫn cho snapshot mã hóa.",
+      "reason_vi": "Đúng: customer key có cross-account key access và snapshot sharing.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref6"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -114,31 +109,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu RDS nói rõ không share được snapshot mã hóa bằng default KMS key và hướng dẫn dùng customer managed key cấp quyền cho account khác; KMS yêu cầu key policy + IAM policy cho truy cập cross-account.",
-    "open_issues": [
-      "Diễn đạt 'share the KMS key ... by using an IAM principal' hơi lỏng: thực tế cần key policy của key nguồn cho phép account đích, IAM policy cho principal ở account đích, và vẫn phải share chính snapshot."
-    ]
+    "reason_vi": "Giữ D; không nói import key nói chung bất khả thi, mà key mới không giải mã snapshot cũ; cross-account cần hai phía.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại đối thủ mạnh nhất B (cũng dùng customer managed key): KMS key do KMS tạo không rời KMS ở dạng rõ, 'import' là đưa key material bên ngoài vào một KMS key, không phải chuyển một KMS key sang account khác; ciphertext của snapshot vẫn gắn với key nguồn. A và C bị loại trực tiếp vì RDS không cho share snapshot mã hóa bằng default KMS key và không sửa được key policy của AWS managed key. Giữ D, verified, high.",
+  "reconciliation_vi": "Giữ D; không nói import key nói chung bất khả thi, mà key mới không giải mã snapshot cũ; cross-account cần hai phía.",
   "explanation_vi": {
-    "why_correct": "RDS chỉ cho share snapshot mã hóa khi dùng customer managed key: key policy của key đó cấp quyền cho hai account DR, principal trong mỗi account có IAM policy dùng key, rồi share snapshot để họ giải mã/copy khi có sự cố.",
+    "why_correct": "Mã hóa snapshot bằng customer managed KMS key và cấp quyền snapshot/key cho hai account nhận. Bên nhận cần key policy cùng IAM permission để copy/restore theo cơ chế RDS hỗ trợ.",
     "others": {
-      "Q022:A": "Default (AWS managed) key không share được cho snapshot, và KMS key không thể bị 'copy' ra account khác bằng Lambda.",
-      "Q022:B": "Customer managed key là đúng hướng, nhưng không thể 'import' một KMS key sang account khác; cách đúng là cấp quyền qua key policy.",
-      "Q022:C": "Không share được snapshot mã hóa bằng default key và không thể sửa key policy của AWS managed key để cấp quyền cross-account."
+      "Q022:A": "Sai: không thể export AWS managed KMS key material.",
+      "Q022:B": "Sai: import cùng material vào key mới không giúp giải mã snapshot mã hóa bởi key cũ; phải share key gốc.",
+      "Q022:C": "Sai: default AWS managed RDS key không hỗ trợ chia sẻ encrypted snapshot."
     }
   },
   "keywords": [
     {
-      "phrase": "snapshots must be encrypted",
-      "meaning_vi": "Snapshot phải được mã hóa bằng KMS key."
+      "phrase": "two accounts",
+      "meaning_vi": "Key policy phải cấp cross-account access."
     },
     {
-      "phrase": "each account needs to be able to decrypt the snapshots",
-      "meaning_vi": "Cần cấp quyền cross-account trên KMS key -> phải là customer managed key."
+      "phrase": "encrypted",
+      "meaning_vi": "Dùng customer managed KMS key."
+    },
+    {
+      "phrase": "decrypt the snapshots",
+      "meaning_vi": "Account nhận cần thêm IAM permissions."
     }
   ],
-  "memory_tip_vi": "Nếu cần share snapshot RDS/EBS mã hóa sang account khác -> nghĩ đến customer managed key + key policy cấp quyền cho account đích + share snapshot; kiểm tra: default/AWS managed key thì không share được.",
+  "memory_tip_vi": "Nếu chia sẻ encrypted RDS snapshot khác account, dùng customer managed key và cấp quyền cả snapshot lẫn key.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -255,6 +252,38 @@
       "previous_answer": [
         "Q022:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ D; không nói import key nói chung bất khả thi, mà key mới không giải mã snapshot cũ; cross-account cần hai phía.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q022:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q022:D"
+      ],
+      "note_vi": "Giữ D; không nói import key nói chung bất khả thi, mà key mới không giải mã snapshot cũ; cross-account cần hai phía.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Giữ D; không nói import key nói chung bất khả thi, mà key mới không giải mã snapshot cũ; cross-account cần hai phía.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q022:D",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

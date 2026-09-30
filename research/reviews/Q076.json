@@ -2,9 +2,9 @@
   "question_id": "Q076",
   "question_content_hash": "9b2569e25e900bbc215eb3256293261584c1a875d23b96cfd91c95a0f723cc43",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,42 +39,41 @@
       "unit_id": "Q076:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Bật Shield Advanced và tạo CloudWatch alarm chỉ cho khả năng phát hiện/cảnh báo; với tầng 7, Shield Advanced chỉ tự tạo rule giảm thiểu khi bật automatic application layer DDoS mitigation, nên option này thiếu phần mitigate tự động.",
+      "reason_vi": "Chỉ bật bảo vệ và alarm chưa bật automatic L7 mitigation.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q076:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Proactive engagement chỉ là SRT liên hệ trực tiếp với bạn khi ứng dụng bị ảnh hưởng; đây là phản ứng có con người tham gia, không phải giảm thiểu tự động tầng 7.",
+      "reason_vi": "Proactive SRT engagement cần con người và không đáp ứng no manual effort.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q076:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Network Firewall lọc traffic ở biên VPC (sau CloudFront, chỉ thấy traffic từ edge), không có tính năng phát hiện DDoS tầng 7; tự viết Lambda sửa web ACL là giải pháp tự chế, không phải real-time được quản lý.",
+      "reason_vi": "Network Firewall ở origin không tự bảo vệ CloudFront HTTP theo thiết kế nêu.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -82,18 +81,16 @@
       "unit_id": "Q076:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đúng mô hình tài liệu: web ACL + rate-based rule làm lớp bảo vệ cơ bản, Shield Advanced bảo vệ CloudFront và bật automatic application layer DDoS mitigation để Shield tự tạo/triển khai rule WAF khi phát hiện tấn công.",
+      "reason_vi": "Đúng theo tính năng legacy: bật automatic L7 mitigation trên CloudFront.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -126,20 +123,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu Shield Advanced mô tả đúng cấu hình của D (web ACL + rate-based rule + automatic application layer DDoS mitigation, bật trên CloudFront distribution) và là option duy nhất vừa phát hiện vừa giảm thiểu tầng 7 tự động. Mức medium vì có điều kiện thời gian: từ 26/3/2026 L7 Auto Mitigation là legacy.",
-    "open_issues": [
-      "Điều kiện thời gian: từ 26/3/2026, Anti-DDoS Managed Rule Group (AWSManagedRulesAntiDDoSRuleSet) là giải pháp mặc định cho HTTP flood và thay thế L7 Auto Mitigation; khách hàng Shield Advanced hiện hữu vẫn dùng được L7AM, khách hàng mới phải liên hệ AWS Support. AMR không có trong các option nên D vẫn là đáp án tốt nhất trong đề.",
-      "Automatic mitigation cần 24 giờ đến 30 ngày để lập baseline traffic; rate-based rule bảo vệ ngay trong thời gian đó."
-    ]
+    "level": "high",
+    "reason_vi": "Bỏ 'chặn ngay': rate-based rule và Shield có detection/mitigation latency; tính năng legacy bị thay từ 26/03/2026.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã fetch lại (--refresh) trang Automating application layer DDoS mitigation: ghi chú nói từ 26/3/2026 Anti-DDoS AMR thay thế L7AM làm mặc định, nhưng khách hàng hiện hữu vẫn dùng được và khách hàng mới có thể yêu cầu qua AWS Support. Cân nhắc 'outdated' và loại: 'outdated' dành cho trường hợp đáp án nguồn chỉ đúng trong bối cảnh cũ; ở đây D vẫn hoạt động và vẫn là option duy nhất đáp ứng 'detect and mitigate ... with no manual effort', còn AMR (giải pháp mới) không nằm trong các option — theo quy tắc không coi đáp án cũ là sai chỉ vì có dịch vụ mới ngoài option. Đối thủ: A chỉ cảnh báo, B cần con người (SRT liên hệ), C Network Firewall ở biên VPC không thấy traffic tầng 7 tại CloudFront edge. Giữ D, verified (medium) kèm điều kiện thời gian.",
+  "reconciliation_vi": "Bỏ 'chặn ngay': rate-based rule và Shield có detection/mitigation latency; tính năng legacy bị thay từ 26/03/2026.",
   "explanation_vi": {
-    "why_correct": "Rate-based rule trong web ACL chặn ngay IP gửi quá ngưỡng, còn Shield Advanced với automatic application layer DDoS mitigation (bật trên CloudFront distribution) tự tạo và triển khai rule WAF khi phát hiện tấn công tầng 7 — phát hiện và giảm thiểu không cần thao tác thủ công. Lưu ý: từ 26/3/2026 AWS khuyến nghị Anti-DDoS Managed Rule Group thay cho tính năng này (legacy nhưng vẫn dùng được), AMR không có trong các option.",
+    "why_correct": "D là lựa chọn theo Shield legacy: rate-based rule cộng automatic application-layer mitigation tự giảm thiểu DDoS. Từ 26/03/2026 cần kiểm tra Anti-DDoS AMR và điều kiện dùng tính năng legacy.",
     "others": {
-      "Q076:A": "Shield Advanced + CloudWatch alarm chỉ giúp phát hiện và cảnh báo; không bật automatic application layer mitigation thì tầng 7 không được giảm thiểu tự động.",
-      "Q076:B": "Proactive engagement chỉ để SRT liên hệ với bạn khi có sự cố — có con người tham gia, không phải giảm thiểu tự động real time.",
-      "Q076:C": "Network Firewall lọc ở biên VPC phía sau CloudFront, không có phát hiện DDoS tầng 7; Lambda tự viết sửa web ACL là giải pháp tự chế, không real time."
+      "Q076:A": "Chỉ bật bảo vệ và alarm chưa bật automatic L7 mitigation.",
+      "Q076:B": "Proactive SRT engagement cần con người và không đáp ứng no manual effort.",
+      "Q076:C": "Network Firewall ở origin không tự bảo vệ CloudFront HTTP theo thiết kế nêu."
     }
   },
   "keywords": [
@@ -152,7 +146,7 @@
       "meaning_vi": "Loại các option cần con người (SRT, cảnh báo email)."
     }
   ],
-  "memory_tip_vi": "Nếu cần tự động phát hiện và giảm thiểu DDoS tầng 7 trên CloudFront/ALB -> nghĩ đến web ACL + rate-based rule + Shield Advanced automatic application layer mitigation (từ 26/3/2026: Anti-DDoS AMR là mặc định); kiểm tra: proactive engagement và CloudWatch alarm không tự giảm thiểu.",
+  "memory_tip_vi": "Nếu bài dùng Shield legacy, chọn automatic L7 mitigation; khi triển khai mới, kiểm tra Anti-DDoS AMR và quyền dùng tính năng legacy.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -281,9 +275,24 @@
       "type": "outdated",
       "location": "Q076:D",
       "detail_vi": "Từ 26/3/2026, Layer 7 Auto Mitigation của Shield Advanced là legacy, Anti-DDoS AMR là giải pháp mặc định; khách hàng mới cần liên hệ AWS Support để dùng L7AM. Khái niệm option D vẫn đúng."
+    },
+    {
+      "type": "data",
+      "location": "Q076",
+      "detail_vi": "Tài liệu hiện hành ghi Anti-DDoS Managed Rule Group thay L7AM từ 2026-03-26; khách hàng Shield mới cần Support để dùng legacy."
+    },
+    {
+      "type": "data",
+      "location": "Q076",
+      "detail_vi": "Baseline 24 giờ–30 ngày và mitigation có độ trễ; không bảo đảm tức thời tuyệt đối."
+    },
+    {
+      "type": "data",
+      "location": "Q076",
+      "detail_vi": "Current option D khả thi theo legacy availability; khách hàng mới có thể cần Support để enable, vì Anti-DDoS AMR hiện thay legacy. Không khẳng định enable luôn có sẵn cho mọi deployment mới."
     }
   ],
-  "notes_vi": "Rate-based rule chặn IP vượt ngưỡng trong cửa sổ 5 phút; automatic mitigation của Shield dùng baseline lịch sử để tạo rule tùy chỉnh.",
+  "notes_vi": "Bỏ 'chặn ngay': rate-based rule và Shield có detection/mitigation latency; tính năng legacy bị thay từ 26/03/2026.",
   "history": [
     {
       "version": "r1",
@@ -298,6 +307,45 @@
       "previous_answer": [
         "Q076:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Bỏ 'chặn ngay': rate-based rule và Shield có detection/mitigation latency; tính năng legacy bị thay từ 26/03/2026.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q076:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q076:D"
+      ],
+      "note_vi": "Bỏ 'chặn ngay': rate-based rule và Shield có detection/mitigation latency; tính năng legacy bị thay từ 26/03/2026.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q076:D"
+    ],
+    "candidate_answers": [
+      [
+        "Q076:D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

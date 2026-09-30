@@ -2,9 +2,9 @@
   "question_id": "Q012",
   "question_content_hash": "bb9496e19e81fb77abff87eec33692342de7d97c3df66b1e52e2ba7f8793992d",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -34,28 +34,31 @@
       "unit_id": "Q012:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Các control EKS của Security Hub CSPM là kiểm tra cấu hình qua AWS Config (endpoint public, phiên bản, audit logging bật chưa...), không phân tích nội dung audit log hay sự kiện OS/mạng/file.",
+      "reason_vi": "Sai: Security Hub tổng hợp posture/findings, không tự thu mọi runtime event.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "ref2",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q012:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Inspector quét lỗ hổng image ECR, Detective hỗ trợ điều tra sau khi có finding; Lambda tự viết để xử lý audit log không phải cơ chế phát hiện threat có sẵn, và không có giám sát sự kiện OS/mạng/file runtime.",
+      "reason_vi": "Sai: Inspector/Detective không thay EKS audit và runtime threat detection này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref1",
+        "ref2",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -63,7 +66,7 @@
       "unit_id": "Q012:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "GuardDuty EKS Protection phân tích EKS audit logs; Runtime Monitoring cho EKS phân tích sự kiện OS, mạng, file; finding GuardDuty gửi qua EventBridge tới SNS topic có subscriber email.",
+      "reason_vi": "Đúng: bật cả EKS Protection và Runtime Monitoring, route findings qua EventBridge tới SNS.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -74,19 +77,21 @@
         "ref2",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q012:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Chỉ thu thập audit log và báo động mỗi khi có log mới — không phát hiện rủi ro, gây cảnh báo liên tục; SSM Agent không cung cấp giám sát sự kiện OS/mạng/file để phát hiện threat.",
+      "reason_vi": "Sai: cảnh báo mọi audit log không tương đương phát hiện nguy cơ runtime.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "ref2",
+        "ref3"
       ],
       "evidence_kind": "inference"
     }
@@ -121,35 +126,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu GuardDuty nêu trực tiếp EKS Protection dùng EKS audit logs và Runtime Monitoring phân tích sự kiện OS, mạng, file; EventBridge -> SNS email là mẫu được tài liệu GuardDuty mô tả.",
-    "open_issues": [
-      "Runtime Monitoring không hỗ trợ EKS trên Fargate (đề không nói dùng Fargate)."
-    ]
+    "reason_vi": "Giữ C; hai GuardDuty features và runtime-node support được xác nhận.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn C. Đã kiểm tra lại phương án cạnh tranh mạnh nhất A: control EKS của Security Hub CSPM chỉ kiểm tra cấu hình (ví dụ EKS.8 kiểm tra audit logging có bật), không phân tích nội dung audit log hay sự kiện runtime; B ghép Inspector (quét lỗ hổng image) và Detective (điều tra) với Lambda tự viết, không có giám sát runtime OS/mạng/file; D chỉ báo động mỗi khi có log mới. Giữ C.",
+  "reconciliation_vi": "Giữ C; hai GuardDuty features và runtime-node support được xác nhận.",
   "explanation_vi": {
-    "why_correct": "GuardDuty EKS Protection phân tích EKS audit logs và Runtime Monitoring cho EKS phân tích sự kiện OS, mạng, file để phát hiện threat; finding được EventBridge rule chuyển tới SNS topic có mailing list subscribe, nên security team nhận email.",
+    "why_correct": "GuardDuty EKS Protection phân tích audit logs; Runtime Monitoring bổ sung sự kiện OS, mạng và file. EventBridge chuyển finding tới SNS email, với runtime agent và loại node được hỗ trợ.",
     "others": {
-      "Q012:A": "Control EKS của Security Hub CSPM chỉ kiểm tra cấu hình (ví dụ audit logging đã bật chưa), không phân tích audit log hay sự kiện OS/mạng/file.",
-      "Q012:B": "Inspector quét lỗ hổng image và Detective dùng để điều tra; Lambda tự viết không thay được cơ chế phát hiện threat và thiếu giám sát runtime.",
-      "Q012:D": "Chỉ thu thập audit log và báo động khi có log mới — không phát hiện rủi ro, gây cảnh báo liên tục; SSM Agent không giám sát sự kiện runtime để phát hiện threat."
+      "Q012:A": "Sai: Security Hub tổng hợp posture/findings, không tự thu mọi runtime event.",
+      "Q012:B": "Sai: Inspector/Detective không thay EKS audit và runtime threat detection này.",
+      "Q012:D": "Sai: cảnh báo mọi audit log không tương đương phát hiện nguy cơ runtime."
     }
   },
   "keywords": [
     {
-      "phrase": "Amazon EKS audit logs",
-      "meaning_vi": "Nguồn dữ liệu của GuardDuty EKS Protection."
+      "phrase": "audit logs",
+      "meaning_vi": "GuardDuty EKS Protection dùng audit stream."
     },
     {
-      "phrase": "operating system, networking, and file events",
-      "meaning_vi": "Sự kiện runtime -> GuardDuty Runtime Monitoring (agent trên node EKS)."
+      "phrase": "file events",
+      "meaning_vi": "Runtime Monitoring dùng agent để xem OS/file/network."
     },
     {
       "phrase": "email alerts",
-      "meaning_vi": "EventBridge rule -> SNS topic với subscriber email."
+      "meaning_vi": "EventBridge gửi finding tới SNS email."
     }
   ],
-  "memory_tip_vi": "Nếu đề nêu EKS audit logs + sự kiện OS/mạng/file -> nghĩ đến GuardDuty EKS Protection + Runtime Monitoring, cảnh báo qua EventBridge -> SNS; kiểm tra EKS trên Fargate không được Runtime Monitoring hỗ trợ.",
+  "memory_tip_vi": "Nếu cần audit lẫn OS/network/file, bật hai tính năng GuardDuty và xác nhận node hỗ trợ runtime agent.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -270,9 +273,14 @@
       "type": "typo",
       "location": "Q012:D",
       "detail_vi": "'lo collect' và 'when now audit logs' — đúng ra là 'to collect', 'when new audit logs'."
+    },
+    {
+      "type": "data",
+      "location": "Q012",
+      "detail_vi": "Runtime Monitoring không hỗ trợ EKS Fargate; không cần bật CloudWatch audit stream riêng cho GuardDuty."
     }
   ],
-  "notes_vi": "Từ khóa: EKS audit logs + OS/network/file events => GuardDuty EKS Protection + Runtime Monitoring.",
+  "notes_vi": "Giữ C; hai GuardDuty features và runtime-node support được xác nhận.",
   "history": [
     {
       "version": "r1",
@@ -293,6 +301,23 @@
       "previous_answer": [
         "Q012:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; hai GuardDuty features và runtime-node support được xác nhận.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q012:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q012:C"
+      ],
+      "note_vi": "Giữ C; hai GuardDuty features và runtime-node support được xác nhận.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -304,5 +329,19 @@
         "corrected": "2026-09-30T19:41:20Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q012:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

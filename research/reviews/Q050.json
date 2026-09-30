@@ -2,9 +2,9 @@
   "question_id": "Q050",
   "question_content_hash": "b89b7c5f943b97e40e19805cba01bd6967ebd54841af712faebc17fa6a66a6f2",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,75 +39,71 @@
       "unit_id": "Q050:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Site-to-Site VPN cung cấp đường hầm IPsec; chạy trên AWS Direct Connect (public VIF) để có kết nối IPsec end-to-end, đáp ứng yêu cầu mã hóa IPsec.",
+      "reason_vi": "Site-to-Site VPN cung cấp tunnel IPsec.",
       "requirement_ids": [
         "R3",
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q050:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Direct Connect là kết nối mạng riêng, độ trễ thấp và ổn định hơn VPN qua internet, đáp ứng yêu cầu latency; nhưng DX không mã hóa mặc định (MACsec là lớp 2, không phải IPsec) nên phải kết hợp với Site-to-Site VPN.",
+      "reason_vi": "Direct Connect tạo đường truyền chuyên dụng, có thể chở VPN.",
       "requirement_ids": [
         "R2",
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref4"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q050:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "VPN CloudHub là mô hình hub-and-spoke để nhiều site on-premises giao tiếp với nhau qua các kết nối Site-to-Site VPN (thường qua internet); không giải quyết yêu cầu độ trễ thấp cho một data center duy nhất.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "VPN CloudHub dành kết nối hub-and-spoke, không tạo đường truyền riêng ổn định.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q050:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "VPC peering chỉ kết nối hai VPC với nhau, không kết nối data center on-premises và không cung cấp IPsec.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "VPC peering không kết nối trực tiếp on-premises.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q050:E",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "NAT gateway cho phép instance trong private subnet đi ra dịch vụ bên ngoài; không phải kết nối riêng tới on-premises và không mã hóa IPsec.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "NAT gateway không cung cấp kết nối IPsec/đường truyền riêng.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref7"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -142,16 +138,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Whitepaper VPC connectivity và trang Encryption in Direct Connect mô tả trực tiếp mẫu Direct Connect + Site-to-Site VPN: IPsec end-to-end cùng độ trễ thấp, ổn định của Direct Connect. Ba lựa chọn còn lại không kết nối on-premises với IPsec độ trễ thấp.",
+    "reason_vi": "Đúng; DX không tự mã hóa IPsec, kết hợp VPN.",
     "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A+B. Đã kiểm tra các đối thủ: Direct Connect đơn lẻ không mã hóa mặc định (MACsec là lớp 2, không phải IPsec) nên cần Site-to-Site VPN; VPN đơn lẻ qua internet không đáp ứng yêu cầu độ trễ ổn định; CloudHub là hub-and-spoke cho nhiều site, VPC peering chỉ nối VPC-VPC, NAT gateway chỉ cho kết nối ra ngoài. Giữ A+B, verified, confidence high.",
+  "reconciliation_vi": "Đúng; DX không tự mã hóa IPsec, kết hợp VPN.",
   "explanation_vi": {
-    "why_correct": "AWS Direct Connect cho đường truyền riêng, độ trễ thấp và ổn định tới data center (đáp ứng database nhạy latency) nhưng không mã hóa mặc định; chạy AWS Site-to-Site VPN trên Direct Connect bổ sung đường hầm IPsec end-to-end, đáp ứng yêu cầu mã hóa IPsec.",
+    "why_correct": "Kết hợp Site-to-Site VPN cung cấp IPsec với Direct Connect cho đường truyền riêng ổn định; Direct Connect tự nó không đáp ứng yêu cầu mã hóa IPsec.",
     "others": {
-      "Q050:C": "VPN CloudHub là mô hình hub-and-spoke cho nhiều site on-premises giao tiếp với nhau qua VPN, không giải quyết yêu cầu độ trễ thấp cho một data center.",
-      "Q050:D": "VPC peering chỉ nối hai VPC, không kết nối tới on-premises và không cung cấp IPsec.",
-      "Q050:E": "NAT gateway chỉ cho instance private đi ra ngoài, không phải kết nối hybrid có mã hóa IPsec."
+      "Q050:C": "VPN CloudHub dành kết nối hub-and-spoke, không tạo đường truyền riêng ổn định.",
+      "Q050:D": "VPC peering không kết nối trực tiếp on-premises.",
+      "Q050:E": "NAT gateway không cung cấp kết nối IPsec/đường truyền riêng."
     }
   },
   "keywords": [
@@ -168,7 +164,7 @@
       "meaning_vi": "Kiến trúc hybrid: app trên AWS gọi database on-premises."
     }
   ],
-  "memory_tip_vi": "Nếu đề đòi vừa độ trễ thấp/ổn định vừa mã hóa IPsec giữa on-premises và AWS -> nghĩ đến Site-to-Site VPN chạy trên Direct Connect; kiểm tra nếu chỉ cần mã hóa lớp 2 trên link dedicated thì MACsec, còn IPsec thì phải có VPN.",
+  "memory_tip_vi": "Nếu cần cả đường truyền ổn định và IPsec, chạy Site-to-Site VPN qua Direct Connect.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -286,6 +282,46 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key AB khớp blind; giữ AB, status verified (confidence high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; DX không tự mã hóa IPsec, kết hợp VPN.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q050:A",
+        "Q050:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q050:A",
+        "Q050:B"
+      ],
+      "note_vi": "Đúng; DX không tự mã hóa IPsec, kết hợp VPN.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Đúng; DX không tự mã hóa IPsec, kết hợp VPN.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q050:A",
+      "Q050:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q050:A",
+      "Q050:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

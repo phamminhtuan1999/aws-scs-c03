@@ -1,0 +1,246 @@
+{
+  "question_id": "Q039",
+  "question_content_hash": "bcc96e2377375908e6f570ef286ca59c5ad23b3ef4bf08ee3ae566f3e45d907c",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:43:36Z",
+  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "83f3cd645b4841c81270bc6c0f58574d8e88ccf1d87dd2b30d28781333c72572",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "User ở developer account cần truy cập tài nguyên cụ thể ở production account (cross-account).",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "MOST secure: tránh chia sẻ credential dài hạn, dùng temporary credentials, least privilege.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q039:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Một IAM user dùng chung và chia sẻ password là credential dài hạn dùng chung, mất khả năng quy trách nhiệm từng người; trái best practice dùng temporary credentials qua role.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q039:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Role đặt ở developer account chỉ có identity policy trong account đó; truy cập cross-account cần tài nguyên/account production (trusting account) cấp quyền, nên chỉ quyền của role ở dev account không đủ để truy cập tài nguyên production.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q039:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Dùng chung một IAM user ở production cho nhiều người là credential dài hạn dùng chung, kém an toàn và không truy vết từng user; không phải cơ chế cross-account chuẩn.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q039:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Đúng mô hình AWS: tạo role trong production account, trust policy chỉ định developer account, permissions policy giới hạn tài nguyên cần thiết; user dev được cấp sts:AssumeRole và nhận temporary credentials.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q039:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "IAM User Guide mô tả đúng kịch bản dev -> production bằng role trong production account với trust policy chỉ định dev account.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:43:36Z"
+  },
+  "source_answer": [
+    "Q039:D"
+  ],
+  "researched_answer": [
+    "Q039:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn D. IAM User Guide mô tả đúng kịch bản development -> production: role đặt trong production account với trust policy chỉ định development account, user nhận temporary credentials.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại đối thủ B (cũng dùng role nhưng đặt ở developer account): role trong account dev chỉ mang quyền của account dev; để chạm tới tài nguyên production cần account production cấp quyền (role tin cậy ở production hoặc resource-based policy), nên B không phải mô hình cross-account role chuẩn. A và C chia sẻ IAM user dài hạn, trái best practice dùng temporary credentials và mất khả năng truy vết từng người. Giữ D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Tạo IAM role trong production account (account sở hữu tài nguyên) với permissions giới hạn vào tài nguyên cần thiết và trust policy chỉ định developer account; user dev được cấp sts:AssumeRole và nhận temporary credentials, không chia sẻ credential dài hạn.",
+    "others": {
+      "Q039:A": "Một IAM user dùng chung với password chia sẻ là credential dài hạn, không truy vết được từng người và trái best practice.",
+      "Q039:B": "Role đặt ở developer account không tự có quyền trên tài nguyên production; role cross-account phải nằm ở account sở hữu tài nguyên.",
+      "Q039:C": "Dùng chung một IAM user ở production vẫn là credential dài hạn chia sẻ, kém an toàn hơn role với temporary credentials."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "specific resources in the production account",
+      "meaning_vi": "Tài nguyên thuộc production -> role đặt trong production account, quyền giới hạn theo tài nguyên."
+    },
+    {
+      "phrase": "MOST secure",
+      "meaning_vi": "Ưu tiên temporary credentials qua AssumeRole thay vì IAM user/password dùng chung."
+    }
+  ],
+  "memory_tip_vi": "Nếu user account A cần truy cập tài nguyên account B -> nghĩ đến IAM role trong account B (trust account A) + sts:AssumeRole; kiểm tra role phải nằm ở account sở hữu tài nguyên, không phải account của user.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "AWS STS"
+    ],
+    "reason_vi": "Cấp quyền truy cập cross-account an toàn bằng role và temporary credentials."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_aws-accounts.html",
+      "title": "Access for an IAM user in another AWS account that you own",
+      "section": "Example scenario",
+      "snapshot_id": "a02cab23dcba",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In the role, the administrator defines a trust policy that specifies the development account as a Principal",
+      "supports": "Role được tạo trong production account và tin cậy developer account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic-cross-account.html",
+      "title": "Cross-account policy evaluation logic",
+      "section": "Overview",
+      "snapshot_id": "a6ef60cac267",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The resource-based policy in the trusting account must specify the principal of the trusted account that will have access to the resource.",
+      "supports": "Account chứa tài nguyên phải cấp quyền; role ở dev account không tự cấp quyền truy cập production.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html",
+      "title": "Security best practices in IAM",
+      "section": "Require human users to use federation ... temporary credentials",
+      "snapshot_id": "081fe26e1732",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Require your human users to use temporary credentials when accessing AWS.",
+      "supports": "Role cung cấp temporary credentials, an toàn hơn IAM user dùng chung.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_aws-accounts.html",
+      "title": "Access for an IAM user in another AWS account that you own",
+      "section": "Example scenario",
+      "snapshot_id": "a02cab23dcba",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "managing credentials for multiple accounts makes identity management difficult",
+      "supports": "Tạo IAM user riêng ở production là cách kém hơn so với role.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q039:D",
+      "detail_vi": "'rote' là lỗi của 'role'."
+    },
+    {
+      "type": "typo",
+      "location": "Q039:A",
+      "detail_vi": "Thiếu dấu chấm sau 'production account'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:43:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q039:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key D; đã xét lại B và giữ kết luận; status verified (high).",
+      "previous_answer": [
+        "Q039:D"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:57+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:52:36Z",
+      "previous_answer": [
+        "Q039:D"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:57+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:52:36Z"
+      }
+    }
+  }
+}

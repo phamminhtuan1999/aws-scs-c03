@@ -2,9 +2,9 @@
   "question_id": "Q065",
   "question_content_hash": "e5b9b282748db7140632b9abc388851a1a0b6849fd5e31fb3899c8390e2f8855",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:36Z",
-  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,29 +38,28 @@
     {
       "unit_id": "Q065:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS Backup không 'replicate trực tiếp' server on-premises: chỉ hỗ trợ backup VM (qua Backup gateway), không hỗ trợ server vật lý, và là backup theo lịch/PITR cho một số dịch vụ chứ không phải replication liên tục; khôi phục từ backup khó đạt RTO < 1 giờ.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Backup không replicate liên tục toàn server theo thiết kế này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q065:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Volume Gateway cung cấp iSCSI volume cho ứng dụng, không replicate liên tục toàn bộ server vật lý/ảo; phải tự xây quy trình khôi phục từ EBS snapshot.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Volume Gateway snapshots không thay server block replication liên tục.",
       "requirement_ids": [
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -68,7 +67,7 @@
       "unit_id": "Q065:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Elastic Disaster Recovery replicate liên tục ở mức block từ server vật lý và ảo vào staging area subnet dùng storage rẻ và compute tối thiểu, tự chuyển đổi và launch recovery instance trong vài phút.",
+      "reason_vi": "DRS có agent, continuous replication và staging resources tối ưu chi phí.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -76,23 +75,21 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q065:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Direct Connect chỉ là kết nối mạng, không replicate dữ liệu server; launch EC2 từ AMI dựng sẵn không có dữ liệu mới nhất, và thêm chi phí kết nối riêng.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Direct Connect và AMI không duy trì dữ liệu server liên tục.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -127,18 +124,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu AWS DRS và whitepaper DR nêu trực tiếp: replicate liên tục server vật lý và ảo vào staging area dùng storage rẻ và compute tối thiểu, RTO tính bằng phút, tự chuyển đổi server khi launch recovery instance.",
-    "open_issues": [
-      "RTO thực tế phụ thuộc thời gian boot OS và các bước cấu hình launch; tài liệu nói RTO 'typically measured in minutes'."
-    ]
+    "reason_vi": "Current 'tự launch' mặc định khi sự cố sai mức tự động: DRS hỗ trợ launch; trigger/automation cần cấu hình.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã rà lại các phương án khác: A — AWS Backup chỉ backup VM on-premises qua Backup gateway (không có server vật lý) và là backup theo lịch, không 'replicate trực tiếp' server; B — Volume Gateway chỉ cung cấp iSCSI volume, không replicate toàn bộ server vật lý/ảo và phải tự dựng quy trình khôi phục; D — Direct Connect là kết nối mạng, AMI dựng sẵn không có dữ liệu mới nhất và tăng chi phí. Không tìm được cách đọc nào khiến A/B/D đáp ứng đủ 'continuously replicate physical and virtual servers' với RTO < 1 giờ. Giữ C, verified, high.",
+  "reconciliation_vi": "Current 'tự launch' mặc định khi sự cố sai mức tự động: DRS hỗ trợ launch; trigger/automation cần cấu hình.",
   "explanation_vi": {
-    "why_correct": "AWS Elastic Disaster Recovery dùng replication agent để replicate liên tục ở mức block từ server vật lý và ảo vào staging area subnet chi phí thấp (storage rẻ, compute tối thiểu) và tự launch recovery instance trong vài phút, đáp ứng RTO < 1 giờ và yêu cầu tự động.",
+    "why_correct": "Elastic Disaster Recovery agents liên tục replicate block từ physical/virtual servers vào staging area chi phí thấp và hỗ trợ khởi chạy recovery trong vài phút. Muốn tự động kích hoạt failover còn cần cấu hình automation/runbook/API phù hợp.",
     "others": {
-      "Q065:A": "AWS Backup không replicate trực tiếp server on-premises (không hỗ trợ server vật lý, là backup theo lịch), khôi phục từ backup khó đạt RTO < 1 giờ.",
-      "Q065:B": "Volume Gateway chỉ cung cấp iSCSI volume lưu trên AWS, không replicate liên tục toàn bộ server vật lý/ảo và phải tự xây quy trình khôi phục.",
-      "Q065:D": "Direct Connect chỉ là kết nối mạng, không replicate dữ liệu; EC2 từ AMI dựng sẵn không có trạng thái server mới nhất và thêm chi phí kết nối."
+      "Q065:A": "Backup không replicate liên tục toàn server theo thiết kế này.",
+      "Q065:B": "Volume Gateway snapshots không thay server block replication liên tục.",
+      "Q065:D": "Direct Connect và AMI không duy trì dữ liệu server liên tục."
     }
   },
   "keywords": [
@@ -155,7 +150,7 @@
       "meaning_vi": "Staging area dùng storage rẻ và compute tối thiểu để duy trì replication."
     }
   ],
-  "memory_tip_vi": "Nếu cần DR cho server on-premises (vật lý + ảo) với replicate liên tục và RTO tính bằng phút -> nghĩ đến AWS Elastic Disaster Recovery (staging area chi phí thấp); kiểm tra: AWS Backup là backup theo lịch, Direct Connect chỉ là kết nối.",
+  "memory_tip_vi": "Nếu cần continuous server replication và RTO thấp, dùng DRS rồi kiểm chứng recovery automation bằng drill.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -249,8 +244,14 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Câu hỏi thiên về resilience/DR nhiều hơn bảo mật nhưng cơ chế rõ ràng.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q065",
+      "detail_vi": "DRS recovery launch không đồng nghĩa mặc định tự phát hiện và failover khi on-prem hỏng."
+    }
+  ],
+  "notes_vi": "Current 'tự launch' mặc định khi sự cố sai mức tự động: DRS hỗ trợ launch; trigger/automation cần cấu hình.",
   "history": [
     {
       "version": "r1",
@@ -265,6 +266,41 @@
       "previous_answer": [
         "Q065:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current 'tự launch' mặc định khi sự cố sai mức tự động: DRS hỗ trợ launch; trigger/automation cần cấu hình.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q065:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q065:C"
+      ],
+      "note_vi": "Current 'tự launch' mặc định khi sự cố sai mức tự động: DRS hỗ trợ launch; trigger/automation cần cấu hình.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q065:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q065:C"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,300 @@
+{
+  "question_id": "Q045",
+  "question_content_hash": "876a2e2d010c7aa26dc187f89f0c69d419465c346b1e57fa494c5795ec6de055",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:50:00Z",
+  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "08e4286e59e9c6db901b17b63118748d3b038ebc50d8e6a113ba89ee70686997",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phạm vi nhiều account trong AWS Organizations.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Mọi resource phải có tag CostCenter (bắt buộc có tag khi tạo).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Giá trị tag phải là một trong ba giá trị được duyệt.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Phải enforce (ngăn chặn chủ động), kể cả ngăn thay đổi tag CostCenter sang giá trị không được duyệt.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q045:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Config Custom Policy rule (Guard) chỉ đánh giá/phát hiện, không ngăn chặn; SCP chỉ chặn lúc tạo resource, nên việc sửa tag CostCenter sang giá trị không duyệt sau khi tạo (TagResource/CreateTags) không bị chặn.",
+      "requirement_ids": [
+        "R4"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q045:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "EventBridge nhận event CloudTrail sau khi API call đã được ghi nhận, nên Lambda chỉ phản ứng sau khi resource đã được tạo, không thể chặn việc tạo; cũng không xử lý thay đổi tag sau này.",
+      "requirement_ids": [
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q045:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Tag policy ở chế độ enforce chặn các thao tác tag không tuân thủ (giá trị ngoài danh sách) trên resource type được hỗ trợ; tag policy không bắt buộc có tag, nên SCP với điều kiện Null trên aws:RequestTag/CostCenter chặn tạo resource thiếu tag - đúng cách AWS khuyến nghị.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q045:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tag policy không được cấu hình enforce, và EventBridge + Lambda chỉ phản ứng sau sự kiện nên không 'block' được thay đổi; cũng không có gì bắt buộc resource phải có tag khi tạo.",
+      "requirement_ids": [
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q045:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Trang Organizations nói rõ tag policy enforce chặn giá trị không tuân thủ nhưng không ép tag bắt buộc, và khuyến nghị dùng SCP để chặn tạo resource thiếu tag - khớp đúng lựa chọn C.",
+      "open_issues": [
+        "Enforcement của tag policy và aws:RequestTag chỉ áp dụng cho resource type/service hỗ trợ; đề giả định phạm vi này."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:42:34Z"
+  },
+  "source_answer": [
+    "Q045:C"
+  ],
+  "researched_answer": [
+    "Q045:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Trang Organizations nêu trực tiếp: tag policy ở chế độ enforce chặn các yêu cầu gắn tag không tuân thủ, nhưng không bắt buộc có tag khi tạo resource và khuyến nghị dùng SCP để chặn tạo resource thiếu tag — đúng tổ hợp của C.",
+    "open_issues": [
+      "Enforcement của tag policy và điều kiện aws:RequestTag chỉ áp dụng cho resource type/action hỗ trợ; đề giả định phạm vi này.",
+      "Tag policy hiện có thêm 'Required tag keys' (chế độ reporting cho IaC) nhưng không thay đổi kết luận."
+    ]
+  },
+  "reconciliation_vi": "Blind = C, source key = C (khớp). Đối thủ mạnh nhất là A: SCP điều kiện aws:RequestTag với danh sách giá trị có thể chặn tạo resource thiếu tag hoặc sai giá trị, nhưng chỉ áp dụng cho thao tác tạo; việc đổi tag sau đó (TagResource/CreateTags) không bị chặn, còn Config Custom Policy rule (Guard) chỉ đánh giá/phát hiện. Yêu cầu 'prevent any changes of the CostCenter tag to a non-approved value' khớp đúng với tag policy enforce ('noncompliant tagging requests ... are prevented from completing'), và trang enforcement khuyến nghị dùng SCP cho tag bắt buộc. B và D dựa trên EventBridge + Lambda phản ứng sau khi API call đã xảy ra nên không 'block' được. Giữ nguyên C; typo aws:RequestTag.CostCenter không đổi bản chất.",
+  "explanation_vi": {
+    "why_correct": "Tag policy ở chế độ enforce chặn mọi thao tác gắn/sửa tag CostCenter sang giá trị ngoài ba giá trị được duyệt, còn SCP từ chối tạo resource khi aws:RequestTag/CostCenter là null bù cho điểm tag policy không bắt buộc phải có tag — hai lớp cùng đáp ứng 'bắt buộc có tag' và 'không đổi sang giá trị sai' trên toàn organization.",
+    "others": {
+      "Q045:A": "Config rule (Guard) chỉ phát hiện, còn SCP chỉ chặn lúc tạo resource nên việc sửa tag CostCenter sang giá trị sai sau đó không bị ngăn.",
+      "Q045:B": "EventBridge nhận event CloudTrail sau khi API call đã hoàn tất nên Lambda chỉ phản ứng sau, không chặn được việc tạo resource hay đổi tag.",
+      "Q045:D": "Tag policy không bật enforce và EventBridge + Lambda chỉ phản ứng sau sự kiện, đồng thời không có gì bắt buộc resource phải có tag khi tạo."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "must have a tag of CostCenter",
+      "meaning_vi": "Tag bắt buộc khi tạo -> SCP Deny với điều kiện Null trên aws:RequestTag/CostCenter."
+    },
+    {
+      "phrase": "one of three approved values",
+      "meaning_vi": "Giới hạn giá trị tag -> tag policy liệt kê giá trị cho phép."
+    },
+    {
+      "phrase": "prevent any changes of the CostCenter tag to a non-approved value",
+      "meaning_vi": "Chặn chủ động thao tác đổi tag sai -> tag policy ở chế độ enforce."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề đòi giá trị tag hợp lệ VÀ chặn đổi sang giá trị sai trong Organizations -> nghĩ đến tag policy (enforce) + SCP Null aws:RequestTag để bắt buộc có tag; kiểm tra: Config/EventBridge chỉ phát hiện/phản ứng sau, không ngăn trước.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS Organizations",
+      "AWS Config",
+      "Amazon EventBridge",
+      "AWS Lambda"
+    ],
+    "reason_vi": "Governance đa account bằng tag policy và SCP để enforce chuẩn tagging."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html",
+      "title": "Tag policies",
+      "section": "intro",
+      "snapshot_id": "d64a9382b467",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "noncompliant tagging requests on specified resource types are prevented from completing.",
+      "supports": "Tag policy ở chế độ enforce chặn thao tác gắn tag sai giá trị (bao gồm thay đổi tag).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies-enforcement.html",
+      "title": "Enforce tagging consistency",
+      "section": "Enforce for \"Basic compliance rules\"",
+      "snapshot_id": "771243d16969",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use SCPs to prevent IAM users and roles in target accounts from creating certain resource types if the request doesn't include the specified tags.",
+      "supports": "Tag policy không ép tag bắt buộc; cần SCP để chặn tạo resource thiếu tag (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html",
+      "title": "IAM JSON policy elements: Condition operators",
+      "section": "Condition operator to check existence of condition keys",
+      "snapshot_id": "8995e7359ce0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use a Null condition operator to check if a condition key is absent at the time of authorization.",
+      "supports": "SCP Deny với Null aws:RequestTag/CostCenter = true chặn request thiếu tag.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config.html",
+      "title": "Evaluating Resources with AWS Config Rules",
+      "section": "intro",
+      "snapshot_id": "17d2837b8dc2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use AWS Config to evaluate the configuration settings of your AWS resources.",
+      "supports": "Config rule là cơ chế đánh giá (detective), không ngăn chặn thay đổi (A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies-enforcement.html",
+      "title": "Enforce tagging consistency",
+      "section": "Enforce for \"Basic compliance rules\"",
+      "snapshot_id": "771243d16969",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can prevent resource creation with tag values that do not meet the requirements specified in your tag policy.",
+      "supports": "Cơ chế chặn giá trị tag sai là tag policy enforce; SCP trong A chỉ phủ thao tác tạo.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-service-event-cloudtrail.html",
+      "title": "AWS service events delivered via AWS CloudTrail",
+      "section": "intro",
+      "snapshot_id": "fe6ea80aa61e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS CloudTrail is a service that automatically records events such as AWS API calls. You can create EventBridge rules that use the information from CloudTrail.",
+      "supports": "EventBridge rule dựa trên event CloudTrail đã ghi nhận, tức là phản ứng sau khi API call xảy ra, không chặn trước (B, D).",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q045:A",
+      "detail_vi": "\"CloudFormatlon\" nên là \"CloudFormation\"; \"aws:RequestTagCostCenter\" thiếu dấu \"/\" (aws:RequestTag/CostCenter)."
+    },
+    {
+      "type": "typo",
+      "location": "Q045:C",
+      "detail_vi": "\"aws:RequestTag.CostCenter\" nên là \"aws:RequestTag/CostCenter\"."
+    }
+  ],
+  "notes_vi": "Tag policy (enforce) = kiểm soát giá trị; SCP + Null aws:RequestTag = bắt buộc có tag khi tạo.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:50:00Z",
+      "change": "Blind verdict (scs-researcher): answer=C, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key C; kiểm tra lại A (SCP aws:RequestTag + Config Guard) — không chặn được việc đổi tag sau khi tạo; giữ nguyên các option review.",
+      "previous_answer": [
+        "Q045:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha 91c2c4e616→08e4286e59; last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:51:17Z",
+      "previous_answer": [
+        "Q045:C"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:51:17Z"
+      }
+    }
+  }
+}

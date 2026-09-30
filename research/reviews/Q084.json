@@ -2,9 +2,9 @@
   "question_id": "Q084",
   "question_content_hash": "6b8f019c505e2d2e0e9985312298c427cafb60df5eee8993aa3fc2f235f880f7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:01Z",
-  "last_reviewed_at": "2026-09-30T20:09:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,63 +38,65 @@
     {
       "unit_id": "Q084:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "CloudTrail ghi mọi thao tác KMS (CreateKey có trường origin, và các thao tác ký/mã hóa); log file validation phát hiện sửa/xóa, S3 Object Lock (WORM) ngăn ghi đè/xóa; auditor được cấp quyền đọc bucket. Hạn chế: trail không lọc được management event theo eventName hay key ARN (chỉ bật/tắt toàn bộ KMS events), nên bước lọc trong A không làm được đúng nghĩa đen; trail sẽ ghi toàn bộ KMS management events – tập lớn hơn nhưng vẫn chứa đủ evidence cần.",
+      "verdict": "undetermined",
+      "reason_vi": "Gần nhất nhưng trail management selector không hỗ trợ các trường lọc CreateKey/key ARN đã nêu.",
       "requirement_ids": [
         "R2",
         "R3",
         "R4"
       ],
       "reference_ids": [
+        "Q084-r2-1",
         "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5",
-        "ref6",
-        "ref8"
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q084:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Log do ứng dụng tự ghi chỉ phản ánh thao tác của ứng dụng, không chứng minh việc tạo/origin của key hay mọi lần dùng key; CloudWatch Logs log group và bản export gửi đi không có cơ chế bất biến như nêu.",
+      "verdict": "undetermined",
+      "reason_vi": "Application logs có thể bỏ sót thao tác KMS và CloudWatch export không bất biến.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "Q084-r2-1",
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q084:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Bảng DynamoDB có thể bị sửa/xóa item nên không phải evidence bất biến; ngoài ra key được tạo trước khi pipeline lọc theo ARN của key tồn tại nên dễ thiếu sự kiện CreateKey.",
+      "verdict": "undetermined",
+      "reason_vi": "DynamoDB ghi được sửa/xóa và filter key ARN bỏ sót CreateKey trước khi có ARN.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "Q084-r2-1",
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q084:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Metric, dashboard và alarm chỉ theo dõi mức sử dụng, không lưu evidence chi tiết về tạo/origin của key; subscription filter chỉ chuyển tiếp log sang đích khác, không đảm bảo tính bất biến.",
+      "verdict": "undetermined",
+      "reason_vi": "Metrics/dashboard không lưu evidence bất biến của creation/origin/use.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref7"
+        "Q084-r2-1",
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -123,32 +125,33 @@
   "source_answer": [
     "Q084:A"
   ],
-  "researched_answer": [
-    "Q084:A"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "unresolved",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn A. Chỉ A tạo evidence bất biến và kiểm chứng được (CloudTrail + log file validation + S3 Object Lock) bao phủ CreateKey (có origin) và mọi lần dùng key; B, C, D đều thiếu tính bất biến hoặc thiếu evidence tạo key. Medium vì chi tiết event selector trong A không khả thi đúng nghĩa đen với trail.",
+    "level": "high",
+    "reason_vi": "Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events.",
     "open_issues": [
-      "Với trail, advanced event selector cho management events chỉ hỗ trợ eventCategory, eventSource (chỉ NotEquals kms.amazonaws.com để loại toàn bộ KMS), readOnly; eventName chỉ cho event data store; resources.ARN chỉ cho data events. Bước 'lọc CreateKey' và 'lọc theo key ARN' trong A không làm được; nếu bỏ qua bước lọc, trail ghi toàn bộ KMS events và vẫn đáp ứng mọi yêu cầu, nên A vẫn là phương án duy nhất đáp ứng."
+      "No fully valid option as written; intended A must be labeled implementation correction.",
+      "Log file validation detects tampering, không tự chống xóa.",
+      "CloudTrail evidence records API origin metadata, không tự chứng thực external entropy provenance."
     ]
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã kiểm tra lại điểm yếu của A: API AdvancedFieldSelector và trang 'Logging management events' xác nhận trail chỉ bật/tắt toàn bộ KMS events (mặc định ghi tất cả), còn lọc theo eventName chỉ có ở event data store và resources.ARN chỉ dùng cho data events; KMS không có loại data event. Như vậy bước lọc trong A không thực hiện được đúng như viết. Tuy vậy, yêu cầu của đề là evidence về tạo/origin/sử dụng key, bất biến, auditor truy cập được: một trail ghi management events (gồm mọi KMS event) + log file validation + bucket Object Lock đáp ứng đủ, lỗi chỉ nằm ở chi tiết lọc (ghi thừa chứ không thiếu). B (log ứng dụng + export), C (DynamoDB sửa/xóa được), D (metric/dashboard, subscription filter) đều thiếu tính bất biến hoặc thiếu evidence tạo key – không phương án nào khác đáp ứng. Không đánh 'ambiguous' vì số phương án đáp ứng yêu cầu vẫn là đúng một; ghi source_issue data cho chi tiết không chính xác. Giữ verified, medium.",
+  "reconciliation_vi": "Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events.",
   "explanation_vi": {
-    "why_correct": "CloudTrail ghi việc tạo key (sự kiện CreateKey có trường origin) và mọi lần dùng key (Sign, Encrypt...); lưu log vào bucket có S3 Object Lock (WORM) và bật log file validation giúp evidence bất biến và kiểm chứng được, rồi cấp quyền đọc bucket cho auditor. Lưu ý: trail thực tế không lọc được KMS event theo tên API hay key ARN – nó ghi toàn bộ KMS events, vẫn chứa đủ evidence cần.",
+    "why_correct": "A gần đúng kiến trúc nhưng selector management events trên trail không hỗ trợ lọc CreateKey/eventName và key ARN như mô tả. Không option nào hoàn toàn đúng; phải sửa A thành ghi KMS events rồi lọc downstream.",
     "others": {
-      "Q084:B": "Log do ứng dụng tự ghi không chứng minh việc tạo/origin của key hay mọi lần dùng key ngoài ứng dụng, và log group/bản export không có cơ chế bất biến.",
-      "Q084:C": "Item trong DynamoDB có thể bị sửa/xóa nên không phải evidence bất biến; pipeline lọc theo ARN chỉ có sau khi key đã tạo nên dễ thiếu sự kiện CreateKey.",
-      "Q084:D": "Metric, dashboard, alarm chỉ theo dõi mức sử dụng, không lưu evidence chi tiết về tạo/origin; subscription filter chỉ chuyển tiếp log, không đảm bảo bất biến."
+      "Q084:A": "Gần nhất nhưng trail management selector không hỗ trợ các trường lọc CreateKey/key ARN đã nêu.",
+      "Q084:B": "Application logs có thể bỏ sót thao tác KMS và CloudWatch export không bất biến.",
+      "Q084:C": "DynamoDB ghi được sửa/xóa và filter key ARN bỏ sót CreateKey trước khi có ARN.",
+      "Q084:D": "Metrics/dashboard không lưu evidence bất biến của creation/origin/use."
     }
   },
   "keywords": [
     {
       "phrase": "immutable evidence",
-      "meaning_vi": "Cần lưu trữ WORM (S3 Object Lock) + kiểm chứng toàn vẹn (log file validation)."
+      "meaning_vi": "Object Lock phải có retention/legal hold; log validation chỉ phát hiện sửa log."
     },
     {
       "phrase": "creation, origin, and use of the KMS key",
@@ -159,7 +162,7 @@
       "meaning_vi": "Cấp quyền đọc bucket log cho auditor."
     }
   ],
-  "memory_tip_vi": "Nếu cần evidence bất biến về tạo và dùng KMS key -> nghĩ đến CloudTrail + log file validation + S3 Object Lock; kiểm tra: trail chỉ bật/tắt toàn bộ KMS events, lọc theo eventName chỉ có ở CloudTrail Lake event data store.",
+  "memory_tip_vi": "Nếu cần KMS audit bất biến, ghi management events vào S3 có retention Object Lock; lọc API/key downstream thay vì selector không hỗ trợ.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -277,18 +280,40 @@
       "quote": "The default setting is to include all AWS KMS events.",
       "supports": "Với trail, KMS events chỉ được bật/tắt toàn bộ (Exclude AWS KMS events); lọc theo eventName chỉ có ở event data store (Advanced event collection). Trail mặc định vẫn ghi mọi KMS event, gồm CreateKey và các thao tác dùng key.",
       "kind": "direct"
+    },
+    {
+      "id": "Q084-r2-1",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedEventSelector.html",
+      "title": "AdvancedEventSelector - AWS CloudTrail",
+      "accessed_at": "2026-09-30",
+      "quote": "Advanced event selectors let you create fine-grained selectors for AWS",
+      "supports": "Management selectors on trails support eventCategory, eventSource, readOnly; eventName for event data stores; resources.ARN for data events.",
+      "kind": "direct",
+      "snapshot_id": "b79373eceb6c",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
-      "type": "data",
-      "location": "Q084:A",
-      "detail_vi": "Phương án A mô tả event selector lọc riêng CreateKey và lọc theo key ARN; với trail, KMS là management events và chỉ lọc được theo eventCategory/eventSource/readOnly (KMS chỉ có thể loại trừ toàn bộ), nên chi tiết này không chính xác về kỹ thuật."
-    },
-    {
       "type": "typo",
       "location": "Q084:B",
       "detail_vi": "Thiếu dấu chấm: 'Configure an automated export of the log group Send the export to the auditors.'"
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q084",
+      "detail_vi": "No fully valid option as written; intended A must be labeled implementation correction."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q084",
+      "detail_vi": "Log file validation detects tampering, không tự chống xóa."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q084",
+      "detail_vi": "CloudTrail evidence records API origin metadata, không tự chứng thực external entropy provenance."
     }
   ],
   "history": [
@@ -305,7 +330,38 @@
       "previous_answer": [
         "Q084:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q084:A"
+      ],
+      "status": "unresolved",
+      "answer": null,
+      "note_vi": "Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events.",
+      "technical_change": true
     }
   ],
-  "notes_vi": "A là phương án duy nhất có evidence bất biến và kiểm chứng được; cần hiểu rằng trail sẽ ghi toàn bộ KMS management events thay vì lọc theo ARN."
+  "notes_vi": "Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": null,
+    "independent_status": "unresolved",
+    "intended_answer": [
+      "Q084:A"
+    ],
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

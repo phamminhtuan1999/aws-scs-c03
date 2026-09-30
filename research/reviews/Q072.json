@@ -2,9 +2,9 @@
   "question_id": "Q072",
   "question_content_hash": "e7040fa4ca98bd938533399517dec8f75bc5720e12714169f51944e69dcc274a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:50Z",
-  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -36,22 +36,23 @@
     {
       "unit_id": "Q072:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "GetSessionToken trả temporary credentials cho IAM user, nghĩa là vẫn cần IAM user và long-term access key để gọi; không có SAML IdP, và access key long-term vẫn dùng được trực tiếp.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "GetSessionToken còn dựa IAM credentials và không đáp ứng SAML federation.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q072:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Identity Center kết nối external IdP qua SAML 2.0, cấp quyền bằng permission set trên các account của organization; session duration của permission set mặc định 1 giờ (tối thiểu 1 giờ); CLI lấy short-term credentials; xóa IAM users loại bỏ long-term keys.",
+      "reason_vi": "Identity Center external IdP và permission-set session 1 giờ đáp ứng workforce access.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -59,40 +60,39 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref7",
-        "ref8"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q072:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Secrets Manager lưu secret, get-secret-value không đăng nhập vào AWS account; managed rotation chỉ áp dụng cho secret của một số dịch vụ (RDS, Aurora...). Cognito identity pool dành cho người dùng ứng dụng; tổ hợp này không tạo truy cập account bằng SAML với credential 60 phút.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Secrets Manager/Cognito không cấu hình quyền AWS account SAML như yêu cầu.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q072:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "IAM Roles Anywhere xác thực bằng X.509 certificate, không phải SAML IdP; thêm vào đó role chỉ nằm trong management account nên không cấp truy cập trực tiếp các member account, và không loại bỏ IAM users.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Roles Anywhere dùng X.509 workload certificates, không SAML workforce login.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -221,7 +221,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q072",
+      "detail_vi": "CLI có thể refresh credential mới khi phiên SSO hợp lệ; expiration60min không có nghĩa cấm mọi refresh."
+    }
+  ],
   "source_answer": [
     "Q072:B"
   ],
@@ -233,18 +239,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "IAM Identity Center hỗ trợ external IdP qua SAML 2.0, permission set có session duration mặc định/tối thiểu 1 giờ và áp dụng cho cả console lẫn AWS CLI; các lựa chọn khác không có SAML hoặc không cấp truy cập account.",
-    "open_issues": [
-      "Nếu yêu cầu thời hạn dưới 60 phút thì permission set không đáp ứng (tối thiểu 1 giờ); đề yêu cầu đúng 60 phút nên phù hợp."
-    ]
+    "reason_vi": "Đúng; permission set role session1h khác portal session, CLI refresh vẫn có thể xảy ra.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là B. Đã kiểm tra thêm: trang session duration của IAM Identity Center nói rõ khi dùng AWS CLI, session duration của permission set kiểm soát thời hạn session (khớp 'retrieve SSO credentials by using the AWS CLI' + 60 phút). Phương án cạnh tranh D (Roles Anywhere) xác thực bằng X.509 certificate chứ không phải SAML IdP, và role nằm ở management account; A (GetSessionToken) vẫn cần IAM user + access key lâu dài và không có SAML. Giữ B, verified, high.",
+  "reconciliation_vi": "Đúng; permission set role session1h khác portal session, CLI refresh vẫn có thể xảy ra.",
   "explanation_vi": {
-    "why_correct": "IAM Identity Center kết nối external IdP qua SAML 2.0, dùng permission set để cấp quyền vào các account trong organization với session duration 1 giờ (áp dụng cả khi lấy credentials qua AWS CLI); xóa IAM users loại bỏ secret access key lâu dài.",
+    "why_correct": "IAM Identity Center federate external SAML IdP, permission sets cấp quyền và đặt AWS account session duration 1 giờ; AWS CLI lấy SSO role credentials rồi loại bỏ IAM users dài hạn.",
     "others": {
-      "Q072:A": "GetSessionToken phải được gọi bằng IAM user và access key lâu dài, không dùng SAML IdP, và key gốc vẫn dùng trực tiếp được.",
-      "Q072:C": "Secrets Manager chỉ lưu secret, get-secret-value không đăng nhập vào account; Cognito identity pool dành cho người dùng ứng dụng, không phải cách truy cập account bằng SAML.",
-      "Q072:D": "IAM Roles Anywhere dùng X.509 certificate cho workload ngoài AWS, không phải SAML IdP cho người dùng; role chỉ ở management account và IAM users vẫn còn."
+      "Q072:A": "GetSessionToken còn dựa IAM credentials và không đáp ứng SAML federation.",
+      "Q072:C": "Secrets Manager/Cognito không cấu hình quyền AWS account SAML như yêu cầu.",
+      "Q072:D": "Roles Anywhere dùng X.509 workload certificates, không SAML workforce login."
     }
   },
   "keywords": [
@@ -261,7 +265,7 @@
       "meaning_vi": "Nhiều account → quản lý tập trung bằng IAM Identity Center."
     }
   ],
-  "memory_tip_vi": "Nếu người dùng (workforce) nhiều account cần đăng nhập qua SAML IdP với credentials tạm thời -> nghĩ đến IAM Identity Center + external IdP + permission set session duration; kiểm tra Roles Anywhere là cho workload dùng certificate, GetSessionToken vẫn cần IAM user.",
+  "memory_tip_vi": "Nếu yêu cầu credential AWS account hết hạn sau 60 phút, đặt permission-set session duration 1 giờ, phân biệt với portal session.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -290,7 +294,42 @@
       "previous_answer": [
         "Q072:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; permission set role session1h khác portal session, CLI refresh vẫn có thể xảy ra.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q072:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q072:B"
+      ],
+      "note_vi": "Đúng; permission set role session1h khác portal session, CLI refresh vẫn có thể xảy ra.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "SAML + nhiều account + temporary credentials 1 giờ -> IAM Identity Center với external IdP và permission set session duration."
+  "notes_vi": "Đúng; permission set role session1h khác portal session, CLI refresh vẫn có thể xảy ra.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q072:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q072:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

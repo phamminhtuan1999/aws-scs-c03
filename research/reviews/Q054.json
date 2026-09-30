@@ -2,9 +2,9 @@
   "question_id": "Q054",
   "question_content_hash": "82acaa06ba017bb7d9fb8dcac3d6bef7c14f866fa2dbf6bc3cb1087a217d09f5",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -33,84 +33,81 @@
     {
       "unit_id": "Q054:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Best practice trước khi cấu hình delegated administration: giới hạn quyền truy cập management account ở mức tối thiểu (least privilege).",
+      "verdict": "undetermined",
+      "reason_vi": "Least privilege tại management là khuyến nghị bảo vệ organization instance.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q054:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Instance IAM Identity Center của organization đã tồn tại và luôn nằm trong management account; không cần tạo directory mới và đây không phải điều kiện tiên quyết.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Không bắt buộc tạo directory mới trước delegation.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref5",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q054:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Thêm Region là tính năng replicate để tăng resiliency, không nằm trong best practices hay prerequisites của delegated administration.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Không cần thêm Region hoặc instance thứ hai.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q054:D",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Best practice: dùng permission set riêng (dedicated) cho management account, vì delegated admin không thể sửa permission set đã provision trong management account.",
+      "verdict": "undetermined",
+      "reason_vi": "Permission sets dành riêng management tránh sửa từ delegated admin.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q054:E",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tạo IAM user trái với best practice dùng federation/temporary credentials cho người dùng và không liên quan tới cấu hình delegated administration.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Không cần tạo IAM users để dùng Identity Center.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q054:F",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Best practice: gán trực tiếp user (không gán group) vào permission set có quyền truy cập management account; lựa chọn diễn đạt hơi khác nhưng khớp khuyến nghị gán user cho management account.",
+      "verdict": "undetermined",
+      "reason_vi": "Đúng nếu nói user-only assignments tại management; sai nếu chỉ cho phép mọi assignment ở management.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref8"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -140,28 +137,28 @@
     "Q054:D",
     "Q054:F"
   ],
-  "researched_answer": [
-    "Q054:A",
-    "Q054:D",
-    "Q054:F"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Mục Best practices của trang Delegated administration (IAM Identity Center) liệt kê trực tiếp các bước nên làm trước khi cấu hình: least privilege cho management account, permission set dành riêng cho management account, và chỉ gán user (không group) cho management account — khớp A, D, F.",
+    "level": "medium",
+    "reason_vi": "Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites.",
     "open_issues": [
-      "F diễn đạt 'Create user assignments only in the organization’s management account' không trùng từng chữ với 'Assign users only (not groups) to permission sets in the management account'."
+      "F mơ hồ/lệch nghĩa khuyến nghị gốc AWS.",
+      "Các mục là recommendations, không phải prerequisites bắt buộc tuyệt đối."
     ]
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A, D, F. Đã đọc lại toàn bộ danh sách Best practices: ngoài ba mục trên chỉ còn mục vị trí Active Directory (không có trong lựa chọn). B (tạo directory mới) sai vì instance luôn nằm ở management account và đã tồn tại; C (Region thứ hai) là tính năng resiliency; E (IAM user) trái best practice dùng federation. Giữ A, D, F, verified, confidence high.",
+  "reconciliation_vi": "Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites.",
   "explanation_vi": {
-    "why_correct": "Trước khi cấu hình delegated administration, AWS khuyên: (A) giới hạn tối thiểu người truy cập management account; (D) dùng permission set dành riêng cho management account vì delegated admin không sửa được permission set đã provision ở đó; (F) gán trực tiếp user (không gán group) cho management account để tránh admin group/IdP thay đổi ai có quyền.",
+    "why_correct": "AWS khuyến nghị hạn chế quyền management account, dùng permission sets riêng cho management và gán user trực tiếp thay vì group ở management account. F phải được hiểu là 'chỉ gán users (không groups) vào management', không phải cấm mọi assignment ở member accounts.",
     "others": {
-      "Q054:B": "IAM Identity Center organization instance đã tồn tại và luôn nằm trong management account; không cần tạo directory mới.",
-      "Q054:C": "Thêm Region là tính năng replicate để tăng resiliency, không phải bước chuẩn bị cho delegated administration.",
-      "Q054:E": "Tạo IAM user trái best practice dùng federation với credential tạm thời và không liên quan tới delegated administration."
+      "Q054:A": "Least privilege tại management là khuyến nghị bảo vệ organization instance.",
+      "Q054:B": "Không bắt buộc tạo directory mới trước delegation.",
+      "Q054:C": "Không cần thêm Region hoặc instance thứ hai.",
+      "Q054:D": "Permission sets dành riêng management tránh sửa từ delegated admin.",
+      "Q054:E": "Không cần tạo IAM users để dùng Identity Center.",
+      "Q054:F": "Đúng nếu nói user-only assignments tại management; sai nếu chỉ cho phép mọi assignment ở management."
     }
   },
   "keywords": [
@@ -178,7 +175,7 @@
       "meaning_vi": "Account đặc quyền cao; permission set và gán quyền cho nó chỉ do admin ở management account quản lý."
     }
   ],
-  "memory_tip_vi": "Nếu đề hỏi chuẩn bị delegated administration cho IAM Identity Center -> nghĩ đến 3 best practice cho management account: least privilege, permission set riêng, gán user (không group); kiểm tra lựa chọn tạo directory/IAM user/Region mới là bẫy.",
+  "memory_tip_vi": "Nếu gán truy cập management account, dùng permission set riêng và users trực tiếp thay vì groups.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -299,8 +296,13 @@
   "source_issues": [
     {
       "type": "ambiguous",
-      "location": "Q054:F",
-      "detail_vi": "Cách diễn đạt 'Create user assignments only in the organization’s management account' không rõ nghĩa ('only' đặt sai chỗ); ý đúng theo tài liệu là chỉ gán user (không group) cho management account."
+      "location": "Q054",
+      "detail_vi": "F mơ hồ/lệch nghĩa khuyến nghị gốc AWS."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q054",
+      "detail_vi": "Các mục là recommendations, không phải prerequisites bắt buộc tuyệt đối."
     }
   ],
   "history": [
@@ -315,6 +317,46 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key ADF khớp blind; giữ ADF, status verified (confidence high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q054:A",
+        "Q054:D",
+        "Q054:F"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites.",
+      "technical_change": true
     }
-  ]
+  ],
+  "notes_vi": "Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q054:A",
+      "Q054:D",
+      "Q054:F"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q054:A",
+      "Q054:D",
+      "Q054:F"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

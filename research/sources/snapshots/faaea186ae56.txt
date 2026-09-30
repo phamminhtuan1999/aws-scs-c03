@@ -1,0 +1,178 @@
+URL: https://aws.amazon.com/blogs/security/when-and-where-to-use-iam-permissions-boundaries/
+TITLE: When and where to use IAM permissions boundaries | AWS Security Blog
+
+## AWS Security Blog
+
+# When and where to use IAM permissions boundaries
+
+Customers often ask for guidance on permissions boundaries in AWS Identity and Access Management (IAM) and when, where, and how to use them. A permissions boundary is an IAM feature that helps your centralized cloud IAM teams to safely empower your application developers to create new IAM roles and policies in Amazon Web Services (AWS). In this blog post, we cover this common use case for permissions boundaries, some best practices to consider, and a few things to avoid.
+
+## Background
+
+Developers often need to create new IAM roles and policies for their applications because these applications need permissions to interact with AWS resources. For example, a developer will likely need to create an IAM role with the correct permissions for an Amazon Elastic Compute Cloud (Amazon EC2) instance to report logs and metrics to Amazon CloudWatch. Similarly, a role with accompanying permissions is required for an AWS Glue job to extract, transform, and load data to an Amazon Simple Storage Service (Amazon S3) bucket, or for an AWS Lambda function to perform actions on the data loaded to Amazon S3.
+
+Before the launch of IAM permissions boundaries, central admin teams, such as identity and access management or cloud security teams, were often responsible for creating new roles and policies. But using a centralized team to create and manage all IAM roles and policies creates a bottleneck that doesn’t scale, especially as your organization grows and your centralized team receives an increasing number of requests to create and manage new downstream roles and policies. Imagine having teams of developers deploying or migrating hundreds of applications to the cloud—a centralized team won’t have the necessary context to manually create the permissions for each application themselves.
+
+Because the use case and required permissions can vary significantly between applications and workloads, customers asked for a way to empower their developers to safely create and manage IAM roles and policies, while having security guardrails in place to set maximum permissions. IAM permissions boundaries are designed to provide these guardrails so that even if your developers created the most permissive policy that you can imagine, such broad permissions wouldn’t be functional.
+
+By setting up permissions boundaries, you allow your developers to focus on tasks that add value to your business, while simultaneously freeing your centralized security and IAM teams to work on other critical tasks, such as governance and support. In the following sections, you will learn more about permissions boundaries and how to use them.
+
+## Permissions boundaries
+
+A permissions boundary is designed to restrict permissions on IAM principals, such as roles, such that permissions don’t exceed what was originally intended. The permissions boundary uses an AWS or customer managed policy to restrict access, and it’s similar to other IAM policies you’re familiar with because it has resource, action, and effect statements. A permissions boundary alone doesn’t grant access to anything. Rather, it enforces a boundary that can’t be exceeded, even if broader permissions are granted by some other policy attached to the role. Permissions boundaries are a preventative guardrail, rather than something that detects and corrects an issue. To grant permissions, you use resource-based policies (such as S3 bucket policies) or identity-based policies (such as managed or in-line permissions policies).
+
+The predominant use case for permissions boundaries is to limit privileges available to IAM roles created by developers (referred to as delegated administrators in the IAM documentation) who have permissions to create and manage these roles. Consider the example of a developer who creates an IAM role that can access all Amazon S3 buckets and Amazon DynamoDB tables in their accounts. If there are sensitive S3 buckets in these accounts, then these overly broad permissions might present a risk.
+
+To limit access, the central administrator can attach a condition to the developer’s identity policy that helps ensure that the developer can only create a role if the role has a permissions boundary policy attached to it. The permissions boundary, which AWS enforces during authorization, defines the maximum permissions that the IAM role is allowed. The developer can still create IAM roles with permissions that are limited to specific use cases (for example, allowing specific actions on non-sensitive Amazon S3 buckets and DynamoDB tables), but the attached permissions boundary prevents access to sensitive AWS resources even if the developer includes these elevated permissions in the role’s IAM policy. Figure 1 illustrates this use of permissions boundaries.
+
+Figure 1: Implementing permissions boundaries
+
+- The central IAM team adds a condition to the developer’s IAM policy that allows the developer to create a role only if a permissions boundary is attached to the role.
+
+- The developer creates a role with accompanying permissions to allow access to an application’s Amazon S3 bucket and DynamoDB table. As part of this step, the developer also attaches a permissions boundary that defines the maximum permissions for the role.
+
+- Resource access is granted to the application’s resources.
+
+- Resource access is denied to the sensitive S3 bucket.
+
+You can use the following policy sample for your developers to allow the creation of roles only if a permissions boundary is attached to them. Make sure to replace <YourAccount_ID> with an appropriate AWS account ID; and the <DevelopersPermissionsBoundary>, with your permissions boundary policy.
+
+"Effect": "Allow",
+"Action": "iam:CreateRole",
+"Condition": {
+"StringEquals": {
+"iam:PermissionsBoundary": "arn:aws:iam::<YourAccount_ID>:policy/<DevelopersPermissionsBoundary>"
+}
+}
+
+You can also deny deletion of a permissions boundary, as shown in the following policy sample.
+
+"Effect": "Deny",
+"Action": "iam:DeleteRolePermissionsBoundary"
+
+You can further prevent detaching, modifying, or deleting the policy that is your permissions boundary, as shown in the following policy sample.
+
+"Effect": "Deny",
+"Action": [
+"iam:CreatePolicyVersion",
+"iam:DeletePolicyVersion",
+"iam:DetachRolePolicy",
+"iam:SetDefaultPolicyVersion"
+],
+
+Put together, you can use the following permissions policy for your developers to get started with permissions boundaries. This policy allows your developers to create downstream roles with an attached permissions boundary. The policy further denies permissions to detach, delete, or modify the attached permissions boundary policy. Remember, nothing is implicitly allowed in IAM, so you need to allow access permissions for any other actions that your developers require. To learn about allowing access permissions for various scenarios, see Example IAM identity-based policies in the documentation.
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "AllowRoleCreationWithAttachedPermissionsBoundary",
+"Effect": "Allow",
+"Action": "iam:CreateRole",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:PermissionsBoundary": "arn:aws:iam::<YourAccount_ID>:policy/<DevelopersPermissionsBoundary>"
+}
+}
+},
+{
+"Sid": "DenyPermissionsBoundaryDeletion",
+"Effect": "Deny",
+"Action": "iam:DeleteRolePermissionsBoundary",
+"Resource": "*",
+"Condition": {
+"StringEquals": {
+"iam:PermissionsBoundary": "arn:aws:iam::<YourAccount_ID>:policy/<DevelopersPermissionsBoundary>"
+}
+}
+},
+{
+"Sid": "DenyPolicyChange",
+"Effect": "Deny",
+"Action": [
+"iam:CreatePolicyVersion",
+"iam:DeletePolicyVersion",
+"iam:DetachRolePolicy",
+"iam:SetDefaultPolicyVersion"
+],
+"Resource":
+"arn:aws:iam::<YourAccount_ID>:policy/<DevelopersPermissionsBoundary>"
+}
+]
+}
+
+## Permissions boundaries at scale
+
+You can build on these concepts and apply permissions boundaries to different organizational structures and functional units. In the example shown in Figure 2, the developer can only create IAM roles if a permissions boundary associated to the business function is attached to the IAM roles. In the example, IAM roles in function A can only perform Amazon EC2 actions and Amazon DynamoDB actions, and they don’t have access to the Amazon S3 or Amazon Relational Database Service (Amazon RDS) resources of function B, which serve a different use case. In this way, you can make sure that roles created by your developers don’t exceed permissions outside of their business function requirements.
+
+Figure 2: Implementing permissions boundaries in multiple organizational functions
+
+## Best practices
+
+You might consider restricting your developers by directly applying permissions boundaries to them, but this presents the risk of you running out of policy space. Permissions boundaries use a managed IAM policy to restrict access, so permissions boundaries can only be up to 6,144 characters long. You can have up to 10 managed policies and 1 permissions boundary attached to an IAM role. Developers often need larger policy spaces because they perform so many functions. However, the individual roles that developers create—such as a role for an AWS service to access other AWS services, or a role for an application to interact with AWS resources—don’t need those same broad permissions. Therefore, it is generally a best practice to apply permissions boundaries to the IAM roles created by developers, rather than to the developers themselves.
+
+There are better mechanisms to restrict developers, and we recommend that you use IAM identity policies and AWS Organizations service control policies (SCPs) to restrict access. In particular, the Organizations SCPs are a better solution here because they can restrict every principal in the account through one policy, rather than separately restricting individual principals, as permissions boundaries and IAM identity policies are confined to do.
+
+You should also avoid replicating the developer policy space to a permissions boundary for a downstream IAM role. This, too, can cause you to run out of policy space. IAM roles that developers create have specific functions, and the permissions boundary can be tailored to common business functions to preserve policy space. Therefore, you can begin to group your permissions boundaries into categories that fit the scope of similar application functions or use cases (such as system automation and analytics), and allow your developers to choose from multiple options for permissions boundaries, as shown in the following policy sample.
+
+"Condition": {
+"StringEquals": {
+"iam:PermissionsBoundary": [
+"arn:aws:iam::<YourAccount_ID>:policy/PermissionsBoundaryFunctionA",
+"arn:aws:iam::<YourAccount_ID>:policy/PermissionsBoundaryFunctionB"
+]
+}
+}
+
+Finally, it is important to understand the differences between the various IAM resources available. The following table lists these IAM resources, their primary use cases and managing entities, and when they apply. Even if your organization uses different titles to refer to the personas in the table, you should have separation of duties defined as part of your security strategy.
+
+IAM resource
+
+Purpose
+
+Owner/maintainer
+
+Applies to
+
+Federated roles and policies
+
+Grant permissions to federated users for experimentation in lower environments
+
+Central team
+
+People represented by users in the enterprise identity provider
+
+IAM workload roles and policies
+
+Grant permissions to resources used by applications, services
+
+Developer
+
+IAM roles representing specific tasks performed by applications
+
+Permissions boundaries
+
+Limit permissions available to workload roles and policies
+
+Central team
+
+Workload roles and policies created by developers
+
+IAM users and policies
+
+Allowed only by exception when there is no alternative that satisfies the use case
+
+Central team plus senior leadership approval
+
+Break-glass access; legacy workloads unable to use IAM roles
+
+## Conclusion
+
+This blog post covered how you can use IAM permissions boundaries to allow your developers to create the roles that they need and to define the maximum permissions that can be given to the roles that they create. Remember, you can use AWS Organizations SCPs or deny statements in identity policies for scenarios where permissions boundaries are not appropriate. As your organization grows and you need to create and manage more roles, you can use permissions boundaries and follow AWS best practices to set security guard rails and decentralize role creation and management. Get started using permissions boundaries in IAM.
+
+If you have feedback about this post, submit comments in the Comments section below. If you have questions about this post, contact AWS Support.
+
+Want more AWS Security news? Follow us on Twitter.
+
+Loading comments…

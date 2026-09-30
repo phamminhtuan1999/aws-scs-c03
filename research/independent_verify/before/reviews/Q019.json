@@ -1,0 +1,353 @@
+{
+  "question_id": "Q019",
+  "question_content_hash": "6f26e8e7de4e9582a1095fe7d218d0e9858292048e7427f05e36044334e5abd6",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:35:22Z",
+  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "c5bc952eda2bb272720dd8230a1e22d8249cd9e205f2c248b7bab07fe2c15e06",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Vô hiệu hóa NGAY người dùng bị lộ thông tin đăng nhập khi nhận cảnh báo sự cố.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Người dùng đó không được dùng ở BẤT KỲ AWS account nào trong organization (truy cập được quản lý bằng IAM Identity Center).",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Thu thập tất cả hành động AWS của người dùng đó trên mọi account trong 7 ngày trước.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Tận dụng hạ tầng có sẵn: organization trail ghi vào S3 và organization event data store (CloudTrail Lake) trong delegated administrator account.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q019:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Athena truy vấn được log CloudTrail của organization trail trong S3 (R3 đạt), nhưng một IAM user chỉ thuộc đúng một account; vô hiệu hóa ở management account không chặn người dùng Identity Center vào các account khác (R2 không đạt).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6",
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q019:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Gỡ IAM policy của một IAM user ở management account không ảnh hưởng quyền truy cập qua Identity Center ở account khác; Security Hub tổng hợp findings/kiểm tra control, không phải công cụ truy vấn log CloudTrail.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q019:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Gỡ permission set chỉ thu hồi từng gán quyền, dễ bỏ sót và người dùng vẫn đăng nhập được portal; nghiêm trọng hơn, CloudWatch Logs Insights chỉ truy vấn log group trong CloudWatch Logs (trail phải được cấu hình gửi sang đó), không truy vấn trực tiếp file log trong S3 bucket.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q019:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Disable user access trong Identity Center chặn đăng nhập và mất quyền vào mọi account/ứng dụng được gán; CloudTrail Lake chạy SQL trên organization event data store chứa sự kiện của nhiều account và Region.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q019:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu trực tiếp xác nhận Identity Center disable user chặn truy cập mọi account được gán và CloudTrail Lake truy vấn SQL organization event data store; các lựa chọn khác sai phạm vi hoặc sai công cụ truy vấn. Giảm độ tin cậy vì đề dùng lẫn thuật ngữ 'IAM user' cho người dùng Identity Center.",
+      "open_issues": [
+        "Đề gọi người dùng Identity Center là 'IAM user'; AWS phân biệt rõ hai loại danh tính này.",
+        "Disable user trong Identity Center không cắt các IAM role session đang tồn tại (có thể kéo dài tới 12 giờ); phương án không đề cập thu hồi session hiện có.",
+        "CloudTrail Lake đóng với khách hàng mới từ 31/05/2026; công ty trong đề đã có organization event data store nên vẫn dùng được."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T19:35:22Z"
+  },
+  "source_answer": [
+    "Q019:D"
+  ],
+  "researched_answer": [
+    "Q019:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn D. Tài liệu trực tiếp: Identity Center disable user làm mất quyền vào mọi account được gán; CloudTrail Lake chạy SQL trên organization event data store đa account/Region. A, B, C đều hỏng ở phạm vi chặn hoặc công cụ truy vấn. Giữ mức medium vì đề gọi người dùng Identity Center là 'IAM user'.",
+    "open_issues": [
+      "Đề dùng 'IAM user' cho danh tính Identity Center; nếu hiểu theo nghĩa IAM user thật thì không phương án nào chặn được ở mọi account.",
+      "Disable user không cắt IAM role session đang tồn tại; kế hoạch thực tế cần thêm bước thu hồi session."
+    ]
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Đã kiểm tra lại đối thủ mạnh nhất: A (Athena truy vấn log trong S3 là khả thi) nhưng thao tác trên một IAM user ở management account chỉ có hiệu lực trong account đó, không chặn truy cập qua Identity Center ở các account khác. C: đã tìm thêm xem CloudWatch Logs Insights có truy vấn thẳng S3 không; tài liệu CloudTrail cho thấy phải cấu hình trail gửi event vào CloudWatch Logs log group trước, nên 'directly query ... in the S3 bucket' là sai. B dùng Security Hub để query log là sai công cụ. Giữ D, verified, medium do cách gọi 'IAM user' lẫn lộn.",
+  "explanation_vi": {
+    "why_correct": "Disable user access trong IAM Identity Center làm người dùng không đăng nhập được AWS access portal và mất quyền vào mọi account được gán (chặn ở phạm vi toàn organization); organization event data store của CloudTrail Lake chứa sự kiện của mọi account/Region nên một truy vấn SQL lọc theo người dùng và 7 ngày là đủ.",
+    "others": {
+      "Q019:A": "Athena truy vấn được log trong S3, nhưng xử lý một IAM user ở management account không chặn người dùng Identity Center dùng các account khác.",
+      "Q019:B": "Gỡ IAM policy ở management account chỉ ảnh hưởng account đó, và Security Hub là nơi tổng hợp findings chứ không phải công cụ query log CloudTrail.",
+      "Q019:C": "Gỡ permission set dễ bỏ sót, và CloudWatch Logs Insights chỉ query log group trong CloudWatch Logs, không query trực tiếp file log trong S3."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "IAM Identify Center",
+      "meaning_vi": "(gõ sai của IAM Identity Center) – người dùng được quản lý tập trung, nên chặn tại Identity Center có hiệu lực ở mọi account."
+    },
+    {
+      "phrase": "organizational event data store",
+      "meaning_vi": "Event data store của CloudTrail Lake chứa sự kiện toàn organization, query bằng SQL."
+    },
+    {
+      "phrase": "prevent the IAM user from being used in any AWS account",
+      "meaning_vi": "Phạm vi chặn phải là toàn organization, không phải một account."
+    }
+  ],
+  "memory_tip_vi": "Nếu người dùng đăng nhập qua IAM Identity Center và cần chặn ở mọi account -> nghĩ đến Disable user access trong Identity Center; kiểm tra xem đã có organization event data store (CloudTrail Lake) để query SQL chưa, và nhớ session IAM role hiện có vẫn còn hiệu lực đến khi hết hạn.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "4 Identity and Access Management",
+      "1 Detection"
+    ],
+    "services": [
+      "AWS IAM Identity Center",
+      "AWS CloudTrail Lake",
+      "AWS Organizations",
+      "Amazon Athena",
+      "Amazon CloudWatch Logs"
+    ],
+    "reason_vi": "Kế hoạch ứng phó sự cố: vô hiệu hóa danh tính bị lộ ở phạm vi organization và thu thập lịch sử hành động từ CloudTrail."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/disableuser.html",
+      "title": "Disable user access to AWS accounts and applications in IAM Identity Center",
+      "section": "Disable user access",
+      "snapshot_id": "22e2c5917fa7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Disabling user access prevents them from signing in to the AWS access portal and they will no longer have access to their assigned AWS accounts and applications.",
+      "supports": "Disable user trong Identity Center chặn người dùng ở mọi account được gán (R1, R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake.html",
+      "title": "Working with AWS CloudTrail Lake",
+      "section": "Overview",
+      "snapshot_id": "af1f384456c2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can store events from an organization in AWS Organizations in an organization event data store, including events from multiple Regions and accounts.",
+      "supports": "Organization event data store chứa sự kiện của mọi account/Region, phù hợp thu thập hành động 7 ngày trên toàn org (R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake.html",
+      "title": "Working with AWS CloudTrail Lake",
+      "section": "Overview",
+      "snapshot_id": "af1f384456c2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS CloudTrail Lake lets you run SQL-based queries on your events.",
+      "supports": "Có thể 'dùng CloudTrail để query' event data store bằng SQL (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html",
+      "title": "Analyzing log data with CloudWatch Logs Insights",
+      "section": "Overview",
+      "snapshot_id": "35255ba80cf5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With CloudWatch Logs Insights, you can interactively search and analyze your log data in Amazon CloudWatch Logs.",
+      "supports": "Logs Insights làm việc trên dữ liệu trong CloudWatch Logs, không truy vấn trực tiếp log trong S3 (lựa chọn C).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html",
+      "title": "Query AWS CloudTrail logs - Amazon Athena",
+      "section": "Overview",
+      "snapshot_id": "5431a82a2229",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use Athena to query these log files directly from Amazon S3, specifying the LOCATION of log files.",
+      "supports": "Phần truy vấn của lựa chọn A khả thi về kỹ thuật.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users.html",
+      "title": "IAM users",
+      "section": "IAM users and account",
+      "snapshot_id": "6af6c7038b77",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Each IAM user is associated with one and only one AWS account.",
+      "supports": "Thao tác trên IAM user ở management account không tác động tới truy cập ở các account khác (A, B).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html",
+      "title": "Introduction to AWS Security Hub CSPM",
+      "section": "Introduction",
+      "snapshot_id": "ce2e8e0fe1c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Security Hub CSPM runs checks against security controls and generates control findings to help you assess your compliance against security best practices.",
+      "supports": "Security Hub là dịch vụ findings/posture, không phải công cụ truy vấn log CloudTrail (B).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/authconcept.html",
+      "title": "Understanding authentication sessions in IAM Identity Center",
+      "section": "Deleting or disabling users",
+      "snapshot_id": "d1f892a4f099",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Any existing IAM role sessions will continue based on the session duration configured in the IAM Identity Center permission set",
+      "supports": "Giới hạn: disable user không cắt IAM role session đang có; vẫn là bước đúng nhất trong các lựa chọn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake-service-availability-change.html",
+      "title": "CloudTrail Lake availability change",
+      "section": "Continued support for existing event data stores",
+      "snapshot_id": "ad9f88a8bc3d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If your AWS Organization has an organization-level EDS, AWS CloudTrail Lake will continue to function as expected.",
+      "supports": "Tổ chức đã có organization event data store nên D vẫn áp dụng sau 31/05/2026.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/send-cloudtrail-events-to-cloudwatch-logs.html",
+      "title": "Sending events to CloudWatch Logs - AWS CloudTrail",
+      "section": "Overview",
+      "snapshot_id": "e2822e11c418",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you configure your trail to send events to CloudWatch Logs, CloudTrail sends only the events that match your trail settings.",
+      "supports": "Muốn dùng Logs Insights phải cấu hình trail gửi event vào log group; Logs Insights không đọc trực tiếp file trong S3 bucket (C).",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q019:stem:0",
+      "detail_vi": "'IAM Identify Center' phải là 'IAM Identity Center'."
+    },
+    {
+      "type": "typo",
+      "location": "Q019:C",
+      "detail_vi": "'arc assigned' -> 'are assigned'; 'performed m the' -> 'performed in the'."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q019:stem:0",
+      "detail_vi": "Đề gọi danh tính là 'IAM user' trong khi truy cập được quản lý bằng IAM Identity Center; lựa chọn D ngầm hiểu đây là người dùng Identity Center."
+    },
+    {
+      "type": "outdated",
+      "location": "Q019:D",
+      "detail_vi": "CloudTrail Lake không nhận khách hàng mới từ 31/05/2026; không ảnh hưởng tình huống vì tổ chức đã có organization event data store."
+    }
+  ],
+  "notes_vi": "D là lựa chọn duy nhất vừa chặn người dùng ở phạm vi toàn organization vừa dùng đúng nguồn dữ liệu có sẵn (organization event data store).",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:35:22Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q019:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:45:00Z",
+      "change": "Reconciliation: khớp source key D; bổ sung ref10 (CloudTrail -> CloudWatch Logs) cho lý do loại C; status verified (medium).",
+      "previous_answer": [
+        "Q019:D"
+      ]
+    }
+  ]
+}

@@ -2,9 +2,9 @@
   "question_id": "Q107",
   "question_content_hash": "44a50566d16236327e074d3ed6108a5ab715896414d705c2eeb38f440d79aaef",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:41:04+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,74 +33,79 @@
     {
       "unit_id": "Q107:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Blog AWS Security mô tả đúng giải pháp này cho đúng kịch bản (share IPAM pool từ account hạ tầng tới development account theo least privilege): tạo customer managed permission chỉ gồm write-only actions (Allocate/Release) rồi thêm condition aws:PrincipalTag để chỉ user/role có tag được thao tác trên pool. Tài liệu RAM xác nhận IPAM pool hỗ trợ CMP và aws:PrincipalTag (không phải system tag aws:) được phép trong CMP. Lưu ý chung: principal ở account nhận vẫn cần IAM policy (không riêng A).",
+      "verdict": "undetermined",
+      "reason_vi": "Khả thi: IPAM pools hỗ trợ custom permissions, write-only actions và condition bằng customer PrincipalTag không bị cấm chung.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
+        "ref6",
         "ref3",
+        "ref5",
         "ref4",
-        "ref12",
-        "ref13",
         "ref14",
-        "ref15",
-        "ref16",
-        "ref17"
+        "ref12"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q107:B",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Chạy được: quyền hiệu lực = AWS managed permission giao với IAM policy do admin development account gán, nên có thể giới hạn principal. Nhưng AWS nói rõ trong đúng kịch bản IPAM pool này rằng AWS managed permission cấp cả đọc lẫn ghi, vì vậy phải tạo customer managed permission để đạt least privilege; với B, trần quyền phía resource rộng hơn cần thiết và toàn bộ giới hạn phụ thuộc account nhận.",
+      "verdict": "undetermined",
+      "reason_vi": "Khả thi: IAM bên nhận chỉ cấp các actions/resources cần thiết cho approved principals, nên broad share không tự cấp read access.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
         "ref6",
-        "ref1",
-        "ref11",
-        "ref13",
-        "ref14"
+        "ref3",
+        "ref5",
+        "ref4",
+        "ref14",
+        "ref12"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q107:C",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "SCP không cấp quyền, chỉ là guardrail; có thể dùng để chặn identity khác nhưng share vẫn dùng managed permission mặc định (không thu hẹp hành động), còn resource-based policy trên IPAM pool do RAM tự tạo từ managed permission nên không phải một cơ chế riêng để cấu hình. Phức tạp và kém least privilege hơn A.",
+      "verdict": "undetermined",
+      "reason_vi": "Có thể guardrail bằng SCP, nhưng SCP không cấp quyền và tự sửa resource policy ngoài RAM tăng phức tạp.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref7",
-        "ref8"
+        "ref6",
+        "ref3",
+        "ref5",
+        "ref4",
+        "ref14",
+        "ref12"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q107:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Customer managed permission 'full access' đi ngược least privilege; VPC endpoint policy chỉ kiểm soát request đi qua endpoint đó, không thay thế identity/resource-based policy nên không giới hạn được principal gọi API EC2 qua endpoint công khai.",
+      "verdict": "undetermined",
+      "reason_vi": "Full-access permission rộng; VPC endpoint policy không ràng buộc mọi đường gọi public endpoint.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref9"
+        "ref6",
+        "ref3",
+        "ref5",
+        "ref4",
+        "ref14",
+        "ref12"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -128,33 +133,34 @@
   "source_answer": [
     "Q107:B"
   ],
-  "researched_answer": [
-    "Q107:A"
-  ],
-  "comparison": "mismatch",
-  "status": "verified",
-  "differs_from_source": true,
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
+  "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Bằng chứng trực tiếp: blog AWS Security (ref14-ref17) trình bày đúng kịch bản của đề (share IPAM pool từ infrastructure account tới development account, least privilege, chỉ một số IAM principal) và giải pháp chính là A: customer managed permission write-only + condition aws:PrincipalTag; blog nói thẳng AWS managed permission (B) cấp cả đọc và ghi nên cần CMP. Tài liệu RAM (ref1, ref3, ref4, ref13) xác nhận cơ chế vẫn hiện hành. B hoạt động nhưng kém least privilege; C, D không đạt.",
+    "level": "medium",
+    "reason_vi": "Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable.",
     "open_issues": [
-      "A không nêu bước gán IAM identity-based policy ở development account; đây là yêu cầu chung của mọi share RAM tới account (ref11) và blog cũng không liệt kê nó như một bước riêng, nên không làm A sai.",
-      "Nguồn quyết định là blog AWS 2023 (không phải user guide); tài liệu RAM hiện hành (ref1, ref3, ref4) vẫn xác nhận các cơ chế tương ứng tính đến 2026-09-30."
+      "Không được nói mọi aws:PrincipalTag không được AWS RAM hỗ trợ.",
+      "Customer managed permission condition chỉ single non-negating operators; bảo vệ tagging để tránh tự gắn allowed tag.",
+      "A write-only có thể đáp ứng allocation nhưng thiếu read nếu operations yêu cầu khác; stem không xác định actions.",
+      "C cũng có thể implement bổ sung đúng policies; không unique nếu diễn giải rộng."
     ]
   },
-  "reconciliation_vi": "Blind = A, source key = B (mismatch). Đã tìm lý lẽ cho B: trang Terms and concepts xác nhận principal ở consuming account chỉ làm được những gì vừa được managed permission vừa được IAM identity-based policy do admin account nhận cho phép, và admin phải gắn policy thì principal mới có quyền — vậy B giới hạn được đúng principal và IAM policy cũng có thể thu hẹp action; AWSRAMDefaultPermissionsIpamPool vốn chỉ gồm thao tác pool (xem + allocate/release), không phải full access. Tìm lý lẽ cho A: trang CMP nói AWS managed permission 'might not provide least privilege' và nêu đúng ví dụ IPAM (cấp phát nhưng không xem); trang Considerations chỉ loại trừ aws:PrincipalTag/aws: (system tag), nên condition aws:PrincipalTag với tag tự đặt hợp lệ; SAR cho thấy Allocate/Release là Write, GetIpamPoolAllocations là List, GetIpamPoolCidrs là Read, nên 'write-only' đúng là cấp phát không xem. C (SCP không cấp quyền; resource-based policy do RAM tự sinh) và D (full access, endpoint policy không thay IAM) vẫn kém. Kết luận: A chặt hơn ở phía resource và khớp tài liệu least privilege của RAM, nhưng B không bị tài liệu bác bỏ và A có thiếu sót (không nêu IAM policy bên nhận, write-only có thể thiếu quyền xem). Xung đột với source key chưa được bằng chứng phân định -> disputed, giữ researched_answer A (medium). | AUDIT (r1-audit, 2026-09-30T20:41:04+00:00): tìm thấy bằng chứng phân định trực tiếp - blog AWS Security 'Configure fine-grained access to your resources shared using AWS Resource Access Manager' (snapshot 007db9a554d3) dựng đúng kịch bản của đề và dùng đúng giải pháp A (CMP chỉ Write + aws:PrincipalTag), đồng thời nói AWS managed permission 'grants both read and write permissions' nên phải tạo CMP. Các lo ngại trước đó (write-only có thể thiếu quyền xem; A không nêu IAM policy bên nhận) được blog giải quyết: blog kiểm chứng development account tạo được VPC từ pool chỉ với quyền Write. Nâng disputed -> verified (high), vẫn khác source key (B).",
+  "reconciliation_vi": "Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable.",
   "explanation_vi": {
-    "why_correct": "A: tạo resource share với customer managed permission chỉ gồm write-only actions (cấp phát/giải phóng CIDR, không xem chi tiết pool) và condition aws:PrincipalTag để chỉ IAM principal có tag được phép - đây đúng là cách AWS mô tả để share IPAM pool tới development account theo least privilege. AWS managed permission cấp cả đọc và ghi nên không đạt least privilege.",
+    "why_correct": "A khả thi nếu chỉ cần write actions và kiểm soát principal tags; B cũng khả thi khi IAM phía nhận giới hạn đúng principals/actions. Đề thiếu yêu cầu chỉ-write hoặc owner-side enforcement để chọn duy nhất.",
     "others": {
-      "Q107:B": "Đáp án của source key: hoạt động nhờ IAM policy ở development account, nhưng AWS managed permission cấp cả đọc lẫn ghi trên IPAM pool; AWS khuyến nghị dùng customer managed permission cho kịch bản least privilege này.",
-      "Q107:C": "SCP không cấp quyền và không thu hẹp managed permission của share; resource-based policy trên IPAM pool do RAM tự sinh từ managed permission, không phải cơ chế cấu hình riêng.",
-      "Q107:D": "CMP 'full access' đi ngược least privilege; VPC endpoint policy chỉ kiểm soát request đi qua endpoint đó, không giới hạn được principal."
+      "Q107:A": "Khả thi: IPAM pools hỗ trợ custom permissions, write-only actions và condition bằng customer PrincipalTag không bị cấm chung.",
+      "Q107:B": "Khả thi: IAM bên nhận chỉ cấp các actions/resources cần thiết cho approved principals, nên broad share không tự cấp read access.",
+      "Q107:C": "Có thể guardrail bằng SCP, nhưng SCP không cấp quyền và tự sửa resource policy ngoài RAM tăng phức tạp.",
+      "Q107:D": "Full-access permission rộng; VPC endpoint policy không ràng buộc mọi đường gọi public endpoint."
     }
   },
   "keywords": [
     {
       "phrase": "principle of least privilege",
-      "meaning_vi": "Trong RAM, AWS managed permission có thể rộng; customer managed permission cho phép chọn đúng action/condition."
+      "meaning_vi": "Quyền hiệu lực phải tối thiểu ở cả share và IAM; broad share không đồng nghĩa effective permission rộng."
     },
     {
       "phrase": "only specific IAM principals in the development account",
@@ -165,7 +171,7 @@
       "meaning_vi": "Quyền thực tế = managed permission của share giao với IAM policy bên nhận."
     }
   ],
-  "memory_tip_vi": "Nếu share qua AWS RAM mà đề nhấn mạnh least privilege và chỉ một số principal -> nghĩ đến customer managed permission (chọn đúng action, vd. write-only) + condition như aws:PrincipalTag; kiểm tra: CMP chỉ hỗ trợ một số resource type và không dùng system tag aws:.",
+  "memory_tip_vi": "Nếu chia sẻ RAM tới account, quyền hiệu lực còn giao với IAM bên nhận; đừng loại B chỉ vì share có thêm read actions.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -402,7 +408,28 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q107",
+      "detail_vi": "Không được nói mọi aws:PrincipalTag không được AWS RAM hỗ trợ."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q107",
+      "detail_vi": "Customer managed permission condition chỉ single non-negating operators; bảo vệ tagging để tránh tự gắn allowed tag."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q107",
+      "detail_vi": "A write-only có thể đáp ứng allocation nhưng thiếu read nếu operations yêu cầu khác; stem không xác định actions."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q107",
+      "detail_vi": "C cũng có thể implement bổ sung đúng policies; không unique nếu diễn giải rộng."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -425,7 +452,45 @@
       "previous_answer": [
         "Q107:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q107:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable.",
+      "technical_change": true
     }
   ],
-  "notes_vi": "Từ khóa: RAM + 'least privilege' -> customer managed permission (chọn đúng action + condition). AWS managed permission là trần quyền mặc định, thường rộng hơn nhu cầu."
+  "notes_vi": "Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q107:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q107:A"
+      ],
+      [
+        "Q107:B"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,1146 @@
+{
+  "schema_version": 1,
+  "range": "Q073-Q108",
+  "method": {
+    "blinded": true,
+    "inputs_read_before_conclusions": [
+      "research/blind_set/questions.json",
+      "research/blind_set/images assigned stem/choice images",
+      "current primary AWS documentation opened with web tool"
+    ],
+    "answer_keys_read_before_persist": false,
+    "started_at_utc": "2026-09-30 21:20:03 UTC",
+    "completed_at_utc": "2026-09-30 21:28:54 UTC",
+    "notes": "All assigned independent conclusions recorded before any existing reviews were read. Source access date is live session date; undocumented publication dates not inferred."
+  },
+  "records": [
+    {
+      "id": "Q073",
+      "independent_answer": [
+        "Create a custom action that uses the Lambda function in Security Hub.",
+        "Define a rule in Amazon EventBridge.",
+        "Select the custom action in Security Hub for EC2 host findings."
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Tạo custom action để có ARN, tạo EventBridge rule khớp ARN và đặt Lambda làm target, rồi chạy action trên finding của EC2 bị nhiễm.",
+      "per_option_vi": {
+        "1": "Chọn bước 1: đăng ký custom action trước để có ARN.",
+        "2": "Không chọn: filter set trong Security Hub không thay thế event pattern của EventBridge.",
+        "3": "Chọn bước 2: rule nối custom action với Lambda.",
+        "4": "Chọn bước 3: finding EC2 xác định host cần cô lập.",
+        "5": "Không chọn: finding security group không xác định trực tiếp host bị nhiễm."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-custom-actions.html",
+          "supported_claim": "Custom action sends selected findings to EventBridge.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-define-rule.html",
+          "supported_claim": "Rule matches custom action ARN and invokes configured target.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Custom action không trực tiếp chứa Lambda; Lambda là EventBridge target.",
+        "Xóa quy tắc của security group dùng chung có thể tác động nhiều instance; câu hỏi cố định thiết kế này."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q074",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "WAF gửi access logs trực tiếp đến S3; Athena đọc bảng có partition projection để phân tích request và dấu hiệu tấn công.",
+      "per_option_vi": {
+        "A": "CloudTrail ghi API quản trị WAF, không nhận web request logs theo cách này.",
+        "B": "Partition projection cho bảng S3 trong lựa chọn này thuộc Athena, không phải OpenSearch table.",
+        "C": "Đúng: đường WAF logs → S3 → Athena được AWS hướng dẫn.",
+        "D": "CloudTrail trail không phải đích của WAF traffic logs."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/athena/latest/ug/create-waf-table-partition-projection.html",
+          "supported_claim": "Athena supports querying WAF S3 logs using partition projection.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q075",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "GuardDuty delegated administrator tập trung threat findings của các member; EventBridge chuyển finding mới gần thời gian thực đến SNS email.",
+      "per_option_vi": {
+        "A": "Đúng: tích hợp tổ chức, threat detection và SNS qua EventBridge.",
+        "B": "CloudWatch alarm không tự theo dõi GuardDuty findings, và IAM cross-account không thay delegated administration.",
+        "C": "Config đánh giá cấu hình, không thay GuardDuty để phát hiện hành vi độc hại.",
+        "D": "Inspector tìm lỗ hổng; mô hình agents báo về central console không phải giải pháp threat detection này."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+          "supported_claim": "New unique finding notifications are near real time; administrator receives member findings and can target SNS.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "AWS docs nói near real-time, không cam kết SLA email ≤5 phút; không nhầm với cập nhật lặp lại 15 phút/1 giờ/6 giờ."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q076",
+      "independent_answer": [
+        "D"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Trong các lựa chọn, Shield Advanced automatic application-layer mitigation cùng WAF/rate-based rule tự phát hiện và thêm mitigation rules cho CloudFront.",
+      "per_option_vi": {
+        "A": "Chỉ bật bảo vệ và alarm chưa bật automatic L7 mitigation.",
+        "B": "Proactive SRT engagement cần con người và không đáp ứng no manual effort.",
+        "C": "Network Firewall ở origin không tự bảo vệ CloudFront HTTP theo thiết kế nêu.",
+        "D": "Đúng theo tính năng legacy: bật automatic L7 mitigation trên CloudFront."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response.html",
+          "supported_claim": "Automatic L7 mitigation manages WAF rules; documented legacy feature superseded March 26, 2026.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Tài liệu hiện hành ghi Anti-DDoS Managed Rule Group thay L7AM từ 2026-03-26; khách hàng Shield mới cần Support để dùng legacy.",
+        "Baseline 24 giờ–30 ngày và mitigation có độ trễ; không bảo đảm tức thời tuyệt đối."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q077",
+      "independent_answer": null,
+      "status": "ambiguous",
+      "confidence": "high",
+      "explanation_vi": "Không lựa chọn nào ngăn tạo rule theo nghĩa chặn trước API. B là đáp án gần nhất nếu đề muốn tự động phát hiện rồi xóa; C không thể lọc CIDR/port bằng SCP.",
+      "per_option_vi": {
+        "A": "Chỉ gửi email sau sự kiện, không ngăn hoặc sửa rule.",
+        "B": "Có thể tự xóa rule sau finding, nhưng là remediation sau tạo.",
+        "C": "IAM/SCP không có condition keys cho CIDR, port hay protocol của AuthorizeSecurityGroupIngress.",
+        "D": "Chặn traffic không ngăn tạo security group rule."
+      },
+      "citations": [
+        {
+          "url": "https://aws.amazon.com/blogs/security/can-i-do-that-with-policy-understanding-the-aws-service-authorization-reference/",
+          "supported_claim": "AWS explicitly states IAM cannot prevent 0.0.0.0/0 TCP22 rules and recommends reactive Config/EventBridge/Lambda.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Literal requirement prevent creation không được đáp ứng.",
+        "Không được sáng tạo ec2:CidrIp, ec2:FromPort hoặc ec2:IpProtocol IAM condition."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q078",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Rate-based rule giới hạn nguồn/nhóm request vượt ngưỡng thay vì cấm toàn bộ người dùng của hai quốc gia; cần chọn ngưỡng và aggregation phù hợp.",
+      "per_option_vi": {
+        "A": "Đúng: áp dụng rate-based rule cho incoming requests để chỉ xử lý nhóm vượt rate limit.",
+        "B": "Chặn cả traffic hợp lệ từ hai nước.",
+        "C": "Security group không có geographic match rule.",
+        "D": "Security group không hỗ trợ deny rules."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-request-limiting.html",
+          "supported_claim": "Rate-based action applies only to aggregation instances exceeding threshold.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+          "supported_claim": "Security groups have allow-only rules and IP/SG/prefix-list sources.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Rate limiting không bảo đảm zero false positives; all incoming requests không đồng nghĩa aggregate CountAll."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q079",
+      "independent_answer": {
+        "row1": "AWS Audit Manager controls",
+        "row2": "AWS Identity and Access Management Access Analyzer internal access analyzers",
+        "row3": "AWS Artifact reports"
+      },
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Audit Manager controls thu thập bằng chứng; internal Access Analyzer xác định principal nội bộ có quyền; Artifact cung cấp tài liệu tuân thủ của AWS.",
+      "per_option_vi": {
+        "AWS Artifact reports": "Ghép row3: tải báo cáo bảo mật/tuân thủ AWS.",
+        "AWS Audit Manager controls": "Ghép row1: thu thập evidence từ CloudTrail, Config, Security Hub.",
+        "AWS Config conformance packs": "Không chọn: gói rules/remediation, không tạo evidence assessment này.",
+        "AWS Config rules": "Không chọn: đánh giá cấu hình, không phân tích đường truy cập IAM.",
+        "Amazon Detective investigations": "Không chọn: điều tra hành vi bảo mật, không tải compliance documents.",
+        "AWS Identity and Access Management Access Analyzer internal access analyzers": "Ghép row2: phân tích IAM principals nội bộ cho supported resources."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/audit-manager/latest/userguide/how-evidence-is-collected.html",
+          "supported_claim": "Active assessment controls collect automated evidence from listed sources.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html",
+          "supported_claim": "Internal analyzers identify principals in account/organization with access to selected supported resources.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/artifact/latest/ug/downloading-documents.html",
+          "supported_claim": "Artifact allows on-demand downloading AWS compliance reports.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q080",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Xem failed API trong CloudTrail của Production trước để xác định action, principal và loại deny, rồi đối chiếu IAM role/SCP.",
+      "per_option_vi": {
+        "A": "Đúng: bằng chứng lỗi API hướng dẫn kiểm tra quyền cụ thể.",
+        "B": "Gỡ toàn bộ SCP làm mất guardrails trước khi biết nguyên nhân.",
+        "C": "Cần kiểm tra sau khi xác định API/principal; chỉ IAM role không giải thích SCP deny.",
+        "D": "Đồng nhất SCP với Testing làm đổi chính sách Production mà chưa chẩn đoán."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/determine-root-cause-for-stack-failures.html",
+          "supported_claim": "Stack failure investigation exposes related CloudTrail events for failed resources.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "FIRST là trình tự troubleshooting hợp lý, không phải mọi lỗi đều do SCP."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q081",
+      "independent_answer": {
+        "row1": "AWS Config conformance packs",
+        "row2": "AWS Config aggregator",
+        "row3": "AWS Config rules",
+        "row4": "AWS Config with AWS Systems Manager",
+        "row5": "AWS Config with AWS User Notifications"
+      },
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Conformance pack gói rules; aggregator tập trung dữ liệu; rules đánh giá cấu hình; Systems Manager thực thi remediation; User Notifications phân phối thông báo sự kiện.",
+      "per_option_vi": {
+        "AWS Config aggregator": "Ghép row2: tập trung configuration/compliance nhiều accounts/Regions.",
+        "AWS Config conformance packs": "Ghép row1: triển khai tập hợp rules trong tổ chức.",
+        "AWS Config with AWS Systems Manager": "Ghép row4: Automation runbook sửa tài nguyên không tuân thủ.",
+        "AWS Config rules": "Ghép row3: so sánh configuration với desired settings.",
+        "AWS Config with AWS User Notifications": "Ghép row5: cấu hình notification theo EventBridge events."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/config-concepts.html",
+          "supported_claim": "Defines conformance packs, aggregator and rule evaluation.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/remediation.html",
+          "supported_claim": "Config remediation uses Systems Manager Automation documents.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/notifications/latest/userguide/what-is-service.html",
+          "supported_claim": "User Notifications routes supported EventBridge events to channels.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "User Notifications cần notification configuration/event filter; không tự thông báo tất cả Config events."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q082",
+      "independent_answer": {
+        "row1": "Deploy software programmatically.",
+        "row2": "Reduce manual management and interactive access.",
+        "row3": "Control traffic flow within your network layers.",
+        "row4": "Protecting data in transit.",
+        "row5": "Configure service and application logging"
+      },
+      "status": "ambiguous",
+      "confidence": "medium",
+      "explanation_vi": "Ghép theo trọng tâm: patch bỏ pipeline → deploy programmatically; phiên người dùng trực tiếp → giảm interactive access; mở tất cả cổng → control traffic; HTTP → data in transit; log review thủ công → logging là lựa chọn còn lại.",
+      "per_option_vi": {
+        "Configure service and application logging": "Ghép row5 theo bộ lựa chọn, nhưng thiếu alerts chủ yếu là thiếu actionable/automated detection.",
+        "Reduce manual management and interactive access.": "Ghép row2; row1 cũng vi phạm nên trọng tâm/bijection quyết định.",
+        "Deploy software programmatically.": "Ghép row1: bypass deployment pipelines.",
+        "Control traffic flow within your network layers.": "Ghép row3: 0.0.0.0/0 mở toàn bộ ports.",
+        "Protecting data in transit.": "Ghép row4: HTTP không mã hóa."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_appsec_deploy_software_programmatically.html",
+          "supported_claim": "Manual production deployments violate programmatic deployment guidance.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_protect_compute_reduce_manual_management.html",
+          "supported_claim": "Manual patching and interactive troubleshooting both violate reduced manual access guidance.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_detect_investigate_events_app_service_logging.html",
+          "supported_claim": "Logging practice retains logs; separate practices address actionable events and automated response.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+          "supported_claim": "Least privilege network layers use selective ports and sources.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Đề gọi design principles nhưng các tên là best practices.",
+        "row5 đã có CloudTrail logs; thiếu automated alerts không trực tiếp là thiếu logging.",
+        "row1 có nhiều best practices cùng bị vi phạm, mapping intended có thể suy ra nhưng không hoàn toàn unique."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q083",
+      "independent_answer": [
+        "B"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Bật CloudTrail S3 data events để ghi object API với IAM identity và timestamp dạng JSON; delivery thường khoảng 5 phút.",
+      "per_option_vi": {
+        "A": "S3 server logs đến bucket có latency vài giờ và best effort.",
+        "B": "Đúng: structured object API audit có identity và thời điểm.",
+        "C": "Config rules không ghi object access requests.",
+        "D": "Macie phát hiện dữ liệu nhạy cảm, không phải access logger."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html",
+          "supported_claim": "S3 compares JSON CloudTrail data events every 5 minutes against server logs delivered in hours.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q084",
+      "independent_answer": null,
+      "status": "unresolved",
+      "confidence": "high",
+      "explanation_vi": "A có kiến trúc CloudTrail + S3 Object Lock hợp lý nhưng selector trên trail như mô tả không hợp lệ: KMS là management events, không hỗ trợ lọc CreateKey/eventName hay resources.ARN theo cách này. Cần ghi toàn bộ KMS management events rồi lọc downstream và đặt Object Lock retention.",
+      "per_option_vi": {
+        "A": "Gần nhất nhưng trail management selector không hỗ trợ các trường lọc CreateKey/key ARN đã nêu.",
+        "B": "Application logs có thể bỏ sót thao tác KMS và CloudWatch export không bất biến.",
+        "C": "DynamoDB ghi được sửa/xóa và filter key ARN bỏ sót CreateKey trước khi có ARN.",
+        "D": "Metrics/dashboard không lưu evidence bất biến của creation/origin/use."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedEventSelector.html",
+          "supported_claim": "Management selectors on trails support eventCategory, eventSource, readOnly; eventName for event data stores; resources.ARN for data events.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/logging-using-cloudtrail.html",
+          "supported_claim": "KMS API calls are CloudTrail management events and key ARN may be stored in log fields.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+          "supported_claim": "Object Lock retention/legal hold protects versions; enabling alone does not assign retention.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "No fully valid option as written; intended A must be labeled implementation correction.",
+        "Log file validation detects tampering, không tự chống xóa.",
+        "CloudTrail evidence records API origin metadata, không tự chứng thực external entropy provenance."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q085",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "OpenSearch Security Analytics phân tích security logs theo detection rules và phát cảnh báo đến SNS notification channel.",
+      "per_option_vi": {
+        "A": "Đúng: search + security detectors/rules + SNS channel.",
+        "B": "Security Hub xử lý findings, không search raw logs hay tự match logs bằng custom actions.",
+        "C": "CloudWatch subscription filters không gửi trực tiếp SNS; phải dùng metric/alarm hoặc processor.",
+        "D": "QuickSight không là near-real-time security rule engine với SNS như mô tả."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/security-analytics.html",
+          "supported_claim": "Security Analytics evaluates security rules and generates alerts from event logs.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/alerting.html",
+          "supported_claim": "Amazon SNS is a supported OpenSearch notification channel.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q086",
+      "independent_answer": [
+        "D"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Account principal :root bật quyền ủy quyền qua IAM policies cho KMS key; IAM users/roles chỉ dùng key khi được IAM policy cho phép.",
+      "per_option_vi": {
+        "A": "Principal bị giới hạn account 111122223333.",
+        "B": "Account principal cho phép ủy quyền IAM, không chỉ root user.",
+        "C": "Không có điều kiện giới hạn S3.",
+        "D": "Đúng cho IAM principals: key policy bật IAM delegation, IAM policy cấp quyền dùng."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+          "supported_claim": "Default Enable IAM User Permissions statement enables IAM delegation; includes root-account administration.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "D diễn đạt IAM principals; root user cũng được full access qua account principal, không cần attached IAM policy."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q087",
+      "independent_answer": null,
+      "status": "ambiguous",
+      "confidence": "high",
+      "explanation_vi": "B hoặc C đều có thể triển khai organizational conformance pack đến member hiện tại/tương lai; E bật Config bằng StackSets từ management account với auto-deployment. Do đó B+E và C+E đều hợp lệ; security-01 chỉ được mô tả là Config delegated admin, chưa là StackSets delegated admin.",
+      "per_option_vi": {
+        "A": "Có thể làm nếu đăng ký thêm StackSets delegation/auto-deployment; đề chưa cho prerequisite này.",
+        "B": "Hợp lệ: Config delegated admin được triển khai organization conformance pack.",
+        "C": "Cũng hợp lệ: management account được gọi cùng API.",
+        "D": "Config delegation không tự cấp quyền StackSets organization deployment.",
+        "E": "Hợp lệ với service-managed StackSets, trusted access và automatic deployment."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_PutOrganizationConformancePack.html",
+          "supported_claim": "Both management and delegated administrator can call PutOrganizationConformancePack.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+          "supported_claim": "Organizational packs deploy to new accounts; recorder prerequisite and retry window.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html",
+          "supported_claim": "CloudFormation StackSets delegated administrator registration is separate service principal.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Không đủ bằng chứng để loại C chỉ vì đã có Config delegated administrator.",
+        "API error paragraph nói all APIs management-only mâu thuẫn phần đầu API; phần đầu và user guide xác nhận delegated support.",
+        "Nếu tổ chức gồm management account, organization conformance pack/StackSets không tự bao phủ management như mọi member."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q088",
+      "independent_answer": [
+        "B"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Deny s3:* với Bool aws:SecureTransport=false trên bucket và objects chặn HTTP, buộc TLS khi truyền.",
+      "per_option_vi": {
+        "A": "Deny khi SecureTransport=true sẽ chặn HTTPS.",
+        "B": "Đúng: explicit deny cho kết nối không TLS.",
+        "C": "Kiểm tra server-side encryption ở rest, không kiểm tra transit.",
+        "D": "SSE header phải là thuật toán chuỗi; boolean true không kiểm tra TLS."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+          "supported_claim": "aws:SecureTransport is Boolean request context for TLS.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Dòng Sid AllowSSLRequestsOnly không đổi ý nghĩa Effect:Deny.",
+        "Khi áp dụng thực tế cần cân nhắc ngoại lệ AWS service principals cho redacted network context."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q089",
+      "independent_answer": [
+        "B"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Bắt buộc boundary đã định nghĩa khi CreateRole để giới hạn quyền tối đa các role do developer tạo; bảo vệ boundary khỏi sửa/gỡ để tránh leo thang.",
+      "per_option_vi": {
+        "A": "Standalone account không dùng SCP trong Organizations.",
+        "B": "Đúng: iam:PermissionsBoundary condition ép role dùng permission ceiling.",
+        "C": "Access Analyzer và remediation diễn ra sau tạo, không chặn privilege escalation.",
+        "D": "So sánh bằng Lambda sau tạo để lại cửa sổ quyền quá rộng."
+      },
+      "citations": [
+        {
+          "url": "https://aws.amazon.com/blogs/security/when-and-where-to-use-iam-permissions-boundaries/",
+          "supported_claim": "Delegated role creation can require named permissions boundary and deny changing/detaching boundary.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Chỉ CreateRole condition là chưa đủ nếu developer có quyền gỡ/sửa boundary; cần deny boundary tampering/pass-role escalation."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q090",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Tạo CloudFormation product trong Service Catalog portfolio, share portfolio qua Organizations và cấp quyền end users để họ tự triển khai S3 theo mẫu chuẩn.",
+      "per_option_vi": {
+        "A": "Đúng nhưng cần share portfolio với tổ chức/OU và grant principal access trong receiving accounts.",
+        "B": "RAM không chia sẻ arbitrary CloudFormation template như loại resource này.",
+        "C": "RAM permission cho S3 không biến template thành deployable product.",
+        "D": "RAM không chia sẻ S3 bucket/template để người dùng tạo bucket mới."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_sharing_how-to-share.html",
+          "supported_claim": "Portfolios can be shared across Organizations; recipients grant end-user access.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+          "supported_claim": "RAM supports enumerated resource types, not arbitrary S3 buckets or CloudFormation templates.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "A thiếu explicit Organizations sharing step trong wording; bổ sung trong giải thích."
+      ],
+      "recorded_at_utc": "2026-09-30 21:26:16 UTC"
+    },
+    {
+      "id": "Q091",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Reimport đúng key material cũ vào chính KMS key ban đầu để phục hồi khả năng giải mã data key của EBS.",
+      "per_option_vi": {
+        "A": "Material mới không giải mã ciphertext dùng material đã xóa.",
+        "B": "Snapshot mã hóa cùng key vẫn cần key material cũ.",
+        "C": "Đúng: khôi phục material cũ giữ key identity.",
+        "D": "Key mới/material mới không thay thế KMS key bảo vệ data key."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-import-key-material.html",
+          "supported_claim": "PendingImport key is unusable; reimport original associated material to restore cryptographic operations.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Current KMS hỗ trợ imported symmetric on-demand rotation; không nói tuyệt đối key không thể có material mới, mà material mới không phục hồi ciphertext cũ."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q092",
+      "independent_answer": [
+        "B",
+        "D"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Gắn Deny s3:* cho group với BoolIfExists aws:MultiFactorAuthPresent=false để chặn cả temporary session chưa MFA lẫn long-term credentials không có key.",
+      "per_option_vi": {
+        "A": "Deny từng user tăng maintenance so với group.",
+        "B": "Đúng: group policy tự bao phủ thành viên.",
+        "C": "Allow thêm không thu hồi full access đang có.",
+        "D": "Đúng: Deny BoolIfExists=false xử lý cả key vắng mặt.",
+        "E": "Bool=false không chặn long-term key thiếu MFA context; snippet còn thiếu dấu hai chấm."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+          "supported_claim": "AWS recommends Deny BoolIfExists MFA false; long-term requests may lack key.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "E có lỗi JSON nhưng ngay cả khi sửa cú pháp vẫn không đầy đủ."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q093",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Group Cloud phải được assign vào Account A cùng permission set hợp lệ trong IAM Identity Center.",
+      "per_option_vi": {
+        "A": "Account ở organization root vẫn có thể được assign truy cập.",
+        "B": "Nếu group sync chung hỏng thì không chỉ Account A bị thiếu.",
+        "C": "Đúng: account assignment + permission set quyết định truy cập.",
+        "D": "Permissions boundary gắn IAM identity, không gắn trực tiếp toàn AWS account."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/assignusers.html",
+          "supported_claim": "Select account, assign users/groups, then permission sets.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q094",
+      "independent_answer": null,
+      "status": "ambiguous",
+      "confidence": "high",
+      "explanation_vi": "B đúng phần điều tra CloudTrail, xóa tài nguyên trái phép và rotate keys, nhưng yêu cầu tự gỡ quarantine policy không phù hợp tài liệu AWS hiện hành. Chỉ xử lý quarantine theo hướng dẫn trong Support case sau remediation.",
+      "per_option_vi": {
+        "A": "Xóa user trước làm gián đoạn và CloudWatch không là nguồn API audit chính.",
+        "B": "Gần nhất; chỉ gỡ quarantine nếu Support case hướng dẫn, không mặc định.",
+        "C": "Gỡ quarantine trước điều tra/rotate sẽ khôi phục quyền cho credential bị lộ.",
+        "D": "CloudWatch logs không thay CloudTrail API history và chỉ rotate impacted key có thể thiếu key/backdoor khác."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/securing_access-keys.html",
+          "supported_claim": "Rotate compromised keys and inspect CloudTrail to determine actions.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AWSCompromisedKeyQuarantineV3.html",
+          "supported_claim": "Managed policy explicitly instructs not to remove it and to follow Support case.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "No fully supported option as written; intended B is conditional.",
+        "Current managed policy edited 2026-03-16 16:27 UTC per actual page; không suy đoán từ crawler."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q095",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "ambiguous",
+      "confidence": "high",
+      "explanation_vi": "Firewall Manager là dịch vụ thích hợp để áp WAF managed rule group tập trung với ít vận hành; phải tạo policy riêng từng Region có ALB và bật remediation.",
+      "per_option_vi": {
+        "A": "StackSets cần discovery/update nhiều existing ACL, overhead cao hơn Firewall Manager.",
+        "B": "SCP giới hạn API permissions, không chèn rule group vào ACL.",
+        "C": "Đúng dịch vụ, nhưng một policy không có scope mọi Regions như câu viết.",
+        "D": "Security Hub findings không tự triển khai rule group."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies-rule-groups.html",
+          "supported_claim": "Firewall Manager WAF policies include Marketplace managed rule groups; member subscription prerequisite.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/create-policy.html",
+          "supported_claim": "Non-CloudFront resources in multiple Regions require separate policies per Region.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "C wording all accounts and Regions sai phạm vi: cần policy per Region.",
+        "Member accounts cần Marketplace subscription/license hợp lệ.",
+        "Không coi Security Hub tự sinh custom missing-third-party-rule finding nếu không có control."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q096",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Bắt CloudTrail API events ScheduleKeyDeletion (và DisableKey nếu muốn) bằng EventBridge rồi dùng Lambda/SNS báo trước khi waiting period hết.",
+      "per_option_vi": {
+        "A": "Không cấu hình thời điểm xóa KMS key khi CreateKey; expiration imported material là khác.",
+        "B": "DeleteAlias không xóa key.",
+        "C": "Đúng: ScheduleKeyDeletion xảy ra trước việc xóa thực.",
+        "D": "SNS policy không là event detector hay có Lambda target như mô tả."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/monitor-and-remediate-scheduled-deletion-of-aws-kms-keys.html",
+          "supported_claim": "Pattern triggers on CloudTrail ScheduleKeyDeletion for notification/remediation before deletion.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Native KMS CMK Deletion event chỉ sau xóa; phải dùng API Call via CloudTrail event.",
+        "Lambda không bắt buộc nếu EventBridge target SNS trực tiếp, nhưng hợp lệ."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q097",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Tắt source/destination check trên appliance ENI để nó chuyển tiếp gói mà appliance không là nguồn hay đích cuối.",
+      "per_option_vi": {
+        "A": "Không cần vô hiệu network ACL; cấu hình rules phù hợp.",
+        "B": "Promiscuous mode không là thiết lập EC2 ENI cần cho routing.",
+        "C": "Đúng: điều kiện bắt buộc cho middlebox forwarding.",
+        "D": "Appliance không bắt buộc ở public subnet có IGW."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/route-table-options.html",
+          "supported_claim": "Appliance considerations require disabling source/destination checking.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q098",
+      "independent_answer": [
+        "D"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Truyền GrantToken do CreateGrant trả về trong Encrypt request để dùng quyền grant ngay trước khi eventual consistency hoàn tất.",
+      "per_option_vi": {
+        "A": "Retry có thể thành công sau propagation nhưng không đáp ứng dùng ngay.",
+        "B": "Token không do người dùng tự tạo rồi đưa vào CreateGrant.",
+        "C": "Grant name không phải grant token; tên phục vụ chống tạo trùng.",
+        "D": "Đúng: dùng token thật trả từ CreateGrant."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/using-grant-token.html",
+          "supported_claim": "Grant token from CreateGrant response permits immediate operations on new grant.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q099",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "S3 Lifecycle transition sau 90 ngày sang Glacier Flexible Retrieval và expiration sau 2 năm; Standard retrieval thường 3–5 giờ.",
+      "per_option_vi": {
+        "A": "Data Lifecycle Manager quản lý EBS snapshots/AMIs, không S3 objects.",
+        "B": "DLM không quản lý S3 và Deep Archive không đáp ứng vài giờ.",
+        "C": "Đúng: Lifecycle đúng dịch vụ và Flexible Standard retrieval phù hợp.",
+        "D": "Deep Archive thường 12 giờ; xóa noncurrent không tự xóa current objects."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html",
+          "supported_claim": "S3 Lifecycle supports transition and expiration actions.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/glacier-storage-classes.html",
+          "supported_claim": "Flexible Standard retrieval 3–5 hours; Deep Archive slower.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Bucket versioning bật thì Expiration chỉ tạo delete marker; để xóa mọi dữ liệu cần NoncurrentVersionExpiration.",
+        "Standard retrieval là typical, không SLA mọi object; rất lớn có thể lâu hơn."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q100",
+      "independent_answer": [
+        "D"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Deny s3:DeleteBucket bằng SCP ở root/OU áp guardrail tập trung cho principals trong member accounts và dễ mở rộng.",
+      "per_option_vi": {
+        "A": "Boundary phải gắn/quản lý từng IAM identity.",
+        "B": "Bucket policy phải áp từng bucket.",
+        "C": "Tag policies chuẩn hóa tags, không cấm DeleteBucket.",
+        "D": "Đúng cho principals member accounts: SCP tập trung permission guardrail."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+          "supported_claim": "SCP limits member-account principals including root; does not affect management or outside principals.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "SCP không áp management account, service-linked roles hoặc external principals; literal any bucket/user toàn tổ chức cần phạm vi chính xác."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q101",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "SCP chặn RunInstances khi thiếu environment/asset; tag policy với enforcement kiểm soát giá trị environment được phép.",
+      "per_option_vi": {
+        "A": "Đúng: SCP yêu cầu presence; tag policy kiểm soát giá trị/case khi enforce ec2:instance.",
+        "B": "Tag policy không là API permission condition yêu cầu RunInstances như mô tả.",
+        "C": "Config remediation xảy ra sau launch, không phòng ngừa.",
+        "D": "Config scope không phải tags độc lập và vẫn là hậu kiểm."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_example-tag-policies.html",
+          "supported_claim": "enforced_for controls noncompliant tagging; required-tag reporting/IaC validation is separate.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+          "supported_claim": "SCP denies actions at request authorization for member principals.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Tag policy phải có enforced_for EC2 instances, không chỉ định allowed values mà không enforce.",
+        "Current tag policy có report_required_tag_for và IaC fail/warn integration; không nhầm reporting với native RunInstances deny."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q102",
+      "independent_answer": [
+        "A",
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Geo restriction deny list ở CloudFront chặn các nước không có license; OAC/bucket policy khóa origin S3 để tránh truy cập trực tiếp vòng qua CloudFront.",
+      "per_option_vi": {
+        "A": "Đúng: chỉ cho distribution qua OAC đọc origin.",
+        "B": "DNS geolocation không là deny list bảo mật và có thể bypass.",
+        "C": "Đúng: CloudFront country deny list.",
+        "D": "S3 bucket policy không có country condition key.",
+        "E": "Restrict Viewer Access yêu cầu signed URLs/cookies, không country deny list."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/georestrictions.html",
+          "supported_claim": "CloudFront geographic restriction operates at country level; recommends origin access control.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html",
+          "supported_claim": "OAC bucket policy authorizes CloudFront service principal with distribution SourceArn.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "OAC là cấu hình distribution, bucket policy dùng CloudFront service principal/SourceArn, không ARN OAC làm Principal."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q103",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Well-Architected Tool đánh giá workload qua security pillar questions và tạo improvement plan cho rủi ro kiến trúc.",
+      "per_option_vi": {
+        "A": "Trusted Advisor kiểm tra selected configurations, không thay workload architecture review.",
+        "B": "Macie khám phá sensitive data trong S3, không scan RDS như mô tả.",
+        "C": "Đúng: workload review, security questions và improvement plan.",
+        "D": "Inspector tìm vulnerabilities/network exposure, không hoàn chỉnh đánh giá architecture design."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/tutorial.html",
+          "supported_claim": "Define workload, answer pillar questions, review improvement plan.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q104",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "medium",
+      "explanation_vi": "Token tĩnh không cần rotation có thể lưu trong Parameter Store standard SecureString rồi GetParameter WithDecryption lúc runtime, tránh phí mỗi secret của Secrets Manager.",
+      "per_option_vi": {
+        "A": "Đáp ứng chức năng nhưng có phí secret/API và lợi ích rotation không được yêu cầu.",
+        "B": "API Gateway authorizer xác thực caller, không lưu/cấp token SaaS cho Lambda.",
+        "C": "Đúng trong giả định standard tier/default throughput: KMS-encrypted parameter, runtime SDK retrieval.",
+        "D": "Khả thi nếu thêm runtime kms:Decrypt, nhưng client-side KMS key/management không có lợi ích chi phí được chứng minh hơn C."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html",
+          "supported_claim": "Standard parameters free; SecureString KMS encryption; Secrets Manager per-secret/API charges.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars-encryption.html",
+          "supported_claim": "Client-side encryption uses customer managed key and decrypt code/permissions; standard KMS charges.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Không khẳng định environment variables không mã hóa: Lambda luôn encrypt at rest.",
+        "MOST cost-effective phụ thuộc caching, request volume, key dùng chung; C là intended default static-token solution."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q105",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "IAM Identity Center dùng SAML để authenticate với IdP, SCIM provision users/groups và permission sets/accounts để quản lý workforce truy cập tập trung.",
+      "per_option_vi": {
+        "A": "Cognito identity pool/roles management account không provision organizational member access như yêu cầu.",
+        "B": "SAML federation không authenticate IAM users; tạo IAM user từng account không là thiết kế tập trung này.",
+        "C": "Đúng: AWS Organizations workforce federation qua Identity Center.",
+        "D": "Verified Permissions là application authorization, không cấp IAM role account federation."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-idp.html",
+          "supported_claim": "External identity sources use SAML2 and SCIM; permissions centrally assign accounts/roles.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q106",
+      "independent_answer": [
+        "C"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Xóa default NAT route trong riêng hai route tables của DB subnets; local VPC route giữ kết nối ứng dụng, route của app không đổi.",
+      "per_option_vi": {
+        "A": "Xóa shared NAT làm gián đoạn app.",
+        "B": "NACL không tham chiếu security group ID và NAT gateway không gắn SG.",
+        "C": "Đúng: cắt internet egress của DB subnets nhưng giữ local routes.",
+        "D": "Route table không có deny connection rules."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/route-table-options.html",
+          "supported_claim": "Private subnet internet egress uses route to NAT; VPC local route preserves internal connectivity.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Theo topo đề không có đường egress khác; nếu có IPv6/TGW/proxy cần cắt thêm."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q107",
+      "independent_answer": null,
+      "status": "ambiguous",
+      "confidence": "medium",
+      "explanation_vi": "A là phương án owner-side ít quyền hơn nếu chỉ cần write operations và kiểm soát principal tags; B cũng đáp ứng khi IAM phía development giới hạn đúng principals/actions. Đề chưa chỉ rõ chỉ-write hay cần owner-side enforcement để chọn duy nhất.",
+      "per_option_vi": {
+        "A": "Khả thi: IPAM pools hỗ trợ custom permissions, write-only actions và condition bằng customer PrincipalTag không bị cấm chung.",
+        "B": "Khả thi: account share vẫn cần IAM permission cho principals bên nhận; restrict IAM actions/resources đúng scope.",
+        "C": "Có thể guardrail bằng SCP, nhưng SCP không cấp quyền và tự sửa resource policy ngoài RAM tăng phức tạp.",
+        "D": "Full-access permission rộng; VPC endpoint policy không ràng buộc mọi đường gọi public endpoint."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/ram/latest/userguide/getting-started-terms-and-concepts.html",
+          "supported_claim": "Explicit example allows developers allocate IPAM CIDRs without read access using custom permissions; account sharing requires IAM access.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/ram/latest/userguide/managed-permission-considerations.html",
+          "supported_claim": "Prohibited system tags aws:PrincipalTag/aws:; ordinary aws:PrincipalTag is not listed as prohibited.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/vpc/latest/ipam/share-pool-ipam.html",
+          "supported_claim": "IPAM sharing supports principals and resource permissions.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        },
+        {
+          "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+          "supported_claim": "IPAM pools support customer managed permissions and users/roles.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [
+        "Không được nói mọi aws:PrincipalTag không được AWS RAM hỗ trợ.",
+        "Customer managed permission condition chỉ single non-negating operators; bảo vệ tagging để tránh tự gắn allowed tag.",
+        "A write-only có thể đáp ứng allocation nhưng thiếu read nếu operations yêu cầu khác; stem không xác định actions.",
+        "C cũng có thể implement bổ sung đúng policies; không unique nếu diễn giải rộng."
+      ],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    },
+    {
+      "id": "Q108",
+      "independent_answer": [
+        "A"
+      ],
+      "status": "verified",
+      "confidence": "high",
+      "explanation_vi": "Role có quyền baseline cho incident types; session policy truyền mỗi AssumeRole chỉ giữ subset cần cho incident đó, độc lập với các session đồng thời.",
+      "per_option_vi": {
+        "A": "Đúng: session permission là giao của role policy và session policy.",
+        "B": "Boundary gắn role, không thay đổi độc lập theo mỗi concurrent session.",
+        "C": "Session policy không tự cấp quyền vượt role baseline rỗng.",
+        "D": "Tạo role mỗi incident tăng vận hành; managed service-role policy không là responder permissions tùy incident."
+      },
+      "citations": [
+        {
+          "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html",
+          "supported_claim": "Session policy can only restrict role permissions and is passed per AssumeRole call.",
+          "access_date": "2026-09-30",
+          "opened_actual_page": true
+        }
+      ],
+      "source_issues": [],
+      "recorded_at_utc": "2026-09-30 21:28:38 UTC"
+    }
+  ]
+}

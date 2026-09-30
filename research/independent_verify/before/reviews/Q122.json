@@ -1,0 +1,316 @@
+{
+  "question_id": "Q122",
+  "question_content_hash": "95631204768850fddd5bc9c2462e3bacd8d72e86acce63a32567de18801ea94a",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:26+00:00",
+  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "3a610474232c9c5070a68836d47d9f5788798d2181612c931f4973139f2787e1",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Cần xác định ngưỡng rate limit sao cho không chặn traffic hợp lệ (giai đoạn tìm/điều chỉnh ngưỡng).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Dùng rate-based rule statement trong AWS WAF web ACL, aggregate theo source IP.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Tài nguyên cần bảo vệ: Network Load Balancer có Elastic IP (tiền đề của đề).",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn rule action phù hợp (một đáp án).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q122:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Count với rate-based rule chỉ đếm các request vượt ngưỡng mà không chặn; AWS khuyến nghị test và tune rule ở count mode với production traffic trước khi bật, nên đây là cách xác định ngưỡng mà không chặn traffic hợp lệ.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q122:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Block là hành động chặn khi vượt ngưỡng; khi chưa biết ngưỡng phù hợp thì Block có thể chặn nhầm traffic hợp lệ, trái với R1 (Block là bước sau khi đã tune bằng Count).",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref9"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q122:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS WAF không có rule action tên 'Monitor'; các action là Allow, Block, Count, CAPTCHA, Challenge.",
+      "requirement_ids": [
+        "R4"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q122:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Rate-based rule cho phép mọi rule action trừ Allow, nên không thể cấu hình Allow cho rule này.",
+      "requirement_ids": [
+        "R4"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q122:A"
+    ],
+    "proposed_status": "ambiguous",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Xét riêng câu hỏi chọn action để tìm ngưỡng không chặn traffic hợp lệ thì Count là đáp án duy nhất hợp lý (Monitor không tồn tại, Allow bị cấm cho rate-based rule, Block rủi ro chặn nhầm). Nhưng tiền đề đề sai: AWS WAF web ACL không associate được với Network Load Balancer, nên không thể 'protect the NLB' bằng WAF.",
+      "open_issues": [
+        "Tiền đề sai: NLB không nằm trong danh sách resource mà AWS WAF bảo vệ; NLB có EIP chỉ được bảo vệ ở mức network qua Shield Advanced (EIP protection)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6",
+      "ref7"
+    ],
+    "recorded_at": "2026-09-30T20:21:26+00:00"
+  },
+  "source_answer": [
+    "Q122:A"
+  ],
+  "researched_answer": [
+    "Q122:A"
+  ],
+  "comparison": "match",
+  "status": "ambiguous",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Phần hỏi thực chất (chọn action để tìm ngưỡng không chặn traffic hợp lệ) có đáp án duy nhất Count, trùng source key: Monitor không tồn tại, Allow bị cấm cho rate-based rule, Block có thể chặn nhầm. Nhưng tiền đề đề sai: đã đọc lại (refresh 2026-09-30) danh sách resource AWS WAF – không có Network Load Balancer; NLB có EIP chỉ được Shield Advanced bảo vệ ở tầng mạng. Không có bằng chứng mới nào làm tiền đề đúng, nên giữ ambiguous theo blind.",
+    "open_issues": [
+      "Tiền đề sai: AWS WAF web ACL không associate được với Network Load Balancer (ref6 đọc lại 2026-09-30); rate-based rule không thể 'protect the NLB'.",
+      "Nếu đề gốc là ALB/CloudFront thì Count là đáp án rõ ràng; không tự sửa đề."
+    ]
+  },
+  "reconciliation_vi": "Source key = A (Count), trùng đáp án blind; blind đề xuất ambiguous vì tiền đề WAF trên NLB. Theo quy tắc bias-guard, chỉ nâng lên verified nếu có bằng chứng trực tiếp mới cho thấy WAF hỗ trợ NLB. Đã refresh trang 'Resources that you can protect with AWS WAF' (ref6): danh sách regional vẫn chỉ có API Gateway REST, ALB, AppSync, Cognito, App Runner, Verified Access, Amplify… – không có NLB. Trang Shield Advanced (ref7) chỉ bảo vệ NLB qua EIP ở tầng mạng; blog AWS về rate-based rule cũng giả định WAF gắn CloudFront/ALB (ref8). Vì vậy tiền đề vẫn sai và không nâng status. Về phần action: tài liệu xác nhận Count chỉ đếm request vượt ngưỡng (ref1), AWS khuyến nghị tune ở count mode (ref2), ngưỡng phải lớn hơn traffic bình thường của một IP (ref9) – nên A là lựa chọn hợp lý duy nhất. Kết luận: researched_answer = A (trùng source), status ambiguous, không chấm điểm.",
+  "explanation_vi": {
+    "why_correct": "CHƯA KẾT LUẬN CHẮC CHẮN (ambiguous): đề giả định gắn AWS WAF web ACL vào Network Load Balancer, nhưng AWS WAF không hỗ trợ NLB (chỉ ALB, API Gateway, CloudFront…), nên tiền đề sai. Nếu bỏ qua tiền đề, A (Count) là đúng: rate-based rule ở Count chỉ đếm request vượt ngưỡng mà không chặn, giúp quan sát traffic thật để chọn rate limit không chặn nhầm người dùng hợp lệ, sau đó mới chuyển sang Block.",
+    "others": {
+      "Q122:B": "Block chặn ngay các IP vượt ngưỡng khi ngưỡng còn chưa được kiểm chứng, dễ chặn nhầm traffic hợp lệ – đây là bước sau khi đã tune bằng Count.",
+      "Q122:C": "AWS WAF không có rule action tên 'Monitor' (chỉ có Allow, Block, Count, CAPTCHA, Challenge).",
+      "Q122:D": "Rate-based rule cho phép mọi action trừ Allow, nên không thể cấu hình Allow cho rule này."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "determine a rate limit that will not block legitimate traffic",
+      "meaning_vi": "Giai đoạn đo/tune ngưỡng -> dùng Count, chưa Block."
+    },
+    {
+      "phrase": "rate-based rule statement",
+      "meaning_vi": "Rule đếm request theo khóa gộp (ở đây source IP) trong cửa sổ thời gian; action không được là Allow."
+    },
+    {
+      "phrase": "Network Load Balancer (NLB)",
+      "meaning_vi": "AWS WAF không gắn được vào NLB – tiền đề của đề sai; NLB/EIP dùng Shield Advanced."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần tìm ngưỡng rate-based rule mà không chặn người dùng thật -> nghĩ đến action Count rồi xem metric/log trước khi đổi sang Block; kiểm tra resource có thực sự gắn được WAF (ALB/CloudFront/API Gateway, không phải NLB).",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS WAF",
+      "Elastic Load Balancing",
+      "AWS Shield Advanced"
+    ],
+    "reason_vi": "Bảo vệ DDoS tầng ứng dụng bằng WAF rate-based rule và giới hạn resource mà WAF hỗ trợ."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-request-limiting.html",
+      "title": "Applying rate limiting to requests in AWS WAF",
+      "section": "How AWS WAF applies the rule action",
+      "snapshot_id": "72c200799dac",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "It just counts the requests that are over the limit",
+      "supports": "Count trong rate-based rule không giới hạn/chặn request, chỉ đếm request vượt ngưỡng - dùng để quan sát ngưỡng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/web-acl-testing.html",
+      "title": "Testing and tuning your AWS WAF protections",
+      "section": "intro",
+      "snapshot_id": "025d233fd288",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Then test and tune the rules in count mode with your production traffic before enabling them",
+      "supports": "AWS khuyến nghị dùng count mode để tune rule trước khi bật chặn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-request-limiting.html",
+      "title": "Applying rate limiting to requests in AWS WAF",
+      "section": "Block",
+      "snapshot_id": "72c200799dac",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS WAF blocks the request and applies any custom blocking behavior",
+      "supports": "Block chặn request vượt ngưỡng - có thể chặn nhầm traffic hợp lệ khi ngưỡng chưa được xác định.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-action.html",
+      "title": "Using rule actions in AWS WAF",
+      "section": "rule action options",
+      "snapshot_id": "81fb8fcacca6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS WAF counts the request but does not determine whether to allow it or block it",
+      "supports": "Danh sách rule action (Allow, Block, Count, CAPTCHA, Challenge) không có 'Monitor'; Count không quyết định allow/block.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-high-level-settings.html",
+      "title": "Rate-based rule high-level settings in AWS WAF",
+      "section": "Action",
+      "snapshot_id": "5bf095f4854b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use any rule action except Allow",
+      "supports": "Rate-based rule không dùng được action Allow.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html",
+      "title": "Resources that you can protect with AWS WAF",
+      "section": "Regional resources",
+      "snapshot_id": "1dd55ffe60ec",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use AWS WAF to protect the following regional resource types",
+      "supports": "Danh sách regional resource (API Gateway REST, ALB, AppSync, Cognito, App Runner, AgentCore Gateway, Verified Access, Amplify) không có Network Load Balancer -> tiền đề đề sai.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-advanced-summary-protected-resources.html",
+      "title": "List of AWS resources that AWS Shield Advanced protects",
+      "section": "list",
+      "snapshot_id": "27a98428aafc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Network Load Balancers, through associations to Amazon EC2 Elastic IP addresses",
+      "supports": "NLB có EIP được bảo vệ DDoS bằng Shield Advanced (qua EIP), không phải bằng WAF web ACL.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://aws.amazon.com/blogs/security/three-most-important-aws-waf-rate-based-rules/",
+      "title": "The three most important AWS WAF rate-based rules | AWS Security Blog",
+      "section": "Prerequisites",
+      "snapshot_id": "f8524deff105",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2025-05-06T10:10:19-07:00",
+      "quote": "AWS WAF is deployed in your AWS account and is associated with an Amazon CloudFront distribution or an Application Load Balancer.",
+      "supports": "Blog AWS về rate-based rule giả định WAF gắn với CloudFront hoặc ALB – không có NLB; củng cố rằng tiền đề 'WAF bảo vệ NLB' của đề không khả thi.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/ddos-app-layer-rbr.html",
+      "title": "Protecting the application layer with AWS WAF rate-based rules and Shield Advanced",
+      "section": "intro",
+      "snapshot_id": "be809a97dccc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "configure its rate threshold to a value that's greater than the normal traffic rate that you expect from any one source IP",
+      "supports": "Ngưỡng phải lớn hơn traffic bình thường của một IP – cần quan sát traffic thật trước (Count) rồi mới đặt ngưỡng chặn.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q122:stem:0",
+      "detail_vi": "Đề giả định gắn AWS WAF web ACL (rate-based rule) để bảo vệ NLB, nhưng AWS WAF không hỗ trợ associate web ACL với Network Load Balancer; câu hỏi chỉ còn ý nghĩa ở phần chọn action để tìm ngưỡng."
+    }
+  ],
+  "notes_vi": "Nếu bỏ qua tiền đề NLB, đáp án Count là rõ ràng. Status để ambiguous vì tiền đề kỹ thuật sai.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:26+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q122:A\"], proposed_status=ambiguous",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:36:52+00:00",
+      "change": "Reconciliation: source key A trùng đáp án blind; giữ status ambiguous (không nâng) vì refresh ref6 vẫn cho thấy AWS WAF không hỗ trợ NLB. Thêm ref8 (blog AWS: WAF gắn CloudFront/ALB) và ref9 (ngưỡng > traffic bình thường); cập nhật reference_ids của Q122:A, Q122:B (verdict không đổi).",
+      "previous_answer": [
+        "Q122:A"
+      ]
+    }
+  ]
+}

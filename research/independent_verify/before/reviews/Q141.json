@@ -1,0 +1,275 @@
+{
+  "question_id": "Q141",
+  "question_content_hash": "358c359ed558e3df6d43e68491b7f3c4424d39da3f3347b5cd2c88ca4b4c05e0",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:23:33+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Thực hiện định kỳ các bài test disaster recovery thực tế (realistic) trong môi trường AWS live.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Test phải chứng minh cấu hình high availability đạt tiêu chí đã định.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phải có cách dừng test khi phát hiện sự cố nghiêm trọng (guardrail/stop).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q141:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tự viết Lambda tắt tài nguyên + Step Functions Express (tối đa 5 phút) là giải pháp tự chế, không có cơ chế dừng tự động theo điều kiện nêu ra và tắt máy không mô phỏng đầy đủ sự cố thực tế.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q141:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AWS FIS có scenario AZ Availability: Power Interruption mô phỏng mất điện AZ thực tế, chọn target theo tag, lên lịch chạy định kỳ, và có stop condition (CloudWatch alarm) để dừng experiment khi có sự cố.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q141:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Runbook thủ công tắt máy theo thứ tự 'sạch' không phải mô phỏng sự cố thực tế, không lặp lại được nhất quán và không có cơ chế dừng tự động.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q141:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "SSM Automation có thể tự động tắt máy và (theo doc) có thể gắn CloudWatch alarm để huỷ automation, nhưng option không nêu cơ chế dừng và chỉ tắt máy nên kém thực tế hơn fault injection chuyên dụng của FIS.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q141:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "FIS là dịch vụ chuyên cho chaos/DR experiment trong production với guardrail stop condition; có sẵn scenario Power Interruption, target theo tag và lập lịch. Các option khác là tự chế/thủ công.",
+      "open_issues": [
+        "Option B không nhắc stop condition nhưng đó là thành phần có sẵn của experiment template FIS."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:23:33+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/stop-conditions.html",
+      "title": "Stop conditions for AWS FIS",
+      "section": "intro",
+      "snapshot_id": "47da0d9a61d0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A stop condition is a mechanism to stop an experiment if it reaches a threshold that you define as an Amazon CloudWatch alarm.",
+      "supports": "FIS có cơ chế dừng experiment khi vượt ngưỡng (R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/az-availability-scenario.html",
+      "title": "AZ Availability: Power Interruption",
+      "section": "intro",
+      "snapshot_id": "ee099e5e8184",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This scenario can be used to demonstrate that multi-AZ applications operate as expected during a single, complete AZ power interruption.",
+      "supports": "Scenario mất điện của FIS chứng minh cấu hình HA đáp ứng (R1, R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/az-availability-scenario.html",
+      "title": "AZ Availability: Power Interruption",
+      "section": "Stop-Instances",
+      "snapshot_id": "ee099e5e8184",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, it targets instances with a tag named AzImpairmentPower with a value of StopInstances.",
+      "supports": "Target được chọn theo tag như mô tả trong option B.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/experiment-scheduler.html",
+      "title": "Scheduling experiments",
+      "section": "intro",
+      "snapshot_id": "17e48e1c9576",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can now schedule your experiments as a one-time task or recurring tasks natively from the FIS Console.",
+      "supports": "FIS hỗ trợ lập lịch chạy định kỳ (regularly).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/fis/latest/userguide/what-is.html",
+      "title": "What is AWS Fault Injection Service?",
+      "section": "intro",
+      "snapshot_id": "4cebfbd52402",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you need to run experiments in production, such as automatically rolling back or stopping the experiment if specific conditions are met.",
+      "supports": "FIS thiết kế để chạy trong production với guardrail dừng tự động.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/step-functions/latest/dg/choosing-workflow-type.html",
+      "title": "Choosing workflow type in Step Functions",
+      "section": "Express",
+      "snapshot_id": "91a6fe35d2b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "They can run for up to five minutes.",
+      "supports": "Express workflow giới hạn 5 phút, không hợp với DR test kéo dài (lựa chọn A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/running-simple-automations.html",
+      "title": "Run an automated operation powered by Systems Manager Automation",
+      "section": "Simple execution steps",
+      "snapshot_id": "8c17cf384ea3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If your alarm enters ALARM state, the automation is canceled and any defined onCancel steps run.",
+      "supports": "SSM Automation cũng có thể dừng theo alarm, nhưng option D không cấu hình điều này.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Từ khoá: realistic DR test trong live environment + cần dừng khi có sự cố -> AWS FIS + stop conditions.",
+  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "blind_record_sha256": "cc8c10f0971485604f916d8d380b9be41d4e702fe04d6f84873b54445aa51bfb",
+  "source_answer": [
+    "Q141:B"
+  ],
+  "researched_answer": [
+    "Q141:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Doc FIS xác nhận: scenario AZ Availability: Power Interruption chứng minh ứng dụng multi-AZ hoạt động đúng, target theo tag, lập lịch định kỳ, và stop condition (CloudWatch alarm) để dừng experiment trong production.",
+    "open_issues": [
+      "Option B không nhắc stop condition, nhưng stop condition là thành phần sẵn có của experiment template FIS."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại D (đối thủ mạnh nhất): SSM Automation có thể huỷ automation khi CloudWatch alarm vào trạng thái ALARM (ref7), nhưng option D không cấu hình cơ chế dừng và chỉ 'shut down machines', không mô phỏng sự cố thực tế như fault injection; FIS được thiết kế riêng để chạy experiment trong production với guardrail stop condition. A (Lambda + Step Functions Express tối đa 5 phút) và C (runbook thủ công, tắt máy 'sạch') không realistic và không có cơ chế dừng. Giữ B, verified, high.",
+  "explanation_vi": {
+    "why_correct": "AWS Fault Injection Service có sẵn scenario Power Interruption để mô phỏng sự cố thực tế trên tài nguyên được chọn theo tag, có thể lên lịch chạy định kỳ, và stop condition (CloudWatch alarm) cho phép dừng experiment khi phát hiện sự cố nghiêm trọng.",
+    "others": {
+      "Q141:A": "Lambda + Step Functions Express là giải pháp tự chế (Express chỉ chạy tối đa 5 phút), không có cơ chế dừng theo điều kiện và tắt máy không mô phỏng sự cố thực tế.",
+      "Q141:C": "Runbook thủ công tắt máy theo thứ tự 'sạch' không phải test realistic, khó lặp lại nhất quán và không có cơ chế dừng tự động.",
+      "Q141:D": "SSM Automation chỉ tắt máy như mô tả, không cấu hình cơ chế dừng khi có sự cố và kém thực tế hơn fault injection chuyên dụng của FIS."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "realistic disaster recovery tests",
+      "meaning_vi": "Mô phỏng sự cố thật (fault injection), không phải tắt máy theo kịch bản."
+    },
+    {
+      "phrase": "stop the tests if critical issues are found",
+      "meaning_vi": "Cần guardrail -> FIS stop condition (CloudWatch alarm)."
+    },
+    {
+      "phrase": "live environment",
+      "meaning_vi": "Chạy trong production -> cần cơ chế dừng an toàn."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần test DR/chaos thực tế trong production và dừng được khi có sự cố -> nghĩ đến AWS FIS + stop conditions; kiểm tra phương án tự viết Lambda/SSM thường thiếu guardrail dừng.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS Fault Injection Service",
+      "Amazon CloudWatch"
+    ],
+    "reason_vi": "Kiểm thử khả năng phục hồi/khôi phục sự cố theo yêu cầu tuân thủ."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:23:33+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q141:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:30:46+00:00",
+      "change": "Reconciliation: khớp source key B; status verified (high); đáp án không đổi; không thêm tham chiếu mới.",
+      "previous_answer": [
+        "Q141:B"
+      ]
+    }
+  ]
+}

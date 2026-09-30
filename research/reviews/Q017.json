@@ -2,9 +2,9 @@
   "question_id": "Q017",
   "question_content_hash": "3d35fad56c549a7dc74902ae374887662b0143fccd86a1e9e9bd312a4227eebb",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:00Z",
-  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,7 +38,7 @@
       "unit_id": "Q017:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Endpoint policy áp dụng cho mọi request đi qua gateway endpoint (đường duy nhất tới S3); aws:PrincipalOrgID chặn credential ngoài tổ chức, aws:ResourceOrgID chặn bucket ngoài tổ chức, trong khi role và bucket nội bộ vẫn được phép.",
+      "reason_vi": "Đúng: ràng buộc principal và tài nguyên trong org trên mọi request qua endpoint.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -46,26 +46,21 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5",
-        "ref9"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q017:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Role đã chỉ cho phép bucket cần thiết nên thêm aws:ResourceOrgID vào role không thay đổi gì; kẻ tấn công dùng credential khác (không phải instance role) sẽ không bị policy của role này ràng buộc.",
+      "reason_vi": "Sai: instance role vốn hạn chế bucket; attacker có thể dùng credentials khác.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref6"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -73,28 +68,28 @@
       "unit_id": "Q017:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Truy cập S3 qua gateway endpoint dùng HTTPS cổng 443 và network ACL phải cho phép lưu lượng tới S3; chặn outbound 443 sẽ làm hỏng job xử lý.",
+      "reason_vi": "Sai: chặn 443 làm job S3 ngừng hoạt động.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q017:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ giới hạn IAM user/role của account thành viên; không ảnh hưởng credential từ account ngoài tổ chức mà kẻ tấn công có thể dùng qua endpoint, nên không chặn được exfiltration.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chưa đủ: SCP không kiểm soát principal ngoài organization và Allow riêng không thay deny.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref8"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -248,35 +243,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Whitepaper data perimeter chỉ rõ dùng VPC endpoint policy với aws:PrincipalOrgID và aws:ResourceOrgID để chỉ cho phép identity và resource tin cậy đi qua mạng của mình bất kể principal; SCP và policy của role không ràng buộc credential từ account ngoài tổ chức.",
-    "open_issues": [
-      "Nếu instance cần truy cập bucket do AWS sở hữu (vd repo Amazon Linux, CloudWatch agent) qua endpoint thì cần ngoại lệ; đề không nêu nhu cầu này."
-    ]
+    "reason_vi": "Giữ A; endpoint policy chặn cả external credentials, SCP không làm được.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind (A) trùng khóa nguồn (A). Đã kiểm tra lại đối thủ mạnh nhất là D (SCP): SCP chỉ giới hạn principal trong tổ chức và không ảnh hưởng user/role của account bên ngoài. Vì instance role đã chỉ cho phép bucket cần thiết, exfiltration phải dùng credential khác đi qua gateway endpoint (đường duy nhất tới S3), nên chỉ kiểm soát ở endpoint (áp dụng bất kể principal) mới chặn được. B không thay đổi gì với credential ngoài; C cắt luôn HTTPS tới S3 làm hỏng job. Giữ A.",
+  "reconciliation_vi": "Giữ A; endpoint policy chặn cả external credentials, SCP không làm được.",
   "explanation_vi": {
-    "why_correct": "Subnet không có internet nên mọi truy cập S3 phải qua gateway endpoint; endpoint policy áp dụng cho mọi request đi qua, với aws:PrincipalOrgID chặn credential ngoài tổ chức và aws:ResourceOrgID chặn bucket ngoài tổ chức, trong khi role và bucket nội bộ vẫn được phép nên job vẫn chạy.",
+    "why_correct": "Giới hạn S3 gateway endpoint theo cả PrincipalOrgID và ResourceOrgID để chặn principal/bucket ngoài organization trên đường ra duy nhất. Chỉ sửa instance role hoặc SCP không ngăn kẻ tấn công dùng thông tin xác thực ngoài organization qua endpoint mặc định.",
     "others": {
-      "Q017:B": "Role vốn đã chỉ cho phép bucket cần thiết, thêm aws:ResourceOrgID không đổi gì và không ràng buộc credential khác mà kẻ tấn công dùng.",
-      "Q017:C": "Chặn outbound 443 cắt luôn HTTPS tới S3 qua gateway endpoint nên job xử lý ngừng hoạt động.",
-      "Q017:D": "SCP chỉ áp dụng cho principal trong tổ chức, không chặn credential của account bên ngoài đi qua endpoint của công ty."
+      "Q017:B": "Sai: instance role vốn hạn chế bucket; attacker có thể dùng credentials khác.",
+      "Q017:C": "Sai: chặn 443 làm job S3 ngừng hoạt động.",
+      "Q017:D": "Chưa đủ: SCP không kiểm soát principal ngoài organization và Allow riêng không thay deny."
     }
   },
   "keywords": [
     {
-      "phrase": "S3 gateway endpoint that has the default access policy",
-      "meaning_vi": "Default endpoint policy cho phép toàn quyền: chỗ cần siết lại thành data perimeter."
+      "phrase": "default access policy",
+      "meaning_vi": "Default endpoint policy cho đường ra chưa giới hạn."
     },
     {
-      "phrase": "outside the company's organization",
-      "meaning_vi": "Gợi ý condition key aws:ResourceOrgID / aws:PrincipalOrgID."
+      "phrase": "outside",
+      "meaning_vi": "Chặn resource/principal ngoài organization."
     },
     {
-      "phrase": "keep the EC2 processing job functional",
-      "meaning_vi": "Không được chặn toàn bộ lưu lượng S3 (loại phương án NACL)."
+      "phrase": "exfiltrating data",
+      "meaning_vi": "Endpoint policy áp mọi credentials đi qua."
     }
   ],
-  "memory_tip_vi": "Nếu cần chặn exfiltration từ VPC tới bucket/credential ngoài tổ chức -> nghĩ đến VPC endpoint policy với aws:ResourceOrgID + aws:PrincipalOrgID; kiểm tra SCP/identity policy không ràng buộc credential của account bên ngoài.",
+  "memory_tip_vi": "Nếu attacker có thể dùng credentials khác trên máy bị xâm nhập, đặt resource perimeter ở endpoint thay vì chỉ sửa instance role.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -314,7 +307,38 @@
       "previous_answer": [
         "Q017:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ A; endpoint policy chặn cả external credentials, SCP không làm được.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q017:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q017:A"
+      ],
+      "note_vi": "Giữ A; endpoint policy chặn cả external credentials, SCP không làm được.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Mạng không có internet nên gateway endpoint là đường duy nhất tới S3; siết endpoint policy là kiểm soát network perimeter áp dụng cho mọi principal."
+  "notes_vi": "Giữ A; endpoint policy chặn cả external credentials, SCP không làm được.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q017:A",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q021",
   "question_content_hash": "617410fda15b991320779357405350659ae19326f9207759714b1ec448c74f2e",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,28 +34,28 @@
       "unit_id": "Q021:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sao chép toàn bộ dữ liệu sang Region khác bằng CRR chỉ để quét là thừa, tăng chi phí/overhead và nhân bản dữ liệu nhạy cảm; quét toàn bộ hằng ngày cũng không có bước xác định bucket rồi quét bổ sung.",
+      "reason_vi": "Sai: replicate để scan thêm chi phí và vận hành.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "Q021-r2-1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q021:B",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Có thể dùng Lambda gọi Macie tạo job cho object mới, nhưng chỉ phủ object được upload sau này (bỏ qua dữ liệu hiện có), phải tự xây và vận hành code, và tạo job theo từng object là overhead lớn.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Sai: tự Lambda/on-upload tăng triển khai và vẫn cần discovery job phù hợp.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "Q021-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -63,30 +63,28 @@
       "unit_id": "Q021:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Automated sensitive data discovery là tính năng managed: liên tục lấy mẫu object đại diện ở mọi bucket để chỉ ra nơi có dữ liệu nhạy cảm, rồi chạy sensitive data discovery job để phân tích sâu các bucket đó.",
+      "reason_vi": "Đúng: automated sampling trước, full job trên bucket liên quan sau.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3"
+        "Q021-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q021:D",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Chạy job Macie trên tất cả bucket rồi tự tổng hợp kết quả vào DynamoDB là quét đầy đủ tốn kém và phải tự xây pipeline lưu trữ/truy vấn, trong khi Macie đã có sẵn thống kê và findings.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Sai: thêm DynamoDB/custom inventory không cần cho Macie native results.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref1"
+        "Q021-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -118,33 +116,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu Macie mô tả đúng quy trình: automated sensitive data discovery lấy mẫu liên tục để biết bucket nào có dữ liệu nhạy cảm, rồi chạy sensitive data discovery job để phân tích sâu các bucket đó.",
+    "reason_vi": "Giữ C; lấy mẫu hằng ngày, full job chỉ object/format đủ điều kiện; không hứa mọi object.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại D (chạy job Macie trên tất cả bucket): về kỹ thuật tìm được dữ liệu nhạy cảm nhưng quét toàn bộ nhiều bucket/object tốn chi phí và còn phải tự dựng DynamoDB để tổng hợp, trong khi Macie đã có kết quả/thống kê sẵn; B chỉ phủ object mới và phải tự viết/vận hành Lambda. Tài liệu Macie trực tiếp gợi ý dùng automated discovery để xác định nơi cần chạy job phân tích sâu. Giữ C, verified, high. Đã bỏ source_issue 'lỗi mã hóa company�s' của blind: ký tự thực tế là U+2019 (’), chỉ là lỗi hiển thị console, không phải lỗi dữ liệu nguồn.",
+  "reconciliation_vi": "Giữ C; lấy mẫu hằng ngày, full job chỉ object/format đủ điều kiện; không hứa mọi object.",
   "explanation_vi": {
-    "why_correct": "Macie automated sensitive data discovery tự động và liên tục lấy mẫu object đại diện ở mọi bucket để chỉ ra bucket nào có dữ liệu nhạy cảm, không cần tự cấu hình job cho từng bucket; sau đó chỉ chạy sensitive data discovery job (quét đầy đủ) trên các bucket đó, nên overhead quản trị thấp nhất.",
+    "why_correct": "Macie automated discovery lấy mẫu đại diện hằng ngày để xác định bucket có dữ liệu nhạy cảm, rồi chạy discovery jobs toàn bộ phạm vi object được hỗ trợ trong bucket đó. Đây là luồng ít quản trị nhất trong các lựa chọn.",
     "others": {
-      "Q021:A": "Sao chép toàn bộ dữ liệu sang Region khác bằng CRR chỉ để quét là thừa, tăng chi phí và nhân bản dữ liệu nhạy cảm.",
-      "Q021:B": "Lambda kích hoạt khi upload chỉ phủ object mới, bỏ qua dữ liệu hiện có, và phải tự viết, vận hành code tạo job cho từng object.",
-      "Q021:D": "Quét toàn bộ mọi bucket rồi tự tổng hợp vào DynamoDB tốn chi phí và công xây dựng hơn, trong khi Macie đã cung cấp findings và thống kê."
+      "Q021:A": "Sai: replicate để scan thêm chi phí và vận hành.",
+      "Q021:B": "Sai: tự Lambda/on-upload tăng triển khai và vẫn cần discovery job phù hợp.",
+      "Q021:D": "Sai: thêm DynamoDB/custom inventory không cần cho Macie native results."
     }
   },
   "keywords": [
     {
-      "phrase": "many S3 buckets and many objects",
-      "meaning_vi": "Quy mô lớn -> nên lấy mẫu (automated discovery) thay vì quét toàn bộ."
+      "phrase": "many S3 buckets",
+      "meaning_vi": "Automated discovery lấy mẫu ở quy mô lớn."
     },
     {
-      "phrase": "perform additional scanning on those S3 buckets",
-      "meaning_vi": "Sau khi xác định bucket nhạy cảm, chạy sensitive data discovery job để quét sâu."
+      "phrase": "additional scanning",
+      "meaning_vi": "Chạy targeted full jobs sau khi tìm bucket nhạy cảm."
     },
     {
       "phrase": "LEAST administrative overhead",
-      "meaning_vi": "Ưu tiên tính năng có sẵn của Macie, tránh tự xây Lambda/DynamoDB/replication."
+      "meaning_vi": "Native discovery ít vận hành hơn tự xây scanner."
     }
   ],
-  "memory_tip_vi": "Nếu cần tìm bucket có dữ liệu nhạy cảm trong rất nhiều bucket với ít công quản trị -> nghĩ đến Macie automated sensitive data discovery rồi chạy discovery job cho bucket đáng chú ý; kiểm tra xem đề cần quét toàn bộ ngay (job) hay chỉ cần tầm nhìn rộng (sampling).",
+  "memory_tip_vi": "Nếu phải ưu tiên scan sâu trong nhiều bucket, dùng automated discovery để chọn bucket rồi chạy targeted jobs.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -195,9 +193,27 @@
       "quote": "You can configure a job to run only once for on-demand analysis and assessment, or on a recurring basis for periodic analysis, assessment, and monitoring.",
       "supports": "Job là cơ chế quét sâu/toàn phần; dùng cho mọi bucket (D) hay theo từng object qua Lambda (B) tốn công hơn automated discovery.",
       "kind": "inference"
+    },
+    {
+      "id": "Q021-r2-1",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-asdd-how-it-works.html",
+      "title": "How automated sensitive data discovery works - Amazon Macie",
+      "accessed_at": "2026-09-30",
+      "quote": "If you enable automated sensitive data discovery, Macie evaluates your",
+      "supports": "Automated discovery evaluates representative supported S3 object samples daily; discovery jobs can inspect selected buckets more thoroughly.",
+      "kind": "direct",
+      "snapshot_id": "4023556628ce",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q021",
+      "detail_vi": "Full scan chỉ các object đủ điều kiện và định dạng/storage class được hỗ trợ, không mọi object/version tuyệt đối."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -212,6 +228,38 @@
       "previous_answer": [
         "Q021:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; lấy mẫu hằng ngày, full job chỉ object/format đủ điều kiện; không hứa mọi object.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q021:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q021:C"
+      ],
+      "note_vi": "Giữ C; lấy mẫu hằng ngày, full job chỉ object/format đủ điều kiện; không hứa mọi object.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Giữ C; lấy mẫu hằng ngày, full job chỉ object/format đủ điều kiện; không hứa mọi object.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q021:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

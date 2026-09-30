@@ -1,0 +1,287 @@
+{
+  "question_id": "Q123",
+  "question_content_hash": "b727309a2e36381f0a28f1ddc049d8051a88aca9206fa00e6b9f844e93ac20b6",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:22:20+00:00",
+  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "4b0bcaf8a3c1dbb449989f9a30aab307fc08a1d2a1650ce75a1b41f3df0ec5ce",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Validate CloudFormation template TRƯỚC khi deploy và ngăn deploy template không tuân thủ (kiểm soát phòng ngừa trong pipeline).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Security team không đủ năng lực viết tay bộ guideline/rule đầu tiên -> cần cách tự động sinh bộ rule ban đầu.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Số lượng template lớn, khác nhau về style/nội dung.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q123:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "cloudformation-stack-drift-detection-check chỉ kiểm tra stack ĐÃ deploy có bị drift so với cấu hình mong đợi hay không; không validate template trước deploy, không chặn deploy và không sinh rule.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q123:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "cfn-guard rulegen tự sinh bộ Guard rule từ template đã biết là tuân thủ (giải quyết R2); sau đó cfn-guard validate trong pipeline trả về vi phạm/exit status khác 0 để pipeline dừng, ngăn deploy template không tuân thủ (R1).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref5",
+        "ref6",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q123:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Detective dùng để điều tra nguyên nhân gốc của security finding/hoạt động đáng ngờ từ log; không phân tích template CloudFormation, không sinh rule validate và không chặn deploy.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q123:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Lambda đọc template để tìm phần chồng lặp chỉ là phân tích tùy biến, không tạo ra bộ rule validate và không có cơ chế ngăn deploy template không tuân thủ; lại phải tự viết logic (tương đương viết tay).",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q123:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu Guard mô tả trực tiếp lệnh rulegen tự sinh rule từ known good templates, khớp chính xác yêu cầu không viết tay bộ rule đầu tiên; các lựa chọn khác không validate trước deploy.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:22:20+00:00"
+  },
+  "source_answer": [
+    "Q123:B"
+  ],
+  "researched_answer": [
+    "Q123:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B. Hai tài liệu độc lập (Guard User Guide và CloudFormation User Guide) mô tả rulegen sinh rule từ template đã biết là tuân thủ và Guard validate dừng build bằng exit code. A, C, D không validate template trước deploy.",
+    "open_issues": [
+      "B không nói rõ bước chặn deploy; ngầm hiểu chạy cfn-guard validate trong pipeline (hoặc Guard Hooks để chặn phía server)."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, trùng blind. Kiểm tra thêm để tìm phản bác: CloudFormation User Guide (ref6, ref7) xác nhận rulegen tạo bộ rule khởi đầu từ template đã tuân thủ và khuyến nghị rà lại vì rule sinh ra thường quá chặt – khớp ý 'mix of known compliant templates'; exit code của Guard dùng để dừng build (ref8) đáp ứng 'prevent the deployment'. A (Config drift) chỉ xét stack đã deploy; C (Detective) là công cụ điều tra finding; D (Lambda tìm overlap) không sinh rule cũng không chặn deploy. Không có lựa chọn cạnh tranh hợp lý. Giữ B, verified, high.",
+  "explanation_vi": {
+    "why_correct": "CloudFormation Guard có lệnh rulegen tự sinh rule từ các template đã biết là tuân thủ, nên security team có ngay bộ rule đầu tiên mà không phải viết tay; sau đó cfn-guard validate trong pipeline trả exit code lỗi để dừng deploy template không tuân thủ.",
+    "others": {
+      "Q123:A": "cloudformation-stack-drift-detection-check chỉ phát hiện stack đã deploy bị drift, không validate template trước deploy và không sinh rule.",
+      "Q123:C": "Amazon Detective dùng để điều tra security finding từ log hoạt động, không phân tích template hay chặn deploy.",
+      "Q123:D": "Lambda đọc template tìm phần chồng lặp chỉ là phân tích tự viết, không tạo bộ rule validate và không có cơ chế chặn deploy."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "validate the CloudFormation templates before deployment",
+      "meaning_vi": "Kiểm tra tĩnh template trong pipeline (policy-as-code), không phải giám sát sau deploy."
+    },
+    {
+      "phrase": "manually create the first set of validation guidelines",
+      "meaning_vi": "Cần tự động sinh bộ rule khởi đầu -> cfn-guard rulegen."
+    },
+    {
+      "phrase": "prevent the deployment of noncompliant templates",
+      "meaning_vi": "Vi phạm phải làm fail pipeline trước bước deploy."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần bộ rule kiểm tra template CloudFormation mà không muốn viết tay từ đầu -> nghĩ đến cfn-guard rulegen từ template đã tuân thủ rồi cfn-guard validate trong pipeline; kiểm tra: Config/Detective chỉ xét tài nguyên đã deploy.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS CloudFormation",
+      "AWS CloudFormation Guard"
+    ],
+    "reason_vi": "Governance phòng ngừa cho IaC: sinh rule và validate template trước deploy."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/cfn-guard-rulegen.html",
+      "title": "rulegen - AWS CloudFormation Guard",
+      "section": "rulegen",
+      "snapshot_id": "6f2e4338ffbb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "useful way to get started with rule writing or to create ready-to-use rules from known good templates",
+      "supports": "rulegen tạo bộ rule ban đầu từ các template đã biết là tuân thủ - không cần viết tay.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/validating-rules.html",
+      "title": "Validating input data against AWS CloudFormation Guard rules",
+      "section": "validate",
+      "snapshot_id": "0fe39ecb7e17",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If Guard identifies a rule violation, the validate command returns a status report of the rules that failed",
+      "supports": "Guard validate báo vi phạm (và exit status khác 0) để pipeline dừng trước khi deploy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/cloudformation-stack-drift-detection-check.html",
+      "title": "cloudformation-stack-drift-detection-check - AWS Config",
+      "section": "rule description",
+      "snapshot_id": "744605d46339",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Checks if the actual configuration of a AWS CloudFormation (CloudFormation) stack differs, or has drifted, from the expected configuration",
+      "supports": "Rule chỉ kiểm tra drift của stack đã deploy, không validate template trước deploy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/detective/latest/userguide/what-is-detective.html",
+      "title": "What is Amazon Detective?",
+      "section": "intro",
+      "snapshot_id": "3ee05a03beee",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Detective helps you analyze, investigate, and quickly identify the root cause of security findings or suspicious activities",
+      "supports": "Detective là công cụ điều tra bảo mật, không phải công cụ validate IaC.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/what-is-guard.html",
+      "title": "What is AWS CloudFormation Guard?",
+      "section": "intro",
+      "snapshot_id": "73a0d0fa273c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Guard doesn’t provide server-side enforcement",
+      "supports": "Guard chặn deploy thông qua bước kiểm tra trong pipeline (client-side), không enforce phía server; muốn enforce phía server dùng CloudFormation Hooks.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html",
+      "title": "Validate templates with Guard - AWS CloudFormation",
+      "section": "Generate rules from a template",
+      "snapshot_id": "95f659bb8a89",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To get started quickly, you can generate rules from a template that already meets your requirements.",
+      "supports": "Tài liệu CloudFormation xác nhận rulegen sinh bộ rule khởi đầu từ template đã tuân thủ – đúng nhu cầu 'first set of validation guidelines' không viết tay.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html",
+      "title": "Validate templates with Guard - AWS CloudFormation",
+      "section": "Generate rules from a template",
+      "snapshot_id": "95f659bb8a89",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Generated rules are a starting point and often require the exact values in the source template",
+      "supports": "Rule sinh ra là bản nháp đầu, cần chọn nhiều template mẫu và rà lại – khớp vế 'Select a mix of known compliant templates' của B.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html",
+      "title": "Validate templates with Guard - AWS CloudFormation",
+      "section": "Validate a template",
+      "snapshot_id": "95f659bb8a89",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use these exit codes to stop an automated build.",
+      "supports": "Guard validate trả exit code khi vi phạm để dừng pipeline – ngăn deploy template không tuân thủ.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Lựa chọn B không nói rõ bước chặn deploy, nhưng dùng Guard validate trong pipeline là cơ chế chuẩn để fail pipeline.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:20+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q123:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:36:52+00:00",
+      "change": "Reconciliation: khớp source key B; status verified (high); đáp án không đổi. Thêm ref6–ref8 (CloudFormation UG: rulegen từ template đã tuân thủ, rule sinh ra là điểm khởi đầu, exit code dừng build); cập nhật reference_ids của Q123:B (verdict không đổi).",
+      "previous_answer": [
+        "Q123:B"
+      ]
+    }
+  ]
+}

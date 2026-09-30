@@ -2,9 +2,9 @@
   "question_id": "Q008",
   "question_content_hash": "1ca5a3262a1dbd229ca91f4547fcab589f7441f16353bf24b3598264d5986e38",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,58 +39,72 @@
     {
       "unit_id": "Q008:P1",
       "unit_type": "prompt",
-      "verdict": "meets",
-      "reason_vi": "VPC Flow Logs ghi dstaddr, bytes, thời điểm của flow; Logs Insights truy vấn theo khung giờ -> phù hợp giám sát truyền dữ liệu lớn ra IP bên ngoài ngoài giờ làm việc.",
+      "verdict": "undetermined",
+      "reason_vi": "P1: phù hợp R5 vì bytes/destination/time, nhưng bị trùng P5.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "matched_response": "Q008:R5"
     },
     {
       "unit_id": "Q008:P2",
       "unit_type": "prompt",
-      "verdict": "meets",
-      "reason_vi": "Metric filter biến log thành metric có dimension (ví dụ source IP) để đặt alarm theo giờ -> đếm >50 lần xác thực thất bại từ một IP trong 1 giờ.",
+      "verdict": "undetermined",
+      "reason_vi": "P2: R4; metric filters đếm lỗi theo source IP trong một giờ.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "matched_response": "Q008:R4"
     },
     {
       "unit_id": "Q008:P3",
       "unit_type": "prompt",
-      "verdict": "meets",
-      "reason_vi": "CloudTrail Insights lập baseline tốc độ gọi API ghi (write management) và báo khi lệch -> phát hiện khối lượng thao tác xóa tài nguyên bất thường.",
+      "verdict": "undetermined",
+      "reason_vi": "P3: R3 gần nhất; Insights phát hiện tốc độ API bất thường, cần lọc CloudTrail để xác định privileged user/delete.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "matched_response": "Q008:R3"
     },
     {
       "unit_id": "Q008:P4",
       "unit_type": "prompt",
       "verdict": "undetermined",
-      "reason_vi": "Chiến lược gồm hai nửa: 'Security Hub custom insights' (gom finding từ nhiều provider -> R2) và 'EventBridge rules gọi Lambda tự động để ứng phó' (-> R1 cô lập EC2). Source key ghép R1, blind ghép R2; cả hai đều có cơ sở tài liệu và không tài liệu nào phân định vì dòng gốc bị mất.",
+      "reason_vi": "P4: R1; EventBridge/Lambda có thể cách ly instance theo finding.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
       "evidence_kind": "inference",
       "matched_response": null
@@ -99,14 +113,17 @@
       "unit_id": "Q008:P5",
       "unit_type": "prompt",
       "verdict": "undetermined",
-      "reason_vi": "Trùng nguyên văn dòng 1 (VPC Flow Logs + Logs Insights). Source key ghép P5 -> R2 (tương quan finding từ nhiều dịch vụ phát hiện), nhưng flow log chỉ ghi metadata lưu lượng mạng, không tương quan finding; ghép đó chỉ hợp lý nếu dòng gốc là dịch vụ tương quan (ví dụ GuardDuty Extended Threat Detection).",
+      "reason_vi": "P5: phù hợp R5 giống P1, không thể gán khác để hoàn thành one-use.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref7"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
       "evidence_kind": "inference",
       "matched_response": null
@@ -115,13 +132,17 @@
       "unit_id": "Q008:R1",
       "unit_type": "response",
       "verdict": "undetermined",
-      "reason_vi": "Cô lập EC2 tự động khi có finding malware cần luồng finding -> EventBridge rule -> Lambda; khớp nửa 'EventBridge + Lambda tự động' của P4 (ghép của source key), nhưng cũng có thể thuộc dòng gốc bị mất.",
+      "reason_vi": "R1: cần tự động remediation, phù hợp P4.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
       "evidence_kind": "inference",
       "used_for": []
@@ -130,14 +151,17 @@
       "unit_id": "Q008:R2",
       "unit_type": "response",
       "verdict": "undetermined",
-      "reason_vi": "Tương quan finding để nhận diện tấn công nhiều giai đoạn là chức năng của GuardDuty Extended Threat Detection (attack sequence) hoặc gom finding của Security Hub insight (P4); không thể do VPC Flow Logs (P5) thực hiện.",
+      "reason_vi": "R2: custom insights nhóm findings không tự chứng minh tương quan chuỗi tấn công; thiếu prompt riêng.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref7"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
       "evidence_kind": "inference",
       "used_for": []
@@ -145,15 +169,19 @@
     {
       "unit_id": "Q008:R3",
       "unit_type": "response",
-      "verdict": "meets",
-      "reason_vi": "Khối lượng thao tác xóa bất thường là lệch baseline API call rate -> CloudTrail Insights (P3).",
+      "verdict": "undetermined",
+      "reason_vi": "R3: P3 là gần nhất nhưng cần scope API và user bổ sung.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q008:P3"
       ]
@@ -161,15 +189,19 @@
     {
       "unit_id": "Q008:R4",
       "unit_type": "response",
-      "verdict": "meets",
-      "reason_vi": "Ngưỡng cố định >50 lần thất bại/IP/giờ -> metric filter có dimension + alarm (P2).",
+      "verdict": "undetermined",
+      "reason_vi": "R4: P2 đếm xác thực thất bại theo IP.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q008:P2"
       ]
@@ -177,17 +209,20 @@
     {
       "unit_id": "Q008:R5",
       "unit_type": "response",
-      "verdict": "meets",
-      "reason_vi": "Lưu lượng mạng, dung lượng lớn tới IP ngoài, theo khung giờ -> VPC Flow Logs + Logs Insights (P1; P5 trùng lặp).",
+      "verdict": "undetermined",
+      "reason_vi": "R5: đồng thời P1 và P5, gây lỗi đề.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "Q008-r2-1",
+        "ref2",
+        "ref1",
+        "Q008-r2-4",
+        "Q008-r2-5"
       ],
-      "evidence_kind": "direct",
+      "evidence_kind": "inference",
       "used_for": [
         "Q008:P1"
       ]
@@ -221,41 +256,46 @@
   },
   "researched_answer": null,
   "comparison": "not_comparable",
-  "status": "ambiguous",
+  "status": "unresolved",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Ba ghép P1->R5, P2->R4, P3->R3 được tài liệu hỗ trợ trực tiếp và trùng source key. Nhưng dòng 5 trùng nguyên văn dòng 1 nên không tồn tại ghép 1-1 hợp lệ cho cả 5 dòng; P4 có hai cách đọc (R1 hoặc R2) mà tài liệu không phân định.",
+    "reason_vi": "Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation.",
     "open_issues": [
-      "Dòng 5 là lỗi sao chép; dòng gốc bị mất (có thể là GuardDuty Extended Threat Detection cho R2, hoặc GuardDuty Malware Protection + EventBridge cho R1).",
-      "Source key đánh dấu gradable=false (quyết định 2026-09-30): P1 và P5 trùng text nhưng khác đáp án."
+      "Đã xem ảnh và xác nhận hàng 1/hàng 5 trùng; distances là typo instances; không ép một full mapping."
     ]
   },
-  "reconciliation_vi": "Source key: P1->R5, P2->R4, P3->R3, P4->R1, P5->R2; blind: không có đáp án đầy đủ (P4->R2 khả năng cao, P5/R1 không ghép được). Ba ghép P1/P2/P3 trùng nhau và được xác nhận (VPC Flow Logs có bytes/dstaddr, metric filter có dimension, CloudTrail Insights so baseline API rate). Khác biệt ở P4: source chọn R1 (nửa 'EventBridge + Lambda tự động ứng phó'), blind chọn R2 (nửa 'custom insights gom finding đa provider'); cả hai đều có tài liệu hỗ trợ (ref3, ref4). Ghép P5->R2 của source không thể đúng với văn bản hiện tại vì VPC Flow Logs không tương quan finding; theo tài liệu, tương quan multi-stage attack là chức năng của GuardDuty Extended Threat Detection (ref7), gợi ý dòng 5 gốc là dịch vụ tương quan và khi đó P4->R1 của source là nhất quán. Không có tài liệu nào khôi phục được dòng gốc, nên giữ status ambiguous, không chấm điểm.",
+  "reconciliation_vi": "Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation.",
   "explanation_vi": {
-    "why_correct": "Câu này bị lỗi dữ liệu nên chưa có đáp án chấm được: dòng 5 trùng nguyên văn dòng 1. Các ghép chắc chắn: VPC Flow Logs + Logs Insights -> giám sát truyền dữ liệu lớn ra IP ngoài ngoài giờ (R5); CloudWatch metric filter theo IP, gộp theo giờ -> >50 lần xác thực thất bại/IP/giờ (R4); CloudTrail Insights so baseline API rate -> khối lượng thao tác xóa bất thường (R3).",
+    "why_correct": "Không có full mapping hợp lệ vì P1/P5 trùng nhau nhưng mỗi response chỉ được dùng một lần. P2→R4, P3→R3 và P4→R1 hợp lý; P1/P5 đều phù hợp R5.",
     "others": {
-      "Q008:P4": "Security Hub custom insights + EventBridge + Lambda: source key ghép với R1 (cô lập EC2 tự động), nhưng phần 'custom insights' cũng hợp với R2 — chưa phân định được vì dòng gốc bị mất.",
-      "Q008:P5": "Bản sao của dòng 1; source key ghép với R2 nhưng VPC Flow Logs không tương quan finding, nên ghép này không đúng với văn bản hiện tại.",
-      "Q008:R1": "Cô lập EC2 khi có finding malware là mẫu finding -> EventBridge -> Lambda; khớp P4 theo source key.",
-      "Q008:R2": "Tương quan multi-stage attack là chức năng của GuardDuty Extended Threat Detection/Security Hub, không phải VPC Flow Logs."
+      "Q008:P1": "P1: phù hợp R5 vì bytes/destination/time, nhưng bị trùng P5.",
+      "Q008:P2": "P2: R4; metric filters đếm lỗi theo source IP trong một giờ.",
+      "Q008:P3": "P3: R3 gần nhất; Insights phát hiện tốc độ API bất thường, cần lọc CloudTrail để xác định privileged user/delete.",
+      "Q008:P4": "P4: R1; EventBridge/Lambda có thể cách ly instance theo finding.",
+      "Q008:P5": "P5: phù hợp R5 giống P1, không thể gán khác để hoàn thành one-use.",
+      "Q008:R1": "R1: cần tự động remediation, phù hợp P4.",
+      "Q008:R2": "R2: custom insights nhóm findings không tự chứng minh tương quan chuỗi tấn công; thiếu prompt riêng.",
+      "Q008:R3": "R3: P3 là gần nhất nhưng cần scope API và user bổ sung.",
+      "Q008:R4": "R4: P2 đếm xác thực thất bại theo IP.",
+      "Q008:R5": "R5: đồng thời P1 và P5, gây lỗi đề."
     }
   },
   "keywords": [
     {
-      "phrase": "large data transfers to external IP addresses",
-      "meaning_vi": "Phân tích lưu lượng mạng theo đích và dung lượng -> VPC Flow Logs (bytes, dstaddr) + Logs Insights."
+      "phrase": "one time",
+      "meaning_vi": "Không ép mapping khi dữ liệu lặp."
     },
     {
-      "phrase": "more than 50 failed authentication attempts",
-      "meaning_vi": "Ngưỡng cố định theo IP/giờ -> CloudWatch metric filter có dimension + alarm."
+      "phrase": "multi-stage attacks",
+      "meaning_vi": "Cần correlation thực sự, không chỉ nhóm findings."
     },
     {
-      "phrase": "unusually high volume of resource deletion operations",
-      "meaning_vi": "Lệch so với baseline tốc độ gọi API -> CloudTrail Insights."
+      "phrase": "office hours",
+      "meaning_vi": "Flow Logs lọc bytes/destination/time."
     }
   ],
-  "memory_tip_vi": "Nếu đề nêu ngưỡng cố định (N lần/giờ/IP) -> nghĩ đến CloudWatch metric filter + alarm; nếu 'bất thường so với baseline API' -> CloudTrail Insights; kiểm tra: lưu lượng/IP đích -> VPC Flow Logs, tương quan multi-stage -> GuardDuty Extended Threat Detection.",
+  "memory_tip_vi": "Nếu hai prompt trùng nhau mà đáp án chỉ dùng một lần, giữ trạng thái unresolved và sửa nguồn trước khi chấm.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -363,14 +403,45 @@
       "quote": "GuardDuty Extended Threat Detection automatically detects multi-stage attacks that span data sources, multiple types of AWS resources, and time",
       "supports": "'Tương quan để phát hiện multi-stage attacks' là chức năng của GuardDuty Extended Threat Detection, không phải VPC Flow Logs — dòng gốc cho R2 có lẽ là dịch vụ kiểu này.",
       "kind": "direct"
+    },
+    {
+      "id": "Q008-r2-1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-cwl.html",
+      "title": "Publish flow logs to CloudWatch Logs - Amazon Virtual Private Cloud",
+      "accessed_at": "2026-09-30",
+      "quote": "In CloudWatch Logs, the timestamp field corresponds to the start",
+      "supports": "VPC Flow Logs in CloudWatch describe traffic with address, time, and bytes fields for queries.",
+      "kind": "direct",
+      "snapshot_id": "654113f9e102",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q008-r2-4",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-custom-insights.html",
+      "title": "Understanding custom insights in Security Hub CSPM - AWS Security Hub",
+      "accessed_at": "2026-09-30",
+      "quote": "issues that are specific to your environment. Custom insights",
+      "supports": "Custom insights group/filter findings; this is not itself sequential multi-stage attack correlation.",
+      "kind": "direct",
+      "snapshot_id": "1e143b746bea",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q008-r2-5",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-all-findings.html",
+      "title": "Configuring an EventBridge rule for Security Hub CSPM findings - AWS Security Hub",
+      "accessed_at": "2026-09-30",
+      "quote": "Configuring an EventBridge rule for Security Hub CSPM findings",
+      "supports": "Security Hub finding events can trigger EventBridge and Lambda remediation.",
+      "kind": "direct",
+      "snapshot_id": "8209154a9cbe",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
-    {
-      "type": "data",
-      "location": "Q008:P5",
-      "detail_vi": "Dòng 5 trùng nguyên văn dòng 1 (VPC Flow Logs + Logs Insights); với quy tắc mỗi chiến lược dùng một lần thì không có ghép hợp lệ cho cả 5 dòng. Có lẽ dòng gốc bị mất."
-    },
     {
       "type": "typo",
       "location": "Q008:R1",
@@ -382,12 +453,12 @@
       "detail_vi": "Trong đề, danh sách response nằm ở stem còn prompt là các dòng trong ảnh; vai trò 'strategy' và 'scenario' bị đảo so với câu hướng dẫn."
     },
     {
-      "type": "data",
-      "location": "Q008:P4",
-      "detail_vi": "Source key ghép P5 (bản sao VPC Flow Logs) -> R2 và P4 -> R1; ghép P5->R2 không thể đúng với văn bản hiện tại, cho thấy dòng 5 gốc (nhiều khả năng là dịch vụ tương quan finding) đã bị thay bằng bản sao dòng 1."
+      "type": "ambiguous",
+      "location": "Q008",
+      "detail_vi": "Đã xem ảnh và xác nhận hàng 1/hàng 5 trùng; distances là typo instances; không ép một full mapping."
     }
   ],
-  "notes_vi": "Ghép xác định được: P1->R5, P2->R4, P3->R3; P4->R2 là khả năng cao nhất; P5 và R1 không ghép được.",
+  "notes_vi": "Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation.",
   "history": [
     {
       "version": "r1",
@@ -406,6 +477,19 @@
       "date": "2026-09-30T19:53:14+00:00",
       "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:45:00Z → 2026-09-30T19:41:20Z",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "status": "unresolved",
+      "answer": null,
+      "note_vi": "Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation.",
+      "technical_change": true
     }
   ],
   "timestamp_correction": {
@@ -417,5 +501,25 @@
         "corrected": "2026-09-30T19:41:20Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": {
+      "Q008:P1": null,
+      "Q008:P2": "Q008:R4",
+      "Q008:P3": "Q008:R3",
+      "Q008:P4": "Q008:R1",
+      "Q008:P5": null
+    },
+    "independent_status": "unresolved",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

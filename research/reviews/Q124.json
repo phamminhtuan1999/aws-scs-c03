@@ -2,9 +2,9 @@
   "question_id": "Q124",
   "question_content_hash": "d123fa9bac55cb1db467eac41be2ec2edaa0caff85a85c5deb4408a5a1bade19",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:23:12+00:00",
-  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,61 +34,58 @@
       "unit_id": "Q124:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Phía account của IAM user phải gắn identity-based policy cho user cho phép sts:AssumeRole trên role nằm ở account chứa resource (tutorial IAM làm đúng như vậy); thiếu bước này user không gọi được AssumeRole. Câu chữ 'in the AWS account that contains the resources' được hiểu là đích của AssumeRole.",
+      "reason_vi": "A phù hợp nếu in the AWS account được hiểu là target của sts:AssumeRole; policy phải gắn IAM user tại caller account.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref6"
+        "ref6",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q124:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ ảnh hưởng user/role do account trong organization đó quản lý, không ảnh hưởng user từ account ngoài organization; nên SCP của organization sở hữu resource không kiểm soát lệnh AssumeRole của IAM user bên ngoài - đây không phải bước bắt buộc (SCP mặc định FullAWSAccess, và kiểm soát principal bên ngoài là việc của RCP).",
+      "reason_vi": "B SCP target không trực tiếp ràng buộc external IAM caller; source SCP và target role permissions phải kiểm tra đúng giai đoạn.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref6",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q124:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Phải tạo role trong account chứa resource, với role trust policy (resource-based policy) chỉ định IAM user làm Principal được phép assume; đây là nửa còn lại bắt buộc của cross-account access.",
+      "reason_vi": "C role target cần trust caller.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref6",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q124:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Không có cấu hình 'trust relationship giữa IAM user và account'; quan hệ tin cậy chỉ được thiết lập qua trust policy của role (tutorial IAM gọi đó là kết quả của việc tạo role – tức đã nằm trong C), nên D không phải một bước độc lập.",
+      "reason_vi": "D mô tả trust chung chung không thay thế identity permission phía caller.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref8"
+        "ref6",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
@@ -96,13 +93,13 @@
       "unit_id": "Q124:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Tạo role trong account của IAM user và gắn policy AssumeRole cho role đó không cấp quyền cho IAM user; role trung gian này không cần thiết và không thay thế việc cấp quyền trực tiếp cho user cùng role ở account chứa resource.",
+      "reason_vi": "E role caller không thay thế việc cho IAM user assume role target.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref6",
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -142,19 +139,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn A+C. Tutorial IAM xác nhận hai bước bắt buộc: tạo role ở account đích với trust policy, và gắn policy cho phép sts:AssumeRole trên role đó cho principal ở account nguồn; SCP không áp dụng cho principal ngoài organization nên B không bắt buộc. Giữ medium vì câu chữ A dễ đọc nhầm là tạo policy trong account chứa resource.",
-    "open_issues": [
-      "Câu chữ A: identity policy phải được tạo/gắn trong account của IAM user; 'in the AWS account that contains the resources' chỉ đúng nếu hiểu là tài nguyên đích của sts:AssumeRole (tutorial IAM dùng đúng cách diễn đạt này).",
-      "SCP của organization chứa IAM user (không phải của organization sở hữu resource) cũng không được deny sts:AssumeRole; RCP của organization sở hữu resource có thể chặn principal bên ngoài – B lại nói SCP của bên sở hữu resource."
-    ]
+    "reason_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A+C, trùng blind. Vì câu medium (vế A), đã đọc thêm IAM tutorial cross-account (ref6–ref8): bước 'Grant access to the role' đăng nhập account nguồn và thêm policy 'allow the AssumeRole action on the UpdateData role in the Destination account' – đúng cách diễn đạt của A, nên A là bước bắt buộc chứ không phải lỗi. Bước tạo role ở account đích với trust policy tương ứng C. Kiểm tra phía phản bác: B – SCP không ảnh hưởng user/role từ account ngoài organization (ref4), kiểm soát principal bên ngoài là RCP (ref5), nên không bắt buộc; D – 'establish trust' chỉ là kết quả của C (ref8), không phải cấu hình riêng; E – role trung gian ở account của user không cấp quyền cho chính IAM user. Giữ A+C, verified, medium.",
+  "reconciliation_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
   "explanation_vi": {
-    "why_correct": "Cross-account role cần hai nửa: (C) tạo role trong account chứa resource với trust policy cho phép IAM user (hoặc account của user) assume; (A) gắn cho IAM user một identity policy cho phép sts:AssumeRole trên role ở account đó. Thiếu một trong hai thì AssumeRole bị từ chối.",
+    "why_correct": "Cross-account AssumeRole cần permission phía caller và trust policy của role phía target; permissions cho tài nguyên của target role vẫn phải được cấu hình.",
     "others": {
-      "Q124:B": "SCP chỉ giới hạn principal thuộc organization của chính nó, không áp dụng cho IAM user từ organization khác, nên SCP của bên sở hữu resource không phải bước bắt buộc.",
-      "Q124:D": "Không có cấu hình 'trust giữa IAM user và account'; trust được thiết lập bằng trust policy của role, tức đã nằm trong C.",
-      "Q124:E": "Tạo role ở account của user và gắn quyền AssumeRole cho role đó không cấp quyền cho chính IAM user; role trung gian này thừa."
+      "Q124:B": "B SCP target không trực tiếp ràng buộc external IAM caller; source SCP và target role permissions phải kiểm tra đúng giai đoạn.",
+      "Q124:D": "D mô tả trust chung chung không thay thế identity permission phía caller.",
+      "Q124:E": "E role caller không thay thế việc cho IAM user assume role target."
     }
   },
   "keywords": [
@@ -167,7 +161,7 @@
       "meaning_vi": "Cross-account, khác organization: SCP của bên kia không áp dụng cho user này."
     }
   ],
-  "memory_tip_vi": "Nếu IAM user cần assume role ở account khác -> nghĩ đến hai nửa: trust policy của role ở account đích + identity policy sts:AssumeRole cho user ở account nguồn; kiểm tra SCP/RCP chỉ là lớp giới hạn, và SCP không áp dụng cho principal ngoài organization.",
+  "memory_tip_vi": "Nếu AssumeRole cross-account, kiểm tra caller permission + target trust.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -287,12 +281,12 @@
   ],
   "source_issues": [
     {
-      "type": "ambiguous",
-      "location": "Q124:A",
-      "detail_vi": "Cụm 'in the AWS account that contains the resources' có thể bị hiểu là tạo identity policy trong account chứa resource (không thể gắn cho IAM user ở account khác); ý đúng là policy cho phép sts:AssumeRole vào role trong account đó."
+      "type": "data",
+      "location": "Q124",
+      "detail_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account."
     }
   ],
-  "notes_vi": "SCP của organization chứa IAM user cũng phải không deny sts:AssumeRole, nhưng B nói về organization sở hữu resource.",
+  "notes_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
   "history": [
     {
       "version": "r1",
@@ -308,6 +302,42 @@
         "Q124:A",
         "Q124:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q124:A",
+        "Q124:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q124:A",
+        "Q124:C"
+      ],
+      "note_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A",
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

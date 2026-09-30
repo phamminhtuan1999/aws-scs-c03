@@ -1,0 +1,279 @@
+{
+  "question_id": "Q090",
+  "question_content_hash": "51cc0bee544a98596b99c5207f9cd84bbd26c3f42ec56eef523f3dcc56525e99",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:58:15Z",
+  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "d88d1d12dc43ef7065f839e1caf557cc5d741d104a4c72439344b4587f29cc35",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phân phối CloudFormation template (S3 bucket bảo mật) như một template chuẩn hóa.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Template phải có sẵn cho mọi account trong một organization của AWS Organizations.",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "End users tự dùng template để deploy S3 bucket mới (trong account của họ).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q090:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Service Catalog cho tạo product từ CloudFormation template trong portfolio, cấp quyền cho end users qua principal của portfolio, và portfolio có thể share với toàn organization qua AWS Organizations để end users mọi account tự launch bucket chuẩn.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q090:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS RAM chỉ share các resource type được hỗ trợ; CloudFormation template không nằm trong danh sách shareable resources của RAM nên không thể tạo resource share cho template.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q090:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Như B, template không share được qua RAM; mục Amazon S3 trong RAM chỉ có S3 Access Grants, không có 'AWS managed permissions for Amazon S3' cho template.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q090:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Share một bucket đã deploy không phải share template để end users tạo bucket mới; hơn nữa S3 bucket không phải resource type shareable qua RAM (mục S3 chỉ có S3 Access Grants).",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q090:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Service Catalog là dịch vụ chuẩn để phân phối CloudFormation template đã phê duyệt và share portfolio với organization; RAM không hỗ trợ share CloudFormation template hay S3 bucket.",
+      "open_issues": [
+        "Phương án A không nêu rõ bước share portfolio với organization (AWS Organizations sharing) mà chỉ nói cấp quyền end users cho portfolio; vẫn là phương án duy nhất khả thi."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6",
+      "ref7"
+    ],
+    "recorded_at": "2026-09-30T19:58:15Z"
+  },
+  "source_answer": [
+    "Q090:A"
+  ],
+  "researched_answer": [
+    "Q090:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Service Catalog cho tạo product từ CloudFormation template, cấp quyền end users qua portfolio và share portfolio với cả organization; danh sách resource shareable của AWS RAM không có CloudFormation template hay S3 bucket (mục S3 chỉ có S3 Access Grants).",
+    "open_issues": [
+      "Phương án A không nêu rõ bước share portfolio với organization qua AWS Organizations, chỉ nói cấp quyền end users cho portfolio; vẫn là phương án duy nhất khả thi."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn A. Đã đọc lại toàn bộ mục lục trang Shareable AWS resources của AWS RAM: không có mục AWS CloudFormation; mục Amazon Simple Storage Service chỉ có S3 Access Grants (S3 on Outposts là loại khác), nên B, C (share template) và D (share bucket) đều không thực hiện được. D còn sai mục tiêu vì share một bucket có sẵn chứ không cho end users tạo bucket mới. Giữ A, verified.",
+  "explanation_vi": {
+    "why_correct": "AWS Service Catalog cho upload CloudFormation template thành product trong portfolio, cấp quyền end users và share portfolio với toàn bộ account trong organization, để end users tự launch S3 bucket theo template chuẩn đã phê duyệt.",
+    "others": {
+      "Q090:B": "AWS RAM không hỗ trợ share CloudFormation template (không có trong danh sách resource shareable), nên không tạo được resource share cho template.",
+      "Q090:C": "Giống B, template không share được qua RAM; mục Amazon S3 trong RAM chỉ có S3 Access Grants, không có managed permission để share template.",
+      "Q090:D": "Share một bucket đã deploy không cho end users tạo bucket mới theo template, và S3 bucket thường không phải resource shareable qua RAM."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "standardized template",
+      "meaning_vi": "Template chuẩn đã phê duyệt để tái sử dụng - gợi ý Service Catalog product."
+    },
+    {
+      "phrase": "available to all the AWS accounts",
+      "meaning_vi": "Phải phân phối cho mọi account trong organization - share portfolio qua AWS Organizations."
+    },
+    {
+      "phrase": "end users can use the template to deploy new S3 buckets",
+      "meaning_vi": "End users tự launch tài nguyên từ template - đúng mô hình self-service của Service Catalog."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần phân phối CloudFormation template đã chuẩn hóa để end users ở nhiều account tự deploy -> nghĩ đến Service Catalog portfolio/product (share qua Organizations); kiểm tra: AWS RAM chỉ share các resource type trong danh sách hỗ trợ, không có CloudFormation template.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS Service Catalog",
+      "AWS CloudFormation",
+      "AWS Resource Access Manager",
+      "AWS Organizations",
+      "Amazon S3"
+    ],
+    "reason_vi": "Chuẩn hóa và phân phối cấu hình bảo mật (secure-by-default template) cho nhiều account."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/productmgmt-cloudresource.html",
+      "title": "Creating Products - AWS Service Catalog",
+      "section": "Creating Products",
+      "snapshot_id": "c7de972a2d67",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Upload an CloudFormation template or a Terraform tar.gz configuration file from a local drive.",
+      "supports": "Product của Service Catalog được tạo bằng cách upload CloudFormation template.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_sharing_how-to-share.html",
+      "title": "Sharing a Portfolio - AWS Service Catalog",
+      "section": "Sharing a Portfolio",
+      "snapshot_id": "d839ced14f86",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "share your AWS Service Catalog portfolio with them using either account-to-account sharing or AWS Organizations.",
+      "supports": "Portfolio có thể share qua AWS Organizations.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_sharing_how-to-share.html",
+      "title": "Sharing a Portfolio - AWS Service Catalog",
+      "section": "Sharing with AWS Organizations",
+      "snapshot_id": "d839ced14f86",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The organization itself. (This shares with every account in the organization.)",
+      "supports": "Share portfolio với toàn bộ account trong organization (R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/catalogs_portfolios_users.html",
+      "title": "Granting Access to Users - AWS Service Catalog",
+      "section": "Granting Access to Users",
+      "snapshot_id": "4f3dc2b63418",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Principal Names are shared with the Portfolio and used in recipient accounts to grant access to end users.",
+      "supports": "Cấp quyền end users (kể cả ở account nhận share) truy cập portfolio (R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/introduction.html",
+      "title": "What Is Service Catalog?",
+      "section": "What Is Service Catalog?",
+      "snapshot_id": "1f5b36ff0a64",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "End users can quickly deploy only the approved IT services they need",
+      "supports": "End users tự deploy các dịch vụ đã chuẩn hóa/phê duyệt.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources - AWS Resource Access Manager",
+      "section": "Shareable AWS resources",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The following sections list the resource types, grouped by AWS service, that you can share by using AWS RAM.",
+      "supports": "Danh sách resource type shareable qua RAM không có mục AWS CloudFormation (template).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources - AWS Resource Access Manager",
+      "section": "Amazon Simple Storage Service",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Create and manage S3 Access Grants Instance centrally, and share them with other AWS accounts or your organization.",
+      "supports": "Resource S3 duy nhất share được qua RAM là S3 Access Grants, không phải bucket hay template.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:58:15Z",
+      "change": "blind verdict [\"Q090:A\"] (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:06:17Z",
+      "change": "reconciliation: source key A khớp blind; đọc lại danh sách resource shareable của RAM (không có CloudFormation, S3 chỉ Access Grants); giữ A, verified (high)",
+      "previous_answer": null
+    }
+  ]
+}

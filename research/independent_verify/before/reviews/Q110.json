@@ -1,0 +1,273 @@
+{
+  "question_id": "Q110",
+  "question_content_hash": "8b1c84154d192eeb862e615bbc12f3be52bad88408444bf0bcf86b1f514ea633",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "31428ce7a6caf3120e82d241827df2d54f7e8045c12f974a21fd638cd82a74b4",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Workload container chạy NGOÀI AWS (không phải người dùng).",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Workload phải nhận temporary security credentials để truy cập tài khoản AWS một cách an toàn.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Công ty đã dùng IAM Identity Center cho người dùng (chi tiết gây nhiễu, không phải cho workload).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q110:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "IAM Roles Anywhere dùng trust anchor (CA) và role tin cậy rolesanywhere.amazonaws.com để container ngoài AWS đổi chứng chỉ X.509 lấy credential tạm.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q110:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Trộn khái niệm: trust anchor thuộc IAM Roles Anywhere; role federation tin cậy principal Federated của IdP, không có 'IAM service principal'. Cấu hình như mô tả không tạo được luồng cấp credential.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q110:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS managed application trong IAM Identity Center cấp SSO cho người dùng/nhóm, không cấp temporary credential cho container chạy ngoài AWS.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q110:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Customer managed application (SAML/OAuth) phục vụ người dùng workforce; gán cho nhóm người dùng không giúp workload lấy credential AWS tạm.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q110:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu IAM Roles Anywhere mô tả chính xác use case (container ngoài AWS, credential tạm, trust anchor, service principal).",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "source_answer": [
+    "Q110:A"
+  ],
+  "researched_answer": [
+    "Q110:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A. Tài liệu IAM Roles Anywhere mô tả trực tiếp use case: workload (server, container) chạy ngoài AWS lấy temporary credentials; trust anchor = CA; role phải tin cậy rolesanywhere.amazonaws.com.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại B (đối thủ mạnh nhất vì cũng nhắc 'trust anchor'): 'trust anchor' là khái niệm của IAM Roles Anywhere (ref3), còn role cho IAM federation tin cậy principal Federated của IdP (ref6), không có 'IAM service principal' nào cấp credential cho workload; B trộn hai cơ chế nên không cấu hình được. C/D: ứng dụng trong IAM Identity Center phục vụ single sign-on cho người dùng/nhóm workforce (ref4, ref5), không cấp credential cho container. Giữ A, verified, high.",
+  "explanation_vi": {
+    "why_correct": "IAM Roles Anywhere cho workload chạy ngoài AWS dùng chứng chỉ X.509 (do CA đã đăng ký làm trust anchor cấp) để lấy temporary credentials của một IAM role; role đó phải tin cậy service principal rolesanywhere.amazonaws.com.",
+    "others": {
+      "Q110:B": "Trust anchor không thuộc IAM federation; role federation tin principal Federated của IdP, không có 'IAM service principal' cấp credential cho workload.",
+      "Q110:C": "AWS managed application trong IAM Identity Center dùng cho single sign-on của người dùng, không cấp temporary credentials cho container ngoài AWS.",
+      "Q110:D": "Customer managed application (SAML/OAuth) gán cho nhóm người dùng là truy cập workforce, không phải cơ chế để workload lấy credential AWS."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "container-based workloads outside of AWS",
+      "meaning_vi": "Workload (không phải người) chạy ngoài AWS → IAM Roles Anywhere."
+    },
+    {
+      "phrase": "temporary security credentials",
+      "meaning_vi": "Credential tạm từ STS, không dùng access key dài hạn."
+    },
+    {
+      "phrase": "AWS IAM Identity Center",
+      "meaning_vi": "Chi tiết gây nhiễu: Identity Center dành cho người dùng workforce."
+    }
+  ],
+  "memory_tip_vi": "Nếu server/container chạy ngoài AWS cần temporary credentials -> nghĩ đến IAM Roles Anywhere (trust anchor = CA, role tin rolesanywhere.amazonaws.com); kiểm tra IAM Identity Center chỉ phục vụ người dùng workforce, không phải workload.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "IAM Roles Anywhere",
+      "AWS IAM",
+      "AWS IAM Identity Center"
+    ],
+    "reason_vi": "Cấp credential tạm cho workload ngoài AWS bằng PKI."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html",
+      "title": "What is AWS Identity and Access Management Roles Anywhere?",
+      "section": "Introduction",
+      "snapshot_id": "8a4f014895bd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "obtain temporary security credentials in IAM for workloads such as servers, containers, and applications that run outside of AWS",
+      "supports": "IAM Roles Anywhere cấp credential tạm cho container chạy ngoài AWS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html",
+      "title": "The IAM Roles Anywhere trust model",
+      "section": "Role trusts",
+      "snapshot_id": "3fca9c1aeb64",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you must create a trust relationship with the IAM Roles Anywhere service principal rolesanywhere.amazonaws.com",
+      "supports": "Role phải tin cậy service principal của IAM Roles Anywhere - đúng như phương án A.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html",
+      "title": "What is AWS Identity and Access Management Roles Anywhere?",
+      "section": "Trust anchors",
+      "snapshot_id": "8a4f014895bd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You register the CA with IAM Roles Anywhere as a trust anchor to establish trust between your public-key infrastructure (PKI) and IAM Roles Anywhere.",
+      "supports": "Trust anchor là khái niệm của IAM Roles Anywhere, không phải của IAM federation.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-applications.html",
+      "title": "Configure access to applications - AWS IAM Identity Center",
+      "section": "Configure access to applications",
+      "snapshot_id": "f7597fd54450",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With AWS IAM Identity Center, you can control who can have single sign-on access to your applications.",
+      "supports": "Ứng dụng trong IAM Identity Center dùng cho SSO của người dùng, không cấp credential cho workload.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/customermanagedapps.html",
+      "title": "Customer managed applications - AWS IAM Identity Center",
+      "section": "Customer managed applications",
+      "snapshot_id": "23c621f4fa64",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IAM Identity Center acts as a central identity service to your workforce users and groups.",
+      "supports": "Customer managed application phục vụ người dùng/nhóm workforce (SAML/OAuth), không phải container ngoài AWS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html",
+      "title": "Create a role for OpenID Connect federation (console)",
+      "section": "Prerequisites",
+      "snapshot_id": "6fff7087bca4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "\"Principal\": {\"Federated\": \"cognito-identity.amazonaws.com\"}",
+      "supports": "Role cho IAM federation tin cậy principal kiểu Federated (IdP), không phải 'IAM service principal' và không có trust anchor.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers.html",
+      "title": "Identity providers and federation into AWS",
+      "section": "Overview",
+      "snapshot_id": "0acc623f5b56",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "OIDC connects applications, like GitHub Actions, that do not run on AWS to AWS resources.",
+      "supports": "IAM federation (OIDC) có thể dùng cho workload ngoài AWS nhưng qua IdP, không qua trust anchor như B mô tả.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "IAM Identity Center trong đề là chi tiết gây nhiễu: nó quản lý truy cập của người dùng, không phải workload.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:17:00+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q110:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:25:15Z",
+      "change": "Reconciliation: khớp source key A; status verified (high); đáp án không đổi; không thêm tham chiếu mới.",
+      "previous_answer": [
+        "Q110:A"
+      ]
+    }
+  ]
+}

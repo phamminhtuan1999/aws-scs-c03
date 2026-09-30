@@ -1,69 +1,105 @@
-# Discrepancies & source issues (research_version r1)
+# Discrepancies & source issues (research_version r2-independent-verify)
 
-Generated 2026-09-30T20:44:03+00:00 by `tools/make_discrepancies.py` from `research/reviews/`, `research/blind/` and `data/keys/source_keys.json`.
+Generated 2026-09-30T21:53:01+00:00 by `tools/make_discrepancies.py` from `research/reviews/`, `research/blind/` and `data/keys/source_keys.json`.
 Source keys are never modified; this file only reports differences.
 
 ## Status counts
 
 | status | questions |
 |---|---|
-| ambiguous | 8 |
-| verified | 135 |
+| ambiguous | 25 |
+| unresolved | 4 |
+| verified | 114 |
 
 ## Source key vs research — every question that differs or cannot be compared
 
 | Q | type | source key | blind verdict | final research | status | confidence | graded by research? | reason (short) |
 |---|---|---|---|---|---|---|---|---|
-| Q005 | ordering | S6 > S1 > S3 | S6 > S1 > S3 | S6 > S1 > S3 | ambiguous | medium | no | Blind đề xuất ambiguous với cùng chuỗi S6 -> S1 -> S3 như source key. Pass đối chiếu đã đọc lại tutorial Okta (Step 1 lấy metadata IdP, Step 2 cấu hình IdP làm identity source, Step 3 bật automatic provisioning trong IAM Identity Center rồi mới cấu hình ở Okta |
-| Q008 | matching | P1→R5, P2→R4, P3→R3, P4→R1, P5→R2 (ungradable) | — | — | ambiguous | medium | no | Source key: P1->R5, P2->R4, P3->R3, P4->R1, P5->R2; blind: không có đáp án đầy đủ (P4->R2 khả năng cao, P5/R1 không ghép được). Ba ghép P1/P2/P3 trùng nhau và được xác nhận (VPC Flow Logs có bytes/dstaddr, metric filter có dimension, CloudTrail Insights so bas |
-| Q024 | multiple_choice | A | — | — | ambiguous | medium | no | Blind = null (ambiguous), source key = A. Đã cố tìm cách đọc đề để A đúng: kiểm tra lịch sử ngưỡng WAF – What's New 30/08/2024 hạ tối thiểu từ 100 xuống 10; API WAF Classic cũng tối thiểu 100; tài liệu caveats nói rate limiting 'not intended for precise' – nên |
-| Q056 | multiple_choice | C | A | A | verified | medium | yes | Mismatch: blind = A (verified, medium), source = C. Đã tìm cách đọc đề để C đúng: EC2 doc (connection tracking) nói trực tiếp NACL chặn một chiều sẽ cắt kết nối đang có, và trang GuardDuty 'Remediating a potentially compromised EC2 instance' trỏ tới NACL để ch |
-| Q077 | multiple_choice | C | B | B | ambiguous | medium | no | Mismatch: blind = B (proposed verified, medium), source = C. Đã tìm cách đọc đề để C đúng: fetch lại Service Authorization Reference cho EC2 (snapshot e09ff3211f53, 30/9/2026) — hành động AuthorizeSecurityGroupIngress chỉ có key ec2:SecurityGroupID/ec2:Vpc/ec2 |
-| Q087 | multiple_response | B,E | B,E | B,E | ambiguous | medium | no | Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phé |
-| Q107 | multiple_choice | B | A | A | verified | high | yes | Blind = A, source key = B (mismatch). Đã tìm lý lẽ cho B: trang Terms and concepts xác nhận principal ở consuming account chỉ làm được những gì vừa được managed permission vừa được IAM identity-based policy do admin account nhận cho phép, và admin phải gắn pol |
-| Q118 | multiple_choice | D | D | — | ambiguous | medium | no | Source key = D; blind chọn D nhưng đề xuất ambiguous vì A mới khả thi. Theo bias-guard, chỉ nâng lên verified nếu có bằng chứng trực tiếp mới cho thấy A không đáp ứng. Đã kiểm tra lại: (1) What's New 23/07/2026 (ref6) xác nhận ALB access logs giao tới CloudWat |
-| Q122 | multiple_choice | A | A | A | ambiguous | medium | no | Source key = A (Count), trùng đáp án blind; blind đề xuất ambiguous vì tiền đề WAF trên NLB. Theo quy tắc bias-guard, chỉ nâng lên verified nếu có bằng chứng trực tiếp mới cho thấy WAF hỗ trợ NLB. Đã refresh trang 'Resources that you can protect with AWS WAF'  |
-| Q133 | multiple_choice | B | A | — | ambiguous | medium | no | Blind = A (verified, medium), source key = B. Đã kiểm tra cả hai phía: (1) trang rule s3-default-encryption-kms chỉ có một tham số tùy chọn kmsKeyArns (ref1) và trang Adding Config Rules định nghĩa parameter là thuộc tính tài nguyên phải tuân theo (ref8), còn  |
+| Q001 | multiple_choice | C | C | — | ambiguous | medium | no | C không sửa principal/SourceArn; không giữ verified khi điều kiện đủ quyền vẫn sai. |
+| Q002 | ordering | S1 > S5 > S3 | S1 > S5 > S3 | — | ambiguous | medium | no | Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials. |
+| Q005 | ordering | S6 > S1 > S3 | S6 > S1 > S3 | — | ambiguous | medium | no | Không ép source tutorial thành chuỗi duy nhất; cả metadata và SCIM là bước hợp lệ, scope không xác định. |
+| Q007 | multiple_choice | B | B | — | ambiguous | medium | no | Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy. |
+| Q008 | matching | P1→R5, P2→R4, P3→R3, P4→R1, P5→R2 (ungradable) | — | — | unresolved | medium | no | Không chấm full mapping; P1/P5 trùng; custom insights không tự chứng minh multi-stage correlation. |
+| Q010 | multiple_choice | B | B | — | ambiguous | medium | no | State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn. |
+| Q011 | multiple_choice | B | B | — | ambiguous | medium | no | Tách native shell khỏi SSH-over-SSM và ghi pricing chính thức có ngày hiệu lực hiện hành; không verified mọi literal yêu cầu. |
+| Q013 | multiple_response | A,E | A,E | — | ambiguous | medium | no | E sai dấu đóng biến và shorthand ARN; AE chỉ sau sửa nguồn, không verified literal option. |
+| Q019 | multiple_choice | D | D | — | ambiguous | medium | no | Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user. |
+| Q023 | multiple_choice | A | A | — | ambiguous | medium | no | A chỉ Aurora MySQL; unspecified engine cần ambiguous thay vì verified mặc dù caveat đã có. |
+| Q024 | multiple_choice | A | — | C | verified | high | yes | Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng. |
+| Q026 | multiple_choice | D | D | — | ambiguous | medium | no | Không loại B chỉ vì inline policy: inline attach role là hợp lệ; task role không cô lập specific container; DBA plaintext vẫn cần hạn chế riêng. |
+| Q041 | multiple_choice | B | B | — | ambiguous | medium | no | Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A. |
+| Q045 | multiple_choice | C | C | — | unresolved | medium | no | Sai nguyên văn IAM condition key và quá rộng: tag policy enforcement không áp dụng mọi tài nguyên; tài nguyên untagged không được tự buộc có tag. |
+| Q047 | multiple_choice | A | A | — | ambiguous | medium | no | Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại. |
+| Q054 | multiple_response | A,D,F | A,D,F | — | ambiguous | medium | no | Current giải thích silently đổi F từ 'user assignments only in management account' thành 'users not groups'; cần flag sửa wording, recommendations không prerequisites. |
+| Q056 | multiple_choice | C | A | — | ambiguous | medium | no | Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG. |
+| Q062 | multiple_response | B,E | B,E | — | unresolved | medium | no | E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu. |
+| Q070 | multiple_choice | A | A | — | ambiguous | medium | no | Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector. |
+| Q077 | multiple_choice | C | B | — | ambiguous | high | no | Giữ ambiguous và bỏ key duy nhất: preventive không đáp ứng; B là intended remediation. |
+| Q084 | multiple_choice | A | A | — | unresolved | high | no | Không được bỏ hai bước selector sai rồi gọi toàn option verified; eventName trên event data store không tương đương trail, resources.ARN chỉ data events. |
+| Q087 | multiple_response | B,E | B,E | — | ambiguous | high | no | BE và CE đều hợp lệ, Config delegated admin không tự là StackSets delegated admin; không ép chọn BE. |
+| Q094 | multiple_choice | B | B | — | ambiguous | high | no | Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ. |
+| Q095 | multiple_choice | C | C | — | ambiguous | high | no | Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified. |
+| Q107 | multiple_choice | B | A | — | ambiguous | medium | no | Broad managed share chỉ là trần; identity policies phía nhận có thể loại reads và principals, nên A/B đều viable. |
+| Q112 | multiple_choice | B | B | — | ambiguous | medium | no | Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem. |
+| Q118 | multiple_choice | D | D | — | ambiguous | high | no | Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs. |
+| Q121 | multiple_choice | B | B | — | ambiguous | high | no | Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified. |
+| Q122 | multiple_choice | A | A | — | ambiguous | high | no | Không thay NLB thành ALB trong đề để hợp thức hóa A. |
+| Q142 | multiple_choice | A | A | — | ambiguous | high | no | Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán. |
 
-## Blind → final changes (bias check)
+## Initial r1 blind → current final changes (historical bias check)
 
-Questions where the final answer or status differs from the blind (pre-key) verdict. `AUDIT` = moved toward the source key after seeing it.
+These preserved blind records are from r1. For the new independently persisted r2 passes and explicit root adjudications see independent_verify/REPORT.md and comparison_all.json. `AUDIT` below is the earlier r1 flag, not proof of an independent r2 consensus.
 
 | Q | blind answer / status | final answer / status | source key | AUDIT flag |
 |---|---|---|---|---|
-| Q077 | B / verified | B / ambiguous | C |  |
-| Q087 | B,E / verified | B,E / ambiguous | B,E |  |
+| Q001 | C / verified | — / ambiguous | C |  |
+| Q002 | S1 > S5 > S3 / verified | — / ambiguous | S1 > S5 > S3 |  |
+| Q005 | S6 > S1 > S3 / ambiguous | — / ambiguous | S6 > S1 > S3 |  |
+| Q007 | B / verified | — / ambiguous | B |  |
+| Q008 | — / ambiguous | — / unresolved | P1→R5, P2→R4, P3→R3, P4→R1, P5→R2 |  |
+| Q010 | B / verified | — / ambiguous | B |  |
+| Q011 | B / verified | — / ambiguous | B |  |
+| Q013 | A,E / verified | — / ambiguous | A,E |  |
+| Q019 | D / verified | — / ambiguous | D |  |
+| Q023 | A / verified | — / ambiguous | A |  |
+| Q024 | — / ambiguous | C / verified | A |  |
+| Q026 | D / verified | — / ambiguous | D |  |
+| Q041 | B / verified | — / ambiguous | B |  |
+| Q045 | C / verified | — / unresolved | C |  |
+| Q047 | A / verified | — / ambiguous | A |  |
+| Q054 | A,D,F / verified | — / ambiguous | A,D,F |  |
+| Q056 | A / verified | — / ambiguous | C |  |
+| Q062 | B,E / verified | — / unresolved | B,E |  |
+| Q070 | A / verified | — / ambiguous | A |  |
+| Q077 | B / verified | — / ambiguous | C |  |
+| Q084 | A / verified | — / unresolved | A |  |
+| Q087 | B,E / verified | — / ambiguous | B,E |  |
+| Q094 | B / verified | — / ambiguous | B |  |
+| Q095 | C / verified | — / ambiguous | C |  |
+| Q107 | A / verified | — / ambiguous | B |  |
+| Q112 | B / verified | — / ambiguous | B |  |
 | Q118 | D / ambiguous | — / ambiguous | D |  |
-| Q133 | A / verified | — / ambiguous | B |  |
+| Q121 | B / verified | — / ambiguous | B |  |
+| Q122 | A / ambiguous | — / ambiguous | A |  |
+| Q133 | A / verified | B / verified | B |  |
+| Q142 | A / verified | — / ambiguous | A |  |
 
 ## Medium/low confidence verified questions (graded, but with open issues)
 
-- **Q001** (medium): Trong thực tế, request của function đến S3 được ký bằng credentials của execution role; bucket policy chuẩn nên dùng Principal là ARN của execution role (hoặc chỉ cần identity policy của role nếu cùng account). Không phương án nào nêu điều này; C là thay đổi duy nhất sửa lỗi có tài liệu hỗ trợ.
-- **Q002** (medium): S2 cấp credentials tạm thời cho code của microservice gọi AWS API, không xác thực người dùng bên ngoài; nếu hiểu 'temporary credentials' là AWS STS credentials thì có thể tranh luận.; JWT authorizer native ít công sức hơn Lambda authorizer cho token Cognito nhưng không có trong danh sách.
-- **Q010** (medium): Theo tài liệu, key đã lên lịch xóa ở trạng thái PendingDeletion hoặc PendingReplicaDeletion đều không dùng được cho cryptographic operations, trái với câu 'still enabled and usable' trong đề.; ARN sai định dạng ('arn:aws;kms'), account ID trong đề (1234156789012) không khớp ARN (123456789012).
-- **Q019** (medium): Đề dùng 'IAM user' cho danh tính Identity Center; nếu hiểu theo nghĩa IAM user thật thì không phương án nào chặn được ở mọi account.; Disable user không cắt IAM role session đang tồn tại; kế hoạch thực tế cần thêm bước thu hồi session.
-- **Q023** (medium): Nếu cluster là Aurora PostgreSQL thì tham số đúng là rds.force_ssl, không phải require_secure_transport.
-- **Q040** (medium): Nếu hiểu attacker chỉ giữ một bộ credential và không còn truy cập instance/lỗ hổng, A cũng chặn được ngay và ít gây gián đoạn hơn; đề không nói rõ, nhưng chi tiết 'development team will require 4 hours to implement and deploy a fix' ngụ ý lỗ hổng vẫn mở.; D chặn cả truy cập hợp lệ vào bucket trong 4 giờ; đề chỉ yêu cầu chặn attacker ngay, không yêu cầu duy trì dịch vụ.
-- **Q041** (medium): Mọi giải pháp dựa trên dữ liệu billing đều có độ trễ tới ~24 giờ; không có lựa chọn nào thời gian thực.; A chạy mỗi giờ nhưng không nhận dữ liệu sớm hơn tần suất refresh của Data Exports; về lý thuyết độ trễ dữ liệu của A và B tương đương, khác biệt nằm ở việc B có sẵn ML và alert tức thì.
-- **Q047** (medium): Aggregator không có quyền mutating; Lambda thực tế nhận event compliance change (EventBridge) từ từng account/Region hoặc được chuyển tiếp về account trung tâm, và cần role cross-account để sửa bucket.; Remediation native của AWS Config dùng SSM Automation; đề không đưa lựa chọn này.
-- **Q049** (medium): Nếu hiểu 'Adjust the configuration and architecture of the workloads' là áp dụng cả cho production thì D có thể tranh luận; văn bản chỉ nói thí nghiệm và report ở development account.; Bằng chứng của B là tài liệu review/mitigation, không phải kiểm thử thực nghiệm; B cũng không nói rõ review workload production (chỉ 'the architecture').
-- **Q051** (medium): A chỉ hiệu lực khi FullAWSAccess (hoặc Allow rộng khác) không còn cho phép s3:PutObject; cách phổ biến hơn là SCP Deny có điều kiện.; SCP không áp dụng cho user/role trong management account và principal ngoài organization.; Trước 19/09/2025 SCP Allow không hỗ trợ Condition, khi đó A không thực hiện được và không lựa chọn nào đáp ứng trọn vẹn; kết luận A phụ thuộc hành vi hiện tại.; Allow có điều 
-- **Q056** (medium): Tài liệu runbook mô tả bước SG 'all access' tạm thời nhưng không nêu nguyên văn lý do (chuyển kết nối tracked sang untracked); đây vẫn là suy luận có căn cứ.; Trong khoảnh khắc rule 0.0.0.0/0 tồn tại, instance mở cho mọi nguồn (rủi ro ngắn); A chấp nhận điều này theo đúng mô tả 'immediately delete'.
-- **Q062** (medium): Câu chữ E ('last logged in') không khớp chính xác trường cần xem (access_key_last_used_date); chỉ đúng khi hiểu rộng là 'lần cuối credential của user được dùng'.; Công cụ điều tra đầy đủ (CloudTrail lọc theo access key ID) không có trong các lựa chọn.
-- **Q070** (medium): Runbook AWS-EnableCloudTrail chỉ có tham số TrailName 'của trail mới'; tài liệu không nêu hành vi khi trail cùng tên đã tồn tại (có thể CreateTrail lỗi ở lần khắc phục thứ hai nếu dùng lại cùng tên).; Rule cloudtrail-enabled là periodic nên khôi phục có độ trễ; Config rule/remediation phải triển khai ở từng Region (hoặc qua conformance pack/organization rule).; Trang Prescriptive Guidance 'Automat
-- **Q076** (medium): Điều kiện thời gian: từ 26/3/2026, Anti-DDoS Managed Rule Group (AWSManagedRulesAntiDDoSRuleSet) là giải pháp mặc định cho HTTP flood và thay thế L7 Auto Mitigation; khách hàng Shield Advanced hiện hữu vẫn dùng được L7AM, khách hàng mới phải liên hệ AWS Support. AMR không có trong các option nên D vẫn là đáp án tốt nhất trong đề.; Automatic mitigation cần 24 giờ đến 30 ngày để lập baseline traffic
-- **Q080** (medium): C là bước troubleshoot hợp lệ theo trang 'Troubleshooting CloudFormation' (Insufficient IAM permissions: review IAM policy); không có tài liệu AWS nêu thứ tự bắt buộc giữa A và C, nên việc chọn A dựa trên chữ FIRST và dữ kiện SCP khác nhau theo OU.
-- **Q084** (medium): Với trail, advanced event selector cho management events chỉ hỗ trợ eventCategory, eventSource (chỉ NotEquals kms.amazonaws.com để loại toàn bộ KMS), readOnly; eventName chỉ cho event data store; resources.ARN chỉ cho data events. Bước 'lọc CreateKey' và 'lọc theo key ARN' trong A không làm được; nếu bỏ qua bước lọc, trail ghi toàn bộ KMS events và vẫn đáp ứng mọi yêu cầu, nên A vẫn là phương án d
-- **Q095** (medium): Firewall Manager yêu cầu tạo policy riêng cho mỗi Region (trừ CloudFront/Global); không tìm thấy What's New nào bổ sung policy đa Region tính đến 2026-09-30. Cụm 'scope ... all accounts and Regions' ở C chỉ đúng theo nghĩa lặp lại policy cho mỗi Region.; Member account phải có subscription rule group Marketplace thì Firewall Manager mới propagate được (điều kiện chung cho mọi phương án).
-- **Q104** (medium): Cách đọc khác của D: chỉ dựa vào mã hóa at rest mặc định của Lambda env var bằng AWS managed key (AWS không tính phí dùng key này) thì D có chi phí gần 0, có thể không đắt hơn C; đề không nói rõ nên tồn tại rủi ro diễn giải.; Lưu lượng GetParameter rất cao có thể cần higher throughput (có phí) và KMS request vượt free tier — đề không nêu.
-- **Q111** (medium): A: 'Organizations has applied an IAM policy to the AWS account' không phải loại policy có thật; RCP (từ 11/2024) hỗ trợ KMS và có thể deny theo ARN key, nhưng RCP không phải IAM policy. Theo đúng chữ, chỉ C và D hợp lệ → đúng Choose two.
-- **Q114** (medium): A không hoàn toàn vô dụng: CPU cao là dấu hiệu được AWS nêu (ref14) và quyền IAM role giúp đánh giá impact; A thua C vì một vế (MITRE tactic) chỉ là metadata của finding.; Process details chỉ có khi bật GuardDuty Runtime Monitoring; VPC Flow Logs phải do khách hàng bật vì GuardDuty dùng luồng flow log riêng (ref12).
-- **Q116** (medium): Trang EBS encryption liệt kê quyền cho user: kms:CreateGrant, kms:Decrypt, kms:DescribeKey, kms:GenerateDataKeyWithoutPlaintext, kms:ReEncrypt; option C chỉ nêu kms:Encrypt và kms:Decrypt nên thực tế có thể phải thêm quyền (đặc biệt CreateGrant).; Nếu key policy là default (cho phép IAM policy trong account) thì sửa IAM policy của role cũng được; nhưng D chỉ cấp kms:DescribeKey nên vẫn không đủ.
-- **Q124** (medium): Câu chữ A: identity policy phải được tạo/gắn trong account của IAM user; 'in the AWS account that contains the resources' chỉ đúng nếu hiểu là tài nguyên đích của sts:AssumeRole (tutorial IAM dùng đúng cách diễn đạt này).; SCP của organization chứa IAM user (không phải của organization sở hữu resource) cũng không được deny sts:AssumeRole; RCP của organization sở hữu resource có thể chặn principal 
-- **Q137** (medium): A và B chỉ khác ở bên được phép ghi; cách diễn đạt 'allow account to write' không trùng với policy thực tế dùng service principal CloudTrail.
-- **Q138** (medium): Nếu bỏ qua yêu cầu 'updates as the incident progresses', A (EventBridge + Lambda + SNS) cũng đóng port, ghi log và thông báo một lần.; C không nói rõ runbook được kích hoạt tự động hay chạy từ OpsItem.
-- **Q139** (medium): Trên thực tế nếu trust policy không tin lambda.amazonaws.com thì CreateFunction/UpdateFunctionConfiguration thường bị từ chối và invoke cũng lỗi, nên A ít khả năng là nguyên nhân thực sự khi function đã deploy; chưa có trang doc mô tả rõ hành vi kiểm tra này. A vẫn là bước kiểm tra hợp lệ duy nhất còn lại trong các option.
-- **Q142** (medium): 'full header information' trong A vượt quá khả năng thực tế của standard logging v2 (chỉ có một số header cụ thể; toàn bộ header cs-headers chỉ có ở real-time logs).
+- **Q015** (medium): 
+- **Q040** (medium): 
+- **Q048** (medium): 
+- **Q063** (medium): 
+- **Q082** (medium): 
+- **Q104** (medium): 
+- **Q116** (medium): 
+- **Q124** (medium): 
+- **Q125** (medium): 
+- **Q132** (medium): 
+- **Q137** (medium): 
+- **Q138** (medium): 
+- **Q140** (medium): 
+- **Q141** (medium): 
 
 ## Time-dependent / outdated notes
 
@@ -80,54 +116,62 @@ Questions where the final answer or status differs from the blind (pre-key) verd
 ## All recorded source issues (typos, data, layout, ambiguity)
 
 - **Q001** [typo] `Q001:C`: Chuỗi ARN có khoảng trắng thừa 'DOC-EXAMPLE- BUCKET/*' và dấu nháy kết thúc sai (''), ý định rõ là arn:aws:s3:::DOC-EXAMPLE-BUCKET/*.
-- **Q001** [data] `Q001:stem:1`: ARN Lambda 'arn:aws:lambda:::function:MyLambdaFunction' thiếu Region và account ID; và thiết kế Principal lambda.amazonaws.com không phản ánh cách Lambda function thực sự gọi S3 (qua execution role).
+- **Q001** [ambiguous] `Q001`: SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ.
 - **Q002** [layout] `Q002:stem:0`: Đề ghi 'HOTSPOT' nhưng thực chất là dạng chọn và sắp xếp 3 bước.
+- **Q002** [ambiguous] `Q002`: Không xác định loại temporary credentials; Lambda authorizer hợp lệ nhưng native JWT authorizer có thể ít quản trị hơn.
 - **Q003** [typo] `Q003:B`: Ghi '-token-code' (một gạch) thay vì '--token-code'.
+- **Q003** [data] `Q003`: D tham chiếu NotAction không tồn tại; SAML/AssumeRole có thể là giải pháp khác nếu cấu hình đầy đủ.
 - **Q004** [layout] `Q004:C`: Ảnh phương án C bị cắt, thiếu dấu ngoặc '}' đóng cuối policy.
 - **Q004** [typo] `Q004:B`: Sid 'DenyNonDefaultRegions' dùng cho statement Allow ở B và D – chỉ là nhãn, gây nhầm.
 - **Q005** [typo] `Q005:stem:1`: 'exlemai' là lỗi chính tả của 'external'.
 - **Q005** [typo] `Q005:S2`: 'specifics' là lỗi chính tả của 'specifies'.
-- **Q005** [ambiguous] `Q005:stem:2`: Quy trình đầy đủ gồm ít nhất 4-5 bước hợp lệ (S6, S5, S1, S3, S4) nhưng chỉ có 3 ô; đề không nói phạm vi (chỉ SAML hay cả SCIM), nên nhiều chuỗi 3 bước có thể bảo vệ được.
-- **Q005** [ambiguous] `Q005:stem:2`: AUDIT: 3 ô cho 5 bước hợp lệ; tutorial Okta cho S6->S1->S3, tutorial Entra ID cho S5->S6->S1, các tutorial SCIM (JumpCloud/OneLogin/PingOne/CyberArk) cho (SAML) S1->S3->S4. Đề không nói chọn 3 bước nào.
+- **Q005** [ambiguous] `Q005`: Lỗi chữ exlemai/specifics; SAML metadata là bước hợp lệ còn SCIM không được yêu cầu rõ; thứ tự ba slot mơ hồ.
 - **Q006** [typo] `Q006:stem:0`: '(AWS KMS}' dùng sai dấu ngoặc đóng '}'.
-- **Q007** [data] `Q007:A`: Mọi phương án chỉ ghi Resource arn:aws:s3:::DOC-EXAMPLE-BUCKET, thiếu arn:aws:s3:::DOC-EXAMPLE-BUCKET/*; policy thực tế sẽ không chặn GetObject/PutObject. Không ảnh hưởng việc chọn principal.
+- **Q006** [data] `Q006`: SES và WorkMail đều có trong danh sách ViaService hiện hành.
 - **Q007** [layout] `Q007:D`: Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ).
-- **Q008** [data] `Q008:P5`: Dòng 5 trùng nguyên văn dòng 1 (VPC Flow Logs + Logs Insights); với quy tắc mỗi chiến lược dùng một lần thì không có ghép hợp lệ cho cả 5 dòng. Có lẽ dòng gốc bị mất.
+- **Q007** [ambiguous] `Q007`: Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access.
 - **Q008** [typo] `Q008:R1`: 'Amazon EC2 distances' — đúng ra là 'Amazon EC2 instances'.
 - **Q008** [layout] `Q008:P4`: Trong đề, danh sách response nằm ở stem còn prompt là các dòng trong ảnh; vai trò 'strategy' và 'scenario' bị đảo so với câu hướng dẫn.
-- **Q008** [data] `Q008:P4`: Source key ghép P5 (bản sao VPC Flow Logs) -> R2 và P4 -> R1; ghép P5->R2 không thể đúng với văn bản hiện tại, cho thấy dòng 5 gốc (nhiều khả năng là dịch vụ tương quan finding) đã bị thay bằng bản sao dòng 1.
+- **Q008** [ambiguous] `Q008`: Đã xem ảnh và xác nhận hàng 1/hàng 5 trùng; distances là typo instances; không ép một full mapping.
 - **Q010** [typo] `Q010:stem:2`: ARN ghi 'arn:aws;kms' (dấu ';' thay ':'); key ID 'mrk-0bb0212cd9864fdea0dcamzo26efb5670' chứa ký tự không phải hex.
-- **Q010** [data] `Q010:stem:0`: Account ID 1234156789012 (13 chữ số) không khớp với 123456789012 trong ARN.
-- **Q010** [data] `Q010:stem:2`: Đề nói key 'still enabled and usable', nhưng tài liệu hiện tại nói primary key ở PendingReplicaDeletion không dùng được cho cryptographic operations.
 - **Q010** [typo] `Q010:C`: 'lo allow' — đúng ra là 'to allow'.
-- **Q011** [ambiguous] `Q011:stem:0`: Đề yêu cầu 'use SSH' nhưng lại không muốn quản lý SSH key; Session Manager đáp ứng nhu cầu truy cập shell chứ không phải SSH thuần.
+- **Q010** [ambiguous] `Q010`: ARN chứa dấu ;, account ID và key ID có lỗi; enabled/usable mâu thuẫn state; không thể xóa ngay.
+- **Q011** [ambiguous] `Q011`: Pricing chính thức: bỏ Advanced Instances Tier 2026-06-30; $0.05/hybrid session từ 2026-09-30, không hourly; hoàn toàn isolated còn cần outbound/private service path.
 - **Q012** [typo] `Q012:C`: 'Enable Amazon GuardDuty Enable EKS Protection' thiếu dấu chấm giữa hai câu.
 - **Q012** [typo] `Q012:A`: 'mailiing' — đúng ra là 'mailing'.
 - **Q012** [typo] `Q012:D`: 'lo collect' và 'when now audit logs' — đúng ra là 'to collect', 'when new audit logs'.
+- **Q012** [data] `Q012`: Runtime Monitoring không hỗ trợ EKS Fargate; không cần bật CloudWatch audit stream riêng cho GuardDuty.
 - **Q013** [typo] `Q013:stem:0`: 'lo subscribe la specific' là lỗi gõ của 'to subscribe to specific'.
 - **Q013** [typo] `Q013:A`: 'conned' là lỗi gõ của 'connect'.
 - **Q013** [typo] `Q013:E`: Biến policy viết '${iot:Connection.Thing.ThingName)' dùng ')' thay '}'; nếu hiểu theo nghĩa đen thì biến không hợp lệ.
-- **Q015** [data] `Q015:stem:1`: Đề nói dùng data key pair asymmetric, nhưng GenerateDataKeyPair không hỗ trợ KMS key trong custom key store; cần một KMS key khác trong key store chuẩn. Không phân biệt được các lựa chọn vì A/C/D có cùng phần tạo khóa.
+- **Q013** [ambiguous] `Q013`: E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ.
+- **Q014** [data] `Q014`: Không có cơ sở hiện hành cho khẳng định mọi thay đổi nhanh tự động bị gộp bởi Continuous recorder.
+- **Q015** [data] `Q015`: Không lựa chọn nào thỏa nếu mọi data keys bắt buộc sinh bằng custom-store key; phân biệt key type và API capability.
 - **Q018** [typo] `Q018:A`: 'Regional duster ARN' là lỗi gõ của 'Regional cluster ARN'.
 - **Q018** [typo] `Q018:stem:0`: Thiếu dấu chấm sau 'eradicated the attack' và '3:15 PM'.
 - **Q019** [typo] `Q019:stem:0`: 'IAM Identify Center' phải là 'IAM Identity Center'.
 - **Q019** [typo] `Q019:C`: 'arc assigned' -> 'are assigned'; 'performed m the' -> 'performed in the'.
-- **Q019** [ambiguous] `Q019:stem:0`: Đề gọi danh tính là 'IAM user' trong khi truy cập được quản lý bằng IAM Identity Center; lựa chọn D ngầm hiểu đây là người dùng Identity Center.
+- **Q019** [ambiguous] `Q019`: Không option đáp ứng literal IAM user + mọi AWS account + immediate; cần phân biệt credentials/IdC user/role session.
+- **Q021** [data] `Q021`: Full scan chỉ các object đủ điều kiện và định dạng/storage class được hỗ trợ, không mọi object/version tuyệt đối.
 - **Q022** [typo] `Q022:stem:0`: 'sands' phải là 'sends'.
 - **Q022** [typo] `Q022:A`: 'Key Management Sen/ice' phải là 'Key Management Service'.
-- **Q023** [ambiguous] `Q023:stem:0`: Không nêu engine Aurora; require_secure_transport chỉ đúng cho Aurora MySQL (PostgreSQL dùng rds.force_ssl).
-- **Q024** [data] `Q024:A`: Giới hạn 3 request/5 phút thấp hơn mức tối thiểu của AWS WAF rate-based rule (10 từ 30/08/2024; trước đó 100; WAF Classic 100); đề nhắm tới WAF nhưng con số không cấu hình được.
-- **Q024** [ambiguous] `Q024:B`: 'Lambda function based on an Amazon CloudWatch request' không rõ nghĩa.
+- **Q023** [ambiguous] `Q023`: Engine không được chỉ định; API/parameter khác giữa hai Aurora engines.
+- **Q024** [data] `Q024`: Không dùng số minimum WAF 100 đã lỗi thời; stateless fleet không được dùng counter local per instance.
 - **Q026** [typo] `Q026:stem:0`: 'wore stored' nên là 'were stored'.
+- **Q026** [ambiguous] `Q026`: B mô tả inline policy chưa xác định nơi attach; D không đảm bảo isolation giữa containers; rotation phải cấu hình, không mặc định.
 - **Q027** [typo] `Q027:stem:0`: 'slates' nên là 'states'.
-- **Q028** [ambiguous] `Q028:D`: Thao tác thực tế là revoke session của IAM role gắn với instance profile (không phải của chính instance profile); cách diễn đạt hơi lỏng nhưng không đổi đáp án.
+- **Q028** [data] `Q028`: Revoke có thể ảnh hưởng ứng dụng; không ngăn attacker lấy credentials mới nếu instance vẫn bị kiểm soát.
+- **Q030** [data] `Q030`: Publication sensitive findings opt-in; delegated administrator không tự thay publication settings mọi member account.
 - **Q031** [typo] `Q031:stem:2`: Lỗi ngữ pháp 'Why was the finding was not created' (thừa 'was').
-- **Q031** [data] `Q031:stem:1`: example.com là domain giữ chỗ, không nằm trong threat list; domain test GuardDuty hướng dẫn là guarddutyc2activityb.com. Cần hiểu example.com là 'domain test sinh finding DNS'.
+- **Q031** [data] `Q031`: example.com tự thân không chứng minh malicious domain; cần biết test/threat-list đã cấu hình.
+- **Q032** [data] `Q032`: Cognito vốn có minimum length >=6; no required minimum là premise không chính xác nếu hiểu theo nghĩa không có bất kỳ minimum nào.
 - **Q033** [typo] `Q033:A`: Thiếu dấu chấm giữa hai câu ('user agent string Add').
 - **Q033** [typo] `Q033:C`: Thiếu dấu chấm giữa hai câu ('for the ALB Create').
-- **Q034** [data] `Q034:stem:0`: 'Route 53 weighted load balancing' là cách gọi không chuẩn của weighted routing policy; không ảnh hưởng đáp án.
+- **Q033** [data] `Q033`: User-Agent spoofable; không nên diễn giải đây là biện pháp chặn mọi credential stuffing.
+- **Q034** [data] `Q034`: WAF giảm thiểu theo rule; cần staging/rule validation với mẫu attack và traffic hợp lệ.
 - **Q035** [typo] `Q035:stem:1`: 'do lo resolve' là lỗi đánh máy của 'to resolve'.
 - **Q037** [typo] `Q037:stem:0`: 'ousting APIs' là lỗi OCR của 'existing APIs'.
+- **Q037** [data] `Q037`: WAF bảo vệ API Gateway REST API stage; stem chỉ nói APIs và có lỗi 'ousting'.
 - **Q038** [typo] `Q038:C`: 'application VPAttach' bị dính chữ, đúng là 'application VPC. Attach'.
 - **Q038** [typo] `Q038:stem:0`: Thiếu dấu chấm sau 'for database access'.
 - **Q039** [typo] `Q039:D`: 'rote' là lỗi của 'role'.
@@ -135,72 +179,152 @@ Questions where the final answer or status differs from the blind (pre-key) verd
 - **Q040** [typo] `Q040:stem:0`: Lỗi OCR: 'stares mare' = 'stores more', '(Pit)' = '(PII)'.
 - **Q040** [typo] `Q040:stem:3`: 'moot' là lỗi của 'meet'.
 - **Q040** [typo] `Q040:C`: 'Amazon Made' là lỗi của 'Amazon Macie'.
+- **Q040** [data] `Q040`: Policy authorization chặn request mới; không chứng minh terminate download stream đã được authorize trước đó.
+- **Q041** [ambiguous] `Q041`: Không có SLA tài liệu chứng minh thứ tự cảnh báo tuyệt đối giữa mọi lựa chọn.
 - **Q044** [typo] `Q044:stem:0`: "security learn" nên là "security team".
 - **Q044** [typo] `Q044:D`: "on promises" nên là "on premises".
 - **Q045** [typo] `Q045:A`: "CloudFormatlon" nên là "CloudFormation"; "aws:RequestTagCostCenter" thiếu dấu "/" (aws:RequestTag/CostCenter).
 - **Q045** [typo] `Q045:C`: "aws:RequestTag.CostCenter" nên là "aws:RequestTag/CostCenter".
+- **Q045** [ambiguous] `Q045`: Lỗi IAM condition key trong A/C.
+- **Q045** [ambiguous] `Q045`: Tag policy không tự buộc tài nguyên untagged có tag.
+- **Q045** [ambiguous] `Q045`: Cần kiểm tra hỗ trợ tài nguyên/API và kiểm soát untag/delete.
 - **Q046** [typo] `Q046:stem:0`: "has learns" nên là "has teams".
 - **Q046** [typo] `Q046:D`: "now dedicated account" nên là "new dedicated account".
-- **Q048** [ambiguous] `Q048:D`: Lựa chọn D diễn đạt mơ hồ ('EC2 role ... must be set to the destination account role'), không tương ứng cơ chế AWS cụ thể.
+- **Q047** [ambiguous] `Q047`: A và C khác phạm vi tăng trưởng account/Region không được stem nêu rõ.
+- **Q047** [ambiguous] `Q047`: Không được mô tả aggregator như cơ chế tự remediation.
+- **Q048** [data] `Q048`: Choose three hợp lý A/C/F với giả định credentials nguồn chung; E không tuyệt đối sai theo wording.
+- **Q049** [data] `Q049`: Không nên khẳng định FIS không xuất báo cáo hoặc thử nghiệm development vô giá trị.
 - **Q051** [typo] `Q051:A`: 's3-default-encryplion-kms' (đúng: s3-default-encryption-kms), 'identity' (đúng: identify), 'AWS. Config' thừa dấu chấm.
 - **Q051** [typo] `Q051:B`: 'server-since encryption' (đúng: server-side encryption), 'AWS. Config' thừa dấu chấm.
+- **Q051** [data] `Q051`: Từ 'unencrypted' cần hiểu yêu cầu KMS vì S3 hiện mặc định SSE-S3.
+- **Q051** [data] `Q051`: Header-based guardrail có thể từ chối request bỏ header dù bucket default KMS.
 - **Q052** [typo] `Q052:B`: 'CryptoCurroncy:EC2/*' (đúng: CryptoCurrency).
-- **Q052** [data] `Q052:D`: 'CryptoCurrency:ЕС2/*' chứa ký tự Cyrillic U+0415 'Е' và U+0421 'С' (homoglyph) thay cho 'EC2' Latin.
-- **Q054** [ambiguous] `Q054:F`: Cách diễn đạt 'Create user assignments only in the organization’s management account' không rõ nghĩa ('only' đặt sai chỗ); ý đúng theo tài liệu là chỉ gán user (không group) cho management account.
-- **Q056** [data] `Q056:C`: Đáp án nguồn C (NACL deny all 0.0.0.0/0 hai chiều trên subnet) chặn cả traffic của forensics team và ảnh hưởng mọi instance trong subnet, mâu thuẫn trực tiếp với yêu cầu 'except for traffic from the company's forensics team' và chi tiết 'A subnet can contain multiple instances'.
+- **Q052** [data] `Q052`: Không nên hứa quarantine SG dừng mọi outbound connection hiện hữu.
+- **Q053** [data] `Q053`: AWS Backup start window mặc định có thể dài; hourly schedule không phải bảo đảm cứng.
+- **Q053** [data] `Q053`: Cần bảo vệ bản sao khỏi ransomware để DR thực tế hiệu quả.
+- **Q054** [ambiguous] `Q054`: F mơ hồ/lệch nghĩa khuyến nghị gốc AWS.
+- **Q054** [ambiguous] `Q054`: Các mục là recommendations, không phải prerequisites bắt buộc tuyệt đối.
+- **Q055** [data] `Q055`: Whitepaper English cũ đã redirect; PDF security-ir live đổi nội dung/version, cần dẫn trang artifact còn hiện hữu.
+- **Q056** [ambiguous] `Q056`: A thiếu bằng chứng về thay đổi tracked/untracked tức thời.
+- **Q056** [ambiguous] `Q056`: C/D vi phạm yêu cầu cho phép forensic cổng 22; cần sửa đề/lựa chọn.
+- **Q056** [ambiguous] `Q056`: Re:Post article linked by runbook returned403; không dùng nó làm bằng chứng đã mở.
+- **Q056** [ambiguous] `Q056`: Runbook thay groups trên ENI; optionA sửa rules của SG hiện có nên chỉ có evidence tương tự, chưa proof hành vi tracking.
+- **Q057** [data] `Q057`: A nói same permissions nhưng bỏ path; giải thích phải bổ sung path và phân biệt khuyến nghị nội dung.
+- **Q058** [data] `Q058`: D là possible cause; direct key policy/grant khác có thể vẫn cho phép.
+- **Q059** [data] `Q059`: AWS managed key do AWS tạo/quản lý, không phải người dùng tự tạo.
 - **Q060** [typo] `Q060:B`: Thiếu dấu chấm: 'Specify the IAM role Run an assessment report.'
-- **Q062** [ambiguous] `Q062:E`: E nói 'last logged in' (đăng nhập console, password_last_used) trong khi việc cần kiểm tra là access key last used; credential report có cả hai trường.
+- **Q061** [data] `Q061`: Chỉ địa chỉ IPv4 public routable trong trusted IP list; DNS/Runtime findings có ngoại lệ.
+- **Q061** [data] `Q061`: Không nói TXT là định dạng duy nhất; còn CSV/STIXXML/OASIS.
 - **Q062** [typo] `Q062:stem:1`: Câu thiếu dấu chấm cuối; 'user's IAM account' ở B nên là IAM user.
+- **Q062** [ambiguous] `Q062`: Choose two không có cặp đáp án hoàn chỉnh; chỉ B được xác minh.
+- **Q062** [ambiguous] `Q062`: Thời điểm console login không chứng minh việc dùng API access key.
 - **Q063** [typo] `Q063:A`: Viết 'S3:Get*', 'S3:List*' thay vì tiền tố action chuẩn 's3:'.
+- **Q063** [data] `Q063`: Stem đã dùng temporary instance-role credentials nên 'additional step' không bắt buộc chỉ để temporary.
+- **Q063** [data] `Q063`: Client-only object access dựa phân phối URL, không phải identity validation bởi presigning.
 - **Q064** [typo] `Q064:stem:0`: 'Amazon Made' là lỗi gõ của 'Amazon Macie'; dấu chấm sau 'Firewall Manager.' nên là dấu phẩy.
+- **Q064** [data] `Q064`: Stem 'Amazon Made' là lỗi OCR của Macie.
+- **Q064** [data] `Q064`: Search snippet metric có thể trộn các trường; actual opened Shield metrics page là căn cứ.
+- **Q065** [data] `Q065`: DRS recovery launch không đồng nghĩa mặc định tự phát hiện và failover khi on-prem hỏng.
 - **Q066** [typo] `Q066:A`: 'Associate the Amazon Cognito function' nên là 'Associate the Lambda function'.
+- **Q066** [data] `Q066`: Lambda pre-sign-up không tự nhận IP caller đầy đủ; giao nhiệm vụ geo cho WAF.
 - **Q067** [typo] `Q067:C`: Lựa chọn C thiếu dấu chấm cuối câu.
-- **Q070** [data] `Q070:C`: Mô tả 'CloudWatch alarm với event source và event name' là cấu hình của EventBridge rule (tên cũ CloudWatch Events), không phải CloudWatch alarm.
-- **Q070** [ambiguous] `Q070:A`: Runbook AWS-EnableCloudTrail tạo trail mới theo TrailName và bật logging cho nó, không gọi StartLogging trên trail đã bị tắt; rule cloudtrail-enabled là periodic và phải triển khai ở từng Region. Đề nói 'turn CloudTrail back on' nên cách hiểu 'khôi phục việc ghi log' vẫn khớp A.
-- **Q073** [ambiguous] `Q073:S1`: 'Create a custom action that uses the Lambda function' — custom action không tham chiếu Lambda; Lambda là target của rule EventBridge. Cách diễn đạt lỏng nhưng vẫn chỉ đúng bước tạo custom action.
+- **Q070** [ambiguous] `Q070`: API/scope mismatch: AWS-EnableCloudTrail description 'Creates a new AWS CloudTrail trail'.
+- **Q070** [ambiguous] `Q070`: Config cloudtrail-enabled periodic không phải immediate event-driven detection.
+- **Q072** [data] `Q072`: CLI có thể refresh credential mới khi phiên SSO hợp lệ; expiration60min không có nghĩa cấm mọi refresh.
+- **Q073** [data] `Q073`: Custom action không trực tiếp chứa Lambda; Lambda là EventBridge target.
+- **Q073** [data] `Q073`: Xóa quy tắc của security group dùng chung có thể tác động nhiều instance; câu hỏi cố định thiết kế này.
 - **Q074** [typo] `Q074:B`: Thiếu dấu chấm: 'Amazon S3 bucket Configure...' và cuối câu thiếu dấu chấm.
+- **Q075** [data] `Q075`: AWS docs nói near real-time, không cam kết SLA email ≤5 phút; không nhầm với cập nhật lặp lại 15 phút/1 giờ/6 giờ.
+- **Q075** [data] `Q075`: 2018 primary blog hỗ trợ timing event trong năm phút; không tương đương bảo đảm email đã nhận. Nếu hiểu câu hỏi là architectural target, giữ A với caveat là hợp lý; nếu deadline cứng, ambiguous.
 - **Q076** [typo] `Q076:C`: 'in the VPCreate security policies' — thiếu dấu chấm và khoảng trắng giữa 'VPC' và 'Create'.
-- **Q077** [ambiguous] `Q077`: Yêu cầu 'prevent the creation' không option nào đáp ứng theo nghĩa chặn trước: SCP không có condition key CIDR/port; B chỉ tự động xóa sau khi tạo. B là lựa chọn khả thi duy nhất.
-- **Q077** [data] `Q077:C`: Đáp án nguồn C giả định SCP lọc được security group rule theo CIDR 0.0.0.0/0 và TCP port 22, nhưng Service Authorization Reference cho ec2:AuthorizeSecurityGroupIngress không có condition key nào như vậy.
+- **Q076** [data] `Q076`: Tài liệu hiện hành ghi Anti-DDoS Managed Rule Group thay L7AM từ 2026-03-26; khách hàng Shield mới cần Support để dùng legacy.
+- **Q076** [data] `Q076`: Baseline 24 giờ–30 ngày và mitigation có độ trễ; không bảo đảm tức thời tuyệt đối.
+- **Q076** [data] `Q076`: Current option D khả thi theo legacy availability; khách hàng mới có thể cần Support để enable, vì Anti-DDoS AMR hiện thay legacy. Không khẳng định enable luôn có sẵn cho mọi deployment mới.
+- **Q077** [ambiguous] `Q077`: Literal requirement prevent creation không được đáp ứng.
+- **Q077** [ambiguous] `Q077`: Không được sáng tạo ec2:CidrIp, ec2:FromPort hoặc ec2:IpProtocol IAM condition.
 - **Q078** [typo] `Q078:C`: Thiếu dấu chấm cuối câu.
+- **Q078** [data] `Q078`: Rate limiting không bảo đảm zero false positives; all incoming requests không đồng nghĩa aggregate CountAll.
 - **Q080** [typo] `Q080:stem:0`: "Production. Development, and Testing" dùng dấu chấm thay vì dấu phẩy sau Production; không ảnh hưởng nghĩa.
+- **Q080** [data] `Q080`: FIRST là trình tự troubleshooting hợp lý, không phải mọi lỗi đều do SCP.
 - **Q081** [typo] `Q081:stem:2`: "when any AWS resources does not comply" sai ngữ pháp số ít/số nhiều; không ảnh hưởng nghĩa.
-- **Q082** [ambiguous] `Q082:stem:3`: Đề gọi các mục là 'security pillar design principle', nhưng design principles chính thức của Security Pillar là: Implement a strong identity foundation, Maintain traceability, Apply security at all layers, Automate security best practices, Protect data in transit and at rest, Keep people away from data, Prepare for security events. Các lựa chọn thực ra là tên best practice (SEC04-BP01, SEC06-BP03, SEC11-BP06, SEC05-BP02) và tên phần 'Protecting data in transit'. Không ảnh hưởng mapping.
+- **Q081** [data] `Q081`: User Notifications cần notification configuration/event filter; không tự thông báo tất cả Config events.
 - **Q082** [layout] `Q082:R1`: Danh sách text ghi 'Configure service and application logging' (không dấu chấm) còn dropdown trong ảnh có dấu chấm; ảnh dùng '0–65535' (en-dash) còn prompt dùng '-'. Không ảnh hưởng nghĩa.
-- **Q084** [data] `Q084:A`: Phương án A mô tả event selector lọc riêng CreateKey và lọc theo key ARN; với trail, KMS là management events và chỉ lọc được theo eventCategory/eventSource/readOnly (KMS chỉ có thể loại trừ toàn bộ), nên chi tiết này không chính xác về kỹ thuật.
+- **Q082** [data] `Q082`: Đề gọi design principles nhưng các tên là best practices.
+- **Q082** [data] `Q082`: Blind ambiguity được giải quyết bằng current primary doc sau comparison, giữ nguyên independent.json lịch sử.
 - **Q084** [typo] `Q084:B`: Thiếu dấu chấm: 'Configure an automated export of the log group Send the export to the auditors.'
+- **Q084** [ambiguous] `Q084`: No fully valid option as written; intended A must be labeled implementation correction.
+- **Q084** [ambiguous] `Q084`: Log file validation detects tampering, không tự chống xóa.
+- **Q084** [ambiguous] `Q084`: CloudTrail evidence records API origin metadata, không tự chứng thực external entropy provenance.
 - **Q086** [typo] `Q086:stem:1`: Trong ảnh, dấu nháy đóng sau 'arn:aws:iam::111122223333:root' là nháy cong (”) thay vì nháy thẳng (") như các chuỗi khác; về cú pháp JSON là không hợp lệ nhưng không đổi ý nghĩa câu hỏi.
-- **Q087** [ambiguous] `Q087`: Choose two nhưng có 3 phương án bảo vệ được: E bắt buộc (bật Config cho account mới), còn phần deploy 10 rules thì B (delegated admin security-01) và C (management-01) đều đáp ứng mọi yêu cầu nêu trong đề; đề không có tiêu chí best practice/least privilege để phân định B với C.
+- **Q086** [data] `Q086`: D diễn đạt IAM principals; root user cũng được full access qua account principal, không cần attached IAM policy.
+- **Q087** [ambiguous] `Q087`: Không đủ bằng chứng để loại C chỉ vì đã có Config delegated administrator.
+- **Q087** [ambiguous] `Q087`: API error paragraph nói all APIs management-only mâu thuẫn phần đầu API; phần đầu và user guide xác nhận delegated support.
+- **Q087** [ambiguous] `Q087`: Nếu tổ chức gồm management account, organization conformance pack/StackSets không tự bao phủ management như mọi member.
 - **Q088** [typo] `Q088:C`: Sid 'AllowSSLRequestsOnly' được dùng cho cả policy C và D dù nội dung là điều kiện SSE (không liên quan SSL); không ảnh hưởng tính hợp lệ nhưng gây nhầm.
+- **Q088** [data] `Q088`: Dòng Sid AllowSSLRequestsOnly không đổi ý nghĩa Effect:Deny.
+- **Q088** [data] `Q088`: Khi áp dụng thực tế cần cân nhắc ngoại lệ AWS service principals cho redacted network context.
 - **Q089** [typo] `Q089:stem:1`: Cụm 'increasing their permissions to creation of these new resources' có vẻ thiếu/sai từ (ý là 'through creation of'); ý nghĩa vẫn hiểu được.
+- **Q089** [data] `Q089`: Chỉ CreateRole condition là chưa đủ nếu developer có quyền gỡ/sửa boundary; cần deny boundary tampering/pass-role escalation.
+- **Q090** [data] `Q090`: A thiếu explicit Organizations sharing step trong wording; bổ sung trong giải thích.
+- **Q091** [data] `Q091`: Current KMS hỗ trợ imported symmetric on-demand rotation; không nói tuyệt đối key không thể có material mới, mà material mới không phục hồi ciphertext cũ.
 - **Q092** [typo] `Q092:E`: Điều kiện ở E thiếu dấu ':' giữa "aws:MultiFactorAuthPresent" và false (JSON không hợp lệ). Có thể do lỗi chép đề; kể cả khi sửa, Bool false vẫn không chặn long-term access keys.
+- **Q092** [data] `Q092`: E có lỗi JSON nhưng ngay cả khi sửa cú pháp vẫn không đầy đủ.
 - **Q094** [typo] `Q094:D`: "IAM abbess keys" là lỗi chính tả của "IAM access keys".
-- **Q095** [ambiguous] `Q095:C`: Policy Firewall Manager cho WAF là theo Region (phải tạo policy riêng cho mỗi Region); cụm 'Set the scope of the policy to all accounts and Regions' không chính xác về kỹ thuật, dù ý định (dùng Firewall Manager) vẫn là phương án tốt nhất.
+- **Q094** [ambiguous] `Q094`: No fully supported option as written; intended B is conditional.
+- **Q094** [ambiguous] `Q094`: Current managed policy edited 2026-03-16 16:27 UTC per actual page; không suy đoán từ crawler.
+- **Q095** [ambiguous] `Q095`: C wording all accounts and Regions sai phạm vi: cần policy per Region.
+- **Q095** [ambiguous] `Q095`: Member accounts cần Marketplace subscription/license hợp lệ.
+- **Q095** [ambiguous] `Q095`: Không coi Security Hub tự sinh custom missing-third-party-rule finding nếu không có control.
+- **Q096** [data] `Q096`: Native KMS CMK Deletion event chỉ sau xóa; phải dùng API Call via CloudTrail event.
+- **Q096** [data] `Q096`: Lambda không bắt buộc nếu EventBridge target SNS trực tiếp, nhưng hợp lệ.
+- **Q099** [data] `Q099`: Bucket versioning bật thì Expiration chỉ tạo delete marker; để xóa mọi dữ liệu cần NoncurrentVersionExpiration.
+- **Q099** [data] `Q099`: Standard retrieval là typical, không SLA mọi object; rất lớn có thể lâu hơn.
+- **Q100** [data] `Q100`: SCP không áp management account, service-linked roles hoặc external principals; literal any bucket/user toàn tổ chức cần phạm vi chính xác.
 - **Q101** [typo] `Q101:B`: "Development. Staging, or Production" – dấu chấm thay vì dấu phẩy sau Development.
 - **Q101** [typo] `Q101:C`: "Development. Staging, and Production" – dấu chấm thay vì dấu phẩy sau Development.
+- **Q101** [data] `Q101`: Tag policy phải có enforced_for EC2 instances, không chỉ định allowed values mà không enforce.
+- **Q101** [data] `Q101`: Current tag policy có report_required_tag_for và IaC fail/warn integration; không nhầm reporting với native RunInstances deny.
+- **Q102** [data] `Q102`: OAC là cấu hình distribution, bucket policy dùng CloudFront service principal/SourceArn, không ARN OAC làm Principal.
 - **Q104** [typo] `Q104:C`: Cụm 'retrieve the value or the SecureString parameter' có lẽ là lỗi đánh máy của 'value of the SecureString parameter'; không ảnh hưởng nghĩa.
+- **Q104** [data] `Q104`: Không khẳng định environment variables không mã hóa: Lambda luôn encrypt at rest.
+- **Q104** [data] `Q104`: MOST cost-effective phụ thuộc caching, request volume, key dùng chung; C là intended default static-token solution.
+- **Q106** [data] `Q106`: Theo topo đề không có đường egress khác; nếu có IPv6/TGW/proxy cần cắt thêm.
+- **Q107** [ambiguous] `Q107`: Không được nói mọi aws:PrincipalTag không được AWS RAM hỗ trợ.
+- **Q107** [ambiguous] `Q107`: Customer managed permission condition chỉ single non-negating operators; bảo vệ tagging để tránh tự gắn allowed tag.
+- **Q107** [ambiguous] `Q107`: A write-only có thể đáp ứng allocation nhưng thiếu read nếu operations yêu cầu khác; stem không xác định actions.
+- **Q107** [ambiguous] `Q107`: C cũng có thể implement bổ sung đúng policies; không unique nếu diễn giải rộng.
 - **Q109** [typo] `Q109:stem:0`: 'MySOL' là lỗi chính tả của 'MySQL'.
-- **Q109** [ambiguous] `Q109:stem:5`: Câu hỏi nhắc 'these requirements' nhưng không nêu danh sách yêu cầu cụ thể; yêu cầu phải suy ra từ kiến trúc (ALB công khai, bastion cho admin từ mạng công ty).
-- **Q111** [ambiguous] `Q111:A`: 'Organizations has applied an IAM policy to the AWS account' không phải loại policy thật của Organizations (SCP/RCP); wording lai giữa các khái niệm.
+- **Q112** [ambiguous] `Q112`: Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.
+- **Q113** [data] `Q113`: A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.
 - **Q114** [typo] `Q114:stem:0`: 'Indicates' viết hoa giữa câu (lỗi chính tả nhỏ).
+- **Q114** [data] `Q114`: Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.
+- **Q116** [data] `Q116`: Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.
+- **Q117** [data] `Q117`: Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.
+- **Q118** [ambiguous] `Q118`: Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.
 - **Q119** [typo] `Q119:C`: 'PostgreSOL' (chữ O) thay vì 'PostgreSQL' (chữ Q).
 - **Q120** [typo] `Q120:B`: 'Verity' thay vì 'Verify' (cũng xuất hiện ở C và E).
 - **Q121** [typo] `Q121:B`: 'cm-guard' là lỗi chính tả của lệnh 'cfn-guard'.
 - **Q121** [typo] `Q121:D`: 'com feted' là lỗi chính tả của 'completed'.
-- **Q122** [ambiguous] `Q122:stem:0`: Đề giả định gắn AWS WAF web ACL (rate-based rule) để bảo vệ NLB, nhưng AWS WAF không hỗ trợ associate web ACL với Network Load Balancer; câu hỏi chỉ còn ý nghĩa ở phần chọn action để tìm ngưỡng.
-- **Q124** [ambiguous] `Q124:A`: Cụm 'in the AWS account that contains the resources' có thể bị hiểu là tạo identity policy trong account chứa resource (không thể gắn cho IAM user ở account khác); ý đúng là policy cho phép sts:AssumeRole vào role trong account đó.
-- **Q125** [ambiguous] `Q125:B`: 'Create an IAM Roles Anywhere trust anchor in the role's trust policy' diễn đạt không chính xác: trust anchor là resource riêng trong Roles Anywhere; trust policy của role tin cậy rolesanywhere.amazonaws.com và có thể tham chiếu ARN trust anchor qua aws:SourceArn. Không làm đổi đáp án.
+- **Q121** [ambiguous] `Q121`: Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.
+- **Q122** [ambiguous] `Q122`: Không thay NLB thành ALB trong đề để hợp thức hóa A.
+- **Q124** [data] `Q124`: A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.
 - **Q125** [typo] `Q125:D`: 'EC2 instance Connect' viết thường chữ 'instance' (tên đúng: EC2 Instance Connect).
-- **Q132** [data] `Q132:stem:0`: Danh sách finding type GuardDuty hiện có SSHBruteForce, RDPBruteForce, WinRMBruteForce nhưng không có finding brute force riêng cho FTP; tình huống trong đề là giả định. Không ảnh hưởng đáp án vì cách xử lý false positive (suppression rule) giống nhau.
+- **Q125** [data] `Q125`: Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.
+- **Q126** [data] `Q126`: Response headers policy hiện là giải pháp không cần code tốt cho nhiều trường hợp, nhưng không có trong options; không tự đổi khóa sang lựa chọn mới.
+- **Q132** [data] `Q132`: Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.
 - **Q133** [typo] `Q133:D`: Tên tag viết sai 'ContainsSensltiveData' (chữ l thay cho i) so với 'ContainsSensitiveData' trong đề.
-- **Q133** [ambiguous] `Q133:A`: A ghi 'Specify the tag name ... as parameters' trong khi rule s3-default-encryption-kms chỉ có tham số kmsKeyArns (lọc tag nằm ở scope) và không nêu giá trị True; đề lại không có tiêu chí least operational overhead nên A và B đều bảo vệ được.
+- **Q133** [data] `Q133`: Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.
+- **Q135** [data] `Q135`: D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.
 - **Q136** [typo] `Q136:B`: Chuỗi policy có khoảng trắng thừa: "AWS " và "arn:aws :iam ::account-number:group/Dev" (ARN không hợp lệ về cú pháp).
-- **Q137** [ambiguous] `Q137:A`: A và B mô tả bucket policy là 'cho account X ghi', trong khi tài liệu dùng service principal cloudtrail.amazonaws.com với aws:SourceArn là trail của management account; phân biệt A/B dựa vào chi tiết này.
+- **Q137** [data] `Q137`: Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.
+- **Q138** [data] `Q138`: C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.
+- **Q140** [data] `Q140`: B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.
+- **Q141** [data] `Q141`: Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.
 - **Q142** [typo] `Q142:stem:0`: 'as the source, address' có dấu phẩy thừa (ý là 'source address').
-- **Q142** [data] `Q142:A`: 'full header information' không chính xác: standard logging v2 chỉ có một số header cụ thể (Host, Referer, User-Agent, Cookie, x-host-header); field cs-headers (toàn bộ header) chỉ có ở real-time logs. Không làm đổi đáp án vì các option khác không đáp ứng.
-- **Q143** [data] `Q143:stem:0`: Account ID 1111111111 và 2222222222 chỉ có 10 chữ số; AWS account ID thật có 12 chữ số (ví dụ minh hoạ, không ảnh hưởng đáp án).
+- **Q142** [ambiguous] `Q142`: Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.
 - **Q143** [typo] `Q143:stem:0`: 'Company's B service' nên là 'Company B's service'.
 - **Q143** [typo] `Q143:stem:3`: Trong ảnh policy thiếu dấu phẩy sau "Version": "2012-10-17" nên JSON không hợp lệ về cú pháp; không ảnh hưởng ý nghĩa câu hỏi.
+- **Q143** [data] `Q143`: Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.
 - **Q005** [mapping note] Source typos retained: "exlemai" (external), "specifics" (specifies).
 - **Q008** [mapping note] Rows 1 and 5 of the source image contain the identical strategy text but the answer image marks different scenarios for them (row 1 -> "Monitor network traffic...", row 5 -> "Correlate security findings...").
 - **Q008** [mapping note] The stem text list contains the five scenarios followed by one strategy sentence ("Configure VPC Flow Logs ...") that is actually the row-1 label of the image; retained unchanged.

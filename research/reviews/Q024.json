@@ -2,9 +2,9 @@
   "question_id": "Q024",
   "question_content_hash": "bb2253ced9f06aa8b106429571c65419e40cbe102d591a3f0b5e58d56a4c5bf7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,44 +34,48 @@
       "unit_id": "Q024:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS WAF rate-based rule gắn vào ALB, đếm theo IP với cửa sổ 300 giây là cơ chế chặn ít công sức nhất và là ý đồ của đề; nhưng rate limit tối thiểu là 10 (trước 08/2024 là 100, WAF Classic cũng 100) và WAF không giới hạn chính xác, nên không thể đặt đúng 3 lần/5 phút như lựa chọn mô tả.",
+      "reason_vi": "Sai: WAF Limit nhỏ nhất hiện là 10, không phải 3.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref7",
-        "ref8"
+        "Q024-r2-2",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q024:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lambda chỉ đếm và gửi thông báo khi vượt ngưỡng, không chặn request nên không áp đặt được giới hạn; 'CloudWatch request' cũng không phải nguồn sự kiện rõ ràng.",
+      "reason_vi": "Sai: alert/Lambda không phải synchronous read quota enforcement.",
       "requirement_ids": [
         "R1"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "ref2",
+        "Q024-r2-2",
+        "ref6"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q024:C",
       "unit_type": "choice",
-      "verdict": "undetermined",
-      "reason_vi": "Tự viết logic trong ứng dụng có thể trả lỗi khi vượt 3 lần, nhưng sau ALB địa chỉ nguồn là của load balancer (phải đọc X-Forwarded-For) và ứng dụng stateless nhiều instance cần bộ đếm dùng chung không được nêu; dù làm được thì công sức lớn nhất và không giảm tải DDoS trước EC2.",
+      "verdict": "meets",
+      "reason_vi": "Đúng có điều kiện: counter phải chia sẻ across EC2 và enforce cửa sổ trượt/atomic.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "ref2",
+        "Q024-r2-2",
+        "ref6"
       ],
       "evidence_kind": "inference"
     },
@@ -79,15 +83,16 @@
       "unit_id": "Q024:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Read capacity của DynamoDB là thông lượng mỗi giây cho cả bảng, không theo từng IP; TTL xóa item trong vòng vài ngày chứ không đúng 5 phút; hạ RCU xuống 3 chỉ gây throttle cho mọi người dùng.",
+      "reason_vi": "Sai: TTL xóa bất đồng bộ và provisioned capacity không tạo quota per IP.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
+        "ref2",
+        "Q024-r2-2",
         "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -111,43 +116,41 @@
   "source_answer": [
     "Q024:A"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
-  "differs_from_source": false,
+  "researched_answer": [
+    "Q024:C"
+  ],
+  "comparison": "mismatch",
+  "status": "verified",
+  "differs_from_source": true,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Source key = A và đây rõ ràng là cơ chế đề nhắm tới (AWS WAF rate-based rule theo IP trên ALB), nhưng tài liệu hiện hành nêu rate limit tối thiểu là 10 (trước 30/08/2024 là 100; WAF Classic cũng tối thiểu 100), nên 3 lần/5 phút chưa bao giờ cấu hình được. Không lựa chọn nào đáp ứng đúng nguyên văn yêu cầu.",
-    "open_issues": [
-      "Nếu hiểu con số 3 chỉ mang tính minh họa ('giới hạn tần suất theo IP'), A là lựa chọn hợp lý duy nhất và ít công sức nhất.",
-      "WAF rate limiting vốn không nhằm giới hạn chính xác tuyệt đối."
-    ]
+    "level": "high",
+    "reason_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind = null (ambiguous), source key = A. Đã cố tìm cách đọc đề để A đúng: kiểm tra lịch sử ngưỡng WAF – What's New 30/08/2024 hạ tối thiểu từ 100 xuống 10; API WAF Classic cũng tối thiểu 100; tài liệu caveats nói rate limiting 'not intended for precise' – nên tại mọi thời điểm không thể cấu hình 3 request/5 phút, không phải trường hợp outdated. Các lựa chọn khác sai rõ hơn: B chỉ thông báo không chặn, D dùng RCU (thông lượng/giây toàn bảng) và TTL (xóa trong vài ngày), C phải tự xây bộ đếm dùng chung và đọc X-Forwarded-For – công sức lớn nhất. Kết luận: A là đáp án 'ý đồ đề' nhưng không thỏa nguyên văn; giữ researched_answer = null, status ambiguous (không chấm điểm).",
+  "reconciliation_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
   "explanation_vi": {
-    "why_correct": "CHƯA KẾT LUẬN (ambiguous): đề nhắm tới AWS WAF rate-based rule gắn vào ALB (lựa chọn A, cũng là source key) – cách ít công sức nhất để chặn theo IP trong cửa sổ 5 phút; nhưng WAF chỉ cho rate limit tối thiểu 10 request (trước 08/2024 là 100), nên con số 3 lần/5 phút không cấu hình được và không lựa chọn nào khớp đúng nguyên văn.",
+    "why_correct": "Thực thi bộ đếm theo IP trong ứng dụng bằng state dùng chung và cập nhật atomic để áp mức 3 lần trong cửa sổ trượt 5 phút. WAF rate-based rule hiện có minimum 10 và chỉ xấp xỉ, nên không thể cấu hình chính xác 3.",
     "others": {
-      "Q024:A": "Đúng cơ chế và ít công sức nhất, nhưng không thể đặt ngưỡng 3 vì WAF rate-based rule tối thiểu là 10 request mỗi cửa sổ đánh giá.",
-      "Q024:B": "Lambda chỉ đếm và gửi thông báo khi vượt ngưỡng, không chặn request nên không áp đặt được giới hạn.",
-      "Q024:C": "Tự viết logic trong ứng dụng cần đọc X-Forwarded-For và bộ đếm dùng chung cho nhiều instance stateless, công sức lớn nhất và không giảm tải trước EC2.",
-      "Q024:D": "Read capacity là thông lượng mỗi giây của cả bảng chứ không theo IP, và TTL xóa item trong vài ngày chứ không đúng 5 phút."
+      "Q024:A": "Sai: WAF Limit nhỏ nhất hiện là 10, không phải 3.",
+      "Q024:B": "Sai: alert/Lambda không phải synchronous read quota enforcement.",
+      "Q024:D": "Sai: TTL xóa bất đồng bộ và provisioned capacity không tạo quota per IP."
     }
   },
   "keywords": [
     {
-      "phrase": "each client IP address",
-      "meaning_vi": "Giới hạn theo từng IP nguồn -> rate-based rule với aggregate key là IP."
+      "phrase": "stateless application",
+      "meaning_vi": "Bộ đếm phải dùng chung qua các EC2."
+    },
+    {
+      "phrase": "3 times",
+      "meaning_vi": "Nhỏ hơn WAF minimum 10."
     },
     {
       "phrase": "5-minute period",
-      "meaning_vi": "Cửa sổ đánh giá 300 giây – mặc định của WAF rate-based rule."
-    },
-    {
-      "phrase": "LEAST effort",
-      "meaning_vi": "Ưu tiên tính năng có sẵn (WAF) thay vì tự viết code."
+      "meaning_vi": "Cửa sổ trượt 300 giây."
     }
   ],
-  "memory_tip_vi": "Nếu đề yêu cầu chặn theo IP khi vượt số request trong vài phút trước ALB/CloudFront/API Gateway -> nghĩ đến AWS WAF rate-based rule; kiểm tra ngưỡng: tối thiểu 10 request/cửa sổ (trước 08/2024 là 100) và không chính xác tuyệt đối.",
+  "memory_tip_vi": "Nếu hạn mức nhỏ hơn WAF minimum hoặc cần chính xác, enforce bằng application counter dùng chung.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -264,21 +267,28 @@
       "quote": "Valid Range: Minimum value of 100. Maximum value of 2000000000.",
       "supports": "AWS WAF Classic cũng có ngưỡng tối thiểu 100 request/5 phút, không thể đặt 3.",
       "kind": "direct"
+    },
+    {
+      "id": "Q024-r2-2",
+      "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/example_dynamodb_Scenario_AtomicCounterOperations_section.html",
+      "title": "Use atomic counter operations in DynamoDB with an AWS SDK - Amazon DynamoDB",
+      "accessed_at": "2026-09-30",
+      "quote": "Use atomic counter operations in DynamoDB with an AWS SDK",
+      "supports": "DynamoDB supports atomic counters and optimistic locking to implement shared application state; exact rolling quota still needs correctly designed time-window state.",
+      "kind": "direct",
+      "snapshot_id": "ea001ec3a651",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
       "type": "data",
-      "location": "Q024:A",
-      "detail_vi": "Giới hạn 3 request/5 phút thấp hơn mức tối thiểu của AWS WAF rate-based rule (10 từ 30/08/2024; trước đó 100; WAF Classic 100); đề nhắm tới WAF nhưng con số không cấu hình được."
-    },
-    {
-      "type": "ambiguous",
-      "location": "Q024:B",
-      "detail_vi": "'Lambda function based on an Amazon CloudWatch request' không rõ nghĩa."
+      "location": "Q024",
+      "detail_vi": "Không dùng số minimum WAF 100 đã lỗi thời; stateless fleet không được dùng counter local per instance."
     }
   ],
-  "notes_vi": "Cơ chế đúng về ý tưởng là AWS WAF rate-based rule gắn vào ALB (A). Vì không option nào đáp ứng đúng con số 3 lần/5 phút, đề được đánh dấu ambiguous.",
+  "notes_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
   "history": [
     {
       "version": "r1",
@@ -291,6 +301,35 @@
       "date": "2026-09-30T19:45:00Z",
       "change": "Reconciliation: source key A vs blind null. Bổ sung ref7 (What's New 08/2024: tối thiểu 100 -> 10) và ref8 (WAF Classic tối thiểu 100): 3 chưa từng hợp lệ, nên giữ null + ambiguous thay vì outdated; cập nhật reason của A.",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "status": "verified",
+      "answer": [
+        "Q024:C"
+      ],
+      "note_vi": "Đổi null/ambiguous thành C: ứng dụng được phép thay đổi nên có thể dùng shared rolling atomic counter; least effort chỉ so các đáp án đáp ứng.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q024:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

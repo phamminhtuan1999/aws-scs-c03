@@ -2,9 +2,9 @@
   "question_id": "Q031",
   "question_content_hash": "b1a20a1e14b016a52154d7487170168bdc4f511a773d2a45cb545613a7f33305",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,57 +39,59 @@
       "unit_id": "Q031:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty lấy VPC Flow Logs qua luồng độc lập, không cần bật flow logs trong tài khoản; hơn nữa finding DNS dựa trên DNS query logs chứ không phải flow logs.",
+      "reason_vi": "Sai: GuardDuty thu nguồn log độc lập, không cần khách tự tạo Flow Logs.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "Q031-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q031:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Nếu VPC dùng DHCP options trỏ tới resolver bên ngoài như OpenDNS, GuardDuty không thể truy cập Route53 Resolver DNS query logs, nên không thể tạo finding DNS.",
+      "reason_vi": "Đúng: custom DNS không được foundational DNS monitoring hỗ trợ.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "ref6"
+        "ref1",
+        "Q031-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q031:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Tích hợp GuardDuty -> Security Hub được kích hoạt tự động khi cả hai dịch vụ được bật; đề nói cả hai đã được bật tự động cho mọi tài khoản, nên đây không phải nguyên nhân.",
+      "reason_vi": "Sai: tích hợp GuardDuty/Security Hub tự có khi hai dịch vụ đã bật; không cần forward custom.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1",
+        "Q031-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q031:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Cross-Region aggregation chỉ gom finding từ nhiều Region về home Region; công ty chỉ dùng một Region nên thiếu cấu hình này không làm mất finding.",
+      "reason_vi": "Sai: hệ thống chỉ một Region, không có vấn đề cross-Region như phương án.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "Q031-r2-2"
       ],
       "evidence_kind": "inference"
     }
@@ -126,35 +128,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Trang GuardDuty data sources nói rõ khi dùng resolver khác như OpenDNS thì GuardDuty không xử lý được DNS query logs; trang finding types xác nhận cách kiểm thử bằng truy vấn DNS tới domain test. A, C, D bị tài liệu bác bỏ hoặc không áp dụng (một Region, tích hợp tự bật).",
-    "open_issues": [
-      "example.com là tên giữ chỗ; với domain không độc hại thì dù dùng AWS DNS cũng không có finding. Đề ngầm hiểu là domain test của GuardDuty."
-    ]
+    "reason_vi": "Giữ B; test domain phải thực sự trong threat/test context; example.com không tự sinh finding.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất C: trang Security Hub CSPM integrations nói tích hợp gửi finding được kích hoạt tự động khi bật cả hai dịch vụ, và đề nói cả hai được bật tự động cho mọi account, nên C không phải nguyên nhân. Bổ sung bằng chứng mới: trang GuardDuty EC2 finding types mô tả đúng cách kiểm thử (dig/nslookup tới domain test), và có finding riêng DefenseEvasion:EC2/UnusualDNSResolver dựa trên flow logs – cho thấy khi dùng resolver công cộng GuardDuty chỉ thấy lưu lượng, không thấy truy vấn DNS. Re-fetch trang data sources (--refresh) xác nhận câu về OpenDNS vẫn còn. Giữ B, verified, high.",
+  "reconciliation_vi": "Giữ B; test domain phải thực sự trong threat/test context; example.com không tự sinh finding.",
   "explanation_vi": {
-    "why_correct": "Finding DNS của GuardDuty dựa trên Route53 Resolver DNS query logs mà GuardDuty chỉ thu được khi instance dùng AWS DNS resolver; DHCP options trỏ sang OpenDNS làm GuardDuty không thấy truy vấn nên không có finding để gửi sang Security Hub.",
+    "why_correct": "GuardDuty không thấy DNS requests dùng custom resolver như OpenDNS, nên không sinh DNS finding tương ứng để gửi Security Hub. GuardDuty tự thu nguồn log nền tảng; không cần tự bật VPC Flow Logs cho nó.",
     "others": {
-      "Q031:A": "GuardDuty tự lấy VPC flow logs qua luồng độc lập, không cần bật flow logs; và finding DNS dựa trên DNS logs chứ không phải flow logs.",
-      "Q031:C": "Tích hợp GuardDuty -> Security Hub tự kích hoạt khi cả hai dịch vụ được bật, mà đề nói chúng đã được bật tự động cho mọi account.",
-      "Q031:D": "Cross-Region aggregation chỉ gom finding từ nhiều Region; công ty chỉ dùng một Region nên thiếu nó không làm mất finding."
+      "Q031:A": "Sai: GuardDuty thu nguồn log độc lập, không cần khách tự tạo Flow Logs.",
+      "Q031:C": "Sai: tích hợp GuardDuty/Security Hub tự có khi hai dịch vụ đã bật; không cần forward custom.",
+      "Q031:D": "Sai: hệ thống chỉ một Region, không có vấn đề cross-Region như phương án."
     }
   },
   "keywords": [
     {
-      "phrase": "run DNS requests against a test domain",
-      "meaning_vi": "Kiểm thử finding DNS của GuardDuty -> phụ thuộc DNS query logs của AWS resolver."
+      "phrase": "DNS requests",
+      "meaning_vi": "DNS findings cần AWS resolver data."
     },
     {
-      "phrase": "operates out of a single AWS Region",
-      "meaning_vi": "Loại các đáp án về cross-Region aggregation."
+      "phrase": "test domain",
+      "meaning_vi": "Domain phải thật sự thuộc test/threat context."
     },
     {
-      "phrase": "automatically enable GuardDuty and Security Hub",
-      "meaning_vi": "Dịch vụ và tích hợp đã bật sẵn -> nguyên nhân nằm ở nguồn dữ liệu."
+      "phrase": "single AWS Region",
+      "meaning_vi": "Không cần cross-Region aggregation cho một Region."
     }
   ],
-  "memory_tip_vi": "Nếu GuardDuty không sinh finding DNS cho EC2 -> nghĩ đến việc VPC dùng DNS resolver ngoài AWS (DHCP options/OpenDNS/tự dựng); kiểm tra: flow logs không cần bật, tích hợp Security Hub tự bật.",
+  "memory_tip_vi": "Nếu test DNS finding, dùng AWS resolver và domain/test threat-list phù hợp loại finding.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -258,6 +258,18 @@
       "quote": "An Amazon EC2 instance is communicating with an unusual public DNS resolver.",
       "supports": "Khi instance dùng resolver công cộng, GuardDuty chỉ có thể thấy hành vi này qua VPC flow logs (finding khác), không thấy nội dung truy vấn DNS để sinh finding DNS như bài kiểm thử mong đợi.",
       "kind": "inference"
+    },
+    {
+      "id": "Q031-r2-2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/securityhub-integration.html",
+      "title": "Integrating with AWS Security Hub CSPM - Amazon GuardDuty",
+      "accessed_at": "2026-09-30",
+      "quote": "When you enable both GuardDuty and Security Hub CSPM, the",
+      "supports": "GuardDuty automatically sends findings when Security Hub integration is enabled by both services.",
+      "kind": "direct",
+      "snapshot_id": "1312c3759dfb",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -268,8 +280,8 @@
     },
     {
       "type": "data",
-      "location": "Q031:stem:1",
-      "detail_vi": "example.com là domain giữ chỗ, không nằm trong threat list; domain test GuardDuty hướng dẫn là guarddutyc2activityb.com. Cần hiểu example.com là 'domain test sinh finding DNS'."
+      "location": "Q031",
+      "detail_vi": "example.com tự thân không chứng minh malicious domain; cần biết test/threat-list đã cấu hình."
     }
   ],
   "history": [
@@ -294,9 +306,26 @@
       "previous_answer": [
         "Q031:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; test domain phải thực sự trong threat/test context; example.com không tự sinh finding.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q031:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q031:B"
+      ],
+      "note_vi": "Giữ B; test domain phải thực sự trong threat/test context; example.com không tự sinh finding.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Cơ chế: finding DNS của GuardDuty chỉ có khi EC2 dùng AWS DNS resolver (mặc định).",
+  "notes_vi": "Giữ B; test domain phải thực sự trong threat/test context; example.com không tự sinh finding.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -306,5 +335,19 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q031:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q095",
   "question_content_hash": "c0aaab6d05f944e4c9caf932280278de2ae0db50e80dbb6c8bfa8912f3bb470e",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:03:58Z",
-  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,61 +33,60 @@
     {
       "unit_id": "Q095:A",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "StackSets có thể triển khai stack qua nhiều account/Region, nhưng phải tự định nghĩa/quản lý từng web ACL trong template (web ACL tạo ngoài stack không tự được sửa) và không tự động bao phủ ALB/web ACL mới; overhead cao hơn Firewall Manager.",
+      "verdict": "undetermined",
+      "reason_vi": "StackSets cần discovery/update nhiều existing ACL, overhead cao hơn Firewall Manager.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref2"
+        "ref7",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q095:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ đặt giới hạn quyền, không cấp quyền và không thực hiện thay đổi cấu hình; SCP không thể chèn rule group vào web ACL.",
+      "verdict": "undetermined",
+      "reason_vi": "SCP giới hạn API permissions, không chèn rule group vào ACL.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref7",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q095:C",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Firewall Manager AWS WAF policy hỗ trợ managed rule group của AWS Marketplace, áp dụng cho mọi account trong organization, tạo mới hoặc retrofit web ACL đang gắn với ALB trong scope và tự bao phủ resource/account mới. Lưu ý: Region được chọn theo từng policy nên nhiều Region cần nhiều policy; member account cần subscription Marketplace.",
+      "verdict": "undetermined",
+      "reason_vi": "Đúng dịch vụ, nhưng một policy không có scope mọi Regions như câu viết.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref8",
-        "ref3",
-        "ref7"
+        "ref7",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q095:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Security Hub CSPM chỉ đánh giá và tạo finding (detective), không đảm bảo/áp dụng rule group vào web ACL; ngoài ra không có control sẵn cho rule group Marketplace cụ thể.",
+      "verdict": "undetermined",
+      "reason_vi": "Security Hub findings không tự triển khai rule group.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5"
+        "ref7",
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -116,27 +115,27 @@
   "source_answer": [
     "Q095:C"
   ],
-  "researched_answer": [
-    "Q095:C"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn C. Firewall Manager là dịch vụ duy nhất trong các phương án áp rule group WAF tập trung cho toàn organization, retrofit web ACL hiện có và tự áp cho resource mới. Giữ medium vì cụm 'all accounts and Regions' không chính xác: tài liệu yêu cầu mỗi Region một policy (trừ CloudFront).",
+    "level": "high",
+    "reason_vi": "Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified.",
     "open_issues": [
-      "Firewall Manager yêu cầu tạo policy riêng cho mỗi Region (trừ CloudFront/Global); không tìm thấy What's New nào bổ sung policy đa Region tính đến 2026-09-30. Cụm 'scope ... all accounts and Regions' ở C chỉ đúng theo nghĩa lặp lại policy cho mỗi Region.",
-      "Member account phải có subscription rule group Marketplace thì Firewall Manager mới propagate được (điều kiện chung cho mọi phương án)."
+      "C wording all accounts and Regions sai phạm vi: cần policy per Region.",
+      "Member accounts cần Marketplace subscription/license hợp lệ.",
+      "Không coi Security Hub tự sinh custom missing-third-party-rule finding nếu không có control."
     ]
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét cả hai phía của vấn đề 'per-Region': (1) Tài liệu create-policy xác nhận lại 'you must create separate Firewall Manager policies for each Region' (trừ CloudFront); tìm What's New 2025–2026 không thấy tính năng policy đa Region. Vì vậy C diễn đạt không chính xác, nhưng ý định (dùng Firewall Manager WAF policy với rule group Marketplace, scope toàn organization) vẫn thực hiện được bằng một policy mỗi Region. (2) Đối thủ mạnh nhất A (StackSets): triển khai được đa account/Region nhưng chỉ quản lý web ACL do stack tạo, không tự áp cho web ACL/ALB tạo sau và phải bảo trì template – overhead cao hơn. Bổ sung ref8: Firewall Manager có thể retrofit web ACL đang gắn với resource trong scope, đáp ứng 'every web ACL that is attached to every ALB'. B (SCP không cấu hình được tài nguyên) và D (Security Hub CSPM chỉ phát hiện) không đáp ứng. Lỗi diễn đạt không làm đổi đáp án duy nhất nên giữ verified, medium, và giữ source_issue.",
+  "reconciliation_vi": "Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified.",
   "explanation_vi": {
-    "why_correct": "AWS Firewall Manager AWS WAF policy cho phép chỉ định rule group Marketplace một lần và tự áp (tạo mới hoặc retrofit web ACL) cho mọi ALB trong mọi account của organization, kể cả account/resource mới, nên ít overhead nhất. Lưu ý: thực tế cần một policy cho mỗi Region.",
+    "why_correct": "C chọn đúng Firewall Manager nhưng một policy không bao phủ ALB ở mọi Region. Phải sửa thành policy từng Region, bật remediation và có subscription Marketplace phù hợp.",
     "others": {
-      "Q095:A": "StackSets triển khai được đa account/Region nhưng chỉ quản lý web ACL trong stack, không tự áp cho web ACL/ALB mới và phải bảo trì template – nhiều công hơn.",
-      "Q095:B": "SCP chỉ giới hạn quyền, không thể chèn rule group hay thay đổi cấu hình web ACL.",
-      "Q095:D": "Security Hub CSPM chỉ tạo finding (phát hiện), không đảm bảo rule group được thêm vào web ACL."
+      "Q095:A": "StackSets cần discovery/update nhiều existing ACL, overhead cao hơn Firewall Manager.",
+      "Q095:B": "SCP giới hạn API permissions, không chèn rule group vào ACL.",
+      "Q095:C": "Đúng dịch vụ, nhưng một policy không có scope mọi Regions như câu viết.",
+      "Q095:D": "Security Hub findings không tự triển khai rule group."
     }
   },
   "keywords": [
@@ -153,7 +152,7 @@
       "meaning_vi": "Dịch vụ tự áp cho resource mới thay vì tự viết/triển khai template."
     }
   ],
-  "memory_tip_vi": "Nếu cần bắt buộc rule group WAF trên mọi ALB/CloudFront của nhiều account trong Organizations -> nghĩ đến AWS Firewall Manager WAF policy; kiểm tra: mỗi Region một policy (CloudFront là Global) và member account cần subscription Marketplace.",
+  "memory_tip_vi": "Nếu bắt buộc rule group WAF nhiều account/Regions, dùng Firewall Manager policy từng Region, bật remediation và bảo đảm subscription Marketplace.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -277,8 +276,18 @@
   "source_issues": [
     {
       "type": "ambiguous",
-      "location": "Q095:C",
-      "detail_vi": "Policy Firewall Manager cho WAF là theo Region (phải tạo policy riêng cho mỗi Region); cụm 'Set the scope of the policy to all accounts and Regions' không chính xác về kỹ thuật, dù ý định (dùng Firewall Manager) vẫn là phương án tốt nhất."
+      "location": "Q095",
+      "detail_vi": "C wording all accounts and Regions sai phạm vi: cần policy per Region."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q095",
+      "detail_vi": "Member accounts cần Marketplace subscription/license hợp lệ."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q095",
+      "detail_vi": "Không coi Security Hub tự sinh custom missing-third-party-rule finding nếu không có control."
     }
   ],
   "history": [
@@ -295,6 +304,40 @@
       "previous_answer": [
         "Q095:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q095:C"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified.",
+      "technical_change": true
     }
-  ]
+  ],
+  "notes_vi": "Option C dùng một policy scope all Regions không khả thi cho ALBs; caveat không cứu whole-option verified.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q095:C"
+    ],
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

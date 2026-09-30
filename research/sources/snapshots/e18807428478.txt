@@ -1,0 +1,170 @@
+URL: https://docs.aws.amazon.com/AmazonS3/latest/userguide/glacier-storage-classes.html
+TITLE: Understanding S3 Glacier storage classes for long-term data storage - Amazon Simple Storage Service
+
+# Understanding S3 Glacier storage classes for long-term data storage
+
+You can use Amazon S3 S3 Glacier storage classes to provide cost-effective solutions to storing long-term data that isn't accessed often. The S3 Glacier storage classes are:
+
+- S3 Glacier Instant Retrieval
+
+- S3 Glacier Flexible Retrieval
+
+- S3 Glacier Deep Archive
+
+You choose one of these storage classes based on how often you access your data and how
+fast you need to retrieve it. Each of these storage classes offer the same durability and
+resiliency as the S3 Standard storage class, but at lower storage costs. For more
+information about the S3 Glacier storage classes, see https://aws.amazon.com/s3/storage-classes/glacier/.
+
+Topics
+
+- Comparing the S3 Glacier storage classes
+
+- S3 Glacier Instant Retrieval
+
+- S3 Glacier Flexible Retrieval
+
+- S3 Glacier Deep Archive
+
+- Understanding archival storage in S3 Glacier Flexible Retrieval and S3 Glacier Deep Archive
+
+- How these storage classes differ from the Amazon Glacier service
+
+## Comparing the S3 Glacier storage classes
+
+Each S3 Glacier storage class has a minimum storage duration for all objects. If you delete, overwrite, or transition the object to a different storage class before the minimum, you are charged for the remainder of that duration.
+
+Some S3 Glacier storage classes are archival, which means the objects stored in those classes are archived and not available for real-time access. For more information, see Understanding archival storage in S3 Glacier Flexible Retrieval and S3 Glacier Deep Archive.
+
+Storage classes designed for less frequent access patterns with longer retrieval times offer lower storage costs. For pricing information, see https://aws.amazon.com/s3/pricing/.
+
+The following table summarizes the key points to consider when choosing a S3 Glacier storage class:
+
+S3 Glacier storage class
+
+Minimum storage duration
+
+Recommended access frequency
+
+Average retrieval times
+
+Archival?
+
+S3 Glacier Instant Retrieval
+
+90 days
+
+Quarterly
+
+Milliseconds
+
+No
+
+S3 Glacier Flexible Retrieval
+
+90 days
+
+Semi-annually
+
+Minutes to 12 hours
+
+Yes
+
+S3 Glacier Deep Archive
+
+180 days
+
+Annually
+
+9 to 48 hours
+
+Yes
+
+## S3 Glacier Instant Retrieval
+
+We recommend using S3 Glacier Instant Retrieval for long-term data that's accessed once per quarter and
+requires millisecond retrieval times. This storage class is ideal for
+performance-sensitive use cases such as image hosting, file-sharing applications, and
+storing medical records for access during appointments.
+
+S3 Glacier Instant Retrieval storage class offers real-time access to your objects with the same latency and throughput performance as the S3 Standard-IA storage class. When compared to S3 Standard-IA, S3 Glacier Instant Retrieval has lower storage costs but higher data access costs.
+
+There is a minimum object size of 128 KB for data stored in the S3 Glacier Instant Retrieval storage class. This storage class also has a minimum storage duration period of 90 days.
+
+## S3 Glacier Flexible Retrieval
+
+We recommend using S3 Glacier Flexible Retrieval for archive data that's accessed one to two
+times a year and doesn't require immediate access. S3 Glacier Flexible Retrieval offers
+flexible retrieval times to help you balance costs, with access times ranging from a few
+minutes to hours, and free bulk retrievals. This storage class is ideal for backup and
+disaster recovery.
+
+Objects stored in S3 Glacier Flexible Retrieval are archived and not available for
+real-time access. For more information, see Understanding archival storage in S3 Glacier Flexible Retrieval and S3 Glacier Deep Archive. To access these objects, you first initiate a
+restore request which creates a temporary copy of the object that you can access when
+the request completes. For information, see Working with archived objects. When you restore an object, you can choose a
+retrieval tier to meet your use case, with lower costs for longer restore times.
+
+The following retrieval tiers are available for S3 Glacier Flexible Retrieval:
+
+- Expedited retrieval – Typically restores the object in
+1–5 minutes. Expedited retrievals are subject to demand, so to make sure
+you have reliable and predictable restore times, we recommend that you purchase
+provisioned retrieval capacity. For more information, see Provisioned capacity.
+
+- Standard retrieval – Typically restores the object in 3–5 hours, or within 1 minute to 5 hours when you use S3 Batch Operations. For more information, see Restore objects with Batch Operations.
+
+- Bulk retrieval – Typically restores the object within 5–12 hours. Bulk retrievals are free.
+
+For any retrieval option, objects larger than 5 TB typically finish within 48 hours
+with up to 300 megabytes per second (MBps) of retrieval throughput. For more
+information, see Understanding archive retrieval options.
+
+The minimum storage duration for objects in S3 Glacier Flexible Retrieval storage class is 90 days.
+
+S3 Glacier Flexible Retrieval requires 40 KB of additional metadata for each object. This includes 32 KB of metadata required to identify and retrieve your data, which is charged at the default rate for S3 Glacier Flexible Retrieval. An additional 8 KB data is required to maintain the user-defined name and metadata for archived objects, and is charged at the S3 Standard rate.
+
+## S3 Glacier Deep Archive
+
+We recommend using S3 Glacier Deep Archive for archive data that's accessed less than once a
+year. This storage class is designed for retaining data sets for multiple years to meet
+compliance requirements and can also be used for backup or disaster recovery or any
+infrequently accessed data that you can wait up to 72 hours to retrieve. S3 Glacier Deep Archive
+is the lowest-cost storage option in AWS.
+
+Objects stored in S3 Glacier Deep Archive are archived and not available for
+real-time access. For more information, see Understanding archival storage in S3 Glacier Flexible Retrieval and S3 Glacier Deep Archive. To access these objects, you first initiate a
+restore request which creates a temporary copy of the object that you can access when
+the request completes. For information, see Working with archived objects. When you restore an object, you can choose a
+retrieval tier to meet your use case, with lower costs for longer restore times.
+
+The following retrieval tiers are available for S3 Glacier Deep Archive:
+
+- Standard retrieval – Typically restores the object within 12 hours, or within 9–12 hours when you use S3 Batch Operations. For more information, see Restore objects with Batch Operations.
+
+- Bulk retrieval – Typically restores the object within 48 hours at a fraction of the cost of the Standard retrieval tier.
+
+The minimum storage duration for objects in S3 Glacier Deep Archive storage class is 180 days.
+
+S3 Glacier Deep Archive requires 40 KB of additional metadata for each object. This includes 32 KB of metadata required to identify and retrieve your data, which is charged at the default rate for S3 Glacier Deep Archive. An additional 8 KB data is required to maintain the user-defined name and metadata for archived objects, and is charged at the S3 Standard rate.
+
+## How these storage classes differ from the Amazon Glacier service
+
+The S3 Glacier storage classes are part of the Amazon S3 service and store data as objects in S3
+buckets. You can manage objects in these storage classes using the S3 console or
+programmatically using the S3 APIs or SDKs. When you store objects in
+S3 Glacier storage classes, you can use S3 features such as advanced encryption, object
+tagging, and S3 Lifecycle configurations to help manage data accessibility and cost.
+
+Important
+
+We recommend using the S3 Glacier storage classes within the Amazon S3 service for all of your long-term data.
+
+The Amazon Glacier service is a separate service that stores data as archives
+within vaults. This service doesn't support Amazon S3 features and doesn’t provide console
+support for data upload and download operations. We don't recommend using the Amazon Glacier
+service for your long-term data. Data stored in this service isn't accessible from the Amazon S3 service. If
+you are looking for information on the Amazon Glacier service, see the Amazon Glacier
+Developer Guide. To transfer data from the Amazon Glacier service to a storage
+class in Amazon S3 see Data Transfer from Amazon Glacier Vaults to Amazon S3 in the AWS solutions
+library.

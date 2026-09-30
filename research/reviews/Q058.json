@@ -2,9 +2,9 @@
   "question_id": "Q058",
   "question_content_hash": "5962599545081fd2104a085ef67b65bdc6c1bd7a84d27521b648a720d45c2993",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:12:44Z",
-  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,59 +33,61 @@
     {
       "unit_id": "Q058:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tải object SSE-KMS chỉ cần kms:Decrypt trên key (ngoài quyền S3); kms:DescribeKey không phải điều kiện để GetObject.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "GetObject SSE-KMS không mặc định cần DescribeKey.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
+        "ref1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q058:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Đổi default encryption không mã hóa lại object cũ (vẫn dùng CMK mà user có Decrypt); object mới dùng aws/s3 thì principal cùng account dùng được qua S3, nên không gây Access Denied.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Đổi default encryption không tự mã hóa lại object đã tồn tại.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q058:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Trong cùng account, quyền là hợp của identity-based và resource-based policy; IAM policy cho phép là đủ, không bắt buộc bucket policy.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Trong cùng account, IAM Allow S3 có thể đủ mà không cần bucket policy.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q058:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Nếu key policy bị bỏ statement cho account (root) quyền truy cập đầy đủ, IAM policy cho phép kms:Decrypt trở nên vô hiệu, nên S3 không giải mã được và trả Access Denied.",
+      "reason_vi": "Xóa account delegation trong key policy có thể vô hiệu hóa IAM Allow KMS.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -116,16 +118,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "KMS default key policy doc nói trực tiếp: thiếu statement cho account trong key policy thì IAM policy cho phép dùng key không có hiệu lực — giải thích Access Denied dù IAM policy đã cho kms:Decrypt. A, B, C bị tài liệu S3/KMS/IAM phản bác.",
+    "reason_vi": "D là possible cause chứ không chắc chắn nếu tồn tại direct grant/key-policy Allow.",
     "open_issues": []
   },
-  "reconciliation_vi": "Khớp: blind = D; source key = D. Kiểm tra phương án cạnh tranh mạnh nhất B (đổi bucket sang AWS managed key aws/s3): đổi default encryption không mã hóa lại object cũ (vẫn dùng customer managed key mà user có kms:Decrypt); object mới mã hóa bằng aws/s3 thì chỉ dùng được trong ngữ cảnh S3 bởi principal cùng account, nên user cùng account có quyền S3 vẫn đọc được — không gây Access Denied. A: tải object SSE-KMS chỉ cần kms:Decrypt, không cần kms:DescribeKey. C: cùng account, identity-based policy đủ cho phép, không cần bucket policy. Giữ D.",
+  "reconciliation_vi": "D là possible cause chứ không chắc chắn nếu tồn tại direct grant/key-policy Allow.",
   "explanation_vi": {
-    "why_correct": "Với KMS, key policy là nguồn quyền chính: nếu key policy bị sửa bỏ statement cho account (root) toàn quyền, IAM policy cho phép kms:Decrypt không còn hiệu lực, nên S3 không giải mã được object SSE-KMS và trả Access Denied.",
+    "why_correct": "IAM Allow kms:Decrypt chỉ có hiệu lực qua key policy cho phép account ủy quyền bằng IAM hoặc qua grant/key policy trực tiếp. Xóa statement account delegation có thể khiến Decrypt bị từ chối dù IAM policy cho phép S3.",
     "others": {
-      "Q058:A": "Tải object SSE-KMS chỉ cần kms:Decrypt trên key; kms:DescribeKey không phải điều kiện của GetObject.",
-      "Q058:B": "Đổi default encryption không mã hóa lại object cũ, còn object mã hóa bằng aws/s3 vẫn dùng được bởi principal cùng account qua S3, nên không gây Access Denied.",
-      "Q058:C": "Trong cùng account, IAM policy cho phép là đủ; bucket policy không bắt buộc."
+      "Q058:A": "GetObject SSE-KMS không mặc định cần DescribeKey.",
+      "Q058:B": "Đổi default encryption không tự mã hóa lại object đã tồn tại.",
+      "Q058:C": "Trong cùng account, IAM Allow S3 có thể đủ mà không cần bucket policy."
     }
   },
   "keywords": [
@@ -142,7 +144,7 @@
       "meaning_vi": "Quyền IAM đã có nhưng có thể vô hiệu nếu key policy không ủy quyền cho IAM."
     }
   ],
-  "memory_tip_vi": "Nếu IAM policy đã cho kms:Decrypt mà vẫn Access Denied với object SSE-KMS cùng account → nghĩ đến key policy thiếu statement cho account (root); kiểm tra bucket policy chỉ bắt buộc khi truy cập cross-account.",
+  "memory_tip_vi": "Nếu IAM Allow KMS vẫn bị từ chối, kiểm tra key policy có bật IAM delegation hoặc grant trực tiếp.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -235,8 +237,14 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q058",
+      "detail_vi": "D là possible cause; direct key policy/grant khác có thể vẫn cho phép."
+    }
+  ],
+  "notes_vi": "D là possible cause chứ không chắc chắn nếu tồn tại direct grant/key-policy Allow.",
   "history": [
     {
       "version": "r1",
@@ -251,6 +259,41 @@
       "previous_answer": [
         "Q058:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. D là possible cause chứ không chắc chắn nếu tồn tại direct grant/key-policy Allow.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q058:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q058:D"
+      ],
+      "note_vi": "D là possible cause chứ không chắc chắn nếu tồn tại direct grant/key-policy Allow.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q058:D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q058:D"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

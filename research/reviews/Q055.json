@@ -2,9 +2,9 @@
   "question_id": "Q055",
   "question_content_hash": "3fa18570cfd7e81163c1b1b292199035368270a4d83bd862aadde36899a8200a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:12:44Z",
-  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,60 +33,54 @@
     {
       "unit_id": "Q055:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tắt termination protection làm instance dễ bị terminate (kể cả bởi attacker), mất bằng chứng; hướng dẫn IR của AWS yêu cầu BẬT termination protection.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Tắt termination protection làm tăng nguy cơ mất instance.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref5",
-        "ref6"
+        "Q055-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q055:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Bật termination protection (mặc định bị tắt) để chống terminate vô tình/cố ý, là bước bảo vệ instance trong thứ tự thu thập bằng chứng EC2 của AWS.",
+      "reason_vi": "Termination protection bảo vệ khỏi terminate nhầm hoặc xóa dấu vết.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref4",
-        "ref5",
-        "ref6"
+        "Q055-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q055:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Snapshot các EBS volume đang gắn là bước thu thập đĩa (Acquire disk) được AWS khuyến nghị để bảo toàn dữ liệu cho điều tra sau.",
+      "reason_vi": "Snapshot EBS giữ bản sao dữ liệu đĩa phục vụ điều tra.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "Q055-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q055:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Xóa snapshot EBS phá hủy dữ liệu/bằng chứng hiện có, trái ngược mục tiêu bảo toàn; không có tài liệu IR nào khuyến nghị việc này.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Xóa snapshot làm mất bằng chứng.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "Q055-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -94,30 +88,26 @@
       "unit_id": "Q055:E",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Thu thập instance metadata (bước 1) rồi gắn tag Quarantine (bước 2) đúng theo thứ tự phản ứng EC2 trong AWS Security Incident Response Guide.",
+      "reason_vi": "Metadata và tag ghi trạng thái điều tra; tag riêng không tự cách ly.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref4",
-        "ref7",
-        "ref8"
+        "Q055-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q055:F",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Xóa ngay thông tin trong metadata là thay đổi/phá hủy bằng chứng trước khi thu thập; AWS khuyến nghị thu thập (acquire) metadata trước tiên, không xóa.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Xóa metadata/bằng chứng đi ngược bảo toàn điều tra.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "Q055-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -160,16 +150,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "AWS Security Incident Response Guide (PDF, snapshot 199d3825e018 lấy bằng tools/fetch_doc.py) liệt kê thứ tự bảo toàn dữ liệu EC2: (1) acquire instance metadata, (2) bật termination protection và gắn tag như Status=Quarantine, (3) snapshot EBS đang gắn — khớp đúng B, C, E; A, D, F đều làm mất/đổi bằng chứng.",
+    "reason_vi": "Đúng; thứ tự AWS là metadata -> protections/tags -> disk -> memory -> isolate; E gom metadata/tag nên không coi lựa chọn là thứ tự toàn bộ.",
     "open_issues": []
   },
-  "reconciliation_vi": "Khớp: blind = B, C, E; source key = B, C, E. Đã tải lại AWS Security Incident Response Guide bằng tools/fetch_doc.py (PDF, snapshot 199d3825e018; snapshot cũ cùng id trước đó chỉ chứa byte PDF thô nên phải --refresh) và xác minh bằng máy các trích dẫn ref1–ref3 trước đây chỉ đọc qua WebFetch, thêm ref8 cho phần tag Quarantine. Kiểm tra phương án cạnh tranh: A (tắt termination protection) ngược với bước 2 của guide; F (xóa ngay metadata nhạy cảm) phá bằng chứng trước khi thu thập, trong khi bước 1 là thu thập metadata; D (xóa snapshot) phá dữ liệu. Không tìm thấy tài liệu nào ủng hộ A, D hay F. Giữ kết luận.",
+  "reconciliation_vi": "Đúng; thứ tự AWS là metadata -> protections/tags -> disk -> memory -> isolate; E gom metadata/tag nên không coi lựa chọn là thứ tự toàn bộ.",
   "explanation_vi": {
-    "why_correct": "Theo AWS Security Incident Response Guide, trước khi điều tra cần bảo toàn bằng chứng theo thứ tự: E — thu thập instance metadata rồi gắn tag quarantine; B — bật termination protection (mặc định tắt) để instance không bị terminate làm mất bằng chứng; C — snapshot các EBS volume đang gắn để giữ dữ liệu đĩa cho phân tích sau.",
+    "why_correct": "Giữ bằng chứng bằng termination protection, snapshot EBS và thu thập metadata kèm nhãn quarantine. Thu thập dữ liệu dễ mất trước khi thực hiện thay đổi cách ly có thể làm gián đoạn tiến trình.",
     "others": {
-      "Q055:A": "Tắt termination protection khiến instance dễ bị terminate (vô tình hoặc do attacker) và mất bằng chứng — ngược với khuyến nghị bật protection.",
-      "Q055:D": "Xóa snapshot EBS phá hủy dữ liệu có thể là bằng chứng; bước chuẩn bị điều tra là tạo snapshot, không phải xóa.",
-      "Q055:F": "Xóa ngay dữ liệu trong metadata là sửa đổi bằng chứng trước khi thu thập; guide yêu cầu thu thập metadata trước tiên."
+      "Q055:A": "Tắt termination protection làm tăng nguy cơ mất instance.",
+      "Q055:D": "Xóa snapshot làm mất bằng chứng.",
+      "Q055:F": "Xóa metadata/bằng chứng đi ngược bảo toàn điều tra."
     }
   },
   "keywords": [
@@ -186,7 +176,7 @@
       "meaning_vi": "Triệu chứng chưa rõ nguyên nhân (có thể mining hoặc tác vụ nền)."
     }
   ],
-  "memory_tip_vi": "Nếu đề hỏi bước làm trước khi điều tra một EC2 nghi bị compromise → nghĩ đến bảo toàn bằng chứng: lấy metadata, bật termination protection + tag quarantine, snapshot EBS; kiểm tra loại các lựa chọn tắt/xóa (disable, remove, delete).",
+  "memory_tip_vi": "Nếu nghi EC2 bị xâm nhập, bảo toàn metadata và artifacts trước các thay đổi có thể phá bằng chứng.",
   "tags": {
     "domains": [
       "2 Incident Response"
@@ -301,10 +291,28 @@
       "quote": "applying a tag with name of Status and value of Quarantine, perform forensic acquisition of data and isolate the instance",
       "supports": "Gắn tag Status=Quarantine là một phần bước 2 (sau khi lấy metadata) trong thứ tự bảo toàn bằng chứng EC2 (hỗ trợ E).",
       "kind": "direct"
+    },
+    {
+      "id": "Q055-r2-1",
+      "url": "https://docs.aws.amazon.com/ja_jp/whitepapers/latest/aws-security-incident-response-guide/collect-relevant-artifacts.html",
+      "title": "Collect relevant artifacts - AWS Security Incident Response Guide",
+      "accessed_at": "2026-09-30",
+      "quote": "metadata and objects), and resources (databases, Amazon EC2 instances).",
+      "supports": "AWS artifact guide yêu cầu metadata, protections/tags, EBS snapshots, memory rồi isolate theo thứ tự bảo toàn dữ liệu.",
+      "kind": "direct",
+      "snapshot_id": "d5f38d260276",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Whitepaper AWS Security Incident Response Guide (HTML) hiện chuyển hướng về Security IR User Guide; nội dung đọc từ PDF (tải qua WebFetch, trích văn bản bằng pdftotext).",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q055",
+      "detail_vi": "Whitepaper English cũ đã redirect; PDF security-ir live đổi nội dung/version, cần dẫn trang artifact còn hiện hữu."
+    }
+  ],
+  "notes_vi": "Đúng; thứ tự AWS là metadata -> protections/tags -> disk -> memory -> isolate; E gom metadata/tag nên không coi lựa chọn là thứ tự toàn bộ.",
   "history": [
     {
       "version": "r1",
@@ -331,6 +339,49 @@
         "Q055:C",
         "Q055:E"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; thứ tự AWS là metadata -> protections/tags -> disk -> memory -> isolate; E gom metadata/tag nên không coi lựa chọn là thứ tự toàn bộ.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q055:B",
+        "Q055:C",
+        "Q055:E"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q055:B",
+        "Q055:C",
+        "Q055:E"
+      ],
+      "note_vi": "Đúng; thứ tự AWS là metadata -> protections/tags -> disk -> memory -> isolate; E gom metadata/tag nên không coi lựa chọn là thứ tự toàn bộ.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q055:B",
+      "Q055:C",
+      "Q055:E"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q055:B",
+      "Q055:C",
+      "Q055:E"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

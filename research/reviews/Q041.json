@@ -2,9 +2,9 @@
   "question_id": "Q041",
   "question_content_hash": "074e164538d4e47821d25a46bff005ea6fe538856a7956fedcb3ef66f89f4a5f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,12 +29,13 @@
       "unit_id": "Q041:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Chạy Lambda mỗi giờ không làm dữ liệu sớm hơn: Data Exports chỉ refresh khi dữ liệu nguồn cập nhật (CUR 2.0 ít nhất một lần/ngày), nên độ trễ tương tự Cost Anomaly Detection nhưng phải tự viết logic phát hiện bất thường.",
+      "reason_vi": "Poll Data Exports hàng giờ không tạo dữ liệu chi phí mới mỗi giờ.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
+        "ref1",
         "ref4"
       ],
       "evidence_kind": "inference"
@@ -42,42 +43,43 @@
     {
       "unit_id": "Q041:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Cost Anomaly Detection chạy khoảng ba lần mỗi ngày bằng ML trên dữ liệu chi phí; individual alert qua SNS báo ngay khi phát hiện anomaly, có thể đặt ngưỡng phần trăm. Đây là cơ chế tự động, sớm nhất trong các lựa chọn.",
+      "verdict": "undetermined",
+      "reason_vi": "Phát hiện bất thường chi phí và gửi SNS theo ngưỡng cấu hình.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q041:C",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Xem Cost Explorer thủ công mỗi ngày (dữ liệu refresh ít nhất mỗi 24 giờ) và so với tháng trước là chậm, phụ thuộc con người, phát hiện muộn hơn cảnh báo tự động.",
+      "reason_vi": "Đánh giá thủ công hàng ngày chậm và cần vận hành.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q041:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "VPC Flow Logs chỉ ghi thông tin IP traffic của một VPC, không đo chi phí; không bao quát các nguồn chi phí khác và cần công cụ bên thứ ba, nên không phải giải pháp giám sát cost increase.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Flow Logs có thể phát hiện lưu lượng sớm nhưng không đo mọi nguồn chi phí.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     }
@@ -104,40 +106,38 @@
   "source_answer": [
     "Q041:B"
   ],
-  "researched_answer": [
-    "Q041:B"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn B. Cost Anomaly Detection chạy ~3 lần/ngày và individual alert báo ngay khi phát hiện; C thủ công, D không đo chi phí. Hạ xuống medium vì A và B đều phụ thuộc dữ liệu billing (Data Exports refresh ít nhất 1 lần/ngày, Cost Explorer trễ tới 24 giờ) nên ưu thế 'sớm nhất' của B so với A là ở chỗ phát hiện và báo động tự động sẵn có, không phải dữ liệu mới hơn.",
+    "reason_vi": "Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A.",
     "open_issues": [
-      "Mọi giải pháp dựa trên dữ liệu billing đều có độ trễ tới ~24 giờ; không có lựa chọn nào thời gian thực.",
-      "A chạy mỗi giờ nhưng không nhận dữ liệu sớm hơn tần suất refresh của Data Exports; về lý thuyết độ trễ dữ liệu của A và B tương đương, khác biệt nằm ở việc B có sẵn ML và alert tức thì."
+      "Không có SLA tài liệu chứng minh thứ tự cảnh báo tuyệt đối giữa mọi lựa chọn."
     ]
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ A (Lambda hourly đọc Data Exports): tài liệu Data Exports nói export chỉ refresh khi dữ liệu nguồn cập nhật (CUR 2.0 ít nhất 1 lần/ngày), nên chạy mỗi giờ không mang lại dữ liệu sớm hơn; A còn phải tự xây logic phát hiện anomaly. Cost Anomaly Detection chạy ~3 lần/ngày sau khi billing data được xử lý, dùng dữ liệu Cost Explorer (trễ tới 24 giờ) và individual alert gửi SNS ngay khi phát hiện, hỗ trợ ngưỡng phần trăm như mô tả trong B. C phụ thuộc người xem hằng ngày, D không đo chi phí. Giữ B, verified; hạ confidence xuống medium vì A/B cùng giới hạn độ trễ dữ liệu billing.",
+  "reconciliation_vi": "Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A.",
   "explanation_vi": {
-    "why_correct": "AWS Cost Anomaly Detection dùng ML theo dõi chi phí khoảng ba lần mỗi ngày và individual alert gửi qua SNS ngay khi phát hiện anomaly vượt ngưỡng phần trăm, nên phát hiện tăng chi phí sớm và tự động nhất trong các lựa chọn.",
+    "why_correct": "Cost Anomaly Detection với SNS gửi cảnh báo theo ngưỡng phần trăm là giải pháp chuyên cho bất thường chi phí. Tuy nhiên AWS đánh giá khoảng ba lần/ngày và dữ liệu Cost Explorer có độ trễ tới 24 giờ, nên không chứng minh được ưu thế EARLIEST tuyệt đối.",
     "others": {
-      "Q041:A": "Chạy mỗi giờ nhưng Data Exports chỉ refresh khi dữ liệu nguồn cập nhật (ít nhất 1 lần/ngày), nên không sớm hơn mà còn phải tự viết logic phát hiện anomaly.",
-      "Q041:C": "Xem Cost Explorer thủ công mỗi ngày và so với tháng trước phụ thuộc con người, phát hiện muộn hơn cảnh báo tự động.",
-      "Q041:D": "VPC Flow Logs ghi traffic mạng của một VPC, không đo chi phí và không bao quát các nguồn chi phí khác."
+      "Q041:A": "Poll Data Exports hàng giờ không tạo dữ liệu chi phí mới mỗi giờ.",
+      "Q041:B": "Phát hiện bất thường chi phí và gửi SNS theo ngưỡng cấu hình.",
+      "Q041:C": "Đánh giá thủ công hàng ngày chậm và cần vận hành.",
+      "Q041:D": "Flow Logs có thể phát hiện lưu lượng sớm nhưng không đo mọi nguồn chi phí."
     }
   },
   "keywords": [
     {
       "phrase": "EARLIEST detection of cost increases",
-      "meaning_vi": "Cần cảnh báo tự động ngay khi phát hiện, không review thủ công."
+      "meaning_vi": "Ưu tiên cảnh báo cost tự động; dữ liệu billing trễ nên không suy ra earliest SLA tuyệt đối."
     },
     {
       "phrase": "monitor for cost increases",
       "meaning_vi": "Theo dõi chi phí -> dịch vụ Billing/Cost Management (Cost Anomaly Detection), không phải log mạng."
     }
   ],
-  "memory_tip_vi": "Nếu cần phát hiện chi phí tăng bất thường sớm và tự động -> nghĩ đến AWS Cost Anomaly Detection + individual alert (SNS); kiểm tra: dữ liệu billing vẫn trễ tới ~24 giờ, còn AWS Budgets dùng cho ngưỡng cố định.",
+  "memory_tip_vi": "Nếu ưu tiên dịch vụ phát hiện bất thường chi phí được quản lý, dùng Cost Anomaly Detection và SNS, đồng thời tính độ trễ dữ liệu.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -241,7 +241,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q041",
+      "detail_vi": "Không có SLA tài liệu chứng minh thứ tự cảnh báo tuyệt đối giữa mọi lựa chọn."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -264,6 +270,21 @@
       "previous_answer": [
         "Q041:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q041:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A.",
+      "technical_change": true
     }
   ],
   "timestamp_correction": {
@@ -275,5 +296,24 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "notes_vi": "Không thể chứng minh 'sớm nhất' tuyệt đối; hourly poll không đồng nghĩa hourly dữ liệu, nhưng cũng không tự chứng minh B luôn đến trước A.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q041:B"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q041:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q004",
   "question_content_hash": "6d594704cdd27b2ea4724ec41edd380dbd29fa144b0966da95318977762fb3ba",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:00Z",
-  "last_reviewed_at": "2026-09-30T19:42:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -63,12 +63,12 @@
       "unit_id": "Q004:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "StringEquals eu-west-1 khiến Deny áp dụng CHÍNH cho eu-west-1 (trừ global services), tức là chặn Region được phép và để mở các Region khác – ngược yêu cầu.",
+      "reason_vi": "Sai: StringEquals deny ngay Region được phép.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1"
+        "Q004-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -76,22 +76,21 @@
       "unit_id": "Q004:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SCP không cấp quyền và FullAWSAccess vẫn đang gắn cho phép mọi thứ; thêm một Allow không tạo giới hạn nào nên các Region khác vẫn dùng được.",
+      "reason_vi": "Sai: allow không hạn chế quyền đang được FullAWSAccess cho phép.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3"
+        "Q004-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q004:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion eu-west-1 đúng mẫu AWS: chặn mọi action ngoài eu-west-1 trừ global services. Deny gắn ở OU áp dụng cho mọi account trong OU, kể cả account mới.",
+      "reason_vi": "Đúng: deny ngoài eu-west-1, trừ global services đã liệt kê.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -99,23 +98,21 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4"
+        "Q004-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q004:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Là Allow (không phải Deny) nên khi FullAWSAccess vẫn gắn thì không hạn chế gì; nếu có tác dụng thì logic cũng ngược (chỉ cho phép ngoài eu-west-1).",
+      "reason_vi": "Sai: StringEquals nhắm eu-west-1; thêm Allow không hạn chế default FullAWSAccess.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3"
+        "Q004-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -192,6 +189,18 @@
       "quote": "any SCP from the root through each OU in the direct path to the account (including the target account itself) can deny that permission.",
       "supports": "Deny gắn ở OU áp dụng cho mọi account trên đường đi, gồm account hiện có và account mới được đưa vào OU.",
       "kind": "direct"
+    },
+    {
+      "id": "Q004-r2-1",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_syntax.html",
+      "title": "SCP syntax - AWS Organizations",
+      "accessed_at": "2026-09-30",
+      "quote": "The following example shows an SCP with a statement that",
+      "supports": "Deny with NotAction and StringNotEquals RequestedRegion restricts regions while exempting named global APIs; default FullAWSAccess permits unless denied.",
+      "kind": "direct",
+      "snapshot_id": "a9634a5fd66a",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -217,35 +226,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Phương án C trùng mẫu chính thức 'Denies access to AWS based on the requested Region' (Deny + NotAction global services + StringNotEquals aws:RequestedRegion). Tài liệu SCP xác nhận SCP không cấp quyền, FullAWSAccess gắn mặc định, và Deny ở OU áp dụng cho mọi account bên dưới.",
-    "open_issues": [
-      "Ảnh phương án C bị cắt mất dấu '}' cuối – lỗi trình bày, không ảnh hưởng logic."
-    ]
+    "reason_vi": "Giữ C; sửa D: StringEquals nhắm eu-west-1 chứ không phải Region khác; Allow không hạn chế default SCP.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key đều là C. Đã kiểm tra lại phương án cạnh tranh A (chỉ khác StringEquals): với StringEquals, Deny rơi vào chính eu-west-1 nên ngược yêu cầu. B và D là Allow; vì FullAWSAccess vẫn gắn và SCP không cấp quyền, Allow thêm không tạo giới hạn. Không có bằng chứng phản bác; giữ C, verified mức high.",
+  "reconciliation_vi": "Giữ C; sửa D: StringEquals nhắm eu-west-1 chứ không phải Region khác; Allow không hạn chế default SCP.",
   "explanation_vi": {
-    "why_correct": "SCP Deny với NotAction (loại trừ global services) và điều kiện StringNotEquals aws:RequestedRegion = eu-west-1 chặn mọi action ở Region khác eu-west-1. Gắn ở OU nên áp dụng cho cả account hiện có và account mới đưa vào OU, bất kể FullAWSAccess.",
+    "why_correct": "Deny với NotAction loại trừ các global service và StringNotEquals eu-west-1 chặn API ngoài Region cho OU. Explicit deny vẫn có hiệu lực khi SCP mặc định FullAWSAccess tồn tại.",
     "others": {
-      "Q004:A": "StringEquals eu-west-1 làm Deny áp dụng chính cho eu-west-1 và để mở các Region khác – ngược yêu cầu.",
-      "Q004:B": "Là Allow; SCP không cấp quyền và FullAWSAccess mặc định vẫn cho phép mọi thứ, nên statement này không hạn chế Region nào.",
-      "Q004:D": "Cũng là Allow nên không thu hẹp quyền khi FullAWSAccess còn gắn; logic còn ngược (nhắm vào các Region khác eu-west-1)."
+      "Q004:A": "Sai: StringEquals deny ngay Region được phép.",
+      "Q004:B": "Sai: allow không hạn chế quyền đang được FullAWSAccess cho phép.",
+      "Q004:D": "Sai: StringEquals nhắm eu-west-1; thêm Allow không hạn chế default FullAWSAccess."
     }
   },
   "keywords": [
     {
-      "phrase": "the default SCP",
-      "meaning_vi": "FullAWSAccess đang gắn → muốn hạn chế phải dùng Deny, Allow thêm không có tác dụng."
+      "phrase": "default SCP",
+      "meaning_vi": "FullAWSAccess khiến thêm Allow không thu hẹp quyền."
     },
     {
-      "phrase": "Except for some desired global services",
-      "meaning_vi": "Loại trừ bằng NotAction trong statement Deny."
+      "phrase": "eu-west-1",
+      "meaning_vi": "Deny ngoài Region eu-west-1."
     },
     {
-      "phrase": "existing accounts and any new accounts in the OU",
-      "meaning_vi": "Gắn SCP ở cấp OU để kế thừa cho mọi account trong OU."
+      "phrase": "global services",
+      "meaning_vi": "Loại trừ global APIs khỏi regional deny."
     }
   ],
-  "memory_tip_vi": "Nếu cần giới hạn Region bằng SCP mà vẫn giữ FullAWSAccess -> nghĩ đến Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion; kiểm tra: StringEquals hoặc Effect Allow là bẫy.",
+  "memory_tip_vi": "Nếu OU đang có FullAWSAccess, dùng explicit deny ngoài Region với ngoại lệ global phù hợp.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -279,9 +286,26 @@
       "previous_answer": [
         "Q004:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; sửa D: StringEquals nhắm eu-west-1 chứ không phải Region khác; Allow không hạn chế default SCP.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q004:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q004:C"
+      ],
+      "note_vi": "Giữ C; sửa D: StringEquals nhắm eu-west-1 chứ không phải Region khác; Allow không hạn chế default SCP.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Mẹo: chặn theo Region trong SCP = Deny + NotAction (global services) + StringNotEquals aws:RequestedRegion.",
+  "notes_vi": "Giữ C; sửa D: StringEquals nhắm eu-west-1 chứ không phải Region khác; Allow không hạn chế default SCP.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -291,5 +315,19 @@
         "corrected": "2026-09-30T19:42:11Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q004:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

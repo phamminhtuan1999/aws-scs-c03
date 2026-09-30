@@ -2,9 +2,9 @@
   "question_id": "Q056",
   "question_content_hash": "54fc7060418ca1fb5ed8a95bb80f4320453481825340123c2d0b4afe941fdbf6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:12:44Z",
-  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,8 +38,8 @@
     {
       "unit_id": "Q056:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Thêm rule inbound và outbound 0.0.0.0/0 mọi port đáp ứng điều kiện untracked; luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa, nên xóa ngay hai rule sẽ cắt phiên SSH cũ, chỉ còn rule port 22 cho forensics và chỉ tác động SG riêng của instance. AWS dùng cùng mô hình trong runbook AWSSupport-ContainEC2Instance (SG 'all access' tạm thời rồi SG containment).",
+      "verdict": "undetermined",
+      "reason_vi": "Runbook AWS dùng pattern all-access rồi containment; việc áp dụng tương đương cho phiên đã tracking bằng sửa rule còn là suy luận.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -48,55 +48,55 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3",
-        "ref7",
-        "ref8",
-        "ref10"
+        "ref10",
+        "ref7"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q056:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Xóa rule port 22 không cắt kết nối SSH đang được track (giống hiện tượng đã quan sát); ngoài ra khi SG không còn outbound, SSM Agent không ra được HTTPS 443 tới endpoint để dùng Session Manager.",
+      "verdict": "undetermined",
+      "reason_vi": "Sửa SG/remove 22 không nhất thiết ngắt established tracked connection; Session Manager còn cần đường mạng.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref11",
-        "ref6"
+        "ref10",
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q056:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "NACL stateless cắt được kết nối đang tồn tại (đây là điểm mạnh của C), nhưng rule deny all 0.0.0.0/0 đặt đầu chặn cả forensics team và áp dụng cho mọi instance trong subnet (subnet có nhiều instance) — vi phạm hai ràng buộc của đề.",
+      "verdict": "undetermined",
+      "reason_vi": "NACL subnet deny-all ảnh hưởng instance khác và chặn cả forensic SSH.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref9"
+        "ref1",
+        "ref10",
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q056:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Firewall host-level chặn toàn bộ inbound/outbound cũng chặn forensics team (và chính kết nối SSM), đồng thời chạy lệnh thay đổi trên máy có thể đã bị compromise, attacker có quyền trên OS có thể gỡ rule.",
+      "verdict": "undetermined",
+      "reason_vi": "Host firewall target cắt lưu lượng nhưng deny-all cũng chặn forensic SSH được yêu cầu.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1",
+        "ref10",
+        "ref7"
       ],
       "evidence_kind": "inference"
     }
@@ -124,27 +124,28 @@
   "source_answer": [
     "Q056:C"
   ],
-  "researched_answer": [
-    "Q056:A"
-  ],
-  "comparison": "mismatch",
-  "status": "verified",
-  "differs_from_source": true,
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
+  "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "B, C, D bị loại bằng bằng chứng trực tiếp hoặc bởi chính nội dung option (C/D chặn cả forensics; C ảnh hưởng cả subnet; B không cắt được kết nối tracked). Cơ chế của A được EC2 doc nêu trực tiếp (điều kiện untracked, ngắt ngay khi xóa rule) và runbook chính thức AWSSupport-ContainEC2Instance dùng đúng bước SG 'all access' tạm thời trước SG containment. Giữ medium vì không có câu nguyên văn nói kết nối đang tracked chuyển thành untracked khi thêm rule.",
+    "reason_vi": "Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG.",
     "open_issues": [
-      "Tài liệu runbook mô tả bước SG 'all access' tạm thời nhưng không nêu nguyên văn lý do (chuyển kết nối tracked sang untracked); đây vẫn là suy luận có căn cứ.",
-      "Trong khoảnh khắc rule 0.0.0.0/0 tồn tại, instance mở cho mọi nguồn (rủi ro ngắn); A chấp nhận điều này theo đúng mô tả 'immediately delete'."
+      "A thiếu bằng chứng về thay đổi tracked/untracked tức thời.",
+      "C/D vi phạm yêu cầu cho phép forensic cổng 22; cần sửa đề/lựa chọn.",
+      "Re:Post article linked by runbook returned403; không dùng nó làm bằng chứng đã mở.",
+      "Runbook thay groups trên ENI; optionA sửa rules của SG hiện có nên chỉ có evidence tương tự, chưa proof hành vi tracking."
     ]
   },
-  "reconciliation_vi": "Mismatch: blind = A (verified, medium), source = C. Đã tìm cách đọc đề để C đúng: EC2 doc (connection tracking) nói trực tiếp NACL chặn một chiều sẽ cắt kết nối đang có, và trang GuardDuty 'Remediating a potentially compromised EC2 instance' trỏ tới NACL để chặn kết nối hiện có — đây là cơ sở của C. Tuy nhiên C tạo rule deny ALL từ/tới 0.0.0.0/0 ở đầu NACL của subnet: chặn luôn forensics team (đề yêu cầu 'except for traffic from the company's forensics team') và, theo AWS Security Incident Response Guide (PDF snapshot 199d3825e018), NACL ảnh hưởng mọi tài nguyên trong subnet, trong khi đề nhấn mạnh 'A subnet can contain multiple instances' và mỗi instance có SG riêng. Phía A: EC2 doc nêu điều kiện untracked (rule 0.0.0.0/0 hai chiều mọi port) và luồng untracked bị ngắt ngay khi rule bị xóa; bằng chứng MỚI: runbook AWSSupport-ContainEC2Instance (snapshot 56dcb7b610f7) chuyển instance sang SG 'all access' tạm thời rồi mới sang SG containment — đúng kỹ thuật của A. Đã fetch lại hai trích dẫn từ IR guide bằng tools/fetch_doc.py (không còn WebFetch). Kết luận: A là phương án duy nhất thỏa mọi ràng buộc; giữ A, verified (medium), differs_from_source = true.",
+  "reconciliation_vi": "Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG.",
   "explanation_vi": {
-    "why_correct": "Phiên SSH cũ là kết nối tracked nên xóa rule SG không cắt nó. Thêm rule inbound và outbound 0.0.0.0/0 mọi port làm luồng trở thành untracked, và luồng untracked bị ngắt ngay khi rule cho phép nó bị xóa; xóa ngay hai rule đó thì phiên cũ bị cắt, chỉ còn rule port 22 cho forensics, và chỉ SG riêng của instance này bị thay đổi (AWS dùng cùng mô hình SG 'all access' tạm thời trong runbook AWSSupport-ContainEC2Instance).",
+    "why_correct": "AWS runbook dùng bước chuyển qua all-access SG rồi containment SG, hỗ trợ ý định A. Tuy nhiên tài liệu chưa chứng minh việc thêm/xóa rule ngay trên SG hiện có sẽ chuyển phiên SSH đã tracking thành untracked tức thời.",
     "others": {
-      "Q056:B": "Xóa rule port 22 không cắt phiên SSH đã tracked (đúng hiện tượng đã thấy) và bỏ luôn đường SSH của forensics; Session Manager còn cần outbound HTTPS 443 mà SG hiện không có.",
-      "Q056:C": "NACL cắt được kết nối đang có, nhưng deny all 0.0.0.0/0 chặn cả forensics team và ảnh hưởng mọi instance khác trong cùng subnet.",
-      "Q056:D": "Firewall host chặn toàn bộ inbound/outbound cũng chặn forensics team (và kênh SSM), lại phụ thuộc OS có thể đã bị attacker kiểm soát."
+      "Q056:A": "Runbook AWS dùng pattern all-access rồi containment; việc áp dụng tương đương cho phiên đã tracking bằng sửa rule còn là suy luận.",
+      "Q056:B": "Sửa SG/remove 22 không nhất thiết ngắt established tracked connection; Session Manager còn cần đường mạng.",
+      "Q056:C": "NACL subnet deny-all ảnh hưởng instance khác và chặn cả forensic SSH.",
+      "Q056:D": "Host firewall target cắt lưu lượng nhưng deny-all cũng chặn forensic SSH được yêu cầu."
     }
   },
   "keywords": [
@@ -161,7 +162,7 @@
       "meaning_vi": "Gợi ý loại NACL vì NACL tác động cả subnet."
     }
   ],
-  "memory_tip_vi": "Nếu đổi security group mà phiên cũ vẫn sống → nghĩ đến connection tracking: làm luồng thành untracked (rule 0.0.0.0/0 hai chiều mọi port) rồi xóa rule; kiểm tra NACL chỉ phù hợp khi được phép ảnh hưởng cả subnet và không cần chừa nguồn nào.",
+  "memory_tip_vi": "Nếu thử pattern all-access rồi containment, xác minh session cũ thực sự bị cắt và giữ quyền SSH forensic.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -321,12 +322,27 @@
   ],
   "source_issues": [
     {
-      "type": "data",
-      "location": "Q056:C",
-      "detail_vi": "Đáp án nguồn C (NACL deny all 0.0.0.0/0 hai chiều trên subnet) chặn cả traffic của forensics team và ảnh hưởng mọi instance trong subnet, mâu thuẫn trực tiếp với yêu cầu 'except for traffic from the company's forensics team' và chi tiết 'A subnet can contain multiple instances'."
+      "type": "ambiguous",
+      "location": "Q056",
+      "detail_vi": "A thiếu bằng chứng về thay đổi tracked/untracked tức thời."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q056",
+      "detail_vi": "C/D vi phạm yêu cầu cho phép forensic cổng 22; cần sửa đề/lựa chọn."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q056",
+      "detail_vi": "Re:Post article linked by runbook returned403; không dùng nó làm bằng chứng đã mở."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q056",
+      "detail_vi": "Runbook thay groups trên ENI; optionA sửa rules của SG hiện có nên chỉ có evidence tương tự, chưa proof hành vi tracking."
     }
   ],
-  "notes_vi": "Kỹ thuật ở A dựa trên hành vi untracked connection của security group; tài liệu nói trực tiếp điều kiện untracked và việc ngắt ngay khi xóa rule.",
+  "notes_vi": "Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG.",
   "history": [
     {
       "version": "r1",
@@ -373,6 +389,37 @@
       "previous_answer": [
         "Q056:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q056:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Current suy ra tracked session chuyển ngay sang untracked khi thêm allow-all; EC2 docs chỉ chắc cho originally untracked connections; runbook cho thêm evidence pattern nhưng không proof tương đương đổi rules SG.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": null,
+    "independent_status": "unresolved",
+    "intended_answer": [
+      "Q056:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

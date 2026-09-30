@@ -1,0 +1,242 @@
+{
+  "question_id": "Q086",
+  "question_content_hash": "c4b0472c260c5b0fe468a986c833b44bbfaef765c67271bb75217dbacb9a7436",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:55:27Z",
+  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "f0f11b0625514314d9d20b82b862749586ea4bcc10bd093e33aa227a5c7b2627",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Diễn giải đúng ý nghĩa của statement key policy trong hình: Principal là account principal arn:aws:iam::111122223333:root, Action kms:*, Resource *.",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Xác định ai thực sự được dùng KMS key nhờ statement này (phạm vi account, vai trò của IAM policy).",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q086_image_01.png",
+      "text": "{\n    \"Sid\": \"Enable IAM User Permissions\",\n    \"Effect\": \"Allow\",\n    \"Principal\": {\n        \"AWS\": \"arn:aws:iam::111122223333:root”\n    },\n    \"Action\": \"kms:*\",\n    \"Resource\": \"*\"\n}",
+      "notes_vi": "Đã đọc lại từng ký tự (phóng to 5x): Sid 'Enable IAM User Permissions', Effect Allow, Principal AWS arn:aws:iam::111122223333:root, Action kms:*, Resource *, không có Condition. Dấu nháy đóng sau 'root' là nháy cong (U+201D) khác các nháy thẳng còn lại - lỗi chính tả trong ảnh, không đổi ý nghĩa."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q086:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Principal chỉ là account 111122223333 (không phải \"*\" hay mọi account), nên statement không mở quyền cho principal của các AWS account khác.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q086:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "ARN ':root' là account principal, đại diện cho cả AWS account và administrators; nó cho phép account dùng IAM policy để ủy quyền cho IAM principals, không giới hạn chỉ root user.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q086:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Statement không có Condition (ví dụ kms:ViaService) nên không giới hạn việc dùng key chỉ qua Amazon S3; Action là kms:* trên chính key.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q086:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Khi Principal là account principal, statement không trực tiếp cấp quyền cho IAM principal nào mà cho phép account dùng IAM policies để ủy quyền; vì vậy chỉ principal trong 111122223333 có IAM policy cho phép key mới dùng được key.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q086:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Đây chính là statement mặc định 'Enable IAM User Permissions' được tài liệu KMS giải thích trực tiếp: account principal cho phép dùng IAM policies để ủy quyền, không tự cấp quyền cho IAM principal.",
+      "open_issues": [
+        "Sắc thái: root user của account vẫn có quyền qua statement này mà không cần IAM policy; D mô tả đúng ý chính đối với IAM principals."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:55:27Z"
+  },
+  "source_answer": [
+    "Q086:D"
+  ],
+  "researched_answer": [
+    "Q086:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Đây chính là statement mặc định 'Enable IAM User Permissions' được tài liệu KMS giải thích trực tiếp: account principal không tự cấp quyền cho IAM principal mà cho phép account dùng IAM policies để ủy quyền.",
+    "open_issues": [
+      "Sắc thái: root user của account 111122223333 dùng được key qua statement này mà không cần IAM policy; D mô tả đúng ý chính đối với IAM principals và vẫn là phương án đúng nhất."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn D. Đã đọc lại ảnh từng ký tự: Principal là account principal ':root' của 111122223333, Action kms:*, không có Condition. Đối thủ mạnh nhất là B (chỉ root user): tài liệu default key policy nói rõ account principal đại diện cho AWS account và administrators (kể cả root user) và statement này cho phép account dùng IAM policies để ủy quyền - nên không giới hạn chỉ root user. A sai vì Principal không phải '*'; C sai vì không có kms:ViaService. Sắc thái root user không cần IAM policy không làm D sai vì các phương án khác sai rõ hơn. Bổ sung source_issue về nháy cong trong ảnh (blind để [?], nay xác nhận khi phóng to). Giữ D, verified.",
+  "explanation_vi": {
+    "why_correct": "Khi Principal là account principal (arn:aws:iam::111122223333:root), key policy không trực tiếp cấp quyền cho IAM user/role nào mà cho phép account dùng IAM policies để ủy quyền; vì vậy chỉ principal trong 111122223333 có IAM policy cho phép key mới dùng được key.",
+    "others": {
+      "Q086:A": "Principal chỉ là account 111122223333, không phải '*', nên principal của các account khác không được dùng key.",
+      "Q086:B": "':root' là account principal (cả account), không có nghĩa chỉ root user; statement này mở đường cho IAM policies trong account ủy quyền.",
+      "Q086:C": "Statement không có Condition kms:ViaService nên không giới hạn việc dùng key chỉ qua Amazon S3."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "AWS KMS key policies",
+      "meaning_vi": "Key policy là resource policy chính của KMS key; phải cho phép account thì IAM policy mới có hiệu lực."
+    },
+    {
+      "phrase": "What does the statement allow",
+      "meaning_vi": "Cần diễn giải đúng Principal ':root' = account principal, không phải chỉ root user."
+    }
+  ],
+  "memory_tip_vi": "Nếu key policy có Principal 'arn:aws:iam::<account>:root' -> nghĩ đến 'bật IAM policies cho account đó' (principal còn cần IAM policy); kiểm tra có Condition như kms:ViaService hay Principal '*' không.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "AWS IAM"
+    ],
+    "reason_vi": "Diễn giải key policy KMS và quan hệ giữa key policy với IAM policy."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS Key Management Service",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When the principal in a key policy statement is the account principal, the policy statement doesn't give any IAM principal permission to use the KMS key.",
+      "supports": "Statement với account principal không trực tiếp cấp quyền dùng key cho IAM principal.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS Key Management Service",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "it allows the account to use IAM policies to delegate the permissions specified in the policy statement.",
+      "supports": "Statement cho phép account ủy quyền kms:* qua IAM policies.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS Key Management Service",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The account principal represents the AWS account and its administrators, including the account root user.",
+      "supports": "':root' là account principal (cả account), không chỉ root user; và chỉ thuộc account 111122223333.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS Key Management Service",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Without this permission, IAM policies that allow access to the key are ineffective",
+      "supports": "Statement này là điều kiện để IAM policy cấp quyền dùng key có hiệu lực.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q086:stem:1",
+      "detail_vi": "Trong ảnh, dấu nháy đóng sau 'arn:aws:iam::111122223333:root' là nháy cong (”) thay vì nháy thẳng (\") như các chuỗi khác; về cú pháp JSON là không hợp lệ nhưng không đổi ý nghĩa câu hỏi."
+    }
+  ],
+  "notes_vi": "Nháy cong sau ':root' đã được xác nhận khi phóng to ảnh và ghi thành source_issue (typo).",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:27Z",
+      "change": "blind verdict [\"Q086:D\"] (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:06:17Z",
+      "change": "image re-read: xác nhận nháy đóng cong U+201D sau ':root' (blind để [?]); thêm source_issue typo",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:06:17Z",
+      "change": "reconciliation: source key D khớp blind; kiểm tra lại B (account principal ≠ chỉ root user); giữ D, verified (high)",
+      "previous_answer": null
+    }
+  ]
+}

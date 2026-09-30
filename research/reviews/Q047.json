@@ -2,9 +2,9 @@
   "question_id": "Q047",
   "question_content_hash": "c5335209aa461892c7faa951f4c361b009486bdc3313242046efec2dccf25a1f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:03:00Z",
-  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -24,7 +24,7 @@
     },
     {
       "id": "R3",
-      "text_vi": "Phải remediate cả các bucket không tuân thủ được tạo trong tương lai (trong toàn organization, kể cả account/Region mới).",
+      "text_vi": "Khắc phục bucket không tuân thủ được tạo trong tương lai; đề không nói sẽ có account hoặc Region mới.",
       "kind": "constraint"
     }
   ],
@@ -33,8 +33,8 @@
     {
       "unit_id": "Q047:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Aggregator cấp organization gom compliance của mọi account (kể cả account mới) và có thể gồm Region tương lai; Lambda được kích hoạt bởi event Config Rules Compliance Change để sửa/xóa bucket nên xử lý cả bucket hiện có lẫn bucket mới. Lưu ý: aggregator chỉ read-only, Lambda cần quyền cross-account để sửa bucket.",
+      "verdict": "undetermined",
+      "reason_vi": "Org aggregator phù hợp mở rộng phạm vi; Lambda vẫn phải assume role để sửa nguồn.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -42,56 +42,52 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref6",
-        "ref7",
-        "ref8"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q047:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ giới hạn quyền tối đa cho request sau này, không khắc phục các bucket noncompliant đang tồn tại; aggregator chỉ để xem, không remediate.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "SCP không tự sửa bucket đã vi phạm.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q047:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Có remediation bằng Lambda nhưng aggregator chỉ gồm account/Region đang dùng, nên bucket tạo trong account hoặc Region mới của organization sẽ không được theo dõi và khắc phục.",
+      "verdict": "undetermined",
+      "reason_vi": "Aggregator current accounts/Regions vẫn thấy bucket mới trong phạm vi hiện tại.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref6",
-        "ref8"
+        "ref1",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q047:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Không remediate bucket hiện có (SCP chỉ phòng ngừa) và aggregator giới hạn account/Region hiện tại.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "SCP không khắc phục tài nguyên đang vi phạm.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -116,27 +112,26 @@
   "source_answer": [
     "Q047:A"
   ],
-  "researched_answer": [
-    "Q047:A"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "A là lựa chọn duy nhất vừa có cơ chế khắc phục (Lambda) cho bucket hiện có và bucket mới vừa phủ toàn organization. Tài liệu Config nêu trực tiếp có thể dùng EventBridge với event 'Config Rules Compliance Change' để 'take corrective action'; tuy nhiên aggregator chỉ là view read-only nên lựa chọn A mô tả kiến trúc hơi giản lược.",
+    "reason_vi": "Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại.",
     "open_issues": [
-      "Aggregator không có quyền mutating; Lambda thực tế nhận event compliance change (EventBridge) từ từng account/Region hoặc được chuyển tiếp về account trung tâm, và cần role cross-account để sửa bucket.",
-      "Remediation native của AWS Config dùng SSM Automation; đề không đưa lựa chọn này."
+      "A và C khác phạm vi tăng trưởng account/Region không được stem nêu rõ.",
+      "Không được mô tả aggregator như cơ chế tự remediation."
     ]
   },
-  "reconciliation_vi": "Blind = A, source key = A (khớp). Đã tìm bằng chứng trực tiếp cho cơ chế 'Lambda responds to AWS Config findings': trang Monitoring AWS Config with Amazon EventBridge nói rule EventBridge có thể 'take corrective action' và dùng loại event 'Config Rules Compliance Change' khi rule đánh giá không tuân thủ — nên Lambda làm target là cơ chế được tài liệu hỗ trợ. Aggregator loại organization gom mọi account có bật Config (kể cả account mới) và có thể gồm Region tương lai; aggregator không mutating nên việc sửa do Lambda đảm nhận. Kiểm tra lại B/D: SCP chỉ phòng ngừa request mới, không sửa bucket noncompliant đang tồn tại nên không đáp ứng 'remediate existing'. C giới hạn account/Region hiện tại nên bỏ sót bucket tương lai ở account/Region mới. Giữ A, confidence medium vì mô tả kiến trúc trong A giản lược.",
+  "reconciliation_vi": "Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại.",
   "explanation_vi": {
-    "why_correct": "Aggregator cấp organization gom kết quả compliance của mọi account/Region (kể cả account mới), còn Lambda được kích hoạt bởi event Config Rules Compliance Change để xóa hoặc cấu hình lại bucket noncompliant — nên xử lý được cả bucket hiện có lẫn bucket tạo sau này.",
+    "why_correct": "A bao phủ tổ chức và Region tốt hơn, nhưng C cũng xử lý bucket tương lai trong các account/Region đã cấu hình vì đề không yêu cầu account hoặc Region mới. Config aggregator chỉ đọc dữ liệu; Lambda cần quyền cross-account và cơ chế phát hiện/khắc phục ở nguồn.",
     "others": {
-      "Q047:B": "SCP chỉ chặn request trong tương lai, không khắc phục được các bucket noncompliant đang tồn tại, còn aggregator chỉ để xem.",
-      "Q047:C": "Có Lambda khắc phục nhưng aggregator chỉ gồm account/Region hiện tại, nên bucket tạo trong account hoặc Region mới sẽ bị bỏ sót.",
-      "Q047:D": "Vừa không khắc phục bucket hiện có (SCP chỉ phòng ngừa) vừa chỉ phủ account/Region hiện tại."
+      "Q047:A": "Org aggregator phù hợp mở rộng phạm vi; Lambda vẫn phải assume role để sửa nguồn.",
+      "Q047:B": "SCP không tự sửa bucket đã vi phạm.",
+      "Q047:C": "Aggregator current accounts/Regions vẫn thấy bucket mới trong phạm vi hiện tại.",
+      "Q047:D": "SCP không khắc phục tài nguyên đang vi phạm."
     }
   },
   "keywords": [
@@ -146,14 +141,14 @@
     },
     {
       "phrase": "created in the future",
-      "meaning_vi": "Phải phủ cả account/Region mới -> aggregator cấp organization thay vì liệt kê account/Region hiện có."
+      "meaning_vi": "Bucket tương lai trong scope hiện tại; không mặc định suy ra account/Region mới."
     },
     {
       "phrase": "several AWS Regions and several AWS accounts",
       "meaning_vi": "Phạm vi multi-account multi-Region -> AWS Config aggregator."
     }
   ],
-  "memory_tip_vi": "Nếu đề đòi 'remediate' cả resource hiện có lẫn tương lai trên toàn organization -> nghĩ đến Config rule + tự động khắc phục (EventBridge/Lambda hoặc SSM Automation) với phạm vi organization-wide; kiểm tra: SCP chỉ phòng ngừa, aggregator chỉ read-only.",
+  "memory_tip_vi": "Nếu phạm vi có thể tăng thêm account hoặc Region, chọn organization aggregator gồm future Regions và remediation có quyền tại nguồn.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -275,8 +270,19 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "'Remediate existing + future' -> cần cơ chế khắc phục (Lambda/SSM), SCP chỉ phòng ngừa; 'organization-wide' để phủ account mới.",
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q047",
+      "detail_vi": "A và C khác phạm vi tăng trưởng account/Region không được stem nêu rõ."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q047",
+      "detail_vi": "Không được mô tả aggregator như cơ chế tự remediation."
+    }
+  ],
+  "notes_vi": "Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại.",
   "history": [
     {
       "version": "r1",
@@ -299,6 +305,21 @@
       "previous_answer": [
         "Q047:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q047:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Current keywords tự thêm account/Region tương lai dù stem chỉ yêu cầu bucket tương lai; C cũng hợp lệ trong phạm vi hiện tại.",
+      "technical_change": true
     }
   ],
   "timestamp_correction": {
@@ -310,5 +331,24 @@
         "corrected": "2026-09-30T19:51:17Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q047:A"
+    ],
+    "candidate_answers": [
+      "Q047:A",
+      "Q047:C"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

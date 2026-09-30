@@ -2,9 +2,9 @@
   "question_id": "Q086",
   "question_content_hash": "c4b0472c260c5b0fe468a986c833b44bbfaef765c67271bb75217dbacb9a7436",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:55:27Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -35,13 +35,13 @@
       "unit_id": "Q086:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Principal chỉ là account 111122223333 (không phải \"*\" hay mọi account), nên statement không mở quyền cho principal của các AWS account khác.",
+      "reason_vi": "Principal bị giới hạn account 111122223333.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -49,27 +49,26 @@
       "unit_id": "Q086:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "ARN ':root' là account principal, đại diện cho cả AWS account và administrators; nó cho phép account dùng IAM policy để ủy quyền cho IAM principals, không giới hạn chỉ root user.",
+      "reason_vi": "Account principal cho phép ủy quyền IAM, không chỉ root user.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q086:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Statement không có Condition (ví dụ kms:ViaService) nên không giới hạn việc dùng key chỉ qua Amazon S3; Action là kms:* trên chính key.",
+      "reason_vi": "Không có điều kiện giới hạn S3.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -77,17 +76,15 @@
       "unit_id": "Q086:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Khi Principal là account principal, statement không trực tiếp cấp quyền cho IAM principal nào mà cho phép account dùng IAM policies để ủy quyền; vì vậy chỉ principal trong 111122223333 có IAM policy cho phép key mới dùng được key.",
+      "reason_vi": "Đúng cho IAM principals: key policy bật IAM delegation, IAM policy cấp quyền dùng.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -121,18 +118,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Đây chính là statement mặc định 'Enable IAM User Permissions' được tài liệu KMS giải thích trực tiếp: account principal không tự cấp quyền cho IAM principal mà cho phép account dùng IAM policies để ủy quyền.",
-    "open_issues": [
-      "Sắc thái: root user của account 111122223333 dùng được key qua statement này mà không cần IAM policy; D mô tả đúng ý chính đối với IAM principals và vẫn là phương án đúng nhất."
-    ]
+    "reason_vi": "Root account principal bật delegation; không nói root user cũng cần identity policy.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn D. Đã đọc lại ảnh từng ký tự: Principal là account principal ':root' của 111122223333, Action kms:*, không có Condition. Đối thủ mạnh nhất là B (chỉ root user): tài liệu default key policy nói rõ account principal đại diện cho AWS account và administrators (kể cả root user) và statement này cho phép account dùng IAM policies để ủy quyền - nên không giới hạn chỉ root user. A sai vì Principal không phải '*'; C sai vì không có kms:ViaService. Sắc thái root user không cần IAM policy không làm D sai vì các phương án khác sai rõ hơn. Bổ sung source_issue về nháy cong trong ảnh (blind để [?], nay xác nhận khi phóng to). Giữ D, verified.",
+  "reconciliation_vi": "Root account principal bật delegation; không nói root user cũng cần identity policy.",
   "explanation_vi": {
-    "why_correct": "Khi Principal là account principal (arn:aws:iam::111122223333:root), key policy không trực tiếp cấp quyền cho IAM user/role nào mà cho phép account dùng IAM policies để ủy quyền; vì vậy chỉ principal trong 111122223333 có IAM policy cho phép key mới dùng được key.",
+    "why_correct": "Statement cho account quyền ủy quyền truy cập KMS key qua IAM policies. Users/roles cần IAM Allow phù hợp; account root có quyền trực tiếp theo key policy.",
     "others": {
-      "Q086:A": "Principal chỉ là account 111122223333, không phải '*', nên principal của các account khác không được dùng key.",
-      "Q086:B": "':root' là account principal (cả account), không có nghĩa chỉ root user; statement này mở đường cho IAM policies trong account ủy quyền.",
-      "Q086:C": "Statement không có Condition kms:ViaService nên không giới hạn việc dùng key chỉ qua Amazon S3."
+      "Q086:A": "Principal bị giới hạn account 111122223333.",
+      "Q086:B": "Account principal cho phép ủy quyền IAM, không chỉ root user.",
+      "Q086:C": "Không có điều kiện giới hạn S3."
     }
   },
   "keywords": [
@@ -145,7 +140,7 @@
       "meaning_vi": "Cần diễn giải đúng Principal ':root' = account principal, không phải chỉ root user."
     }
   ],
-  "memory_tip_vi": "Nếu key policy có Principal 'arn:aws:iam::<account>:root' -> nghĩ đến 'bật IAM policies cho account đó' (principal còn cần IAM policy); kiểm tra có Condition như kms:ViaService hay Principal '*' không.",
+  "memory_tip_vi": "Nếu KMS Principal là account :root, IAM policies có thể được ủy quyền; users/roles vẫn cần Allow phù hợp.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -216,9 +211,14 @@
       "type": "typo",
       "location": "Q086:stem:1",
       "detail_vi": "Trong ảnh, dấu nháy đóng sau 'arn:aws:iam::111122223333:root' là nháy cong (”) thay vì nháy thẳng (\") như các chuỗi khác; về cú pháp JSON là không hợp lệ nhưng không đổi ý nghĩa câu hỏi."
+    },
+    {
+      "type": "data",
+      "location": "Q086",
+      "detail_vi": "D diễn đạt IAM principals; root user cũng được full access qua account principal, không cần attached IAM policy."
     }
   ],
-  "notes_vi": "Nháy cong sau ':root' đã được xác nhận khi phóng to ảnh và ghi thành source_issue (typo).",
+  "notes_vi": "Root account principal bật delegation; không nói root user cũng cần identity policy.",
   "history": [
     {
       "version": "r1",
@@ -237,6 +237,45 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key D khớp blind; kiểm tra lại B (account principal ≠ chỉ root user); giữ D, verified (high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Root account principal bật delegation; không nói root user cũng cần identity policy.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q086:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q086:D"
+      ],
+      "note_vi": "Root account principal bật delegation; không nói root user cũng cần identity policy.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q086:D"
+    ],
+    "candidate_answers": [
+      [
+        "Q086:D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

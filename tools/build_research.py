@@ -19,11 +19,11 @@ from validate_research import validate, units_of, QMAP  # noqa: E402
 TRAINER = Path(__file__).resolve().parents[1]
 R = TRAINER / 'research'
 KEYS = json.loads((TRAINER / 'data' / 'keys' / 'source_keys.json').read_text(encoding='utf-8'))['keys']
-RESEARCH_VERSION = 'r1'
+RESEARCH_VERSION = 'r2-independent-verify'
 APP_FIELDS = ('status', 'researched_answer', 'source_answer', 'comparison', 'differs_from_source', 'confidence',
               'option_reviews', 'references', 'explanation_vi', 'keywords', 'memory_tip_vi', 'tags', 'source_issues',
               'requirements', 'image_transcriptions', 'researched_at', 'last_reviewed_at', 'independent_verdict',
-              'reconciliation_vi', 'history', 'research_version')
+              'reconciliation_vi', 'history', 'research_version', 'independent_reverification')
 
 
 def src_answer(qid):

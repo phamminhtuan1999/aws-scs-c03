@@ -2,9 +2,9 @@
   "question_id": "Q037",
   "question_content_hash": "15d23760f41db820b1c46e02627d2753f5ec842845c4fa317a49ff038e2d8b0d",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,15 +39,14 @@
       "unit_id": "Q037:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Có Config managed rule api-gw-associated-with-waf để phát hiện stage chưa có web ACL, nhưng remediation tạo web ACL phải là SSM Automation document tự viết và phải triển khai/quản lý ở từng account; tạo web ACL riêng cho mỗi API tốn công hơn nhiều so với một policy tập trung.",
+      "reason_vi": "Mỗi API cần ACL và luồng Config remediation riêng nên vận hành nhiều hơn.",
       "requirement_ids": [
         "R1",
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -55,7 +54,7 @@
       "unit_id": "Q037:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Firewall Manager AWS WAF policy hỗ trợ resource type AWS::ApiGateway::Stage, dùng được managed rule group Bot Control và SQL database, và tự áp dụng cho account/tài nguyên mới trong Organizations; chỉ cấu hình một lần từ admin account.",
+      "reason_vi": "Policy Firewall Manager tự quản lý WAF theo phạm vi tổ chức.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -63,43 +62,37 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5",
-        "ref9"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q037:C",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Service Catalog chỉ đóng gói template để provision; vẫn cần Config rule + remediation tùy biến ở mỗi account để phát hiện và gắn web ACL. Nhiều thành phần tự xây hơn Firewall Manager, và 'product applied' không phải thứ Config đánh giá trực tiếp.",
+      "reason_vi": "Service Catalog và remediation thêm thành phần và phụ thuộc triển khai.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q037:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Security Hub custom action là thao tác thủ công của analyst trên console (chọn tối đa 20 finding mỗi lần) để gửi sang EventBridge, nên không tự động bảo vệ tài nguyên mới; ngoài ra phải tự viết Lambda tạo web ACL.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Custom action Security Hub cần hành động kích hoạt và Lambda tự xây dựng.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref8"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -135,18 +128,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Tài liệu Firewall Manager nêu rõ AWS WAF policy hỗ trợ resource type AWS::ApiGateway::Stage và tự áp dụng cho account/tài nguyên mới trong tổ chức; managed rule group SQL database và Bot Control tồn tại đúng như mô tả.",
-    "open_issues": [
-      "Firewall Manager cần tiền điều kiện (Organizations, administrator account, AWS Config bật ở các account); đây không phải lý do loại B."
-    ]
+    "reason_vi": "Kết luận đúng; giảm độ dài và ghi rõ phạm vi API Gateway REST API stages.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất A: Config có managed rule api-gw-associated-with-waf để phát hiện stage chưa gắn web ACL, nên A khả thi, nhưng phải tạo web ACL cho từng API, viết SSM Automation document tùy biến và triển khai rule/remediation ở cả 12 account — nhiều công vận hành hơn một policy Firewall Manager tập trung có sẵn auto remediation. C thêm Service Catalog nhưng vẫn cần Config + remediation tùy biến. D dựa vào Security Hub custom action vốn là thao tác thủ công của analyst. Không tìm thấy bằng chứng bác bỏ B. Giữ B, verified, high.",
+  "reconciliation_vi": "Kết luận đúng; giảm độ dài và ghi rõ phạm vi API Gateway REST API stages.",
   "explanation_vi": {
-    "why_correct": "AWS Firewall Manager cho phép tạo một AWS WAF policy ở cấp Organizations gồm managed rule group Bot Control và SQL database, scope là API Gateway stage; policy tự áp dụng cho tài nguyên hiện có và tài nguyên/account mới, nên ít công vận hành nhất.",
+    "why_correct": "Firewall Manager áp dụng tập trung WAF Bot Control và SQL database rules cho API Gateway stages hiện có và tương lai trong tổ chức, giảm cấu hình riêng từng API.",
     "others": {
-      "Q037:A": "Khả thi nhưng phải quản lý web ACL cho từng API và tự viết remediation Config ở từng account, tốn công hơn nhiều so với một policy Firewall Manager.",
-      "Q037:C": "Service Catalog chỉ đóng gói template; vẫn phải tự dựng Config rule và remediation ở mỗi account, nên nhiều thành phần hơn Firewall Manager.",
-      "Q037:D": "Security Hub custom action là thao tác thủ công trên console, không tự động bảo vệ tài nguyên mới, lại phải tự viết Lambda tạo web ACL."
+      "Q037:A": "Mỗi API cần ACL và luồng Config remediation riêng nên vận hành nhiều hơn.",
+      "Q037:C": "Service Catalog và remediation thêm thành phần và phụ thuộc triển khai.",
+      "Q037:D": "Custom action Security Hub cần hành động kích hoạt và Lambda tự xây dựng."
     }
   },
   "keywords": [
@@ -163,7 +154,7 @@
       "meaning_vi": "Ưu tiên dịch vụ quản lý tập trung sẵn có thay vì tự dựng Config/Lambda."
     }
   ],
-  "memory_tip_vi": "Nếu cần áp AWS WAF (hoặc security group, Shield) cho nhiều account trong Organizations kể cả tài nguyên tương lai -> nghĩ đến AWS Firewall Manager policy; kiểm tra tiền điều kiện Organizations + AWS Config + resource type được hỗ trợ.",
+  "memory_tip_vi": "Nếu cần bảo vệ tài nguyên hiện có và tương lai trên nhiều tài khoản, ưu tiên Firewall Manager với tự động remediation.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -301,6 +292,11 @@
       "type": "typo",
       "location": "Q037:stem:0",
       "detail_vi": "'ousting APIs' là lỗi OCR của 'existing APIs'."
+    },
+    {
+      "type": "data",
+      "location": "Q037",
+      "detail_vi": "WAF bảo vệ API Gateway REST API stage; stem chỉ nói APIs và có lỗi 'ousting'."
     }
   ],
   "history": [
@@ -325,9 +321,26 @@
       "previous_answer": [
         "Q037:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Kết luận đúng; giảm độ dài và ghi rõ phạm vi API Gateway REST API stages.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q037:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q037:B"
+      ],
+      "note_vi": "Kết luận đúng; giảm độ dài và ghi rõ phạm vi API Gateway REST API stages.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Tên 'SQL database managed rule group' trong đáp án B khớp tên chính thức AWSManagedRulesSQLiRuleSet.",
+  "notes_vi": "Kết luận đúng; giảm độ dài và ghi rõ phạm vi API Gateway REST API stages.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:57+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -337,5 +350,23 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q037:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q037:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

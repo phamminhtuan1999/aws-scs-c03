@@ -1,0 +1,288 @@
+{
+  "question_id": "Q138",
+  "question_content_hash": "7f459e8340f52b63ebcbe330f07d390c9fd73005adb4df36ad0e7b12379faecb",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:24:46+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "2cb3312503fa26dc8eb72a5b9d84dbd98b67686f2802143e4e33d61eadfd99f6",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Đóng port 8435 bị lợi dụng trên EC2 instance.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Sự cố phải được ghi nhận (logged).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Stakeholder nhận thông báo VÀ cập nhật theo tiến trình sự cố.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Giải pháp tự động hóa, tái sử dụng để khắc phục các sự cố tương tự trong tương lai.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q138:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "EventBridge + Lambda có thể tự đóng port và ghi log, SNS có thể là target của rule; nhưng SNS chỉ gửi thông báo khi rule khớp sự kiện, không có cơ chế theo dõi sự cố và gửi cập nhật khi sự cố tiến triển. Cách nói 'subscribe SNS topic to the EventBridge rule' cũng không chính xác (SNS là target).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q138:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đóng port bằng cách sửa security group thủ công, không đáp ứng yêu cầu tự động hóa cho sự cố tương tự và không ghi nhận/cập nhật tiến trình sự cố.",
+      "requirement_ids": [
+        "R4",
+        "R3"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q138:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "EventBridge rule tạo OpsItem trong OpsCenter (ghi nhận sự cố kèm dữ liệu port); trường Notifications của OpsItem gửi SNS mỗi khi OpsItem được sửa/đổi trạng thái (cập nhật tiến trình); Automation runbook tùy chỉnh gắn với OpsItem để đóng port và dùng lại cho sự cố sau.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q138:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Inspector chỉ quét lỗ hổng/phơi nhiễm mạng và tạo finding, không tự động đóng port; CloudWatch alarm + SNS cũng không cho cập nhật theo tiến trình sự cố.",
+      "requirement_ids": [
+        "R1",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q138:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu xác nhận EventBridge tạo OpsItem, OpsItem có SNS notification khi được chỉnh sửa/thay đổi, và OpsCenter dùng Automation runbook để khắc phục; chỉ C đáp ứng yêu cầu cập nhật theo tiến trình. A gần đúng về tự động hóa nên độ tin cậy ở mức medium.",
+      "open_issues": [
+        "Nếu bỏ qua yêu cầu 'updates as the incident progresses', A cũng có thể được coi là chạy được.",
+        "C không nói rõ runbook được kích hoạt tự động hay chạy từ OpsItem."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T20:24:46+00:00"
+  },
+  "source_answer": [
+    "Q138:C"
+  ],
+  "researched_answer": [
+    "Q138:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu nêu trực tiếp: EventBridge rule tạo OpsItem (ghi nhận sự cố, input transformer chuyển dữ liệu như port), trường Notifications của OpsItem gửi SNS cho mọi stakeholder mỗi khi OpsItem được sửa kể cả đổi trạng thái (cập nhật theo tiến trình), và Automation runbook khắc phục vấn đề trong OpsItem. Mức medium vì phân biệt với A dựa hoàn toàn vào yêu cầu 'updates as the incident progresses'.",
+    "open_issues": [
+      "Nếu bỏ qua yêu cầu 'updates as the incident progresses', A (EventBridge + Lambda + SNS) cũng đóng port, ghi log và thông báo một lần.",
+      "C không nói rõ runbook được kích hoạt tự động hay chạy từ OpsItem."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại A (đối thủ mạnh nhất): EventBridge + Lambda đóng port và ghi log được, SNS là target của rule (ref1) nên thông báo một lần khi sự kiện khớp; A không có đối tượng theo dõi sự cố nên không có 'updates as the incident progresses'. Bằng chứng mới cho C: trang Editing an OpsItem nêu khi chỉ định SNS topic ở trường Notifications thì mọi stakeholder nhận thông báo mỗi khi OpsItem được sửa, kể cả đổi trạng thái (ref7) – đúng yêu cầu cập nhật theo tiến trình. B thủ công, D dùng Inspector (không tự đóng port). Giữ C, verified, medium.",
+  "explanation_vi": {
+    "why_correct": "C: EventBridge rule tạo OpsItem trong OpsCenter kèm port bị ảnh hưởng (ghi nhận sự cố); SNS topic trong trường Notifications của OpsItem báo cho stakeholder mỗi lần OpsItem được cập nhật hoặc đổi trạng thái; custom Automation runbook đóng port và dùng lại được cho sự cố tương tự.",
+    "others": {
+      "Q138:A": "Lambda đóng port và SNS thông báo một lần khi rule khớp, nhưng không có nơi theo dõi sự cố để gửi cập nhật khi sự cố tiến triển.",
+      "Q138:B": "Đóng port bằng cách sửa security group thủ công, không phải giải pháp tự động cho sự cố tương tự và không theo dõi tiến trình sự cố.",
+      "Q138:D": "Amazon Inspector chỉ quét lỗ hổng/phơi nhiễm mạng và tạo finding, không tự đóng port; CloudWatch alarm + SNS cũng không cập nhật theo tiến trình."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "the incident is logged",
+      "meaning_vi": "Cần bản ghi sự cố (OpsItem trong OpsCenter)."
+    },
+    {
+      "phrase": "notifications and updates as the incident progresses",
+      "meaning_vi": "Thông báo mỗi khi sự cố đổi trạng thái -> OpsItem Notifications (SNS)."
+    },
+    {
+      "phrase": "automated solution that can help remediate any similar incident",
+      "meaning_vi": "Runbook Systems Manager Automation dùng lại được."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề cần ghi nhận sự cố, báo stakeholder theo tiến trình và runbook khắc phục -> nghĩ đến EventBridge -> OpsCenter OpsItem (Notifications SNS) + Automation runbook; kiểm tra nếu chỉ cần tự động đóng port và báo một lần thì EventBridge + Lambda + SNS cũng đủ.",
+  "tags": {
+    "domains": [
+      "2 Incident Response"
+    ],
+    "services": [
+      "AWS Systems Manager",
+      "Amazon EventBridge",
+      "Amazon SNS",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Tự động hóa phản ứng sự cố: ghi nhận, thông báo theo tiến trình và khắc phục bằng runbook."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-targets.html",
+      "title": "Event bus targets in Amazon EventBridge",
+      "section": "Targets list",
+      "snapshot_id": "a7b1924eb122",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Systems Manager OpsItem",
+      "supports": "EventBridge có target Lambda, SNS topic, Systems Manager Automation và Systems Manager OpsItem.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-automatically-create-OpsItems-2.html",
+      "title": "Configure EventBridge rules to create OpsItems",
+      "section": "Overview",
+      "snapshot_id": "fe4fd8faca06",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can create a rule or edit an existing rule to set OpsCenter as the target of an EventBridge event.",
+      "supports": "EventBridge rule tạo OpsItem để ghi nhận sự cố (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateOpsItem.html",
+      "title": "CreateOpsItem - AWS Systems Manager API Reference",
+      "section": "Notifications",
+      "snapshot_id": "36ed82dce946",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Amazon Resource Name (ARN) of an SNS topic where notifications are sent when this OpsItem is edited or changed.",
+      "supports": "Stakeholder nhận cập nhật mỗi khi OpsItem thay đổi (R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-remediating.html",
+      "title": "Remediate OpsItem issues",
+      "section": "Overview",
+      "snapshot_id": "4872da576c96",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Using AWS Systems Manager Automation runbooks, you can remediate issues with AWS resources that are identified in an OpsItem.",
+      "supports": "Automation runbook khắc phục sự cố gắn với OpsItem (R1, R4).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html",
+      "title": "AWS Systems Manager OpsCenter",
+      "section": "Overview",
+      "snapshot_id": "7b5ce740d68f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "OpsCenter also provides Systems Manager Automation runbooks that you can use to quickly resolve issues.",
+      "supports": "OpsCenter là nơi ghi nhận, điều tra và xử lý OpsItem bằng runbook.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html",
+      "title": "What is Amazon Inspector?",
+      "section": "Overview",
+      "snapshot_id": "6ead4370c770",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When Amazon Inspector detects a software vulnerability or unintended network exposure, it creates a finding",
+      "supports": "Inspector tạo finding, không tự đóng port (D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html",
+      "title": "Editing an OpsItem - AWS Systems Manager",
+      "section": "Notifications",
+      "snapshot_id": "86b02791371e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "make sure that all stakeholders receive a notification when the OpsItem is edited, including a status change.",
+      "supports": "OpsItem Notifications gửi cập nhật cho stakeholder mỗi khi sự cố được sửa/đổi trạng thái (R3).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Đề không nói nguồn cảnh báo (ví dụ GuardDuty finding); giả định cảnh báo đi qua EventBridge.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:24:46+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q138:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:56+00:00",
+      "change": "Reconciliation: khớp source key C; status verified (medium); đáp án không đổi; bổ sung ref7 (Editing an OpsItem: stakeholder nhận thông báo khi OpsItem được sửa, kể cả đổi trạng thái).",
+      "previous_answer": [
+        "Q138:C"
+      ]
+    }
+  ]
+}

@@ -2,9 +2,9 @@
   "question_id": "Q094",
   "question_content_hash": "d1925497bef531d1dc0388eecef696376b44b72fd9089dde049f0b92f3e7f32f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:58:31Z",
-  "last_reviewed_at": "2026-09-30T20:41:41+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,70 +33,59 @@
     {
       "unit_id": "Q094:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Xóa IAM user là một kỹ thuật containment AWS có nêu, nhưng A làm trước khi xác định phạm vi, dùng CloudWatch thay vì CloudTrail (nguồn ghi API call) và không xóa tài nguyên trái phép, nên không đạt yêu cầu scope + remediate.",
+      "verdict": "undetermined",
+      "reason_vi": "Xóa user trước làm gián đoạn và CloudWatch không là nguồn API audit chính.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7",
-        "ref4",
-        "ref10"
+        "Q094-r2-1",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q094:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Khớp quy trình AWS cho access key bị lộ: xem CloudTrail để xác định phạm vi, xóa tài nguyên trái phép (eradication), rotate access key của user bị lộ; gỡ quarantine policy chỉ ở bước cuối sau khi đã hoàn tất khắc phục - đúng hướng dẫn 'keep the policy in place until you complete all remediation steps' của AWS Knowledge Center.",
+      "verdict": "undetermined",
+      "reason_vi": "Gần nhất; chỉ gỡ quarantine nếu Support case hướng dẫn, không mặc định.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref4",
-        "ref5",
-        "ref2",
-        "ref1",
-        "ref9",
-        "ref10"
+        "Q094-r2-1",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q094:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Gỡ AWSCompromisedKeyQuarantineV3 ngay bước đầu trong khi key bị lộ vẫn còn hiệu lực và C không hề rotate key, nên mở lại quyền cho kẻ tấn công; trang policy ghi 'Do NOT remove this policy'.",
+      "verdict": "undetermined",
+      "reason_vi": "Gỡ quarantine trước điều tra/rotate sẽ khôi phục quyền cho credential bị lộ.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5",
-        "ref9"
+        "Q094-r2-1",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q094:D",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Rotate key và xóa tài nguyên trái phép là đúng, nhưng scoping dựa vào CloudWatch logs – chỉ có hoạt động API nếu trail đã được cấu hình gửi sang CloudWatch Logs, điều đề không nêu; CloudTrail (Event history) mới là nguồn ghi API call của access key, nên D kém hơn B.",
+      "verdict": "undetermined",
+      "reason_vi": "CloudWatch logs không thay CloudTrail API history và chỉ rotate impacted key có thể thiếu key/backdoor khác.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref8",
-        "ref5",
-        "ref2",
-        "ref10"
+        "Q094-r2-1",
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -123,26 +112,26 @@
   "source_answer": [
     "Q094:B"
   ],
-  "researched_answer": [
-    "Q094:B"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Bằng chứng trực tiếp cho từng vế của B: AWS IR Guide (CloudTrail là nguồn log, eradication, rotate key) và Knowledge Center 'Manage IAM access keys securely' (xem CloudTrail logs để tìm API call trái phép; giữ AWSCompromisedKeyQuarantineV3 cho tới khi hoàn tất mọi bước khắc phục). C bị bác trực tiếp (gỡ policy trước, không rotate key). D dùng CloudWatch thay cho CloudTrail nên kém hơn.",
+    "reason_vi": "Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ.",
     "open_issues": [
-      "D vẫn khả thi một phần nếu CloudTrail đã được gửi sang CloudWatch Logs; B được chọn vì dùng đúng nguồn ghi API call mà AWS hướng dẫn (ref6, ref10), không cần giả định thêm."
+      "No fully supported option as written; intended B is conditional.",
+      "Current managed policy edited 2026-03-16 16:27 UTC per actual page; không suy đoán từ crawler."
     ]
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Blind chủ yếu dựa vào re:Post Knowledge Center nên đã tìm thêm bằng chứng docs.aws.amazon.com: AWS Security Incident Response Guide (PDF) nêu CloudTrail là nguồn log quan trọng ghi management API call, giai đoạn eradication là xóa tài nguyên trái phép và 'Rotate or delete keys', và xóa/tạo lại IAM user chỉ là kỹ thuật containment. Kiểm tra cả hai phía: (1) C gỡ policy trước khi rotate key – bị bác trực tiếp bởi trang AWSCompromisedKeyQuarantineV3 ('Do NOT remove this policy'). (2) Đối thủ mạnh nhất D: IR Guide có nhắc CloudWatch Logs như một nguồn log khả dụng, nên D không phải 'không hoạt động' mà là meets_but_suboptimal – nó dựa vào CloudWatch (chỉ có API activity nếu đã cấu hình trail → CloudWatch Logs) thay vì CloudTrail. (3) Thứ tự gỡ policy ở B: không có docs nói rõ, nhưng B gỡ ở bước CUỐI sau khi đã rotate key và xóa tài nguyên, nên không mâu thuẫn với mục đích quarantine. Giữ B, verified, medium. | AUDIT (r1-audit, 2026-09-30T20:41:41+00:00): bổ sung Knowledge Center 'Manage IAM access keys securely' (snapshot 09b4c40c669c, ref9-ref10): 'Keep the AWSCompromisedKeyQuarantineV3 policy in place until you complete all remediation steps' và 'Review your CloudTrail logs...'. Điều này giải quyết open issue về thời điểm gỡ policy (sau khi khắc phục, đúng thứ tự B). Nâng confidence medium -> high, đáp án không đổi.",
+  "reconciliation_vi": "Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ.",
   "explanation_vi": {
-    "why_correct": "B đi đúng quy trình ứng phó access key bị lộ của AWS: xem CloudTrail để xác định phạm vi hành động của key, xóa tài nguyên trái phép, rotate mọi access key của user bị gắn AWSCompromisedKeyQuarantineV3, và chỉ gỡ quarantine policy ở bước cuối khi đã hoàn tất khắc phục (AWS khuyên giữ policy cho tới lúc đó).",
+    "why_correct": "B hợp lý ở bước điều tra CloudTrail, xóa tài nguyên trái phép và rotate keys, nhưng tự gỡ quarantine policy không được tài liệu hiện hành hỗ trợ. Phải làm theo hướng dẫn trong Support case.",
     "others": {
-      "Q094:A": "Xóa user chỉ là containment; A không xác định phạm vi bằng CloudTrail và không xóa tài nguyên trái phép.",
-      "Q094:C": "Gỡ quarantine policy trước khi rotate key (và không rotate key) mở lại quyền cho kẻ tấn công; AWS ghi 'Do NOT remove this policy'.",
-      "Q094:D": "Rotate key và xóa tài nguyên là đúng, nhưng dùng CloudWatch logs để xác định phạm vi thay cho CloudTrail – nguồn ghi API call của access key."
+      "Q094:A": "Xóa user trước làm gián đoạn và CloudWatch không là nguồn API audit chính.",
+      "Q094:B": "Gần nhất; chỉ gỡ quarantine nếu Support case hướng dẫn, không mặc định.",
+      "Q094:C": "Gỡ quarantine trước điều tra/rotate sẽ khôi phục quyền cho credential bị lộ.",
+      "Q094:D": "CloudWatch logs không thay CloudTrail API history và chỉ rotate impacted key có thể thiếu key/backdoor khác."
     }
   },
   "keywords": [
@@ -159,7 +148,7 @@
       "meaning_vi": "Eradication: xóa tài nguyên trái phép, rotate key, sau cùng mới khôi phục trạng thái user."
     }
   ],
-  "memory_tip_vi": "Nếu AWS Support báo access key bị lộ và user bị gắn AWSCompromisedKeyQuarantine -> nghĩ đến CloudTrail để xác định phạm vi, xóa tài nguyên trái phép, rotate key; kiểm tra: không gỡ quarantine policy trước khi key cũ đã bị vô hiệu.",
+  "memory_tip_vi": "Nếu AWS gắn quarantine vì key lộ, điều tra CloudTrail và rotate keys; xử lý quarantine theo Support case.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -302,6 +291,18 @@
       "quote": "Review your CloudTrail logs to identify unauthorized API calls that were made with the compromised key.",
       "supports": "Xác định phạm vi hành động của key bị lộ bằng CloudTrail logs (B), không phải CloudWatch (A, D).",
       "kind": "direct"
+    },
+    {
+      "id": "Q094-r2-1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/securing_access-keys.html",
+      "title": "Secure access keys - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30",
+      "quote": "You can review the AWS access keys in your code",
+      "supports": "Rotate compromised keys and inspect CloudTrail to determine actions.",
+      "kind": "direct",
+      "snapshot_id": "f50d9f8b1cc7",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -309,6 +310,16 @@
       "type": "typo",
       "location": "Q094:D",
       "detail_vi": "\"IAM abbess keys\" là lỗi chính tả của \"IAM access keys\"."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q094",
+      "detail_vi": "No fully supported option as written; intended B is conditional."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q094",
+      "detail_vi": "Current managed policy edited 2026-03-16 16:27 UTC per actual page; không suy đoán từ crawler."
     }
   ],
   "history": [
@@ -333,6 +344,38 @@
       "previous_answer": [
         "Q094:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q094:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ.",
+      "technical_change": true
     }
-  ]
+  ],
+  "notes_vi": "Managed policy hiện hành ghi không gỡ, làm theo Support case; review paraphrase 'giữ tới remediation rồi gỡ' không được nguồn hỗ trợ.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q094:B"
+    ],
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,283 @@
+{
+  "question_id": "Q075",
+  "question_content_hash": "f41523494bc8a4944a45005b44e5e14297b039c812159eb6eceedac52bb2196b",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:51Z",
+  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "e72e213feba86e51bd7f50c21eb79a822b4957fcf19e922cf7c18d7a7ac3ed14",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phát hiện mối đe dọa tập trung: xác định hoạt động đáng ngờ/độc hại trên tất cả 50 account trong Organizations.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Tập trung security findings vào audit account (môi trường AWS Control Tower).",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Security team nhận email cảnh báo trong vòng 5 phút khi có finding mới.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn MỘT giải pháp đáp ứng tất cả yêu cầu.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q075:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "GuardDuty là dịch vụ threat detection; delegated administrator (audit account) bật và quản lý GuardDuty cho mọi member account; rule EventBridge ở administrator account nhận finding của cả member account, gửi tới SNS email; finding mới được gửi EventBridge gần real-time.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q075:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Bật GuardDuty riêng lẻ từng account và cấp IAM role cross-account không tập trung finding vào audit account; CloudWatch alarm dựa trên metric chứ không trực tiếp theo dõi GuardDuty finding, lại phải cấu hình ở từng account.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q075:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS Config đánh giá cấu hình tài nguyên, không phát hiện hoạt động độc hại (threat detection); Systems Manager không phải cơ chế thu thập security findings; Lambda giám sát S3 là giải pháp tự chế, không đảm bảo yêu cầu.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q075:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng (vulnerability management), quét lỗ hổng phần mềm/phơi nhiễm mạng, không phát hiện hoạt động đáng ngờ/độc hại trên account; lại chỉ bao phủ workload EC2 và cần rule EventBridge ở từng account.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q075:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Mô tả GuardDuty khớp nguyên văn yêu cầu 'suspicious and potentially malicious activity'; tài liệu GuardDuty xác nhận delegated admin quản lý mọi member và rule EventBridge ở admin account nhận finding của member.",
+      "open_issues": [
+        "GuardDuty là dịch vụ Regional: delegated admin và auto-enable phải cấu hình ở mỗi Region cần giám sát (option không nêu Region)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:49:51Z"
+  },
+  "source_answer": [
+    "Q075:A"
+  ],
+  "researched_answer": [
+    "Q075:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A. GuardDuty là dịch vụ threat detection; delegated admin quản lý GuardDuty cho mọi member account; rule EventBridge ở admin account nhận finding của cả member, GuardDuty gửi finding mới gần real-time; Prescriptive Guidance xác nhận Audit account của Control Tower có thể làm delegated admin cho dịch vụ bảo mật.",
+    "open_issues": [
+      "GuardDuty là dịch vụ Regional: delegated admin, auto-enable và rule EventBridge phải cấu hình ở từng Region cần giám sát (option không nêu Region)."
+    ]
+  },
+  "reconciliation_vi": "Source key = A, trùng blind. Đã tìm bằng chứng phản bác: B dùng GuardDuty nhưng bật riêng lẻ, CloudWatch alarm không theo dõi trực tiếp finding và không tập trung finding vào audit account; C dùng AWS Config (đánh giá cấu hình, không phải threat detection) và tự chế thu thập qua Systems Manager; D dùng Inspector (quản lý lỗ hổng) — không phát hiện hoạt động độc hại. Bổ sung ref7 (Prescriptive Guidance: Audit account của Control Tower làm delegated admin cho dịch vụ giám sát threat). Giữ A, verified (high).",
+  "explanation_vi": {
+    "why_correct": "GuardDuty phát hiện hoạt động đáng ngờ/độc hại; đặt audit account làm delegated administrator để bật GuardDuty cho mọi member và gom finding về đó, rồi một rule EventBridge ở audit account chuyển finding (gửi gần real-time) tới SNS topic gửi email cho security team trong vòng vài phút.",
+    "others": {
+      "Q075:B": "Bật GuardDuty từng account và dùng IAM role cross-account không gom finding về audit account; CloudWatch alarm dựa trên metric, không theo dõi trực tiếp finding, lại phải cấu hình ở 50 account.",
+      "Q075:C": "AWS Config đánh giá cấu hình tài nguyên chứ không phát hiện hoạt động độc hại; thu thập finding qua Systems Manager + Lambda quét S3 là giải pháp tự chế, không đảm bảo 5 phút.",
+      "Q075:D": "Amazon Inspector quét lỗ hổng phần mềm/phơi nhiễm mạng, không phát hiện hoạt động đáng ngờ trên account, và cần rule EventBridge ở từng member account."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "suspicious and potentially malicious activity",
+      "meaning_vi": "Mô tả đúng chức năng threat detection của GuardDuty."
+    },
+    {
+      "phrase": "centralize security findings into an audit account",
+      "meaning_vi": "Audit account làm delegated administrator."
+    },
+    {
+      "phrase": "within 5 minutes",
+      "meaning_vi": "Cần luồng sự kiện gần real-time: EventBridge -> SNS."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần phát hiện hoạt động độc hại trên toàn organization và gom về audit account -> nghĩ đến GuardDuty delegated admin + rule EventBridge -> SNS ở admin account; kiểm tra: Inspector = lỗ hổng, Config = cấu hình, và GuardDuty cấu hình theo từng Region.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "Amazon GuardDuty",
+      "AWS Organizations",
+      "AWS Control Tower",
+      "Amazon EventBridge",
+      "Amazon SNS"
+    ],
+    "reason_vi": "Phát hiện threat tập trung cho nhiều account và cảnh báo nhanh qua email."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html",
+      "title": "What is Amazon GuardDuty?",
+      "section": "intro",
+      "snapshot_id": "667e4665f388",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon GuardDuty is a threat detection service that continuously monitors, analyzes, and processes AWS data sources and logs in your AWS environment.",
+      "supports": "GuardDuty là dịch vụ threat detection, xác định hoạt động đáng ngờ và độc hại.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html",
+      "title": "Managing GuardDuty accounts with AWS Organizations",
+      "section": "intro",
+      "snapshot_id": "caa20bc04c20",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, the administrator account can enable and manage GuardDuty for all the member accounts in the organization within that Region.",
+      "supports": "Delegated administrator (audit account) bật và quản lý GuardDuty tập trung cho mọi member account (theo Region).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+      "title": "Processing GuardDuty findings with Amazon EventBridge",
+      "section": "EventBridge rule for GuardDuty multi-account environments",
+      "snapshot_id": "0e9346cee7b7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you set up finding notifications through EventBridge in your administrator account, you will receive notifications of findings from both your account and member accounts.",
+      "supports": "Một rule EventBridge ở admin account nhận finding của toàn bộ member account; SNS topic có thể là target (email).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+      "title": "Processing GuardDuty findings with Amazon EventBridge",
+      "section": "Understanding EventBridge notification frequency in GuardDuty",
+      "snapshot_id": "0e9346cee7b7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty sends these notifications in near real-time when it generates a finding with a unique finding ID.",
+      "supports": "Finding mới được gửi EventBridge gần real-time, đáp ứng cảnh báo trong 5 phút.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/WhatIsConfig.html",
+      "title": "What Is AWS Config?",
+      "section": "intro",
+      "snapshot_id": "19eb8056b939",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Config provides a detailed view of the configuration of AWS resources in your AWS account.",
+      "supports": "AWS Config tập trung vào cấu hình tài nguyên, không phải threat detection.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html",
+      "title": "What is Amazon Inspector?",
+      "section": "intro",
+      "snapshot_id": "6ead4370c770",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Inspector is a vulnerability management service that automatically discovers workloads and continually scans them for software vulnerabilities and unintended network exposure.",
+      "supports": "Inspector là quét lỗ hổng, không phát hiện hoạt động độc hại trên account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/designing-control-tower-landing-zone/auditing.html",
+      "title": "Auditing and alerting - AWS Prescriptive Guidance",
+      "section": "Auditing and alerting",
+      "snapshot_id": "b92286f388cc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the Audit account can be the delegated administrator for several security services that monitor the accounts in the organization for threats and compliance.",
+      "supports": "Audit account của Control Tower là nơi phù hợp làm delegated administrator cho GuardDuty.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Tài liệu Control Tower hiện hành gọi audit account là 'Config aggregator account' (tên cũ: audit account) và khuyến nghị giới hạn cho đội security/compliance; không ảnh hưởng kết luận.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:51Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q075:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:07:59Z",
+      "change": "Reconciliation: khớp source key A; kiểm tra lại B/C/D; bổ sung ref7 (Audit account làm delegated admin); giữ verified (high).",
+      "previous_answer": [
+        "Q075:A"
+      ]
+    }
+  ]
+}

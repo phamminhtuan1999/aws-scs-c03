@@ -2,9 +2,9 @@
   "question_id": "Q028",
   "question_content_hash": "f3328138bd3cecae906e0f2ffb837f57f012b3e4c77ba31f5100ee815f1fa4b7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:08Z",
-  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,14 +29,12 @@
       "unit_id": "Q028:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Security group chỉ kiểm soát traffic mạng tới/từ instance; kẻ tấn công gọi AWS API bằng credential đã lộ từ nơi khác nên thay đổi security group không chặn được.",
+      "reason_vi": "Sai: inbound network rule không vô hiệu hóa AWS credentials bị đánh cắp.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref2",
-        "ref8"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -44,46 +42,43 @@
       "unit_id": "Q028:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Systems Manager Inventory chỉ thu thập metadata của node; không vô hiệu hoá credential bị lộ.",
+      "reason_vi": "Sai: inventory không ngăn attacker dùng token.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q028:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector là dịch vụ quét lỗ hổng phần mềm; chạy assessment CVE không chặn được việc kẻ tấn công đang dùng credential. (Agent/rules package kiểu Inspector Classic cũng là mô hình cũ.)",
+      "reason_vi": "Sai: vulnerability scan không thu hồi token.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q028:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Credential của instance profile là STS temporary credential của IAM role; 'Revoke active sessions' gắn policy AWSRevokeOlderSessions deny mọi quyền cho các session phát hành trước thời điểm thu hồi, vô hiệu hoá ngay credential kẻ tấn công đang giữ.",
+      "reason_vi": "Đúng: revoke active role sessions issued trước thời điểm thu hồi.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -116,35 +111,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu GuardDuty mô tả finding là temporary credential tạo trên EC2 bị dùng từ bên ngoài; tài liệu IAM nêu trực tiếp 'Revoke active sessions' vô hiệu hoá ngay mọi credential của role phát hành trước thời điểm thu hồi.",
-    "open_issues": [
-      "Tên finding trong đề là dạng cũ; hiện GuardDuty tách thành .InsideAWS và .OutsideAWS (không đổi đáp án)."
-    ]
+    "reason_vi": "Giữ D; revoke issued sessions trước cutoff, không ngăn phát hành credentials mới nếu instance còn bị kiểm soát.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại A (xoá security group mở 0.0.0.0/0): finding .OutsideAWS nêu credential tạo riêng cho EC2 đang bị dùng từ IP bên ngoài để gọi AWS API, nên security group của instance không liên quan tới các lời gọi API này; B/C chỉ thu thập inventory/quét lỗ hổng, không chặn truy cập. Tài liệu IAM xác nhận thu hồi session của role gắn AWSRevokeOlderSessions và deny ngay mọi credential phát hành trước đó. Giữ D, verified, high. Giữ source_issue outdated (tên finding) và ghi chú về cách diễn đạt D; bỏ source_issue encoding ở stem.",
+  "reconciliation_vi": "Giữ D; revoke issued sessions trước cutoff, không ngăn phát hành credentials mới nếu instance còn bị kiểm soát.",
   "explanation_vi": {
-    "why_correct": "Credential bị lộ là STS temporary credential của IAM role gắn với instance profile; 'Revoke active sessions' trên IAM console gắn policy AWSRevokeOlderSessions deny mọi session phát hành trước thời điểm thu hồi, nên chặn ngay kẻ tấn công.",
+    "why_correct": "Thu hồi các session của IAM role gắn instance profile để credentials bị đánh cắp không còn gọi AWS API. Thay inbound security group không chặn API call thực hiện từ bên ngoài bằng credentials đó.",
     "others": {
-      "Q028:A": "Kẻ tấn công gọi AWS API từ nơi khác bằng credential đã lộ, nên sửa security group của instance không chặn được.",
-      "Q028:B": "Cài SSM Agent và chạy Inventory chỉ thu thập metadata của instance, không vô hiệu hoá credential đang bị dùng.",
-      "Q028:C": "Amazon Inspector chỉ quét lỗ hổng phần mềm; chạy assessment CVE không chặn truy cập, và không phải bước đầu tiên khi credential đang bị lạm dụng."
+      "Q028:A": "Sai: inbound network rule không vô hiệu hóa AWS credentials bị đánh cắp.",
+      "Q028:B": "Sai: inventory không ngăn attacker dùng token.",
+      "Q028:C": "Sai: vulnerability scan không thu hồi token."
     }
   },
   "keywords": [
     {
       "phrase": "InstanceCredentialExfiltration",
-      "meaning_vi": "Temporary credential của EC2 instance role bị dùng từ bên ngoài."
+      "meaning_vi": "Credential của EC2 role bị đánh cắp."
     },
     {
-      "phrase": "deny access to the malicious actor",
-      "meaning_vi": "Vô hiệu hoá credential đã phát hành -> revoke active sessions của role."
+      "phrase": "API access keys",
+      "meaning_vi": "Revoke role sessions để chặn AWS API access."
     },
     {
       "phrase": "first step",
-      "meaning_vi": "Ưu tiên containment (chặn credential) trước điều tra/quét."
+      "meaning_vi": "Containment trước scanning/investigation."
     }
   ],
-  "memory_tip_vi": "Nếu GuardDuty báo credential của EC2 instance role bị dùng từ bên ngoài -> nghĩ đến revoke active sessions của IAM role (AWSRevokeOlderSessions); kiểm tra đề hỏi bước đầu tiên (containment) hay bước điều tra sau đó.",
+  "memory_tip_vi": "Nếu instance credentials bị dùng ngoài AWS, revoke role sessions trước rồi tiếp tục xử lý nguồn xâm nhập.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -272,9 +265,9 @@
       "detail_vi": "Tên finding hiện tại là UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS (hoặc .InsideAWS); đề dùng tên cũ không có hậu tố. Không ảnh hưởng đáp án."
     },
     {
-      "type": "ambiguous",
-      "location": "Q028:D",
-      "detail_vi": "Thao tác thực tế là revoke session của IAM role gắn với instance profile (không phải của chính instance profile); cách diễn đạt hơi lỏng nhưng không đổi đáp án."
+      "type": "data",
+      "location": "Q028",
+      "detail_vi": "Revoke có thể ảnh hưởng ứng dụng; không ngăn attacker lấy credentials mới nếu instance vẫn bị kiểm soát."
     }
   ],
   "history": [
@@ -299,6 +292,23 @@
       "previous_answer": [
         "Q028:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ D; revoke issued sessions trước cutoff, không ngăn phát hành credentials mới nếu instance còn bị kiểm soát.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q028:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q028:D"
+      ],
+      "note_vi": "Giữ D; revoke issued sessions trước cutoff, không ngăn phát hành credentials mới nếu instance còn bị kiểm soát.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -310,5 +320,20 @@
         "corrected": "2026-09-30T19:49:06Z"
       }
     }
+  },
+  "notes_vi": "Giữ D; revoke issued sessions trước cutoff, không ngăn phát hành credentials mới nếu instance còn bị kiểm soát.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q028:D",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

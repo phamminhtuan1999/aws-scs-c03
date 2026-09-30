@@ -1,0 +1,287 @@
+URL: https://docs.aws.amazon.com/macie/latest/user/discovery-asdd-how-it-works.html
+TITLE: How automated sensitive data discovery works - Amazon Macie
+
+# How automated sensitive data discovery works
+
+When you enable Amazon Macie for your AWS account, Macie creates an AWS Identity and Access Management (IAM) service-linked role for your account in the current
+AWS Region. The permissions policy for this role allows Macie to call other AWS services and
+monitor AWS resources on your behalf. By using this role, Macie generates and maintains an
+inventory of your Amazon Simple Storage Service (Amazon S3) general purpose buckets in the Region. The inventory includes
+information about each of your S3 buckets and objects in the buckets. If you're the Macie administrator
+for an organization, your inventory includes information about buckets that your member accounts
+own. For more information, see Managing multiple accounts.
+
+If you enable automated sensitive data discovery, Macie evaluates your inventory data on a daily basis to identify S3
+objects that are eligible for automated discovery. As part of the evaluation, Macie also selects a sampling of
+representative objects to analyze. Macie then retrieves and analyzes the latest version of each
+selected object, inspecting it for sensitive data.
+
+As the analysis progresses each day, Macie updates statistics, inventory data, and other
+information that it provides about your Amazon S3 data. Macie also produces records of the sensitive
+data it finds and the analysis that it performs. The resulting data provides insight into where
+Macie found sensitive data in your Amazon S3 data estate, which can span all the S3 general purpose
+buckets for your account. The data can help you assess the security and privacy of your Amazon S3 data,
+determine where to perform a deeper investigation, and identify cases where remediation is
+necessary.
+
+For a brief demonstration of how automated sensitive data discovery works, watch the following video:
+
+To configure and manage automated sensitive data discovery, you must be the Macie administrator for an organization or have a
+standalone Macie account. If your account is part of an organization, only the Macie administrator for
+your organization can enable or disable automated discovery for accounts in the organization. In addition, only
+the Macie administrator can configure and manage automated discovery settings for the accounts. This includes settings
+that define the scope and nature of the analyses that Macie performs. If you have a member account
+in an organization, contact your Macie administrator to learn about the settings for your account and
+organization.
+
+Topics
+
+- Key components
+
+- Considerations
+
+## Key components
+
+Amazon Macie uses a combination of features and techniques to perform automated sensitive data discovery. These work
+together with features that Macie provides to help you monitor your Amazon S3 data for security and access control.
+
+Selecting S3 objects to analyze
+
+On a daily basis, Macie evaluates your Amazon S3 inventory data to identify S3 objects that
+are eligible for analysis by automated sensitive data discovery. If you're the Macie administrator for an organization, by
+default the evaluation includes data for S3 buckets that your member accounts own.
+
+As part of the evaluation, Macie uses sampling techniques to select representative S3
+objects to analyze. The techniques define groups of objects that have similar metadata and are
+likely to have similar content. The groups are based on dimensions such as bucket name,
+prefix, storage class, file name extension, and last modified date. Macie then selects a
+representative set of samples from each group, retrieves the latest version of each selected
+object from Amazon S3, and analyzes each selected object to determine whether the object contains
+sensitive data. When the analysis is complete, Macie discards its copy of the object.
+
+The sampling strategy prioritizes distributed analyses. In general, it uses a
+breadth-first approach to your Amazon S3 data estate. Each day, a representative set of S3 objects
+are selected from as many of your general purpose buckets as possible based on the total
+storage size of all the classifiable objects in your Amazon S3 data estate. For example, if Macie
+has already analyzed and found sensitive data in objects in one bucket and hasn't yet analyzed
+objects in another bucket, the latter bucket is a higher priority for analysis. With this
+approach, you gain broad insight into the sensitivity of your Amazon S3 data more quickly.
+Depending on the size of your data estate, analysis results can begin to appear within 48
+hours.
+
+The sampling strategy also prioritizes analysis of different kinds of S3 objects and
+objects that were recently created or changed. Any single object sample isn’t guaranteed to be
+conclusive. Therefore, analysis of a diverse set of objects can yield better insight into the
+types and amount of sensitive data that an S3 bucket might contain. In addition, prioritizing
+new or recently changed objects helps the analysis adapt to changes to your bucket inventory.
+For example, if objects are created or changed after a previous analysis, those objects are a
+higher priority for subsequent analysis. Conversely, if an object was previously analyzed and
+hasn't changed since that analysis, Macie doesn't analyze the object again. This approach
+helps you establish sensitivity baselines for individual S3 buckets. Then, as continual,
+incremental analyses progress for your account, your sensitivity assessments of individual
+buckets can become increasingly deeper and detailed at a predictable rate.
+
+Defining the scope of the analyses
+
+By default, Macie includes all the S3 general purpose buckets for your account when it
+evaluates your inventory data and selects S3 objects to analyze. If you're the Macie administrator for
+an organization, this includes buckets that your member accounts own.
+
+You can adjust the scope of the analyses by excluding specific S3 buckets from
+automated sensitive data discovery. For example, you might want to exclude buckets that typically store AWS logging
+data, such as AWS CloudTrail event logs. To exclude a bucket, you can change the automated discovery settings for
+your account or the bucket. If you do this, Macie starts excluding the bucket when the next
+daily evaluation and analysis cycle starts. You can exclude as many as 1,000 buckets from
+analyses. If you exclude an S3 bucket, you can include it again later. To do this, change the
+settings for your account or the bucket again. Macie then starts including the bucket when the
+next daily evaluation and analysis cycle starts.
+
+If you're the Macie administrator for an organization, you can also enable or disable automated sensitive data discovery
+for individual accounts in your organization. If you disable automated discovery for an account, Macie
+excludes all the S3 buckets that the account owns. If you subsequently re-enable automated discovery for
+the account, Macie starts including the buckets again.
+
+Determining which types of sensitive data to detect and
+report
+
+By default, Macie inspects S3 objects by using the set of managed data identifiers that
+we recommend for automated sensitive data discovery. For a list of these managed data identifiers, see Default settings for automated sensitive data discovery.
+
+You can tailor the analyses to focus on specific types of sensitive data. To do this,
+change your automated discovery settings in any of the following ways:
+
+- Add or remove managed data identifiers – A
+managed data identifier is a set of built-in criteria
+and techniques that are designed to detect a specific type of sensitive data, such as credit
+card numbers, AWS secret access keys, or passport numbers for a particular country or
+region. For more information, see Using managed data
+identifiers.
+
+- Add or remove custom data identifiers – A
+custom data identifier is a set of criteria that you
+define to detect sensitive data. With custom data identifiers, you can detect sensitive data
+that reflects your organization's particular scenarios, intellectual property, or
+proprietary data. For example, you can detect employee IDs, customer account numbers, or
+internal data classifications. For more information, see Building custom data
+identifiers.
+
+- Add or remove allow lists – In Macie, an allow
+list specifies text or a text pattern that you want Macie to ignore in S3 objects. These are
+typically sensitive data exceptions for your particular scenarios or environment, such as
+public names or phone numbers for your organization, or sample data that your organization
+uses for testing. For more information, see Defining sensitive data exceptions with allow
+lists.
+
+If you change a setting, Macie applies your change when the next daily analysis cycle
+starts. If you're the Macie administrator for an organization, Macie uses the settings for your
+account when it analyzes S3 objects for other accounts in your organization.
+
+You can also configure bucket-level settings that determine whether specific types of
+sensitive data are included in assessments of a bucket's sensitivity. To learn how, see Adjusting sensitivity scores for S3 buckets.
+
+Calculating sensitivity scores
+
+By default, Macie automatically calculates a sensitivity score for each S3 general purpose
+bucket for your account. If you're the Macie administrator for an organization, this includes buckets
+that your member accounts own.
+
+In Macie, a sensitivity score is a quantitative measure of
+the intersection of two primary dimensions: the amount of sensitive data that Macie has found
+in a bucket, and the amount of data that Macie has analyzed in a bucket. A bucket's
+sensitivity score determines which sensitivity label Macie assigns to the bucket. A sensitivity label is a qualitative representation of a bucket's
+sensitivity score—for example, Sensitive, Not sensitive, and Not yet
+analyzed. For details about the range of sensitivity scores and labels that Macie
+defines, see Sensitivity scoring for S3 buckets.
+
+Important
+
+An S3 bucket's sensitivity score and label don't imply or otherwise indicate the criticality
+or importance that the bucket or the bucket's objects might have for you or your
+organization. Instead, they're intended to provide reference points that can help you
+identify and monitor potential security risks.
+
+When you enable automated sensitive data discovery for the first time, Macie automatically assigns a sensitivity score
+of 50 and the Not yet
+analyzed label to each S3 bucket. The exception is empty buckets. An empty bucket is a bucket that doesn't store any objects or all the
+bucket's objects contain zero (0) bytes of data. If this is the case for a bucket, Macie
+assigns a score of 1 to the bucket and it assigns the
+Not sensitive label to the bucket.
+
+As automated sensitive data discovery progresses, Macie updates sensitivity scores and labels to reflect the
+results of its analyses. For example:
+
+- If Macie doesn't find sensitive data in an object, Macie decreases the bucket's
+sensitivity score and updates the bucket's sensitivity label as necessary.
+
+- If Macie finds sensitive data in an object, Macie increases the bucket's sensitivity score
+and updates the bucket's sensitivity label as necessary.
+
+- If Macie finds sensitive data in an object that's subsequently changed, Macie removes
+sensitive data detections for the object from the bucket's sensitivity score and updates the
+bucket's sensitivity label as necessary.
+
+- If Macie finds sensitive data in an object that's subsequently deleted, Macie removes
+sensitive data detections for the object from the bucket's sensitivity score and updates the
+bucket's sensitivity label as necessary.
+
+You can adjust the sensitivity scoring settings for individual S3 buckets by including or
+excluding specific types of sensitive data from a bucket's score. You can also override a
+bucket's calculated score by manually assigning the maximum score (100) to the bucket. If you assign the maximum score, the bucket's label is
+Sensitive. For more information, see Adjusting sensitivity scores for S3
+buckets.
+
+Generating metadata, statistics, and other types of
+results
+
+When you enable automated sensitive data discovery, Macie generates and begins maintaining additional inventory
+data, statistics, and other information about the S3 general purpose buckets for your account.
+If you're the Macie administrator for an organization, by default this includes buckets that your
+member accounts own.
+
+The additional information captures the results of the automated sensitive data discovery activities that Macie
+has performed thus far. It also supplements other information that Macie provides about your
+Amazon S3 data, such as the public access and shared access settings for individual buckets. The
+additional information includes:
+
+- An interactive, visual representation of data sensitivity across your Amazon S3 data
+estate.
+
+- Aggregated data sensitivity statistics, such as the total number of buckets that Macie
+has found sensitive data in and how many of those buckets are publicly accessible.
+
+- Bucket-level details that indicate the current status of the analyses. For example, a
+list of objects that Macie has analyzed in a bucket, the types of sensitive data that Macie
+has found in a bucket, and the number of occurrences of each type of sensitive data that
+Macie found.
+
+The information also includes statistics and details that can help you assess and monitor
+coverage of your Amazon S3 data. You can check the status of the analyses for your data estate
+overall and for individual S3 buckets. You can also identify issues that prevented Macie from
+analyzing objects in specific buckets. If you remediate the issues, you can increase coverage
+of your Amazon S3 data during subsequent analysis cycles. For more information, see Assessing automated sensitive data discovery coverage.
+
+Macie automatically recalculates and updates this information while it performs
+automated sensitive data discovery. For example, if Macie finds sensitive data in an S3 object that's subsequently
+changed or deleted, Macie updates the applicable bucket's metadata: removes the object from
+the list of analyzed objects; removes occurrences of sensitive data that Macie found in the
+object; recalculates the sensitivity score, if the score is calculated automatically; and,
+updates the sensitivity label as necessary to reflect the new score.
+
+In addition to metadata and statistics, Macie produces records of the sensitive data it
+finds and the analysis that it performs: sensitive data
+findings, which report sensitive data that Macie finds in individual S3 objects,
+and sensitive data discovery results, which log details
+about the analysis of individual S3 objects.
+
+For more information, see Reviewing automated sensitive data discovery results.
+
+## Considerations
+
+As you configure and use Amazon Macie to perform automated sensitive data discovery for your Amazon S3 data, keep the
+following in mind:
+
+- Your automated discovery settings apply only to the current AWS Region. Consequently, the resulting
+analyses and data apply only to S3 general purpose buckets and objects in the current Region.
+To perform automated discovery and access the resulting data in additional Regions, enable and configure
+automated discovery in each additional Region.
+
+- If you're the Macie administrator for an organization:
+
+- You can perform automated discovery for a member account only if Macie is enabled for the account in
+the current Region. In addition, you must enable automated discovery for the account in that Region.
+Members can't enable or disable automated discovery for their own accounts.
+
+- If you enable automated discovery for a member account, Macie uses the automated discovery settings for your
+administrator account when it analyzes data for the member account. The applicable settings
+are: the list of S3 buckets to exclude from analyses, and the managed data identifiers,
+custom data identifiers, and allow lists to use when analyzing S3 objects. Members can't
+review or change these settings.
+
+- Members can't access automated discovery settings for individual S3 buckets that they own. For
+example, a member can't review or adjust the sensitivity scoring settings for one of their
+buckets. Only the Macie administrator can access these settings.
+
+- Members have read access to sensitive data discovery statistics and other results that Macie directly provides
+for their S3 buckets. For example, a member can use Macie to review sensitivity scores and
+coverage data for their S3 buckets. The exception is sensitive data findings. Only the
+Macie administrator has direct access to findings that automated discovery produces.
+
+- If an S3 bucket's permissions settings prevent Macie from accessing or retrieving
+information about the bucket or the bucket’s objects, Macie can't perform automated discovery for the
+bucket. Macie can only provide a subset of information about the bucket, such as the account ID
+for the AWS account that owns the bucket, the bucket's name, and when Macie most recently
+retrieved bucket and object metadata for the bucket as part of the daily refresh cycle. In your bucket
+inventory, the sensitivity score for these buckets is 50 and
+their sensitivity label is Not yet analyzed. To identify S3
+buckets where this is the case, you can refer to coverage data. For more information, see Assessing automated sensitive data discovery coverage.
+
+- To be eligible for selection and analysis, an S3 object must be stored in a general
+purpose bucket and it must be classifiable. A classifiable object uses a supported Amazon S3 storage class and it has a
+file name extension for a supported file or storage format. For more information, see Supported storage classes and
+formats.
+
+- If an S3 object is encrypted, Macie can analyze it only if it's encrypted with a key that
+Macie can access and is allowed to use. For more information, see Analyzing encrypted S3
+objects. To identify cases where
+encryption settings prevented Macie from analyzing one or more objects in a bucket, you can
+refer to coverage data. For more information, see Assessing automated sensitive data discovery coverage.

@@ -1,0 +1,3065 @@
+{
+  "compared_at": "2026-09-30T21:34:57.842844+00:00",
+  "questions": [
+    {
+      "question_id": "Q109",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q109:A"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q109:A"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+      "explanation_vi": {
+        "why_correct": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+        "others": {
+          "Q109:B": "B thiếu đường bastion → DB và nguồn SSH công ty.",
+          "Q109:C": "C chỉ cho SSH từ CIDR VPC, không đáp ứng workstation công ty đã nêu.",
+          "Q109:D": "D mở web cho toàn Internet thay vì giới hạn sgLB."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q109:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A mở đúng luồng ALB → web → DB và nguồn SSH công ty.",
+          "reference_ids": [
+            "sg"
+          ]
+        },
+        {
+          "unit_id": "Q109:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B thiếu đường bastion → DB và nguồn SSH công ty.",
+          "reference_ids": [
+            "sg"
+          ]
+        },
+        {
+          "unit_id": "Q109:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C chỉ cho SSH từ CIDR VPC, không đáp ứng workstation công ty đã nêu.",
+          "reference_ids": [
+            "sg"
+          ]
+        },
+        {
+          "unit_id": "Q109:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D mở web cho toàn Internet thay vì giới hạn sgLB.",
+          "reference_ids": [
+            "sg"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu có nhiều tầng, giới hạn SG theo tầng gọi trực tiếp; SSH theo nguồn quản trị.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "sg",
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "A giới hạn web chỉ nhận từ ALB, DB chỉ nhận từ web/bastion và SSH chỉ từ IP công ty.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q110",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q110:A"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q110:A"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+      "explanation_vi": {
+        "why_correct": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+        "others": {
+          "Q110:B": "B gán trust anchor cho IAM federation chung và sai service principal.",
+          "Q110:C": "C assignment ứng dụng cho người dùng không cấp workload credentials theo cơ chế nêu trong đề.",
+          "Q110:D": "D ứng dụng customer managed cho nhóm người dùng không thay thế Roles Anywhere cho workload."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q110:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A dùng đúng cơ chế Roles Anywhere và service principal.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q110:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B gán trust anchor cho IAM federation chung và sai service principal.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q110:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C assignment ứng dụng cho người dùng không cấp workload credentials theo cơ chế nêu trong đề.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q110:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D ứng dụng customer managed cho nhóm người dùng không thay thế Roles Anywhere cho workload.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu workload ngoài AWS có PKI, cân nhắc Roles Anywhere; kiểm tra trust policy.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "rolesanywhere",
+          "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/getting-started.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "role",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q111",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q111:C",
+        "Q111:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q111:C",
+        "Q111:D"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+      "explanation_vi": {
+        "why_correct": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+        "others": {
+          "Q111:A": "A Organizations dùng SCP/RCP, không gắn IAM identity policy lên account như mô tả.",
+          "Q111:B": "B rotation giữ key identity và dữ liệu cũ vẫn giải mã được.",
+          "Q111:E": "E cấp quyền RevokeGrant không đồng nghĩa đã thu hồi grant; ứng dụng đang dùng IAM permissions."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q111:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A Organizations dùng SCP/RCP, không gắn IAM identity policy lên account như mô tả.",
+          "reference_ids": [
+            "scp",
+            "keypolicy",
+            "rotation"
+          ]
+        },
+        {
+          "unit_id": "Q111:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B rotation giữ key identity và dữ liệu cũ vẫn giải mã được.",
+          "reference_ids": [
+            "scp",
+            "keypolicy",
+            "rotation"
+          ]
+        },
+        {
+          "unit_id": "Q111:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C SCP deny KMS có thể chặn quyền của instance role.",
+          "reference_ids": [
+            "scp",
+            "keypolicy",
+            "rotation"
+          ]
+        },
+        {
+          "unit_id": "Q111:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D xóa delegation cho IAM trong key policy có thể làm IAM permissions không đủ.",
+          "reference_ids": [
+            "scp",
+            "keypolicy",
+            "rotation"
+          ]
+        },
+        {
+          "unit_id": "Q111:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E cấp quyền RevokeGrant không đồng nghĩa đã thu hồi grant; ứng dụng đang dùng IAM permissions.",
+          "reference_ids": [
+            "scp",
+            "keypolicy",
+            "rotation"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu IAM allow mà KMS vẫn deny, kiểm tra SCP và key policy trước.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "scp",
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "keypolicy",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "rotation",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C",
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q112",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q112:B"
+      ],
+      "proposed_status": "ambiguous",
+      "proposed_answer": null,
+      "confidence": "medium",
+      "change_type": "status_or_answer_change",
+      "mandatory": true,
+      "reason_vi": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+      "explanation_vi": {
+        "why_correct": "Chưa có đáp án chắc chắn: B và C đều tạo repository với KMS và bật ECR scanning. C thêm SSM Inventory nhưng không làm mất khả năng quét CVE đã bật; đề không nêu tiêu chí loại phần việc thừa nên chưa có đáp án duy nhất.",
+        "others": {
+          "Q112:A": "A không thể đổi encryption repository hiện có theo cách mô tả.",
+          "Q112:B": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
+          "Q112:C": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
+          "Q112:D": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q112:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A không thể đổi encryption repository hiện có theo cách mô tả.",
+          "reference_ids": [
+            "ecrcrypto",
+            "ecrscan"
+          ]
+        },
+        {
+          "unit_id": "Q112:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B tạo repository mã hóa KMS và dùng scan report để phân tích CVE.",
+          "reference_ids": [
+            "ecrcrypto",
+            "ecrscan"
+          ]
+        },
+        {
+          "unit_id": "Q112:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C đã bật ECR scanning nên cũng có CVE analysis; Inventory report chỉ là phần bổ sung, không phải scan report.",
+          "reference_ids": [
+            "ecrcrypto",
+            "ecrscan"
+          ]
+        },
+        {
+          "unit_id": "Q112:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D vừa không đổi được encryption hiện có vừa không dùng Trusted Advisor làm ECR image CVE scanner.",
+          "reference_ids": [
+            "ecrcrypto",
+            "ecrscan"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần đổi ECR encryption, tạo repository mới; đọc image scan report.",
+      "source_issues": "Sau lượt độc lập, rà lại toàn bộ mệnh đề C: C dùng cùng KMS + scanning hợp lệ như B. Không thể loại C chỉ vì Inventory không phải CVE report; tiêu chí ít vận hành không có trong stem.",
+      "references": [
+        {
+          "id": "ecrcrypto",
+          "url": "https://docs.aws.amazon.com/AmazonECR/latest/userguide/encryption-at-rest.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Encryption configuration của ECR không đổi sau khi tạo repository; tạo lại với KMS rồi bật image scanning đáp ứng cả hai yêu cầu.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "ecrscan",
+          "url": "https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Encryption configuration của ECR không đổi sau khi tạo repository; tạo lại với KMS rồi bật image scanning đáp ứng cả hai yêu cầu.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": true
+    },
+    {
+      "question_id": "Q113",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q113:A"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q113:A"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
+      "explanation_vi": {
+        "why_correct": "A dùng TLS cho các đường truyền và encryption cho RDS/EBS, tránh phần quản lý HSM và client-side encryption.",
+        "others": {
+          "Q113:B": "B Secrets Manager lưu secrets, không tự mã hóa dữ liệu ứng dụng client-side.",
+          "Q113:C": "C thêm HSM và quản lý mã hóa client-side, tăng chi phí và vận hành.",
+          "Q113:D": "D truyền HTTP đến origin nên không bảo vệ toàn bộ dữ liệu in transit."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q113:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A đáp ứng các lớp mã hóa nếu ALB → EC2 được cấu hình HTTPS.",
+          "reference_ids": [
+            "albtls",
+            "rdstls"
+          ]
+        },
+        {
+          "unit_id": "Q113:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B Secrets Manager lưu secrets, không tự mã hóa dữ liệu ứng dụng client-side.",
+          "reference_ids": [
+            "albtls",
+            "rdstls"
+          ]
+        },
+        {
+          "unit_id": "Q113:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C thêm HSM và quản lý mã hóa client-side, tăng chi phí và vận hành.",
+          "reference_ids": [
+            "albtls",
+            "rdstls"
+          ]
+        },
+        {
+          "unit_id": "Q113:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D truyền HTTP đến origin nên không bảo vệ toàn bộ dữ liệu in transit.",
+          "reference_ids": [
+            "albtls",
+            "rdstls"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần mã hóa end-to-end, kiểm tra riêng từng hop và từng nơi lưu.",
+      "source_issues": "A cần HTTPS target group; chỉ cài certificate chưa tự bật TLS. ALB không validate chứng chỉ target, nên self-signed có thể dùng cho hop này.",
+      "references": [
+        {
+          "id": "albtls",
+          "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "A dùng TLS cho các đường truyền và encryption cho RDS/EBS, tránh phần quản lý HSM và client-side encryption.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "rdstls",
+          "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "A dùng TLS cho các đường truyền và encryption cho RDS/EBS, tránh phần quản lý HSM và client-side encryption.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q114",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q114:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q114:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
+      "explanation_vi": {
+        "why_correct": "Process, DNS mining domains và outbound flows là bằng chứng trực tiếp để kiểm chứng hoạt động mining và phạm vi kết nối.",
+        "others": {
+          "Q114:A": "A CPU/tactic/role chỉ là dấu hiệu hoặc ngữ cảnh, chưa xác nhận tiến trình mining.",
+          "Q114:B": "B số findings và launch time không xác nhận hành vi mining.",
+          "Q114:D": "D Session history, DNS records và severity không thay thế kiểm tra tiến trình/kết nối."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q114:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A CPU/tactic/role chỉ là dấu hiệu hoặc ngữ cảnh, chưa xác nhận tiến trình mining.",
+          "reference_ids": [
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q114:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B số findings và launch time không xác nhận hành vi mining.",
+          "reference_ids": [
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q114:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C kiểm tra tiến trình, đích DNS và traffic liên quan mining.",
+          "reference_ids": [
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q114:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D Session history, DNS records và severity không thay thế kiểm tra tiến trình/kết nối.",
+          "reference_ids": [
+            "gd"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu điều tra mining, đối chiếu process + mining destination + network flow.",
+      "source_issues": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
+      "references": [
+        {
+          "id": "gd",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Process, DNS mining domains và outbound flows là bằng chứng trực tiếp để kiểm chứng hoạt động mining và phạm vi kết nối.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q115",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q115:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q115:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+      "explanation_vi": {
+        "why_correct": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+        "others": {
+          "Q115:A": "A trail đơn lẻ và notification không tự phủ mọi account mới.",
+          "Q115:B": "B function ở từng account chưa xử lý tự động onboarding account mới như organization trail.",
+          "Q115:D": "D SCP chống stop/delete không tạo trail đang thiếu."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q115:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A trail đơn lẻ và notification không tự phủ mọi account mới.",
+          "reference_ids": [
+            "orgtrail"
+          ]
+        },
+        {
+          "unit_id": "Q115:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B function ở từng account chưa xử lý tự động onboarding account mới như organization trail.",
+          "reference_ids": [
+            "orgtrail"
+          ]
+        },
+        {
+          "unit_id": "Q115:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C management account có thể đổi trail hiện có thành organization trail.",
+          "reference_ids": [
+            "orgtrail"
+          ]
+        },
+        {
+          "unit_id": "Q115:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D SCP chống stop/delete không tạo trail đang thiếu.",
+          "reference_ids": [
+            "orgtrail"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần CloudTrail cho account hiện tại và tương lai, dùng organization trail.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "orgtrail",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Organization trail áp dụng cho management/member accounts và tự bắt đầu logging cho account mới gia nhập.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q116",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q116:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q116:C"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+      "explanation_vi": {
+        "why_correct": "C sửa quyền dùng KMS key, phù hợp lỗi khởi chạy encrypted AMI; Encrypt/Decrypt không phải danh sách quyền đầy đủ cho mọi trường hợp.",
+        "others": {
+          "Q116:A": "A DescribeImages chỉ xem metadata, không cho giải mã EBS.",
+          "Q116:B": "B StartInstances không sửa quyền KMS của encrypted root volume.",
+          "Q116:D": "D DescribeKey chỉ xem key metadata, không cấp Decrypt/CreateGrant."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q116:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A DescribeImages chỉ xem metadata, không cho giải mã EBS.",
+          "reference_ids": [
+            "ebs"
+          ]
+        },
+        {
+          "unit_id": "Q116:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B StartInstances không sửa quyền KMS của encrypted root volume.",
+          "reference_ids": [
+            "ebs"
+          ]
+        },
+        {
+          "unit_id": "Q116:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C là hướng xử lý KMS phù hợp; vẫn kiểm tra CreateGrant và quyền EBS cần thiết.",
+          "reference_ids": [
+            "ebs"
+          ]
+        },
+        {
+          "unit_id": "Q116:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D DescribeKey chỉ xem key metadata, không cấp Decrypt/CreateGrant.",
+          "reference_ids": [
+            "ebs"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu encrypted AMI khởi chạy rồi terminate, kiểm tra KMS key policy, grants và SCP.",
+      "source_issues": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+      "references": [
+        {
+          "id": "ebs",
+          "url": "https://docs.aws.amazon.com/ebs/latest/userguide/ebs-encryption-requirements.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "C sửa quyền dùng KMS key, phù hợp lỗi khởi chạy encrypted AMI; Encrypt/Decrypt không phải danh sách quyền đầy đủ cho mọi trường hợp.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q117",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q117:B",
+        "Q117:C",
+        "Q117:E"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q117:B",
+        "Q117:C",
+        "Q117:E"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+      "explanation_vi": {
+        "why_correct": "Config rule phát hiện DB instance public; EventBridge bắt compliance change và gửi SNS notification.",
+        "others": {
+          "Q117:A": "A RDS event notification không phải direct Lambda target như mô tả và không cần Lambda để Config ghi nhận thay đổi.",
+          "Q117:D": "D RDS không post trực tiếp vào SQS theo luồng này; chiều SNS → SQS cũng không gửi ngược từ SQS.",
+          "Q117:F": "F event flow Lambda → Config không phải luồng managed rule chuẩn cần chọn."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q117:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A RDS event notification không phải direct Lambda target như mô tả và không cần Lambda để Config ghi nhận thay đổi.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        },
+        {
+          "unit_id": "Q117:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B managed rule kiểm tra publiclyAccessible của DB instance.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        },
+        {
+          "unit_id": "Q117:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C SNS là target gửi thông báo cho security engineer.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        },
+        {
+          "unit_id": "Q117:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D RDS không post trực tiếp vào SQS theo luồng này; chiều SNS → SQS cũng không gửi ngược từ SQS.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        },
+        {
+          "unit_id": "Q117:E",
+          "letter": "E",
+          "verdict": "selected",
+          "reason_vi": "E EventBridge nhận compliance change của Config rule.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        },
+        {
+          "unit_id": "Q117:F",
+          "letter": "F",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "F event flow Lambda → Config không phải luồng managed rule chuẩn cần chọn.",
+          "reference_ids": [
+            "rdsconfig",
+            "configevent"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu báo vi phạm Config, nghĩ Config → EventBridge → SNS.",
+      "source_issues": "Managed rule này kiểm tra DB instances; nếu hiểu all RDS resources gồm public snapshots thì cần thêm rules. Không quảng cáo một rule phủ mọi loại tài nguyên RDS.",
+      "references": [
+        {
+          "id": "rdsconfig",
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/rds-instance-public-access-check.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Config rule phát hiện DB instance public; EventBridge bắt compliance change và gửi SNS notification.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "configevent",
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/monitor-config-with-cloudwatchevents.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Config rule phát hiện DB instance public; EventBridge bắt compliance change và gửi SNS notification.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B",
+        "C",
+        "E"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q118",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "proposed_status": "ambiguous",
+      "proposed_answer": null,
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
+      "explanation_vi": {
+        "why_correct": "Chưa có đáp án chắc chắn: A và D đều khả thi với tài liệu hiện hành: ALB đã hỗ trợ CloudWatch Logs; S3/Athena/visualization vẫn hợp lệ.",
+        "others": {
+          "Q118:A": "A hiện có ALB → CloudWatch Logs và Logs Insights; không còn sai vì ALB chỉ hỗ trợ S3.",
+          "Q118:B": "B không có native direct ALB log destination Redshift như mô tả.",
+          "Q118:C": "C không có native direct ALB log destination OpenSearch như mô tả.",
+          "Q118:D": "D S3 logs + Athena + visualization đáp ứng yêu cầu."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q118:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A hiện có ALB → CloudWatch Logs và Logs Insights; không còn sai vì ALB chỉ hỗ trợ S3.",
+          "reference_ids": [
+            "alblog",
+            "athenatrail"
+          ]
+        },
+        {
+          "unit_id": "Q118:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B không có native direct ALB log destination Redshift như mô tả.",
+          "reference_ids": [
+            "alblog",
+            "athenatrail"
+          ]
+        },
+        {
+          "unit_id": "Q118:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C không có native direct ALB log destination OpenSearch như mô tả.",
+          "reference_ids": [
+            "alblog",
+            "athenatrail"
+          ]
+        },
+        {
+          "unit_id": "Q118:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D S3 logs + Athena + visualization đáp ứng yêu cầu.",
+          "reference_ids": [
+            "alblog",
+            "athenatrail"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu đề dùng từ directly, tra destination hiện hành trước khi loại.",
+      "source_issues": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
+      "references": [
+        {
+          "id": "alblog",
+          "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-logs.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "A và D đều khả thi với tài liệu hiện hành: ALB đã hỗ trợ CloudWatch Logs; S3/Athena/visualization vẫn hợp lệ.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "athenatrail",
+          "url": "https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "A và D đều khả thi với tài liệu hiện hành: ALB đã hỗ trợ CloudWatch Logs; S3/Athena/visualization vẫn hợp lệ.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": null,
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q119",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q119:A",
+        "Q119:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q119:A",
+        "Q119:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+      "explanation_vi": {
+        "why_correct": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+        "others": {
+          "Q119:B": "B brute force S3 namespace là hành vi bucket walking bị cấm.",
+          "Q119:D": "D packet flooding không thuộc bài pentest thông thường được phép.",
+          "Q119:E": "E DNS zone walking Route 53 là hoạt động bị cấm."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q119:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A port scanning VPC của công ty được phép trong phạm vi tài nguyên được quản lý.",
+          "reference_ids": [
+            "pentest"
+          ]
+        },
+        {
+          "unit_id": "Q119:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B brute force S3 namespace là hành vi bucket walking bị cấm.",
+          "reference_ids": [
+            "pentest"
+          ]
+        },
+        {
+          "unit_id": "Q119:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C kiểm thử SQL injection ứng dụng của công ty/RDS nằm trong phạm vi được phép.",
+          "reference_ids": [
+            "pentest"
+          ]
+        },
+        {
+          "unit_id": "Q119:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D packet flooding không thuộc bài pentest thông thường được phép.",
+          "reference_ids": [
+            "pentest"
+          ]
+        },
+        {
+          "unit_id": "Q119:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E DNS zone walking Route 53 là hoạt động bị cấm.",
+          "reference_ids": [
+            "pentest"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu pentest AWS, kiểm tra permitted services và prohibited activities hiện hành.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "pentest",
+          "url": "https://aws.amazon.com/security/penetration-testing/",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A",
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q120",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q120:B",
+        "Q120:E"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q120:B",
+        "Q120:E"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+      "explanation_vi": {
+        "why_correct": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+        "others": {
+          "Q120:A": "A không gắn MFA device trực tiếp vào IAM role như IAM user.",
+          "Q120:C": "C role không có access key dài hạn gắn trực tiếp; EC2 dùng temporary credentials.",
+          "Q120:D": "D SQSFullAccess mở rộng quyền quá mức và không thắng explicit deny."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q120:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A không gắn MFA device trực tiếp vào IAM role như IAM user.",
+          "reference_ids": [
+            "sqs",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q120:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B explicit deny trong queue policy có thể chặn role.",
+          "reference_ids": [
+            "sqs",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q120:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C role không có access key dài hạn gắn trực tiếp; EC2 dùng temporary credentials.",
+          "reference_ids": [
+            "sqs",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q120:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D SQSFullAccess mở rộng quyền quá mức và không thắng explicit deny.",
+          "reference_ids": [
+            "sqs",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q120:E",
+          "letter": "E",
+          "verdict": "selected",
+          "reason_vi": "E role cần identity permissions phù hợp với queue/action.",
+          "reference_ids": [
+            "sqs",
+            "role"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu SQS AccessDenied, kiểm tra identity allow + resource deny + KMS/SCP khi có.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "sqs",
+          "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/troubleshooting-access-denied.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "role",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B",
+        "E"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q121",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q121:B"
+      ],
+      "proposed_status": "ambiguous",
+      "proposed_answer": null,
+      "confidence": "high",
+      "change_type": "status_or_answer_change",
+      "mandatory": true,
+      "reason_vi": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+      "explanation_vi": {
+        "why_correct": "Chưa có đáp án chắc chắn: B là thiết kế dự định phù hợp nhưng ghi lệnh cm-guard không tồn tại; lệnh AWS công bố là cfn-guard validate.",
+        "others": {
+          "Q121:A": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
+          "Q121:B": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
+          "Q121:C": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
+          "Q121:D": "D review thủ công standards mới làm chậm delivery."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q121:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A validate-template kiểm tra template, không tự đánh giá các standards bảo mật tùy chỉnh.",
+          "reference_ids": [
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q121:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B Guard trong CI/CD phù hợp sau khi sửa cm-guard thành cfn-guard; nguyên văn chưa chạy đúng.",
+          "reference_ids": [
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q121:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C thêm EC2/queue và workflow triển khai riêng, tăng vận hành và thay đổi luồng delivery.",
+          "reference_ids": [
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q121:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D review thủ công standards mới làm chậm delivery.",
+          "reference_ids": [
+            "guard"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu kiểm tra IaC trước deploy, dùng Guard validate trong pipeline; đừng nhầm validate-template.",
+      "source_issues": "Typo thực thi cụ thể trong option B; không âm thầm sửa đề khi gọi đáp án verified.",
+      "references": [
+        {
+          "id": "guard",
+          "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "B là thiết kế dự định phù hợp nhưng ghi lệnh cm-guard không tồn tại; lệnh AWS công bố là cfn-guard validate.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": null,
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q122",
+      "previous_status": "ambiguous",
+      "previous_answer": [
+        "Q122:A"
+      ],
+      "proposed_status": "ambiguous",
+      "proposed_answer": null,
+      "confidence": "high",
+      "change_type": "status_or_answer_change",
+      "mandatory": true,
+      "reason_vi": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
+      "explanation_vi": {
+        "why_correct": "Chưa có đáp án chắc chắn: AWS WAF không attach trực tiếp NLB; Count là cách thử rate rule ở resource được hỗ trợ, nhưng không giải quyết tiền đề NLB.",
+        "others": {
+          "Q122:A": "A Count giúp quan sát rate nhưng WAF không attach trực tiếp NLB.",
+          "Q122:B": "B Block có thể chặn legitimate traffic khi chưa xác định ngưỡng và vẫn không attach NLB.",
+          "Q122:C": "C WAF không có rule action Monitor như mô tả.",
+          "Q122:D": "D Allow không dùng để đo ngưỡng rồi rate-block bảo vệ NLB."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q122:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A Count giúp quan sát rate nhưng WAF không attach trực tiếp NLB.",
+          "reference_ids": [
+            "waf"
+          ]
+        },
+        {
+          "unit_id": "Q122:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B Block có thể chặn legitimate traffic khi chưa xác định ngưỡng và vẫn không attach NLB.",
+          "reference_ids": [
+            "waf"
+          ]
+        },
+        {
+          "unit_id": "Q122:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C WAF không có rule action Monitor như mô tả.",
+          "reference_ids": [
+            "waf"
+          ]
+        },
+        {
+          "unit_id": "Q122:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D Allow không dùng để đo ngưỡng rồi rate-block bảo vệ NLB.",
+          "reference_ids": [
+            "waf"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu WAF + NLB, kiểm tra resource support; Count chỉ áp dụng sau khi chọn kiến trúc hỗ trợ.",
+      "source_issues": "Không thay NLB thành ALB trong đề để hợp thức hóa A.",
+      "references": [
+        {
+          "id": "waf",
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "AWS WAF không attach trực tiếp NLB; Count là cách thử rate rule ở resource được hỗ trợ, nhưng không giải quyết tiền đề NLB.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": null,
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q123",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q123:B"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q123:B"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+      "explanation_vi": {
+        "why_correct": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+        "others": {
+          "Q123:A": "A drift detection kiểm tra tài nguyên đã triển khai, không sinh pre-deploy policy rules.",
+          "Q123:C": "C Detective không phân tích template thành rules tuân thủ IaC.",
+          "Q123:D": "D chỉ đọc và tìm overlap chưa tạo validation/enforcement theo mô tả."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q123:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A drift detection kiểm tra tài nguyên đã triển khai, không sinh pre-deploy policy rules.",
+          "reference_ids": [
+            "rulegen",
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q123:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B rulegen sinh rules từ mẫu compliant; vẫn cần rà và test rules trước khi enforce.",
+          "reference_ids": [
+            "rulegen",
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q123:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C Detective không phân tích template thành rules tuân thủ IaC.",
+          "reference_ids": [
+            "rulegen",
+            "guard"
+          ]
+        },
+        {
+          "unit_id": "Q123:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D chỉ đọc và tìm overlap chưa tạo validation/enforcement theo mô tả.",
+          "reference_ids": [
+            "rulegen",
+            "guard"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu có mẫu IaC compliant, rulegen khởi tạo rules; review trước enforce.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "rulegen",
+          "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/cfn-guard-rulegen.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "guard",
+          "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Guard rulegen tạo rules ban đầu từ các template đã biết compliant, sau đó validate trong pipeline.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q124",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q124:A",
+        "Q124:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q124:A",
+        "Q124:C"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
+      "explanation_vi": {
+        "why_correct": "Cross-account AssumeRole cần permission phía caller và trust policy của role phía target; permissions cho tài nguyên của target role vẫn phải được cấu hình.",
+        "others": {
+          "Q124:B": "B SCP target không trực tiếp ràng buộc external IAM caller; source SCP và target role permissions phải kiểm tra đúng giai đoạn.",
+          "Q124:D": "D mô tả trust chung chung không thay thế identity permission phía caller.",
+          "Q124:E": "E role caller không thay thế việc cho IAM user assume role target."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q124:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A phù hợp nếu in the AWS account được hiểu là target của sts:AssumeRole; policy phải gắn IAM user tại caller account.",
+          "reference_ids": [
+            "crossrole",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q124:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B SCP target không trực tiếp ràng buộc external IAM caller; source SCP và target role permissions phải kiểm tra đúng giai đoạn.",
+          "reference_ids": [
+            "crossrole",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q124:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C role target cần trust caller.",
+          "reference_ids": [
+            "crossrole",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q124:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D mô tả trust chung chung không thay thế identity permission phía caller.",
+          "reference_ids": [
+            "crossrole",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q124:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E role caller không thay thế việc cho IAM user assume role target.",
+          "reference_ids": [
+            "crossrole",
+            "scp"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu AssumeRole cross-account, kiểm tra caller permission + target trust.",
+      "source_issues": "A có cách viết dễ hiểu nhầm vị trí tạo policy. Không thể gắn policy target account vào IAM user caller như một managed-policy ARN cross-account.",
+      "references": [
+        {
+          "id": "crossrole",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Cross-account AssumeRole cần permission phía caller và trust policy của role phía target; permissions cho tài nguyên của target role vẫn phải được cấu hình.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "scp",
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Cross-account AssumeRole cần permission phía caller và trust policy của role phía target; permissions cho tài nguyên của target role vẫn phải được cấu hình.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A",
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q125",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q125:B"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q125:B"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
+      "explanation_vi": {
+        "why_correct": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
+        "others": {
+          "Q125:A": "A tạo access keys dài hạn, thêm rủi ro so với certificate và temporary credentials.",
+          "Q125:C": "C mở SSH, trái yêu cầu Session Manager only.",
+          "Q125:D": "D ARN/IP không tự cấp identity credentials và dùng EC2 Instance Connect thay Session Manager."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q125:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A tạo access keys dài hạn, thêm rủi ro so với certificate và temporary credentials.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q125:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B dùng trust anchor/profile/role để cấp temporary credentials cho Session Manager.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q125:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C mở SSH, trái yêu cầu Session Manager only.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        },
+        {
+          "unit_id": "Q125:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D ARN/IP không tự cấp identity credentials và dùng EC2 Instance Connect thay Session Manager.",
+          "reference_ids": [
+            "rolesanywhere",
+            "role"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu partner không có AWS account, certificate + Roles Anywhere có thể cấp temporary credentials.",
+      "source_issues": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
+      "references": [
+        {
+          "id": "rolesanywhere",
+          "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/getting-started.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "role",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q126",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q126:C",
+        "Q126:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q126:C",
+        "Q126:D"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Response headers policy hiện là giải pháp không cần code tốt cho nhiều trường hợp, nhưng không có trong options; không tự đổi khóa sang lựa chọn mới.",
+      "explanation_vi": {
+        "why_correct": "CloudFront giảm latency; Lambda@Edge thêm security headers mà không sửa application code.",
+        "others": {
+          "Q126:A": "A API cache không trực tiếp bổ sung HTTP security headers và CDN delivery cho cả hai origin như yêu cầu.",
+          "Q126:B": "B Lambda authorizer kiểm soát authorization, không sửa origin response headers theo mô tả.",
+          "Q126:E": "E Connection header là hop-by-hop, không cung cấp bộ security headers yêu cầu."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q126:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A API cache không trực tiếp bổ sung HTTP security headers và CDN delivery cho cả hai origin như yêu cầu.",
+          "reference_ids": [
+            "edge",
+            "cfheaders"
+          ]
+        },
+        {
+          "unit_id": "Q126:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B Lambda authorizer kiểm soát authorization, không sửa origin response headers theo mô tả.",
+          "reference_ids": [
+            "edge",
+            "cfheaders"
+          ]
+        },
+        {
+          "unit_id": "Q126:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C Lambda@Edge có thể sửa headers ở response event.",
+          "reference_ids": [
+            "edge",
+            "cfheaders"
+          ]
+        },
+        {
+          "unit_id": "Q126:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D CloudFront phục vụ EC2/S3 origins qua edge locations.",
+          "reference_ids": [
+            "edge",
+            "cfheaders"
+          ]
+        },
+        {
+          "unit_id": "Q126:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E Connection header là hop-by-hop, không cung cấp bộ security headers yêu cầu.",
+          "reference_ids": [
+            "edge",
+            "cfheaders"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần security headers ở edge, dùng response headers policy hoặc Lambda@Edge theo lựa chọn.",
+      "source_issues": "Response headers policy hiện là giải pháp không cần code tốt cho nhiều trường hợp, nhưng không có trong options; không tự đổi khóa sang lựa chọn mới.",
+      "references": [
+        {
+          "id": "edge",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-examples.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "CloudFront giảm latency; Lambda@Edge thêm security headers mà không sửa application code.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "cfheaders",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/modifying-response-headers.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "CloudFront giảm latency; Lambda@Edge thêm security headers mà không sửa application code.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C",
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q127",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q127:A"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q127:A"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Customer managed KMS key hỗ trợ imported material; DynamoDB hỗ trợ dùng key đó cho encryption at rest.",
+      "explanation_vi": {
+        "why_correct": "Customer managed KMS key hỗ trợ imported material; DynamoDB hỗ trợ dùng key đó cho encryption at rest.",
+        "others": {
+          "Q127:B": "B disable key khiến DynamoDB mất khả năng decrypt table key khi cache hết hạn.",
+          "Q127:C": "C không import material vào AWS managed key do bạn không quản lý.",
+          "Q127:D": "D không import AWS managed key; disable cũng phá encryption-at-rest dependency."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q127:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A nhập material từ HSM vào customer managed key, cấp quyền và chọn cho table.",
+          "reference_ids": [
+            "ddb",
+            "import"
+          ]
+        },
+        {
+          "unit_id": "Q127:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B disable key khiến DynamoDB mất khả năng decrypt table key khi cache hết hạn.",
+          "reference_ids": [
+            "ddb",
+            "import"
+          ]
+        },
+        {
+          "unit_id": "Q127:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C không import material vào AWS managed key do bạn không quản lý.",
+          "reference_ids": [
+            "ddb",
+            "import"
+          ]
+        },
+        {
+          "unit_id": "Q127:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D không import AWS managed key; disable cũng phá encryption-at-rest dependency.",
+          "reference_ids": [
+            "ddb",
+            "import"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu BYOK cho DynamoDB, dùng customer managed KMS key với imported material và giữ key usable.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "ddb",
+          "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/encryption.usagenotes.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Customer managed KMS key hỗ trợ imported material; DynamoDB hỗ trợ dùng key đó cho encryption at rest.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "import",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Customer managed KMS key hỗ trợ imported material; DynamoDB hỗ trợ dùng key đó cho encryption at rest.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q128",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q128:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q128:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+      "explanation_vi": {
+        "why_correct": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+        "others": {
+          "Q128:A": "A tạo/xóa trail không cần thiết và có thể thất bại vì prefix policy chưa phù hợp.",
+          "Q128:B": "B PutBucketPolicy cho engineer không sửa resource prefix được cho CloudTrail write.",
+          "Q128:D": "D GetBucketPolicy không cấp CloudTrail PutObject vào prefix mới."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q128:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A tạo/xóa trail không cần thiết và có thể thất bại vì prefix policy chưa phù hợp.",
+          "reference_ids": [
+            "trailbucket"
+          ]
+        },
+        {
+          "unit_id": "Q128:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B PutBucketPolicy cho engineer không sửa resource prefix được cho CloudTrail write.",
+          "reference_ids": [
+            "trailbucket"
+          ]
+        },
+        {
+          "unit_id": "Q128:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C sửa bucket policy prefix rồi sửa trail prefix đúng luồng AWS hướng dẫn.",
+          "reference_ids": [
+            "trailbucket"
+          ]
+        },
+        {
+          "unit_id": "Q128:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D GetBucketPolicy không cấp CloudTrail PutObject vào prefix mới.",
+          "reference_ids": [
+            "trailbucket"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu đổi CloudTrail prefix, cập nhật S3 policy resource prefix trước.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "trailbucket",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html",
+          "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+          "claim": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q129",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q129:B",
+        "Q129:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q129:B",
+        "Q129:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "CloudFront chèn origin custom header bí mật; ALB chỉ forward khi header/value khớp và chặn mặc định phần còn lại.",
+      "explanation_vi": {
+        "why_correct": "CloudFront chèn origin custom header bí mật; ALB chỉ forward khi header/value khớp và chặn mặc định phần còn lại.",
+        "others": {
+          "Q129:A": "A cache key policy không tự tạo origin secret header.",
+          "Q129:D": "D X-Forwarded-For không chứng minh request đến từ distribution của bạn.",
+          "Q129:E": "E certificate chung không hạn chế đường direct-to-ALB."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q129:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A cache key policy không tự tạo origin secret header.",
+          "reference_ids": [
+            "cforigin"
+          ]
+        },
+        {
+          "unit_id": "Q129:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B Origin Custom Headers tạo header cho request tới ALB.",
+          "reference_ids": [
+            "cforigin"
+          ]
+        },
+        {
+          "unit_id": "Q129:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C ALB listener condition kiểm header và default action phải chặn phần còn lại.",
+          "reference_ids": [
+            "cforigin"
+          ]
+        },
+        {
+          "unit_id": "Q129:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D X-Forwarded-For không chứng minh request đến từ distribution của bạn.",
+          "reference_ids": [
+            "cforigin"
+          ]
+        },
+        {
+          "unit_id": "Q129:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E certificate chung không hạn chế đường direct-to-ALB.",
+          "reference_ids": [
+            "cforigin"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu chặn bypass CloudFront, dùng secret origin header + ALB rule; giữ secret và dùng HTTPS.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "cforigin",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "CloudFront chèn origin custom header bí mật; ALB chỉ forward khi header/value khớp và chặn mặc định phần còn lại.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B",
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q130",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q130:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q130:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Service Catalog cung cấp sản phẩm với AMI đã duyệt; giới hạn permission để developer chỉ provision catalog trong account development.",
+      "explanation_vi": {
+        "why_correct": "Service Catalog cung cấp sản phẩm với AMI đã duyệt; giới hạn permission để developer chỉ provision catalog trong account development.",
+        "others": {
+          "Q130:A": "A template được cung cấp không ngăn developer dùng API/AMI khác.",
+          "Q130:B": "B cài thêm software sau launch không ngăn AMI chưa duyệt hoặc loại bỏ software cũ.",
+          "Q130:D": "D StackSets mọi account trái yêu cầu chỉ development account."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q130:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A template được cung cấp không ngăn developer dùng API/AMI khác.",
+          "reference_ids": [
+            "catalog"
+          ]
+        },
+        {
+          "unit_id": "Q130:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B cài thêm software sau launch không ngăn AMI chưa duyệt hoặc loại bỏ software cũ.",
+          "reference_ids": [
+            "catalog"
+          ]
+        },
+        {
+          "unit_id": "Q130:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C catalog + permissions giới hạn launch vào sản phẩm/account được phê duyệt.",
+          "reference_ids": [
+            "catalog"
+          ]
+        },
+        {
+          "unit_id": "Q130:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D StackSets mọi account trái yêu cầu chỉ development account.",
+          "reference_ids": [
+            "catalog"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu chỉ được launch mẫu đã duyệt, dùng Service Catalog kèm IAM/launch constraints.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "catalog",
+          "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints-launch.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Service Catalog cung cấp sản phẩm với AMI đã duyệt; giới hạn permission để developer chỉ provision catalog trong account development.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q131",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q131:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q131:D"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Cả hai loại log có thể lưu S3; Athena truy vấn dữ liệu lịch sử sau incident.",
+      "explanation_vi": {
+        "why_correct": "Cả hai loại log có thể lưu S3; Athena truy vấn dữ liệu lịch sử sau incident.",
+        "others": {
+          "Q131:A": "A metric filter tạo numeric metrics theo dữ liệu mới, không phải truy vấn log lịch sử.",
+          "Q131:B": "B subscription filter chuyển luồng log, không phải công cụ truy vấn sau incident.",
+          "Q131:C": "C không có native direct log destination DynamoDB cho cả hai service như mô tả."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q131:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A metric filter tạo numeric metrics theo dữ liệu mới, không phải truy vấn log lịch sử.",
+          "reference_ids": [
+            "athenatrail",
+            "athenaflow",
+            "metricfilter"
+          ]
+        },
+        {
+          "unit_id": "Q131:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B subscription filter chuyển luồng log, không phải công cụ truy vấn sau incident.",
+          "reference_ids": [
+            "athenatrail",
+            "athenaflow",
+            "metricfilter"
+          ]
+        },
+        {
+          "unit_id": "Q131:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C không có native direct log destination DynamoDB cho cả hai service như mô tả.",
+          "reference_ids": [
+            "athenatrail",
+            "athenaflow",
+            "metricfilter"
+          ]
+        },
+        {
+          "unit_id": "Q131:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D S3 và Athena hỗ trợ truy vấn CloudTrail/VPC Flow Logs.",
+          "reference_ids": [
+            "athenatrail",
+            "athenaflow",
+            "metricfilter"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu query log lịch sử trên S3, dùng Athena; metric/subscription filter có mục đích khác.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "athenatrail",
+          "url": "https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Cả hai loại log có thể lưu S3; Athena truy vấn dữ liệu lịch sử sau incident.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "athenaflow",
+          "url": "https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Cả hai loại log có thể lưu S3; Athena truy vấn dữ liệu lịch sử sau incident.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "metricfilter",
+          "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Cả hai loại log có thể lưu S3; Athena truy vấn dữ liệu lịch sử sau incident.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q132",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q132:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q132:C"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
+      "explanation_vi": {
+        "why_correct": "Suppression rule hẹp archive finding false positive mà GuardDuty vẫn tiếp tục tạo finding và giữ archived view.",
+        "others": {
+          "Q132:A": "A không có thao tác tắt một FTP rule như mô tả.",
+          "Q132:B": "B trusted IP list rộng có thể che các findings khác và không chọn chính xác hành vi false positive.",
+          "Q132:D": "D GuardDuty không có API xóa findings tùy ý như mô tả; dùng archive/suppress."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q132:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A không có thao tác tắt một FTP rule như mô tả.",
+          "reference_ids": [
+            "suppress",
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q132:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B trusted IP list rộng có thể che các findings khác và không chọn chính xác hành vi false positive.",
+          "reference_ids": [
+            "suppress",
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q132:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C suppression theo finding/resource cụ thể giảm noise, vẫn giữ archived findings.",
+          "reference_ids": [
+            "suppress",
+            "gd"
+          ]
+        },
+        {
+          "unit_id": "Q132:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D GuardDuty không có API xóa findings tùy ý như mô tả; dùng archive/suppress.",
+          "reference_ids": [
+            "suppress",
+            "gd"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu suppress false positive, scope theo finding + resource cụ thể; tránh rule quá rộng.",
+      "source_issues": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
+      "references": [
+        {
+          "id": "suppress",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Suppression rule hẹp archive finding false positive mà GuardDuty vẫn tiếp tục tạo finding và giữ archived view.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "gd",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Suppression rule hẹp archive finding false positive mà GuardDuty vẫn tiếp tục tạo finding và giữ archived view.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q133",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q133:B"
+      ],
+      "confidence": "high",
+      "change_type": "status_or_answer_change",
+      "mandatory": true,
+      "reason_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
+      "explanation_vi": {
+        "why_correct": "Custom Config Lambda rule kiểm tra tag và xác nhận customer managed KMS key. A ghi tag như rule parameter, trong khi managed rule chỉ có kmsKeyArns; tag phải đặt ở scope.",
+        "others": {
+          "Q133:A": "A tag không phải parameter của s3-default-encryption-kms; thiết kế này khả thi nếu sửa tag sang Config scope, nhưng không đúng nguyên văn.",
+          "Q133:C": "C Inspector không scan S3 bucket default encryption như một Config rule.",
+          "Q133:D": "D Trusted Advisor không có custom-policy-rule facility như mô tả."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q133:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A tag không phải parameter của s3-default-encryption-kms; thiết kế này khả thi nếu sửa tag sang Config scope, nhưng không đúng nguyên văn.",
+          "reference_ids": [
+            "s3config"
+          ]
+        },
+        {
+          "unit_id": "Q133:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B custom rule có thể đọc tag/encryption và xác nhận KMS customer managed key.",
+          "reference_ids": [
+            "s3config"
+          ]
+        },
+        {
+          "unit_id": "Q133:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C Inspector không scan S3 bucket default encryption như một Config rule.",
+          "reference_ids": [
+            "s3config"
+          ]
+        },
+        {
+          "unit_id": "Q133:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D Trusted Advisor không có custom-policy-rule facility như mô tả.",
+          "reference_ids": [
+            "s3config"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu Config managed rule thiếu tag parameter, đặt tag ở scope; custom rule khi cần logic khác.",
+      "source_issues": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
+      "references": [
+        {
+          "id": "s3config",
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/s3-default-encryption-kms.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Custom Config Lambda rule kiểm tra tag và xác nhận customer managed KMS key. A ghi tag như rule parameter, trong khi managed rule chỉ có kmsKeyArns; tag phải đặt ở scope.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q134",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q134:A"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q134:A"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+      "explanation_vi": {
+        "why_correct": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+        "others": {
+          "Q134:B": "B Roles Anywhere trust anchor dùng X.509/CA, không dùng OIDC token.",
+          "Q134:C": "C Identity Center application assignment không thay IAM OIDC role federation cho repository workload.",
+          "Q134:D": "D RAM share không tạo OIDC trust provider."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q134:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A thiết lập đúng OIDC federation và trust target role.",
+          "reference_ids": [
+            "oidc",
+            "rolesanywhere"
+          ]
+        },
+        {
+          "unit_id": "Q134:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B Roles Anywhere trust anchor dùng X.509/CA, không dùng OIDC token.",
+          "reference_ids": [
+            "oidc",
+            "rolesanywhere"
+          ]
+        },
+        {
+          "unit_id": "Q134:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C Identity Center application assignment không thay IAM OIDC role federation cho repository workload.",
+          "reference_ids": [
+            "oidc",
+            "rolesanywhere"
+          ]
+        },
+        {
+          "unit_id": "Q134:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D RAM share không tạo OIDC trust provider.",
+          "reference_ids": [
+            "oidc",
+            "rolesanywhere"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu CI bên ngoài phát OIDC token, IAM OIDC provider + role trust; giới hạn aud/sub.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "oidc",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "rolesanywhere",
+          "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/getting-started.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "IAM OIDC provider và role trust policy cho phép external OIDC principal lấy temporary credentials qua web identity federation.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q135",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q135:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q135:D"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
+      "explanation_vi": {
+        "why_correct": "KMS custom key store trên CloudHSM giữ tích hợp KMS và key material riêng; cluster cần ít nhất hai active HSM ở hai AZ.",
+        "others": {
+          "Q135:A": "A một HSM không đáp ứng yêu cầu custom key store lúc tạo và HA.",
+          "Q135:B": "B EC2/open-source material upload không tạo CloudHSM-backed KMS custom key store theo mô tả.",
+          "Q135:C": "C HMAC dùng MAC, không thay symmetric encryption key cho integration này."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q135:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A một HSM không đáp ứng yêu cầu custom key store lúc tạo và HA.",
+          "reference_ids": [
+            "hsm"
+          ]
+        },
+        {
+          "unit_id": "Q135:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B EC2/open-source material upload không tạo CloudHSM-backed KMS custom key store theo mô tả.",
+          "reference_ids": [
+            "hsm"
+          ]
+        },
+        {
+          "unit_id": "Q135:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C HMAC dùng MAC, không thay symmetric encryption key cho integration này.",
+          "reference_ids": [
+            "hsm"
+          ]
+        },
+        {
+          "unit_id": "Q135:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D hai HSM phù hợp khi đặt ở các AZ khác nhau và cấu hình KMS crypto user/key store.",
+          "reference_ids": [
+            "hsm"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu KMS APIs + HSM riêng + HA, CloudHSM custom key store với >=2 active HSM khác AZ.",
+      "source_issues": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
+      "references": [
+        {
+          "id": "hsm",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-cloudhsm.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "KMS custom key store trên CloudHSM giữ tích hợp KMS và key material riêng; cluster cần ít nhất hai active HSM ở hai AZ.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q136",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q136:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q136:D"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+      "explanation_vi": {
+        "why_correct": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+        "others": {
+          "Q136:A": "A resource allow không thắng root SCP deny.",
+          "Q136:B": "B IAM group không là resource-policy principal và không thắng SCP deny.",
+          "Q136:C": "C đề không nêu Control Tower guardrail gây lỗi; deny có sẵn ở root SCP."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q136:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A resource allow không thắng root SCP deny.",
+          "reference_ids": [
+            "iamlogic",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q136:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B IAM group không là resource-policy principal và không thắng SCP deny.",
+          "reference_ids": [
+            "iamlogic",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q136:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C đề không nêu Control Tower guardrail gây lỗi; deny có sẵn ở root SCP.",
+          "reference_ids": [
+            "iamlogic",
+            "scp"
+          ]
+        },
+        {
+          "unit_id": "Q136:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D bỏ SES explicit deny khỏi root SCP giải quyết restriction đã cho.",
+          "reference_ids": [
+            "iamlogic",
+            "scp"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu OU allow nhưng vẫn deny, kiểm tra SCP ở mọi ancestor; explicit deny thắng.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "iamlogic",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "scp",
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Root SCP explicit deny ses:* chặn SES dù IAM và OU SCP allow; phải gỡ deny ở root.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q137",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q137:A",
+        "Q137:D"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q137:A",
+        "Q137:D"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
+      "explanation_vi": {
+        "why_correct": "Organization trail tập trung log ít vận hành; Object Lock compliance giữ từng log version trong hai năm.",
+        "others": {
+          "Q137:B": "B chỉ cho member-account principals write không thay service-principal policy của organization trail.",
+          "Q137:C": "C lifecycle expiration không ngăn xóa/chỉnh log trước hai năm.",
+          "Q137:E": "E per-account trails và Lambda/Firehose tăng vận hành, không tự cấu hình WORM retention."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q137:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A đặt retention compliance và cho trail management account context ghi vào bucket security là hướng phù hợp.",
+          "reference_ids": [
+            "orgtrail",
+            "trailbucket",
+            "lock"
+          ]
+        },
+        {
+          "unit_id": "Q137:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B chỉ cho member-account principals write không thay service-principal policy của organization trail.",
+          "reference_ids": [
+            "orgtrail",
+            "trailbucket",
+            "lock"
+          ]
+        },
+        {
+          "unit_id": "Q137:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C lifecycle expiration không ngăn xóa/chỉnh log trước hai năm.",
+          "reference_ids": [
+            "orgtrail",
+            "trailbucket",
+            "lock"
+          ]
+        },
+        {
+          "unit_id": "Q137:D",
+          "letter": "D",
+          "verdict": "selected",
+          "reason_vi": "D organization trail tập trung member activity vào security bucket.",
+          "reference_ids": [
+            "orgtrail",
+            "trailbucket",
+            "lock"
+          ]
+        },
+        {
+          "unit_id": "Q137:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E per-account trails và Lambda/Firehose tăng vận hành, không tự cấu hình WORM retention.",
+          "reference_ids": [
+            "orgtrail",
+            "trailbucket",
+            "lock"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu log bất biến hai năm, organization trail + Object Lock compliance; bucket policy cho CloudTrail service.",
+      "source_issues": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
+      "references": [
+        {
+          "id": "orgtrail",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Organization trail tập trung log ít vận hành; Object Lock compliance giữ từng log version trong hai năm.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "trailbucket",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Organization trail tập trung log ít vận hành; Object Lock compliance giữ từng log version trong hai năm.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "lock",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Organization trail tập trung log ít vận hành; Object Lock compliance giữ từng log version trong hai năm.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A",
+        "D"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q138",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q138:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q138:C"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
+      "explanation_vi": {
+        "why_correct": "OpsItem lưu incident và thông báo khi tạo/cập nhật; Automation runbook có thể đóng port và tái dùng cho incident sau.",
+        "others": {
+          "Q138:A": "A Lambda có thể đóng port/log và SNS gửi alert đầu tiên, nhưng mô tả chưa có incident-progress updates/work item.",
+          "Q138:B": "B remediation thủ công không đạt automated future response.",
+          "Q138:D": "D Inspector tạo findings, không tự đóng port bằng cấu hình alarm như mô tả."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q138:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A Lambda có thể đóng port/log và SNS gửi alert đầu tiên, nhưng mô tả chưa có incident-progress updates/work item.",
+          "reference_ids": [
+            "ops"
+          ]
+        },
+        {
+          "unit_id": "Q138:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B remediation thủ công không đạt automated future response.",
+          "reference_ids": [
+            "ops"
+          ]
+        },
+        {
+          "unit_id": "Q138:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C OpsCenter + notifications + runbook quản lý vòng đời incident và đóng port.",
+          "reference_ids": [
+            "ops"
+          ]
+        },
+        {
+          "unit_id": "Q138:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D Inspector tạo findings, không tự đóng port bằng cấu hình alarm như mô tả.",
+          "reference_ids": [
+            "ops"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần cập nhật tiến độ incident, dùng OpsItem lifecycle notifications và Automation.",
+      "source_issues": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
+      "references": [
+        {
+          "id": "ops",
+          "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started-sns.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "OpsItem lưu incident và thông báo khi tạo/cập nhật; Automation runbook có thể đóng port và tái dùng cho incident sau.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q139",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q139:A",
+        "Q139:B"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q139:A",
+        "Q139:B"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Lambda phải assume execution role và role đó phải có quyền ghi CloudWatch Logs.",
+      "explanation_vi": {
+        "why_correct": "Lambda phải assume execution role và role đó phải có quyền ghi CloudWatch Logs.",
+        "others": {
+          "Q139:C": "C X-Ray traces không cấp CloudWatch Logs write.",
+          "Q139:D": "D function resource policy kiểm invocation, không thay execution-role Logs permissions.",
+          "Q139:E": "E developer role không phải role Lambda assume để ghi logs."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q139:A",
+          "letter": "A",
+          "verdict": "selected",
+          "reason_vi": "A execution-role trust phải cho lambda.amazonaws.com AssumeRole.",
+          "reference_ids": [
+            "lambda"
+          ]
+        },
+        {
+          "unit_id": "Q139:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B execution role phải có logs:CreateLogGroup/CreateLogStream/PutLogEvents phù hợp.",
+          "reference_ids": [
+            "lambda"
+          ]
+        },
+        {
+          "unit_id": "Q139:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C X-Ray traces không cấp CloudWatch Logs write.",
+          "reference_ids": [
+            "lambda"
+          ]
+        },
+        {
+          "unit_id": "Q139:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D function resource policy kiểm invocation, không thay execution-role Logs permissions.",
+          "reference_ids": [
+            "lambda"
+          ]
+        },
+        {
+          "unit_id": "Q139:E",
+          "letter": "E",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "E developer role không phải role Lambda assume để ghi logs.",
+          "reference_ids": [
+            "lambda"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu Lambda không ghi log, kiểm execution-role trust và Logs permissions.",
+      "source_issues": "",
+      "references": [
+        {
+          "id": "lambda",
+          "url": "https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Lambda phải assume execution role và role đó phải có quyền ghi CloudWatch Logs.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "A",
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q140",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q140:B"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q140:B"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+      "explanation_vi": {
+        "why_correct": "Log metric filter tạo metric; anomaly threshold theo metric và SNS alarm gửi notification. Đây là numeric anomaly, không tự phát hiện mọi bất thường ngữ nghĩa trong log.",
+        "others": {
+          "Q140:A": "A Container Insights thu thập logs/metrics nhưng option không nêu metric/filter nào biến application logs thành signal cần chấm.",
+          "Q140:C": "C batch Athena/visualization không tự cung cấp near-real-time anomaly alarm theo mô tả.",
+          "Q140:D": "D CloudTrail/Detective không dùng để học arbitrary EKS application-log anomalies qua App Mesh."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q140:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A Container Insights thu thập logs/metrics nhưng option không nêu metric/filter nào biến application logs thành signal cần chấm.",
+          "reference_ids": [
+            "metricfilter",
+            "anomaly"
+          ]
+        },
+        {
+          "unit_id": "Q140:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B định nghĩa rõ log-derived metric, anomaly alarm và SNS.",
+          "reference_ids": [
+            "metricfilter",
+            "anomaly"
+          ]
+        },
+        {
+          "unit_id": "Q140:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C batch Athena/visualization không tự cung cấp near-real-time anomaly alarm theo mô tả.",
+          "reference_ids": [
+            "metricfilter",
+            "anomaly"
+          ]
+        },
+        {
+          "unit_id": "Q140:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D CloudTrail/Detective không dùng để học arbitrary EKS application-log anomalies qua App Mesh.",
+          "reference_ids": [
+            "metricfilter",
+            "anomaly"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu anomaly trên số lượng log events, metric filter → anomaly alarm → SNS.",
+      "source_issues": "B chỉ phát hiện bất thường của metric được trích xuất. Nếu mục tiêu là log-pattern anomaly tùy ý, cần CloudWatch Logs anomaly detector; A cũng khả thi nếu bổ sung cấu hình signal, nên không nói Container Insights không thu app logs.",
+      "references": [
+        {
+          "id": "metricfilter",
+          "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Log metric filter tạo metric; anomaly threshold theo metric và SNS alarm gửi notification. Đây là numeric anomaly, không tự phát hiện mọi bất thường ngữ nghĩa trong log.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "anomaly",
+          "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Log metric filter tạo metric; anomaly threshold theo metric và SNS alarm gửi notification. Đây là numeric anomaly, không tự phát hiện mọi bất thường ngữ nghĩa trong log.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q141",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q141:B"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q141:B"
+      ],
+      "confidence": "medium",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+      "explanation_vi": {
+        "why_correct": "FIS tạo fault experiments có targeting và stop conditions dựa trên CloudWatch alarms để dừng khi vượt ngưỡng.",
+        "others": {
+          "Q141:A": "A Express Step Functions không có cơ chế StopExecution như Standard, và không nêu stop guardrail thích hợp.",
+          "Q141:C": "C shutdown tuần tự thủ công kém realistic/automation và không định nghĩa stop condition.",
+          "Q141:D": "D Automation runbook có thể dừng nhưng option không đưa fault experiment và stop conditions theo yêu cầu như FIS."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q141:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A Express Step Functions không có cơ chế StopExecution như Standard, và không nêu stop guardrail thích hợp.",
+          "reference_ids": [
+            "fis"
+          ]
+        },
+        {
+          "unit_id": "Q141:B",
+          "letter": "B",
+          "verdict": "selected",
+          "reason_vi": "B FIS phù hợp; phải thêm CloudWatch stop condition vào experiment template.",
+          "reference_ids": [
+            "fis"
+          ]
+        },
+        {
+          "unit_id": "Q141:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C shutdown tuần tự thủ công kém realistic/automation và không định nghĩa stop condition.",
+          "reference_ids": [
+            "fis"
+          ]
+        },
+        {
+          "unit_id": "Q141:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D Automation runbook có thể dừng nhưng option không đưa fault experiment và stop conditions theo yêu cầu như FIS.",
+          "reference_ids": [
+            "fis"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu thử lỗi production, FIS + CloudWatch stop conditions; dừng thử không tự hoàn tác mọi tác động.",
+      "source_issues": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+      "references": [
+        {
+          "id": "fis",
+          "url": "https://docs.aws.amazon.com/fis/latest/userguide/stop-conditions.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "FIS tạo fault experiments có targeting và stop conditions dựa trên CloudWatch alarms để dừng khi vượt ngưỡng.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "B"
+      ],
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q142",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q142:A"
+      ],
+      "proposed_status": "ambiguous",
+      "proposed_answer": null,
+      "confidence": "high",
+      "change_type": "status_or_answer_change",
+      "mandatory": true,
+      "reason_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
+      "explanation_vi": {
+        "why_correct": "Chưa có đáp án chắc chắn: Không có option đầy đủ: standard logging v2 ghi IP và các fields được hỗ trợ, không tự ghi full headers; cs-headers thuộc real-time logs.",
+        "others": {
+          "Q142:A": "A lấy viewer IP và một số header fields nhưng không full arbitrary headers chỉ bằng bật standard logging v2.",
+          "Q142:B": "B sourceIp không bổ sung header information và có thể là IP hop trung gian theo luồng đề.",
+          "Q142:C": "C PutLogEvents không thay đổi nội dung log fields.",
+          "Q142:D": "D thêm headers vào cache key không bật logging và gây cache fragmentation."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q142:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A lấy viewer IP và một số header fields nhưng không full arbitrary headers chỉ bằng bật standard logging v2.",
+          "reference_ids": [
+            "cfstandard",
+            "cflogfields",
+            "cfrealtime"
+          ]
+        },
+        {
+          "unit_id": "Q142:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B sourceIp không bổ sung header information và có thể là IP hop trung gian theo luồng đề.",
+          "reference_ids": [
+            "cfstandard",
+            "cflogfields",
+            "cfrealtime"
+          ]
+        },
+        {
+          "unit_id": "Q142:C",
+          "letter": "C",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "C PutLogEvents không thay đổi nội dung log fields.",
+          "reference_ids": [
+            "cfstandard",
+            "cflogfields",
+            "cfrealtime"
+          ]
+        },
+        {
+          "unit_id": "Q142:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D thêm headers vào cache key không bật logging và gây cache fragmentation.",
+          "reference_ids": [
+            "cfstandard",
+            "cflogfields",
+            "cfrealtime"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu cần full headers, phân biệt standard với real-time logging; chọn fields và pipeline phù hợp.",
+      "source_issues": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
+      "references": [
+        {
+          "id": "cfstandard",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Không có option đầy đủ: standard logging v2 ghi IP và các fields được hỗ trợ, không tự ghi full headers; cs-headers thuộc real-time logs.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "cflogfields",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logs-reference.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Không có option đầy đủ: standard logging v2 ghi IP và các fields được hỗ trợ, không tự ghi full headers; cs-headers thuộc real-time logs.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        },
+        {
+          "id": "cfrealtime",
+          "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Không có option đầy đủ: standard logging v2 ghi IP và các fields được hỗ trợ, không tự ghi full headers; cs-headers thuộc real-time logs.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": null,
+      "post_comparison_change": false
+    },
+    {
+      "question_id": "Q143",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q143:C"
+      ],
+      "proposed_status": "verified",
+      "proposed_answer": [
+        "Q143:C"
+      ],
+      "confidence": "high",
+      "change_type": "explanation_refinement",
+      "mandatory": false,
+      "reason_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
+      "explanation_vi": {
+        "why_correct": "Không có ExternalId theo customer, bên thứ ba có thể bị lừa assume role của Company A khi customer khác đưa role ARN đó.",
+        "others": {
+          "Q143:A": "A trust không chứng minh target role không có resource permissions; đề nói role phục vụ ingest.",
+          "Q143:B": "B trust Company B không cho customer account trực tiếp assume role.",
+          "Q143:D": "D ExternalId là giá trị phân biệt customer do third party quản lý, không cho intercept request như mô tả."
+        }
+      },
+      "option_reviews": [
+        {
+          "unit_id": "Q143:A",
+          "letter": "A",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "A trust không chứng minh target role không có resource permissions; đề nói role phục vụ ingest.",
+          "reference_ids": [
+            "externalid"
+          ]
+        },
+        {
+          "unit_id": "Q143:B",
+          "letter": "B",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "B trust Company B không cho customer account trực tiếp assume role.",
+          "reference_ids": [
+            "externalid"
+          ]
+        },
+        {
+          "unit_id": "Q143:C",
+          "letter": "C",
+          "verdict": "selected",
+          "reason_vi": "C customer khác có thể đưa ARN của A cho Company B, tạo confused deputy.",
+          "reference_ids": [
+            "externalid"
+          ]
+        },
+        {
+          "unit_id": "Q143:D",
+          "letter": "D",
+          "verdict": "not_selected_or_unresolved",
+          "reason_vi": "D ExternalId là giá trị phân biệt customer do third party quản lý, không cho intercept request như mô tả.",
+          "reference_ids": [
+            "externalid"
+          ]
+        }
+      ],
+      "memory_tip_vi": "Nếu third party assume role cho nhiều khách, trust third party + ExternalId riêng theo customer.",
+      "source_issues": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
+      "references": [
+        {
+          "id": "externalid",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html",
+          "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+          "claim": "Không có ExternalId theo customer, bên thứ ba có thể bị lừa assume role của Company A khi customer khác đưa role ARN đó.",
+          "basis": "Primary AWS documentation opened during this independent pass; option-specific inferences are recorded below."
+        }
+      ],
+      "independent_record_path": "q109_q143/independent.json",
+      "independent_record_answer": [
+        "C"
+      ],
+      "post_comparison_change": false
+    }
+  ]
+}

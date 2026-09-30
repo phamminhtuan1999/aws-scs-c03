@@ -1,0 +1,333 @@
+{
+  "question_id": "Q104",
+  "question_content_hash": "077015d844168e4ba4f7c46331ed4294c3702c3b882e78a8e74e0ac0af8a36df",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:33Z",
+  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "789301d46ba770bdbd8ba0f5e6a9dc66572f774eb48d761bee315b5ebb4a646f",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Mã hóa client token của SaaS khi lưu trữ (at rest).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Đưa token cho Lambda function sử dụng lúc runtime (Lambda gọi ra SaaS).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Tối ưu: MOST cost-effective (chi phí thấp nhất trong các phương án đáp ứng R1, R2).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q104:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Secrets Manager lưu secret được mã hóa và Lambda lấy qua SDK lúc runtime nên đáp ứng R1, R2; nhưng tính phí theo mỗi secret mỗi tháng và theo API call, đắt hơn SecureString standard của Parameter Store (không tính phí thêm). Không cần tính năng rotation của Secrets Manager.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q104:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Lambda authorizer kiểm soát ai được gọi API (xác thực caller đến API Gateway); nó không lưu trữ/mã hóa client token của SaaS và không cung cấp token cho Lambda để gọi ra ngoài.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q104:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "SecureString được Parameter Store mã hóa bằng KMS key (có thể dùng AWS managed key aws/ssm, không tốn phí lưu key); standard parameter và standard throughput không tính phí thêm; Lambda gọi GetParameter với decryption lúc runtime. Chi phí chỉ là KMS request (có free tier).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q104:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Nếu hiểu đúng chữ 'Use AWS KMS to encrypt the client token' là tự mã hóa (encryption helpers) thì phải dùng customer managed key ($1/tháng + phí Decrypt) vì AWS managed key không dùng trực tiếp được -> đắt hơn C. Nếu chỉ dựa vào mã hóa at rest mặc định của Lambda (aws/lambda, không tốn phí) thì chi phí gần bằng 0, nhưng khi đó token hiện plaintext với ai có quyền xem cấu hình function, và env var là cấu hình cố định theo version, trái khuyến nghị dùng Secrets Manager thay env var cho credential.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5",
+        "ref7",
+        "ref8",
+        "ref9",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q104:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Giá Parameter Store standard (không phí) và Secrets Manager (tính theo secret) được tài liệu nêu rõ; so sánh với D dựa trên suy luận rằng tự mã hóa bằng KMS cần customer managed key.",
+      "open_issues": [
+        "Nếu hiểu D là chỉ dùng mã hóa mặc định (AWS managed key, miễn phí) của Lambda env var thì D có thể rẻ hơn C; đề viết 'Use AWS KMS to encrypt the client token' nên được hiểu là client-side encryption với customer managed key.",
+        "Lưu lượng GetParameter rất cao có thể cần higher throughput (có phí) — đề không nêu."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:54:33Z"
+  },
+  "source_answer": [
+    "Q104:C"
+  ],
+  "researched_answer": [
+    "Q104:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn C. Giá Parameter Store standard (không phí thêm) và Secrets Manager (tính theo secret + API call) được nêu trực tiếp; loại D dựa trên cách đọc chữ 'Use AWS KMS to encrypt' (cần customer managed key) và khuyến nghị bảo mật của Lambda, nên để medium.",
+    "open_issues": [
+      "Cách đọc khác của D: chỉ dựa vào mã hóa at rest mặc định của Lambda env var bằng AWS managed key (AWS không tính phí dùng key này) thì D có chi phí gần 0, có thể không đắt hơn C; đề không nói rõ nên tồn tại rủi ro diễn giải.",
+      "Lưu lượng GetParameter rất cao có thể cần higher throughput (có phí) và KMS request vượt free tier — đề không nêu."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xem xét kỹ cách đọc chi phí của D theo yêu cầu: trang 'Securing Lambda environment variables' xác nhận Lambda luôn mã hóa env var at rest bằng AWS managed key và 'AWS doesn't charge you to use this key' — nên nếu D chỉ là mã hóa mặc định thì chi phí ~0. Tuy vậy D viết 'Use AWS KMS to encrypt the client token', là một bước mã hóa chủ động; tài liệu KMS nói AWS managed key không dùng trực tiếp cho cryptographic operations, nên phải có customer managed key ($1/tháng) và phí Decrypt, đắt hơn SecureString dùng aws/ssm (không phí lưu key, standard parameter/throughput miễn phí). Ngoài ra cùng trang Lambda khuyến nghị dùng Secrets Manager thay env var cho credential; env var với key mặc định hiển thị plaintext cho người có quyền xem cấu hình. A (Secrets Manager) đáp ứng nhưng tính phí theo secret/tháng + API call. B không liên quan (authorizer kiểm soát caller vào API). Giữ verified, medium, ghi open issue về cách đọc D.",
+  "explanation_vi": {
+    "why_correct": "SecureString trong Parameter Store được mã hóa at rest bằng KMS (có thể dùng AWS managed key aws/ssm, không phí lưu key); standard parameter không tính phí thêm; Lambda gọi GetParameter với decryption qua SDK lúc runtime — đáp ứng mã hóa + truyền token với chi phí thấp nhất.",
+    "others": {
+      "Q104:A": "Secrets Manager đáp ứng kỹ thuật nhưng tính phí theo mỗi secret mỗi tháng và theo API call, đắt hơn SecureString standard; không cần tính năng rotation.",
+      "Q104:B": "Lambda authorizer kiểm soát ai được gọi API Gateway; không lưu/mã hóa token SaaS và không cấp token cho Lambda để gọi ra ngoài.",
+      "Q104:D": "Tự mã hóa bằng KMS cần customer managed key ($1/tháng + phí Decrypt) và env var là cấu hình cố định, không được khuyến nghị cho credential; nếu chỉ dựa vào mã hóa mặc định thì token lộ plaintext cho người xem cấu hình function."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "encrypt the access token at rest",
+      "meaning_vi": "Cần kho lưu trữ có mã hóa KMS (SecureString/Secrets Manager)."
+    },
+    {
+      "phrase": "pass the token to the Lambda function at runtime",
+      "meaning_vi": "Lambda lấy giá trị qua SDK khi chạy, không nhúng cứng vào cấu hình."
+    },
+    {
+      "phrase": "MOST cost-effectively",
+      "meaning_vi": "Không cần rotation -> Parameter Store standard SecureString (không phí thêm) rẻ hơn Secrets Manager."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần lưu secret mã hóa cho Lambda với chi phí thấp nhất và không yêu cầu rotation -> nghĩ đến Parameter Store SecureString (standard); kiểm tra: nếu đề cần rotation tự động/cross-account secret thì Secrets Manager; tự mã hóa bằng KMS phải dùng customer managed key ($1/tháng).",
+  "tags": {
+    "domains": [
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Systems Manager Parameter Store",
+      "AWS Secrets Manager",
+      "AWS KMS",
+      "AWS Lambda",
+      "Amazon API Gateway"
+    ],
+    "reason_vi": "Quản lý và mã hóa secret (token) at rest, cấp cho ứng dụng lúc runtime với chi phí tối ưu."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://aws.amazon.com/secrets-manager/pricing/",
+      "title": "AWS Secrets Manager pricing",
+      "section": "Pricing overview",
+      "snapshot_id": "705101563041",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With Secrets Manager, you pay based on the number of secrets stored and API calls made.",
+      "supports": "Secrets Manager tính phí theo số secret lưu trữ và API call.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://aws.amazon.com/systems-manager/pricing/",
+      "title": "AWS Systems Manager Pricing",
+      "section": "Parameter Store",
+      "snapshot_id": "c28437022921",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Standard parameters are available at no additional charge.",
+      "supports": "Parameter Store standard parameter không tính phí thêm (rẻ hơn Secrets Manager).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/secure-string-parameter-kms-encryption.html",
+      "title": "AWS KMS encryption for Parameter Store SecureString parameters",
+      "section": "Overview",
+      "snapshot_id": "5bec308fba96",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use the AWS managed key that Parameter Store creates for your account or specify your own customer managed key.",
+      "supports": "SecureString được mã hóa at rest bằng KMS, có thể dùng AWS managed key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://aws.amazon.com/kms/pricing/",
+      "title": "AWS Key Management Service pricing",
+      "section": "Key storage",
+      "snapshot_id": "28d42fedb9ef",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Each AWS KMS key that you create in AWS KMS costs $1/month (prorated hourly).",
+      "supports": "Customer managed key tốn $1/tháng; AWS managed key không tốn phí lưu trữ (chỉ phí request).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys",
+      "section": "AWS managed keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you cannot use AWS managed keys in cryptographic operations directly; the service that creates them uses them on your behalf.",
+      "supports": "Tự mã hóa token bằng KMS (option D) phải dùng customer managed key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html",
+      "title": "Use API Gateway Lambda authorizers",
+      "section": "Use API Gateway Lambda authorizers",
+      "snapshot_id": "cef4c01f0438",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use a Lambda authorizer (formerly known as a custom authorizer) to control access to your API.",
+      "supports": "Lambda authorizer dùng để kiểm soát truy cập vào API, không phải lưu token SaaS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars-encryption.html",
+      "title": "Securing Lambda environment variables",
+      "section": "Security at rest",
+      "snapshot_id": "a55ad8df9c38",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Customer managed keys incur standard AWS KMS charges.",
+      "supports": "Dùng customer managed key cho env var (helper mã hóa) phát sinh phí KMS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html",
+      "title": "Working with Lambda environment variables",
+      "section": "Overview",
+      "snapshot_id": "e146d74aa79f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An environment variable is a pair of strings that is stored in a function's version-specific configuration.",
+      "supports": "Env var là cấu hình lưu theo version của function, không phải giá trị truyền động lúc runtime.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars-encryption.html",
+      "title": "Securing Lambda environment variables",
+      "section": "Security at rest",
+      "snapshot_id": "a55ad8df9c38",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS doesn't charge you to use this key.",
+      "supports": "Mã hóa at rest mặc định của Lambda env var (AWS managed key) không tính phí -> cách đọc chi phí khác của D (open issue).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars-encryption.html",
+      "title": "Securing Lambda environment variables",
+      "section": "Note",
+      "snapshot_id": "a55ad8df9c38",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "we recommend that you use AWS Secrets Manager instead of environment variables to store database credentials",
+      "supports": "AWS khuyến nghị kho secret thay vì env var cho credential; bất lợi bảo mật của D.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q104:C",
+      "detail_vi": "Cụm 'retrieve the value or the SecureString parameter' có lẽ là lỗi đánh máy của 'value of the SecureString parameter'; không ảnh hưởng nghĩa."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:54:33Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q104:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:44+00:00",
+      "change": "Reconciliation: khớp source key C. Thêm ref9 (mã hóa mặc định env var không tính phí) và ref10 (khuyến nghị không dùng env var cho credential); cập nhật lý do D gồm cả hai cách đọc chi phí. Giữ verified medium.",
+      "previous_answer": [
+        "Q104:C"
+      ]
+    }
+  ],
+  "notes_vi": "Lambda docs khuyến nghị Secrets Manager cho database credentials, nhưng tiêu chí đề là MOST cost-effective và không cần rotation."
+}

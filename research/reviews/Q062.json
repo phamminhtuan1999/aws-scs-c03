@@ -2,9 +2,9 @@
   "question_id": "Q062",
   "question_content_hash": "f423875998bd11bd3be150faa642101d14ec3009c86401fb5516048da150e46c",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:36Z",
-  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,71 +33,78 @@
     {
       "unit_id": "Q062:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "IAM Access Analyzer phân tích policy (external/internal/unused access, validate) và chỉ generate policy từ hoạt động CloudTrail của một identity; không có tính năng xác định key bị lộ đã truy cập resource nào và bên nào dùng key — việc đó cần CloudTrail.",
+      "verdict": "undetermined",
+      "reason_vi": "Access Analyzer phân tích quyền/unused access và có policy generation từ CloudTrail, không trực tiếp trả lịch sử forensic được mô tả.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
         "ref3",
-        "ref7"
+        "ref2",
+        "Q062-r2-3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q062:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Deactivate access key làm key không còn dùng được cho API call, chặn ngay việc dùng tiếp key bị lộ.",
+      "verdict": "undetermined",
+      "reason_vi": "Deactivate key chặn việc dùng key đó tiếp.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "ref3",
+        "ref2",
+        "Q062-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q062:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty là dịch vụ phát hiện mối đe dọa; không có loại rule để chặn một access key (suppression rule chỉ archive finding).",
+      "verdict": "undetermined",
+      "reason_vi": "GuardDuty phát hiện, không có blocking rule vô hiệu hóa key.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref3",
+        "ref2",
+        "Q062-r2-3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q062:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tạo key mới không vô hiệu hóa key cũ bị lộ và cũng không cho biết key cũ đã bị dùng hay chưa.",
+      "verdict": "undetermined",
+      "reason_vi": "Tạo key mới không làm key cũ mất hiệu lực.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "ref3",
+        "ref2",
+        "Q062-r2-3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q062:E",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Credential report có access_key_N_last_used_date/service/region (và password_last_used) giúp xác định key có bị dùng sau thời điểm lộ hay không; câu chữ 'last logged in' nghĩa đen là password_last_used nên chưa chính xác, nhưng đây là lựa chọn duy nhất phục vụ việc phát hiện.",
+      "verdict": "undetermined",
+      "reason_vi": "Credential report chứa trạng thái/last-used tổng hợp, không lịch sử API và không nhận diện attacker.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
+        "ref3",
         "ref2",
-        "ref6"
+        "Q062-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -125,41 +132,40 @@
     "Q062:B",
     "Q062:E"
   ],
-  "researched_answer": [
-    "Q062:B",
-    "Q062:E"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "unresolved",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn B+E. B được tài liệu IAM nêu trực tiếp (key bị deactivate không dùng được cho API call). E là lựa chọn phát hiện duy nhất có cơ sở: credential report có access_key_N_last_used_date/region/service. Mức medium vì E viết 'last logged in' (đúng nghĩa đen là password_last_used, đăng nhập website) thay vì thời điểm access key được dùng, và credential report chỉ cho lần dùng gần nhất.",
+    "reason_vi": "E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu.",
     "open_issues": [
-      "Câu chữ E ('last logged in') không khớp chính xác trường cần xem (access_key_last_used_date); chỉ đúng khi hiểu rộng là 'lần cuối credential của user được dùng'.",
-      "Công cụ điều tra đầy đủ (CloudTrail lọc theo access key ID) không có trong các lựa chọn."
+      "Choose two không có cặp đáp án hoàn chỉnh; chỉ B được xác minh.",
+      "Thời điểm console login không chứng minh việc dùng API access key."
     ]
   },
-  "reconciliation_vi": "Source key = B+E, trùng blind. B chắc chắn (deactivate chặn mọi API call bằng key). Lựa chọn thứ hai phải phục vụ việc phát hiện, nên đối thủ thật của E là A. Đã đọc lại trang Access Analyzer: các tính năng là phân tích external/internal/unused access và generate policy dựa trên hoạt động trong CloudTrail — không có tính năng cho biết key bị lộ đã truy cập resource nào và 'ai' (bên nào/IP nào) dùng key, nên A không đáp ứng như mô tả. C: GuardDuty không có rule chặn key (suppression rule chỉ archive finding). D: tạo key mới không vô hiệu key cũ và không phát hiện gì. Với E, đã đọc lại trang credential report: trường password_last_used là thời điểm đăng nhập website (đúng nghĩa 'last logged in'), còn access_key_1_last_used_date là lần key ký API request — báo cáo có cả hai nên E vẫn cho thấy key có bị dùng sau thời điểm lộ hay không. Vấn đề câu chữ được ghi vào source_issues; giữ B+E, verified, medium.",
+  "reconciliation_vi": "E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu.",
   "explanation_vi": {
-    "why_correct": "B: deactivate access key bị lộ làm key không thể ký API call nữa, chặn mọi lần dùng tiếp theo. E: IAM credential report cho biết thời điểm access key (và password) của user được dùng gần nhất, nên so với thời điểm lộ có thể biết key đã bị dùng trái phép hay chưa.",
+    "why_correct": "B vô hiệu hóa key bị lộ, nhưng không có lựa chọn thứ hai điều tra đúng lịch sử dùng key; cần CloudTrail để xem API calls và danh tính liên quan. Access Analyzer không phải báo cáo forensic 'resources accessed and who used them'.",
     "others": {
-      "Q062:A": "IAM Access Analyzer phân tích quyền/policy, không truy vết key bị lộ đã truy cập resource nào và ai dùng nó (cần CloudTrail).",
-      "Q062:C": "GuardDuty chỉ phát hiện mối đe dọa; không có rule nào chặn một access key (suppression rule chỉ archive finding).",
-      "Q062:D": "Tạo key mới không vô hiệu hóa key cũ đang bị lộ và cũng không cho biết key cũ đã bị dùng hay chưa."
+      "Q062:A": "Access Analyzer phân tích quyền/unused access và có policy generation từ CloudTrail, không trực tiếp trả lịch sử forensic được mô tả.",
+      "Q062:B": "Deactivate key chặn việc dùng key đó tiếp.",
+      "Q062:C": "GuardDuty phát hiện, không có blocking rule vô hiệu hóa key.",
+      "Q062:D": "Tạo key mới không làm key cũ mất hiệu lực.",
+      "Q062:E": "Credential report chứa trạng thái/last-used tổng hợp, không lịch sử API và không nhận diện attacker."
     }
   },
   "keywords": [
     {
       "phrase": "identify whether unauthorized usage of the exposed credentials has occurred",
-      "meaning_vi": "Cần bước phát hiện: xem key đã được dùng khi nào (credential report / CloudTrail)."
+      "meaning_vi": "Cần lịch sử API/identity từ CloudTrail; last-used và console login không đủ xác định trái phép."
     },
     {
       "phrase": "prevent any additional usage of the exposed credentials",
       "meaning_vi": "Cần vô hiệu key ngay: deactivate (hoặc delete) access key."
     }
   ],
-  "memory_tip_vi": "Nếu access key bị lộ và cần vừa phát hiện vừa chặn -> nghĩ đến deactivate key + xem last used (credential report/CloudTrail); kiểm tra: tạo key mới không vô hiệu key cũ, GuardDuty/Access Analyzer không chặn hay truy vết key.",
+  "memory_tip_vi": "Nếu key bị lộ, deactivate key và truy vấn CloudTrail theo accessKeyId để điều tra.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -263,21 +269,38 @@
       "quote": "IAM Access Analyzer generates IAM policies based on access activity in your AWS CloudTrail logs.",
       "supports": "Tính năng gần nhất của Access Analyzer chỉ dùng CloudTrail để tạo policy, không phải để điều tra ai đã dùng key bị lộ.",
       "kind": "inference"
+    },
+    {
+      "id": "Q062-r2-3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/securing_access-keys.html",
+      "title": "Secure access keys - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30",
+      "quote": "revoke the access keys for individual applications if they are",
+      "supports": "AWS khuyến nghị vô hiệu hóa exposed key và xem CloudTrail để tìm activity liên quan.",
+      "kind": "direct",
+      "snapshot_id": "f50d9f8b1cc7",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
-      "type": "ambiguous",
-      "location": "Q062:E",
-      "detail_vi": "E nói 'last logged in' (đăng nhập console, password_last_used) trong khi việc cần kiểm tra là access key last used; credential report có cả hai trường."
-    },
-    {
       "type": "typo",
       "location": "Q062:stem:1",
       "detail_vi": "Câu thiếu dấu chấm cuối; 'user's IAM account' ở B nên là IAM user."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q062",
+      "detail_vi": "Choose two không có cặp đáp án hoàn chỉnh; chỉ B được xác minh."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q062",
+      "detail_vi": "Thời điểm console login không chứng minh việc dùng API access key."
     }
   ],
-  "notes_vi": "Trong thực tế nên điều tra bằng CloudTrail (lọc theo access key ID) và deactivate/xóa key, rồi rotate.",
+  "notes_vi": "E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu.",
   "history": [
     {
       "version": "r1",
@@ -311,6 +334,36 @@
         "Q062:B",
         "Q062:E"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q062:B",
+        "Q062:E"
+      ],
+      "status": "unresolved",
+      "answer": null,
+      "note_vi": "E hỏi last console login; credential report last-use không xác định attacker/all API activity; B/E không đáp ứng và CloudTrail thiếu.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": null,
+    "independent_status": "unresolved",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

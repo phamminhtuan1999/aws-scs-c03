@@ -2,9 +2,9 @@
   "question_id": "Q030",
   "question_content_hash": "9e1202c84962b1901d9dc935dd5cd0adf652c48506bdeaf2ad26846f12db61fe",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:08Z",
-  "last_reviewed_at": "2026-09-30T19:49:06Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,62 +34,58 @@
       "unit_id": "Q030:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Macie phát hiện dữ liệu nhạy cảm trong S3; delegated Macie administrator quản lý Macie cho các account trong org. Cấu hình Macie publish sensitive data findings (mặc định không publish) sang Security Hub mà security account là delegated admin -> xem tập trung.",
+      "reason_vi": "Đúng: Macie phát hiện S3 sensitive data và Security Hub tổng hợp findings.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref4",
-        "ref8"
+        "Q030-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q030:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector quét EC2, ECR image và Lambda để tìm lỗ hổng; không quét S3 bucket để phát hiện dữ liệu nhạy cảm.",
+      "reason_vi": "Sai: Inspector không phân loại dữ liệu nhạy cảm trong S3.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5"
+        "ref2",
+        "Q030-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q030:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Inspector không quét dữ liệu nhạy cảm trong S3; Trusted Advisor cũng không phải nơi nhận findings dữ liệu nhạy cảm.",
+      "reason_vi": "Sai: Inspector vẫn không tạo sensitive-data inventory.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6",
-        "ref7"
+        "ref2",
+        "Q030-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q030:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Macie đúng dịch vụ, nhưng Trusted Advisor chỉ tích hợp để hiển thị các control của Security Hub CSPM (FSBP), không nhận sensitive data findings từ Macie; bật Macie riêng lẻ từng account cũng không tạo điểm xem tập trung.",
+      "reason_vi": "Sai: Trusted Advisor không là đích tích hợp Macie sensitive findings thay Security Hub.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
         "ref2",
-        "ref7"
+        "Q030-r2-2"
       ],
       "evidence_kind": "inference"
     }
@@ -125,35 +121,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu Macie nêu delegated Macie administrator quản lý Macie và phát hiện dữ liệu nhạy cảm cho tới 10.000 account, và có thể publish sensitive data findings sang Security Hub CSPM; Inspector không quét S3; các tích hợp của Trusted Advisor (AWS Config, Security Hub CSPM controls, Compute Optimizer) không gồm Macie.",
-    "open_issues": [
-      "Tên dịch vụ hiện tại là AWS Security Hub CSPM (đề ghi 'AWS Security Hub'); Security Hub mới cũng tổng hợp tín hiệu từ Macie nên không đổi đáp án."
-    ]
+    "reason_vi": "Giữ A; sensitive publication opt-in từng account/Region, delegated admin không thay settings member tự động.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại D (Macie đúng dịch vụ nhưng gửi findings tới Trusted Advisor): trang tổng quan Trusted Advisor chỉ liệt kê tích hợp với AWS Config, Security Hub CSPM controls (FSBP) và Compute Optimizer, không có tích hợp nhận findings của Macie; bật Macie riêng từng account cũng không tạo điểm xem tập trung. B/C dùng Inspector – dịch vụ chỉ quét EC2, ECR image, Lambda. Đã kiểm tra việc đổi tên: 'AWS Security Hub' cũ nay là Security Hub CSPM, và Security Hub mới cũng tương quan tín hiệu từ Macie, nên A đúng với cả hai cách hiểu. Giữ A, verified, high. Bỏ source_issue encoding ở stem.",
+  "reconciliation_vi": "Giữ A; sensitive publication opt-in từng account/Region, delegated admin không thay settings member tự động.",
   "explanation_vi": {
-    "why_correct": "Đặt security account làm delegated administrator cho Macie để quản lý Macie và phát hiện dữ liệu nhạy cảm trong S3 của mọi account trong org, rồi cấu hình Macie publish sensitive data findings (mặc định không publish) sang Security Hub có cùng delegated admin để xem tập trung một nơi.",
+    "why_correct": "Chọn security account làm delegated administrator cho Macie và Security Hub để quản lý discovery xuyên organization và tổng hợp findings. Bật publication sensitive-data findings theo account/Region cần thiết, vì Macie không gửi loại này mặc định.",
     "others": {
-      "Q030:B": "Amazon Inspector quét lỗ hổng trên EC2, ECR image và Lambda, không quét S3 để tìm dữ liệu nhạy cảm.",
-      "Q030:C": "Inspector không phát hiện dữ liệu nhạy cảm trong S3, và Trusted Advisor không phải nơi nhận findings dữ liệu nhạy cảm.",
-      "Q030:D": "Macie đúng dịch vụ, nhưng Trusted Advisor không có tích hợp nhận findings của Macie, và bật Macie riêng từng account không cho điểm xem tập trung."
+      "Q030:B": "Sai: Inspector không phân loại dữ liệu nhạy cảm trong S3.",
+      "Q030:C": "Sai: Inspector vẫn không tạo sensitive-data inventory.",
+      "Q030:D": "Sai: Trusted Advisor không là đích tích hợp Macie sensitive findings thay Security Hub."
     }
   },
   "keywords": [
     {
-      "phrase": "inventory of all sensitive data that is stored in Amazon S3 buckets",
-      "meaning_vi": "Phát hiện dữ liệu nhạy cảm trong S3 -> Amazon Macie."
+      "phrase": "across the organization",
+      "meaning_vi": "Macie delegated admin quản lý member discovery."
     },
     {
-      "phrase": "visible from a single location",
-      "meaning_vi": "Delegated administrator + tổng hợp findings vào Security Hub."
+      "phrase": "single location",
+      "meaning_vi": "Security Hub tổng hợp findings."
     },
     {
-      "phrase": "single dedicated security account",
-      "meaning_vi": "Dùng làm delegated administrator cho Macie và Security Hub."
+      "phrase": "sensitive data",
+      "meaning_vi": "Sensitive-data publication phải bật riêng."
     }
   ],
-  "memory_tip_vi": "Nếu cần tìm dữ liệu nhạy cảm trong S3 trên nhiều account và xem tập trung -> nghĩ đến Macie với delegated administrator (+ publish findings sang Security Hub); kiểm tra sensitive data findings phải bật publish vì mặc định chỉ gửi policy findings.",
+  "memory_tip_vi": "Nếu muốn Macie sensitive findings trong Security Hub, bật publication loại này và kiểm tra từng account/Region.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -272,6 +266,18 @@
       "quote": "a designated Macie administrator can enable and manage Macie for as many as 10,000 accounts.",
       "supports": "Delegated Macie administrator (security account) quản lý Macie cho toàn org, đáp ứng phạm vi nhiều account.",
       "kind": "direct"
+    },
+    {
+      "id": "Q030-r2-2",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/findings-publish-frequency.html",
+      "title": "Configuring publication settings for Macie findings - Amazon Macie",
+      "accessed_at": "2026-09-30",
+      "quote": "updated policy findings to Security Hub CSPM. To change or",
+      "supports": "Publishing sensitive-data findings to Security Hub is opt-in, configured per account and Region; default publication concerns policy findings.",
+      "kind": "direct",
+      "snapshot_id": "e505a5c8a27a",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -279,6 +285,11 @@
       "type": "outdated",
       "location": "Q030:A",
       "detail_vi": "'AWS Security Hub' trong đề nay tương ứng với AWS Security Hub CSPM (dịch vụ Security Hub mới cũng tổng hợp tín hiệu từ Macie); chỉ là đổi tên, không ảnh hưởng đáp án."
+    },
+    {
+      "type": "data",
+      "location": "Q030",
+      "detail_vi": "Publication sensitive findings opt-in; delegated administrator không tự thay publication settings mọi member account."
     }
   ],
   "history": [
@@ -303,6 +314,23 @@
       "previous_answer": [
         "Q030:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ A; sensitive publication opt-in từng account/Region, delegated admin không thay settings member tự động.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q030:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q030:A"
+      ],
+      "note_vi": "Giữ A; sensitive publication opt-in từng account/Region, delegated admin không thay settings member tự động.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -314,5 +342,20 @@
         "corrected": "2026-09-30T19:49:06Z"
       }
     }
+  },
+  "notes_vi": "Giữ A; sensitive publication opt-in từng account/Region, delegated admin không thay settings member tự động.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q030:A",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

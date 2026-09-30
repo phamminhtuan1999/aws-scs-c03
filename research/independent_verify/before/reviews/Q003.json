@@ -1,0 +1,261 @@
+{
+  "question_id": "Q003",
+  "question_content_hash": "481de70f5e41ca33790d3b5ed478e18560b20080b4e48fc51daa29bc5fd89be7",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:42:00Z",
+  "last_reviewed_at": "2026-09-30T19:42:11Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5",
+    "blind_performed_by": {
+      "agent": "scs-researcher (blind)",
+      "model": "claude-opus-5-5"
+    }
+  },
+  "blind_record_sha256": "d18718ab816a82bc72c04012aa62130742c94982c3402c893ca54d1af363ae0a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Người dùng IAM (trong IAM group) phải chạy được lệnh Amazon EC2 qua AWS CLI.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Vẫn bắt buộc MFA cho từng người dùng (không nới lỏng policy).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Giải pháp tương thích với managed policy hiện tại gắn vào IAM group (Deny ec2:* với BoolIfExists aws:MultiFactorAuthPresent=false).",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q003_image_01.png",
+      "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": \"ec2:*\",\n            \"Resource\": \"*\"\n        },\n        {\n            \"Sid\": \"BlockAnyAccessUnlessSignedInWithMFA\",\n            \"Effect\": \"Deny\",\n            \"Action\": \"ec2:*\",\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"BoolIfExists\": {\n                    \"aws:MultiFactorAuthPresent\": false\n                }\n            }\n        }\n    ]\n}",
+      "notes_vi": "Giá trị false không có dấu nháy (boolean JSON) – vẫn hợp lệ. Không có phần tử NotAction."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q003:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đổi thành true sẽ Deny chính các request ĐÃ dùng MFA, và với BoolIfExists request bằng access key (không có key) vẫn bị Deny; vừa không sửa lỗi vừa phá yêu cầu MFA.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q003:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CLI dùng access key dài hạn nên không có aws:MultiFactorAuthPresent và bị BoolIfExists Deny. Gọi sts get-session-token với --serial-number và --token-code trả về credentials tạm thời có thông tin MFA, nên lệnh EC2 được phép mà vẫn giữ MFA.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q003:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "aws:MultiFactorAuthPresent không có mặt với federated identities; hơn nữa người dùng SAML federation không thuộc IAM group nên policy của group không áp dụng. Đây là thay đổi kiến trúc lớn, không giải quyết vấn đề với policy hiện có.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q003:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "AssumeRole với MFA trong trust policy có thể bảo vệ truy cập, nhưng khi đó quyền EC2 đến từ permission policy của role (đề không nêu) và credentials của role không mang thông tin MFA cho từng API; 'thêm sts:AssumeRole vào NotAction' cũng không khớp policy hiện tại. Phức tạp hơn và không giải quyết trực tiếp policy của group.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q003:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu IAM nói rõ BoolIfExists=false Deny cả request dùng access key dài hạn, và GetSessionToken với MFA là cách dùng cho gọi API cùng account; CLI reference xác nhận tham số --serial-number/--token-code.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:32:14Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html",
+      "title": "Secure API access with MFA",
+      "section": "Choosing between GetSessionToken and AssumeRole",
+      "snapshot_id": "b21949b65910",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Because temporary credentials returned by GetSessionToken include MFA information, you can check for MFA in individual API operations made by the credentials.",
+      "supports": "GetSessionToken với MFA tạo credentials có ngữ cảnh MFA, thỏa điều kiện của policy cho API cùng account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys",
+      "section": "aws:MultiFactorAuthPresent",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "It also denies requests that are made using long-term credentials, such as AWS CLI or AWS API operations made using access keys.",
+      "supports": "Giải thích nguyên nhân: CLI với access key bị Deny bởi BoolIfExists false. Cùng mục nêu key không có mặt với federated identities.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/cli/latest/reference/sts/get-session-token.html",
+      "title": "get-session-token — AWS CLI Command Reference",
+      "section": "Description / Synopsis",
+      "snapshot_id": "5d4ba845f460",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Typically, you use GetSessionToken if you want to use MFA to protect programmatic calls to specific Amazon Web Services API operations like Amazon EC2 StopInstances .",
+      "supports": "get-session-token là cơ chế chuẩn để bảo vệ lệnh EC2 qua CLI bằng MFA; synopsis có --serial-number và --token-code.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html",
+      "title": "Secure API access with MFA",
+      "section": "Choosing between GetSessionToken and AssumeRole",
+      "snapshot_id": "b21949b65910",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The temporary credentials returned by AssumeRole do not include MFA information in the context, so you cannot check individual API operations for MFA.",
+      "supports": "Với AssumeRole, MFA được áp ở thời điểm assume role (trust policy); quyền EC2 lúc đó đến từ role chứ không từ policy của group — phương án D thay đổi mô hình và thiếu phần permission của role.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q003:B",
+      "detail_vi": "Ghi '-token-code' (một gạch) thay vì '--token-code'."
+    }
+  ],
+  "source_answer": [
+    "Q003:B"
+  ],
+  "researched_answer": [
+    "Q003:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu IAM nói rõ Deny + BoolIfExists aws:MultiFactorAuthPresent=false cũng chặn request dùng access key dài hạn (CLI), và GetSessionToken với MFA là cách dành cho gọi API trong cùng account; CLI reference có --serial-number và --token-code.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Blind và source key đều là B. Đã kiểm tra lại phương án D (AssumeRole có MFA) với mục 'Choosing between GetSessionToken and AssumeRole': AssumeRole phù hợp khi muốn ủy quyền qua role, MFA được kiểm tại lúc assume role và credentials role không mang MFA context cho từng API; quyền EC2 khi đó phụ thuộc permission policy của role mà đề không nêu, nên D không phải cách sửa đúng cho policy của group. Giữ B, verified mức high.",
+  "explanation_vi": {
+    "why_correct": "CLI dùng access key dài hạn nên không có aws:MultiFactorAuthPresent và bị statement Deny (BoolIfExists=false) chặn. Gọi aws sts get-session-token với --serial-number và --token-code trả về credentials tạm thời có thông tin MFA, nên lệnh EC2 được phép mà vẫn bắt buộc MFA.",
+    "others": {
+      "Q003:A": "Đổi thành true sẽ Deny chính các request đã dùng MFA, còn request bằng access key (không có key) vẫn bị Deny do BoolIfExists; vừa không sửa lỗi vừa phá yêu cầu MFA.",
+      "Q003:C": "Chuyển sang SAML federation là thay đổi kiến trúc lớn; người dùng federated không thuộc IAM group này và aws:MultiFactorAuthPresent không có mặt với federated identity.",
+      "Q003:D": "Dùng AssumeRole đổi sang quyền của một role chưa được định nghĩa quyền EC2, và 'thêm sts:AssumeRole vào NotAction' không khớp policy hiện tại; phức tạp hơn GetSessionToken cho truy cập cùng account."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "unable to perform Amazon EC2 commands using the AWS CLI",
+      "meaning_vi": "CLI dùng access key dài hạn → không có ngữ cảnh MFA → bị Deny."
+    },
+    {
+      "phrase": "while still enforcing multi-factor authentication",
+      "meaning_vi": "Không được nới policy; người dùng phải lấy credentials tạm thời có MFA."
+    }
+  ],
+  "memory_tip_vi": "Nếu policy Deny khi aws:MultiFactorAuthPresent=false (BoolIfExists) làm CLI bị chặn -> nghĩ đến sts get-session-token với --serial-number/--token-code; kiểm tra: cần ủy quyền qua role/cross-account thì mới dùng AssumeRole với MFA trong trust policy.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "AWS STS",
+      "AWS CLI",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Bắt buộc MFA cho truy cập API/CLI bằng condition key và credentials tạm thời của STS."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:42:00Z",
+      "change": "blind verdict ['Q003:B'] (proposed_status=verified)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T21:10:00Z",
+      "change": "reconciliation: source=['Q003:B'], final=['Q003:B'], status=verified",
+      "previous_answer": [
+        "Q003:B"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha ea2a1bb2b2→d18718ab81; last_reviewed_at: 2026-09-30T21:10:00Z → 2026-09-30T19:42:11Z",
+      "previous_answer": [
+        "Q003:B"
+      ]
+    }
+  ],
+  "notes_vi": "Mẫu Deny + BoolIfExists + false là mẫu AWS khuyến nghị; hệ quả là CLI với access key phải lấy session token có MFA.",
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T21:10:00Z",
+        "corrected": "2026-09-30T19:42:11Z"
+      }
+    }
+  }
+}

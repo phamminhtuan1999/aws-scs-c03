@@ -2,9 +2,9 @@
   "question_id": "Q092",
   "question_content_hash": "b29c19753df6596d3bb414522e9a3c965f89b070c352842fb6599abfc0812822",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:56:18Z",
-  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,14 +39,13 @@
       "unit_id": "Q092:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Deny gắn vào từng user cũng có hiệu lực, nhưng phải gắn/gỡ cho từng user và cho user mới; gắn vào group dễ quản lý hơn nên thua về maintenance overhead.",
+      "reason_vi": "Deny từng user tăng maintenance so với group.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -54,27 +53,26 @@
       "unit_id": "Q092:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Deny s3:* gắn vào group áp dụng cho mọi user trong group (kể cả user mới được thêm); explicit deny ghi đè Allow full S3 hiện có khi điều kiện không-MFA thỏa.",
+      "reason_vi": "group policy tự bao phủ thành viên.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q092:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Users đã có full S3 access qua policy khác; thêm một Allow nữa (dù có điều kiện) không thu hẹp quyền, vì chỉ explicit deny mới ghi đè allow hiện có.",
+      "reason_vi": "Allow thêm không thu hồi full access đang có.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -82,29 +80,28 @@
       "unit_id": "Q092:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Deny + BoolIfExists aws:MultiFactorAuthPresent false là tổ hợp AWS khuyến nghị: chặn temporary credentials không MFA và cả request bằng long-term access keys (key vắng mặt). Giá trị false không có dấu nháy vẫn hợp lệ vì Boolean có thể không cần quotes.",
+      "reason_vi": "Deny BoolIfExists=false xử lý cả key vắng mặt.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q092:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Deny + Bool false được AWS ghi rõ là KHÔNG đáng tin cậy: không chặn request dùng long-term access keys (key không tồn tại). Ngoài ra đoạn JSON thiếu dấu ':' trước false nên sai cú pháp.",
+      "reason_vi": "Bool=false không chặn long-term key thiếu MFA context; snippet còn thiếu dấu hai chấm.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -139,16 +136,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B+D. IAM docs nêu trực tiếp tổ hợp Deny + BoolIfExists + false là khuyến nghị, Bool + false không chặn long-term credentials; policy gắn vào group giảm công bảo trì so với gắn từng user.",
+    "reason_vi": "BoolIfExists bao phủ missing MFA key; option E còn lỗi JSON thiếu colon.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = B+D, trùng blind. Đã xét lại đối thủ: A (Deny gắn từng user) cũng có hiệu lực nhưng phải gắn cho từng user và user mới, trái 'least maintenance overhead' – group policy tự áp cho thành viên (ref3). C thêm Allow không thu hẹp quyền full S3 sẵn có (explicit deny mới ghi đè allow, ref4). E dùng Bool: tài liệu IAM ghi rõ không chặn request dùng long-term access keys, và đoạn JSON thiếu dấu ':'. Giữ B+D, verified, high.",
+  "reconciliation_vi": "BoolIfExists bao phủ missing MFA key; option E còn lỗi JSON thiếu colon.",
   "explanation_vi": {
-    "why_correct": "B: gắn một customer managed Deny s3:* vào IAM group để áp cho mọi user (kể cả user thêm sau) với ít bảo trì nhất; explicit deny ghi đè quyền full S3 hiện có. D: điều kiện BoolIfExists aws:MultiFactorAuthPresent = false là tổ hợp AWS khuyến nghị, chặn cả request không MFA từ temporary credentials lẫn long-term access keys.",
+    "why_correct": "Gắn Deny s3:* cho group với BoolIfExists aws:MultiFactorAuthPresent=false để chặn cả temporary session chưa MFA lẫn long-term credentials không có key.",
     "others": {
-      "Q092:A": "Gắn Deny cho từng user vẫn có tác dụng nhưng phải lặp lại cho mỗi user và user mới, nhiều công bảo trì hơn gắn vào group.",
-      "Q092:C": "Users đã có full S3 access; thêm một Allow nữa không hạn chế được gì vì chỉ explicit deny mới ghi đè allow.",
-      "Q092:E": "Deny với Bool false bỏ lọt request dùng long-term access keys (key không tồn tại nên điều kiện không khớp), và đoạn JSON thiếu dấu ':' nên sai cú pháp."
+      "Q092:A": "Deny từng user tăng maintenance so với group.",
+      "Q092:C": "Allow thêm không thu hồi full access đang có.",
+      "Q092:E": "Bool=false không chặn long-term key thiếu MFA context; snippet còn thiếu dấu hai chấm."
     }
   },
   "keywords": [
@@ -161,7 +158,7 @@
       "meaning_vi": "Gắn policy một lần vào IAM group thay vì từng user."
     }
   ],
-  "memory_tip_vi": "Nếu cần bắt buộc MFA cho quyền đã có sẵn -> nghĩ đến Deny + BoolIfExists aws:MultiFactorAuthPresent false gắn vào group; kiểm tra: Bool (không IfExists) bỏ lọt long-term access keys, Allow thêm không thu hẹp quyền.",
+  "memory_tip_vi": "Nếu Deny khi chưa MFA phải bao phủ long-term keys, dùng BoolIfExists=false và gắn policy vào group.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -244,6 +241,11 @@
       "type": "typo",
       "location": "Q092:E",
       "detail_vi": "Điều kiện ở E thiếu dấu ':' giữa \"aws:MultiFactorAuthPresent\" và false (JSON không hợp lệ). Có thể do lỗi chép đề; kể cả khi sửa, Bool false vẫn không chặn long-term access keys."
+    },
+    {
+      "type": "data",
+      "location": "Q092",
+      "detail_vi": "E có lỗi JSON nhưng ngay cả khi sửa cú pháp vẫn không đầy đủ."
     }
   ],
   "history": [
@@ -261,6 +263,51 @@
         "Q092:B",
         "Q092:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. BoolIfExists bao phủ missing MFA key; option E còn lỗi JSON thiếu colon.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q092:B",
+        "Q092:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q092:B",
+        "Q092:D"
+      ],
+      "note_vi": "BoolIfExists bao phủ missing MFA key; option E còn lỗi JSON thiếu colon.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "BoolIfExists bao phủ missing MFA key; option E còn lỗi JSON thiếu colon.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "B",
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q092:B",
+      "Q092:D"
+    ],
+    "candidate_answers": [
+      [
+        "Q092:B",
+        "Q092:D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

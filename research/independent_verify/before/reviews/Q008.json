@@ -1,0 +1,421 @@
+{
+  "question_id": "Q008",
+  "question_content_hash": "1ca5a3262a1dbd229ca91f4547fcab589f7441f16353bf24b3598264d5986e38",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:33:20Z",
+  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "051ca6d9ca7d23f2edd7a32ac783b8da9c00f24fdbf99e7f3dfdffd272c2aa1d",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Mỗi dòng chiến lược (prompt) phải được ghép với đúng một kịch bản giám sát (response); mỗi response dùng đúng một lần (không reuse).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ghép theo cơ chế: VPC Flow Logs + Logs Insights cho lưu lượng mạng; metric filter cho đếm lỗi xác thực theo IP/giờ; CloudTrail Insights cho khối lượng API bất thường; Security Hub + EventBridge + Lambda cho tổng hợp/ứng phó.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Bộ dữ liệu có 5 prompt nhưng dòng 1 và dòng 5 trùng nguyên văn (cùng là VPC Flow Logs) — phải kiểm tra xem có tồn tại cách ghép hợp lệ hay không.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q008_image_01.png",
+      "text": "Row 1: Configure VPC Flow Logs with Amazon CloudWatch Logs Insights queries to analyze traffic volume and destination patterns during specific time windows. [dropdown]\nRow 2: Create Amazon CloudWatch metric filters on application logs to track authentication failure rates for each source IP address with hourly aggregation. [dropdown]\nRow 3: Enable AWS CloudTrail Insights for API call rate analysis to establish baselines and then detect anomalous API activity patterns. [dropdown]\nRow 4: Implement AWS Security Hub custom insights with Amazon EventBridge rules to invoke automated AWS Lambda functions for coordinated incident response. [dropdown]\nRow 5: Configure VPC Flow Logs with Amazon CloudWatch Logs Insights queries to analyze traffic volume and destination patterns during specific time windows. [dropdown]\nDropdown options (same for every row): Automatically isolate Amazon EC2 distances when malware detection findings are confirmed. / Correlate security findings from multiple AWS detection services to identify multi-stage attacks. / Detect when privileged users perform an unusually high volume of resource deletion operations. / Identify patterns of more than 50 failed authentication attempts from specific IP addresses in 1 hour. / Monitor network traffic patterns especially large data transfers to external IP addresses outside normal office hours.",
+      "notes_vi": "Giữ nguyên lỗi 'EC2 distances' (đúng ra là 'instances'). Dòng 1 và dòng 5 trùng nguyên văn."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q008:P1",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "VPC Flow Logs ghi dstaddr, bytes, thời điểm của flow; Logs Insights truy vấn theo khung giờ -> phù hợp giám sát truyền dữ liệu lớn ra IP bên ngoài ngoài giờ làm việc.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q008:R5"
+    },
+    {
+      "unit_id": "Q008:P2",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "Metric filter biến log thành metric có dimension (ví dụ source IP) để đặt alarm theo giờ -> đếm >50 lần xác thực thất bại từ một IP trong 1 giờ.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q008:R4"
+    },
+    {
+      "unit_id": "Q008:P3",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "CloudTrail Insights lập baseline tốc độ gọi API ghi (write management) và báo khi lệch -> phát hiện khối lượng thao tác xóa tài nguyên bất thường.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q008:R3"
+    },
+    {
+      "unit_id": "Q008:P4",
+      "unit_type": "prompt",
+      "verdict": "undetermined",
+      "reason_vi": "Chiến lược gồm hai nửa: 'Security Hub custom insights' (gom finding từ nhiều provider -> R2) và 'EventBridge rules gọi Lambda tự động để ứng phó' (-> R1 cô lập EC2). Source key ghép R1, blind ghép R2; cả hai đều có cơ sở tài liệu và không tài liệu nào phân định vì dòng gốc bị mất.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "inference",
+      "matched_response": null
+    },
+    {
+      "unit_id": "Q008:P5",
+      "unit_type": "prompt",
+      "verdict": "undetermined",
+      "reason_vi": "Trùng nguyên văn dòng 1 (VPC Flow Logs + Logs Insights). Source key ghép P5 -> R2 (tương quan finding từ nhiều dịch vụ phát hiện), nhưng flow log chỉ ghi metadata lưu lượng mạng, không tương quan finding; ghép đó chỉ hợp lý nếu dòng gốc là dịch vụ tương quan (ví dụ GuardDuty Extended Threat Detection).",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref7"
+      ],
+      "evidence_kind": "inference",
+      "matched_response": null
+    },
+    {
+      "unit_id": "Q008:R1",
+      "unit_type": "response",
+      "verdict": "undetermined",
+      "reason_vi": "Cô lập EC2 tự động khi có finding malware cần luồng finding -> EventBridge rule -> Lambda; khớp nửa 'EventBridge + Lambda tự động' của P4 (ghép của source key), nhưng cũng có thể thuộc dòng gốc bị mất.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference",
+      "used_for": []
+    },
+    {
+      "unit_id": "Q008:R2",
+      "unit_type": "response",
+      "verdict": "undetermined",
+      "reason_vi": "Tương quan finding để nhận diện tấn công nhiều giai đoạn là chức năng của GuardDuty Extended Threat Detection (attack sequence) hoặc gom finding của Security Hub insight (P4); không thể do VPC Flow Logs (P5) thực hiện.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref7"
+      ],
+      "evidence_kind": "inference",
+      "used_for": []
+    },
+    {
+      "unit_id": "Q008:R3",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Khối lượng thao tác xóa bất thường là lệch baseline API call rate -> CloudTrail Insights (P3).",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q008:P3"
+      ]
+    },
+    {
+      "unit_id": "Q008:R4",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Ngưỡng cố định >50 lần thất bại/IP/giờ -> metric filter có dimension + alarm (P2).",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q008:P2"
+      ]
+    },
+    {
+      "unit_id": "Q008:R5",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Lưu lượng mạng, dung lượng lớn tới IP ngoài, theo khung giờ -> VPC Flow Logs + Logs Insights (P1; P5 trùng lặp).",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q008:P1"
+      ]
+    }
+  ],
+  "independent_verdict": {
+    "answer": null,
+    "proposed_status": "ambiguous",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Ba ghép P1->R5, P2->R4, P3->R3 được tài liệu hỗ trợ rõ; nhưng dòng 5 trùng dòng 1 nên không tồn tại ghép 1-1 hợp lệ cho cả 5 dòng (R1 không có chiến lược phù hợp).",
+      "open_issues": [
+        "Dòng 5 có vẻ là lỗi sao chép, dòng gốc (có thể về GuardDuty Malware Protection + EventBridge + Lambda) bị mất.",
+        "P4 có thể được dự định cho R2 hoặc R1 tùy dòng bị mất."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:33:20Z"
+  },
+  "source_answer": {
+    "Q008:P1": "Q008:R5",
+    "Q008:P2": "Q008:R4",
+    "Q008:P3": "Q008:R3",
+    "Q008:P4": "Q008:R1",
+    "Q008:P5": "Q008:R2"
+  },
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Ba ghép P1->R5, P2->R4, P3->R3 được tài liệu hỗ trợ trực tiếp và trùng source key. Nhưng dòng 5 trùng nguyên văn dòng 1 nên không tồn tại ghép 1-1 hợp lệ cho cả 5 dòng; P4 có hai cách đọc (R1 hoặc R2) mà tài liệu không phân định.",
+    "open_issues": [
+      "Dòng 5 là lỗi sao chép; dòng gốc bị mất (có thể là GuardDuty Extended Threat Detection cho R2, hoặc GuardDuty Malware Protection + EventBridge cho R1).",
+      "Source key đánh dấu gradable=false (quyết định 2026-09-30): P1 và P5 trùng text nhưng khác đáp án."
+    ]
+  },
+  "reconciliation_vi": "Source key: P1->R5, P2->R4, P3->R3, P4->R1, P5->R2; blind: không có đáp án đầy đủ (P4->R2 khả năng cao, P5/R1 không ghép được). Ba ghép P1/P2/P3 trùng nhau và được xác nhận (VPC Flow Logs có bytes/dstaddr, metric filter có dimension, CloudTrail Insights so baseline API rate). Khác biệt ở P4: source chọn R1 (nửa 'EventBridge + Lambda tự động ứng phó'), blind chọn R2 (nửa 'custom insights gom finding đa provider'); cả hai đều có tài liệu hỗ trợ (ref3, ref4). Ghép P5->R2 của source không thể đúng với văn bản hiện tại vì VPC Flow Logs không tương quan finding; theo tài liệu, tương quan multi-stage attack là chức năng của GuardDuty Extended Threat Detection (ref7), gợi ý dòng 5 gốc là dịch vụ tương quan và khi đó P4->R1 của source là nhất quán. Không có tài liệu nào khôi phục được dòng gốc, nên giữ status ambiguous, không chấm điểm.",
+  "explanation_vi": {
+    "why_correct": "Câu này bị lỗi dữ liệu nên chưa có đáp án chấm được: dòng 5 trùng nguyên văn dòng 1. Các ghép chắc chắn: VPC Flow Logs + Logs Insights -> giám sát truyền dữ liệu lớn ra IP ngoài ngoài giờ (R5); CloudWatch metric filter theo IP, gộp theo giờ -> >50 lần xác thực thất bại/IP/giờ (R4); CloudTrail Insights so baseline API rate -> khối lượng thao tác xóa bất thường (R3).",
+    "others": {
+      "Q008:P4": "Security Hub custom insights + EventBridge + Lambda: source key ghép với R1 (cô lập EC2 tự động), nhưng phần 'custom insights' cũng hợp với R2 — chưa phân định được vì dòng gốc bị mất.",
+      "Q008:P5": "Bản sao của dòng 1; source key ghép với R2 nhưng VPC Flow Logs không tương quan finding, nên ghép này không đúng với văn bản hiện tại.",
+      "Q008:R1": "Cô lập EC2 khi có finding malware là mẫu finding -> EventBridge -> Lambda; khớp P4 theo source key.",
+      "Q008:R2": "Tương quan multi-stage attack là chức năng của GuardDuty Extended Threat Detection/Security Hub, không phải VPC Flow Logs."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "large data transfers to external IP addresses",
+      "meaning_vi": "Phân tích lưu lượng mạng theo đích và dung lượng -> VPC Flow Logs (bytes, dstaddr) + Logs Insights."
+    },
+    {
+      "phrase": "more than 50 failed authentication attempts",
+      "meaning_vi": "Ngưỡng cố định theo IP/giờ -> CloudWatch metric filter có dimension + alarm."
+    },
+    {
+      "phrase": "unusually high volume of resource deletion operations",
+      "meaning_vi": "Lệch so với baseline tốc độ gọi API -> CloudTrail Insights."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề nêu ngưỡng cố định (N lần/giờ/IP) -> nghĩ đến CloudWatch metric filter + alarm; nếu 'bất thường so với baseline API' -> CloudTrail Insights; kiểm tra: lưu lượng/IP đích -> VPC Flow Logs, tương quan multi-stage -> GuardDuty Extended Threat Detection.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "2 Incident Response"
+    ],
+    "services": [
+      "Amazon VPC Flow Logs",
+      "Amazon CloudWatch Logs",
+      "AWS CloudTrail",
+      "AWS Security Hub",
+      "Amazon EventBridge",
+      "AWS Lambda",
+      "Amazon GuardDuty"
+    ],
+    "reason_vi": "Chọn cơ chế giám sát/phát hiện phù hợp từng kịch bản và tự động ứng phó finding."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-insights-events-with-cloudtrail.html",
+      "title": "Working with CloudTrail Insights",
+      "section": "intro",
+      "snapshot_id": "3d8c0239d578",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudTrail then generates Insights events when the current API call rates or error rates deviate from the baseline.",
+      "supports": "CloudTrail Insights phát hiện tốc độ gọi API bất thường so với baseline (phù hợp R3).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+      "title": "Creating metrics from log events using filters",
+      "section": "intro",
+      "snapshot_id": "18614a309935",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you create a metric from a log filter, you can also choose to assign dimensions and a unit to the metric.",
+      "supports": "Metric filter có thể gán dimension (ví dụ IP nguồn) để đếm/alarm theo từng IP (phù hợp R4).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-insights.html",
+      "title": "Viewing insights in Security Hub CSPM",
+      "section": "intro",
+      "snapshot_id": "f548e8cf3779",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An insight brings together findings from across finding providers.",
+      "supports": "Insight của Security Hub gom finding từ nhiều provider (liên quan R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-integration-types.html",
+      "title": "Security Hub CSPM event types in EventBridge",
+      "section": "All findings (Security Hub Findings - Imported)",
+      "snapshot_id": "05261238db18",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can define rules in EventBridge that automatically route findings to a remediation workflow",
+      "supports": "EventBridge rule có thể tự động chuyển finding tới luồng khắc phục (Lambda) — dùng được cho cả ứng phó phối hợp lẫn cô lập EC2.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html",
+      "title": "Flow log records",
+      "section": "Available fields - bytes",
+      "snapshot_id": "315de400f925",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The number of bytes transferred during the flow.",
+      "supports": "Flow log có trường bytes (cùng dstaddr, start) để phân tích dung lượng và đích lưu lượng (R5).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html",
+      "title": "Analyzing log data with CloudWatch Logs Insights",
+      "section": "intro",
+      "snapshot_id": "35255ba80cf5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With CloudWatch Logs Insights, you can interactively search and analyze your log data in Amazon CloudWatch Logs.",
+      "supports": "Logs Insights truy vấn/phân tích log (bao gồm flow log gửi vào CloudWatch Logs).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-extended-threat-detection.html",
+      "title": "GuardDuty Extended Threat Detection",
+      "section": "intro",
+      "snapshot_id": "d689bca05b13",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty Extended Threat Detection automatically detects multi-stage attacks that span data sources, multiple types of AWS resources, and time",
+      "supports": "'Tương quan để phát hiện multi-stage attacks' là chức năng của GuardDuty Extended Threat Detection, không phải VPC Flow Logs — dòng gốc cho R2 có lẽ là dịch vụ kiểu này.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q008:P5",
+      "detail_vi": "Dòng 5 trùng nguyên văn dòng 1 (VPC Flow Logs + Logs Insights); với quy tắc mỗi chiến lược dùng một lần thì không có ghép hợp lệ cho cả 5 dòng. Có lẽ dòng gốc bị mất."
+    },
+    {
+      "type": "typo",
+      "location": "Q008:R1",
+      "detail_vi": "'Amazon EC2 distances' — đúng ra là 'Amazon EC2 instances'."
+    },
+    {
+      "type": "layout",
+      "location": "Q008:P4",
+      "detail_vi": "Trong đề, danh sách response nằm ở stem còn prompt là các dòng trong ảnh; vai trò 'strategy' và 'scenario' bị đảo so với câu hướng dẫn."
+    },
+    {
+      "type": "data",
+      "location": "Q008:P4",
+      "detail_vi": "Source key ghép P5 (bản sao VPC Flow Logs) -> R2 và P4 -> R1; ghép P5->R2 không thể đúng với văn bản hiện tại, cho thấy dòng 5 gốc (nhiều khả năng là dịch vụ tương quan finding) đã bị thay bằng bản sao dòng 1."
+    }
+  ],
+  "notes_vi": "Ghép xác định được: P1->R5, P2->R4, P3->R3; P4->R2 là khả năng cao nhất; P5 và R1 không ghép được.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict null",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key P4->R1, P5->R2 (gradable=false); P4 đổi từ meets/R2 sang undetermined, R2 đổi từ meets sang undetermined; status ambiguous, không chấm điểm",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:45:00Z → 2026-09-30T19:41:20Z",
+      "previous_answer": null
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:45:00Z",
+        "corrected": "2026-09-30T19:41:20Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "question_id": "Q107",
+  "question_content_hash": "44a50566d16236327e074d3ed6108a5ab715896414d705c2eeb38f440d79aaef",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:33Z",
+  "last_reviewed_at": "2026-09-30T20:41:04+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "5a4b6184cc9ad81b3f2af1a0bac8c58c33e0c37dd406bd491b229343f712fd2d",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Chia sẻ IPAM pool từ infrastructure account sang development account bằng AWS RAM (cùng một organization).",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Tuân thủ least privilege (chỉ cấp đúng các hành động cần cho IPAM pool).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chỉ các IAM principal cụ thể trong development account được thực hiện thao tác trên IPAM pool.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q107:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Blog AWS Security mô tả đúng giải pháp này cho đúng kịch bản (share IPAM pool từ account hạ tầng tới development account theo least privilege): tạo customer managed permission chỉ gồm write-only actions (Allocate/Release) rồi thêm condition aws:PrincipalTag để chỉ user/role có tag được thao tác trên pool. Tài liệu RAM xác nhận IPAM pool hỗ trợ CMP và aws:PrincipalTag (không phải system tag aws:) được phép trong CMP. Lưu ý chung: principal ở account nhận vẫn cần IAM policy (không riêng A).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref12",
+        "ref13",
+        "ref14",
+        "ref15",
+        "ref16",
+        "ref17"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q107:B",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chạy được: quyền hiệu lực = AWS managed permission giao với IAM policy do admin development account gán, nên có thể giới hạn principal. Nhưng AWS nói rõ trong đúng kịch bản IPAM pool này rằng AWS managed permission cấp cả đọc lẫn ghi, vì vậy phải tạo customer managed permission để đạt least privilege; với B, trần quyền phía resource rộng hơn cần thiết và toàn bộ giới hạn phụ thuộc account nhận.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6",
+        "ref1",
+        "ref11",
+        "ref13",
+        "ref14"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q107:C",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "SCP không cấp quyền, chỉ là guardrail; có thể dùng để chặn identity khác nhưng share vẫn dùng managed permission mặc định (không thu hẹp hành động), còn resource-based policy trên IPAM pool do RAM tự tạo từ managed permission nên không phải một cơ chế riêng để cấu hình. Phức tạp và kém least privilege hơn A.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q107:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Customer managed permission 'full access' đi ngược least privilege; VPC endpoint policy chỉ kiểm soát request đi qua endpoint đó, không thay thế identity/resource-based policy nên không giới hạn được principal gọi API EC2 qua endpoint công khai.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q107:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu RAM nêu CMP là cơ chế least privilege với chính ví dụ IPAM pool (cấp phát nhưng không xem), IPAM pool hỗ trợ CMP và aws:PrincipalTag không bị loại trừ; tuy nhiên B vẫn có thể đạt quyền hiệu lực tương đương nếu admin dev account viết IAM policy chặt.",
+      "open_issues": [
+        "Mọi phương án đều cần IAM identity-based policy trong development account; A không nêu bước này nhưng đó là yêu cầu chung của RAM.",
+        "'write-only actions' được hiểu là chỉ chọn access level Write (allocate/release) như ví dụ trong tài liệu; chưa kiểm chứng tập action tối thiểu để tạo VPC từ pool."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:54:33Z"
+  },
+  "source_answer": [
+    "Q107:B"
+  ],
+  "researched_answer": [
+    "Q107:A"
+  ],
+  "comparison": "mismatch",
+  "status": "verified",
+  "differs_from_source": true,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Bằng chứng trực tiếp: blog AWS Security (ref14-ref17) trình bày đúng kịch bản của đề (share IPAM pool từ infrastructure account tới development account, least privilege, chỉ một số IAM principal) và giải pháp chính là A: customer managed permission write-only + condition aws:PrincipalTag; blog nói thẳng AWS managed permission (B) cấp cả đọc và ghi nên cần CMP. Tài liệu RAM (ref1, ref3, ref4, ref13) xác nhận cơ chế vẫn hiện hành. B hoạt động nhưng kém least privilege; C, D không đạt.",
+    "open_issues": [
+      "A không nêu bước gán IAM identity-based policy ở development account; đây là yêu cầu chung của mọi share RAM tới account (ref11) và blog cũng không liệt kê nó như một bước riêng, nên không làm A sai.",
+      "Nguồn quyết định là blog AWS 2023 (không phải user guide); tài liệu RAM hiện hành (ref1, ref3, ref4) vẫn xác nhận các cơ chế tương ứng tính đến 2026-09-30."
+    ]
+  },
+  "reconciliation_vi": "Blind = A, source key = B (mismatch). Đã tìm lý lẽ cho B: trang Terms and concepts xác nhận principal ở consuming account chỉ làm được những gì vừa được managed permission vừa được IAM identity-based policy do admin account nhận cho phép, và admin phải gắn policy thì principal mới có quyền — vậy B giới hạn được đúng principal và IAM policy cũng có thể thu hẹp action; AWSRAMDefaultPermissionsIpamPool vốn chỉ gồm thao tác pool (xem + allocate/release), không phải full access. Tìm lý lẽ cho A: trang CMP nói AWS managed permission 'might not provide least privilege' và nêu đúng ví dụ IPAM (cấp phát nhưng không xem); trang Considerations chỉ loại trừ aws:PrincipalTag/aws: (system tag), nên condition aws:PrincipalTag với tag tự đặt hợp lệ; SAR cho thấy Allocate/Release là Write, GetIpamPoolAllocations là List, GetIpamPoolCidrs là Read, nên 'write-only' đúng là cấp phát không xem. C (SCP không cấp quyền; resource-based policy do RAM tự sinh) và D (full access, endpoint policy không thay IAM) vẫn kém. Kết luận: A chặt hơn ở phía resource và khớp tài liệu least privilege của RAM, nhưng B không bị tài liệu bác bỏ và A có thiếu sót (không nêu IAM policy bên nhận, write-only có thể thiếu quyền xem). Xung đột với source key chưa được bằng chứng phân định -> disputed, giữ researched_answer A (medium). | AUDIT (r1-audit, 2026-09-30T20:41:04+00:00): tìm thấy bằng chứng phân định trực tiếp - blog AWS Security 'Configure fine-grained access to your resources shared using AWS Resource Access Manager' (snapshot 007db9a554d3) dựng đúng kịch bản của đề và dùng đúng giải pháp A (CMP chỉ Write + aws:PrincipalTag), đồng thời nói AWS managed permission 'grants both read and write permissions' nên phải tạo CMP. Các lo ngại trước đó (write-only có thể thiếu quyền xem; A không nêu IAM policy bên nhận) được blog giải quyết: blog kiểm chứng development account tạo được VPC từ pool chỉ với quyền Write. Nâng disputed -> verified (high), vẫn khác source key (B).",
+  "explanation_vi": {
+    "why_correct": "A: tạo resource share với customer managed permission chỉ gồm write-only actions (cấp phát/giải phóng CIDR, không xem chi tiết pool) và condition aws:PrincipalTag để chỉ IAM principal có tag được phép - đây đúng là cách AWS mô tả để share IPAM pool tới development account theo least privilege. AWS managed permission cấp cả đọc và ghi nên không đạt least privilege.",
+    "others": {
+      "Q107:B": "Đáp án của source key: hoạt động nhờ IAM policy ở development account, nhưng AWS managed permission cấp cả đọc lẫn ghi trên IPAM pool; AWS khuyến nghị dùng customer managed permission cho kịch bản least privilege này.",
+      "Q107:C": "SCP không cấp quyền và không thu hẹp managed permission của share; resource-based policy trên IPAM pool do RAM tự sinh từ managed permission, không phải cơ chế cấu hình riêng.",
+      "Q107:D": "CMP 'full access' đi ngược least privilege; VPC endpoint policy chỉ kiểm soát request đi qua endpoint đó, không giới hạn được principal."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "principle of least privilege",
+      "meaning_vi": "Trong RAM, AWS managed permission có thể rộng; customer managed permission cho phép chọn đúng action/condition."
+    },
+    {
+      "phrase": "only specific IAM principals in the development account",
+      "meaning_vi": "Giới hạn principal: IAM policy ở account nhận (bắt buộc) và/hoặc condition trong CMP."
+    },
+    {
+      "phrase": "AWS Resource Access Manager (AWS RAM)",
+      "meaning_vi": "Quyền thực tế = managed permission của share giao với IAM policy bên nhận."
+    }
+  ],
+  "memory_tip_vi": "Nếu share qua AWS RAM mà đề nhấn mạnh least privilege và chỉ một số principal -> nghĩ đến customer managed permission (chọn đúng action, vd. write-only) + condition như aws:PrincipalTag; kiểm tra: CMP chỉ hỗ trợ một số resource type và không dùng system tag aws:.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management",
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "AWS Resource Access Manager",
+      "Amazon VPC IP Address Manager",
+      "AWS Organizations",
+      "AWS IAM"
+    ],
+    "reason_vi": "Kiểm soát quyền trên tài nguyên mạng được chia sẻ giữa các account theo least privilege."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/create-customer-managed-permissions.html",
+      "title": "Creating and using customer managed permissions in AWS RAM",
+      "section": "Creating and using customer managed permissions in AWS RAM",
+      "snapshot_id": "120ec8424399",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can create customer managed permissions for your developers to assign IP addresses, but not view the range of IP addresses other developer accounts assign.",
+      "supports": "CMP cho IPAM pool là cơ chế least privilege được tài liệu mô tả (chỉ quyền ghi/cấp phát).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/create-customer-managed-permissions.html",
+      "title": "Creating and using customer managed permissions in AWS RAM",
+      "section": "Create a customer managed permission",
+      "snapshot_id": "120ec8424399",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Select or deselect access level information to meet your requirements in the visual editor.",
+      "supports": "Có thể chọn access level (vd. chỉ Write) và thêm condition bằng JSON editor.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/managed-permission-considerations.html",
+      "title": "Considerations for using customer managed permissions in AWS RAM",
+      "section": "Unsupported conditions",
+      "snapshot_id": "224ccb8a86f5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "aws:PrincipalTag/aws:",
+      "supports": "Chỉ system tag aws:PrincipalTag/aws: bị loại trừ; aws:PrincipalTag với tag do khách hàng đặt không nằm trong danh sách loại trừ.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources",
+      "section": "Amazon VPC - IPAM pools (ec2:IpamPool)",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This lets those principals allocate CIDRs from the pool to AWS resources, such as VPCs, in their respective accounts.",
+      "supports": "IPAM pool chia sẻ được qua RAM; bảng cột 'Can use customer managed permissions' cho ec2:IpamPool là Yes.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpc/latest/ipam/share-pool-ipam.html",
+      "title": "Share an IPAM pool using AWS RAM",
+      "section": "AWS Management Console",
+      "snapshot_id": "c93ec8bc2493",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "allow principals to view the CIDRs and allocations in the shared IPAM pool and allocate/release CIDRs in the pool.",
+      "supports": "AWS managed permission mặc định cho IPAM pool gồm cả xem và allocate/release (rộng hơn chỉ ghi).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/getting-started-terms-and-concepts.html",
+      "title": "Terms and concepts for AWS RAM",
+      "section": "Managed permissions / consuming account",
+      "snapshot_id": "66f50d52792b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "These specify the maximum permissions that can be granted to the principals in the consuming account.",
+      "supports": "Quyền hiệu lực = managed permission (trần) giao với IAM policy do admin account nhận gán.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "Overview",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs do not grant permissions to the IAM users and IAM roles in your organization.",
+      "supports": "SCP chỉ là guardrail, không thu hẹp managed permission của share.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/security-ram-permissions.html",
+      "title": "Managing permissions in AWS RAM",
+      "section": "Managing permissions in AWS RAM",
+      "snapshot_id": "b142eca4c5e4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS RAM then authors the resource-based policy that it attaches to all resources in that resource share.",
+      "supports": "Resource-based policy trên IPAM pool được RAM tạo từ managed permission, không phải cơ chế cấu hình riêng như option C mô tả.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-access.html",
+      "title": "Control access to VPC endpoints using endpoint policies",
+      "section": "Control access to VPC endpoints using endpoint policies",
+      "snapshot_id": "59aa01b01e73",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An endpoint policy does not override or replace identity-based policies or resource-based policies.",
+      "supports": "Endpoint policy chỉ kiểm soát việc dùng endpoint, không phải cơ chế least privilege cho share.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/shareable.html",
+      "title": "Shareable AWS resources",
+      "section": "Amazon VPC - IPAM pools (ec2:IpamPool)",
+      "snapshot_id": "4b15b9f9cab9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Share Amazon VPC IPAM pools centrally with other AWS accounts, IAM roles or users",
+      "supports": "IPAM pool có thể share trực tiếp tới IAM role/user (cách least privilege khác, không có trong phương án).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/getting-started-terms-and-concepts.html",
+      "title": "Terms and concepts for AWS RAM",
+      "section": "Consuming principals",
+      "snapshot_id": "66f50d52792b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The IAM identity-based policies attached to individual roles or users by the IAM administrator in the consuming account.",
+      "supports": "Quyền hiệu lực cần cả IAM policy do admin account nhận gán -> B giới hạn được principal; A cũng cần bước này dù không nêu.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref12",
+      "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_ec2.html",
+      "title": "Actions, resources, and condition keys for Amazon EC2",
+      "section": "Actions defined by Amazon EC2",
+      "snapshot_id": "e09ff3211f53",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "ec2:GetIpamPoolAllocations List",
+      "supports": "Allocate/Release IPAM pool là Write; xem allocation là List (GetIpamPoolCidrs là Read) -> 'write-only' = cấp phát nhưng không xem.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref13",
+      "url": "https://docs.aws.amazon.com/ram/latest/userguide/create-customer-managed-permissions.html",
+      "title": "Creating and using customer managed permissions in AWS RAM",
+      "section": "Creating and using customer managed permissions in AWS RAM",
+      "snapshot_id": "120ec8424399",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "those managed permissions might not provide least privilege access for your sharing use case",
+      "supports": "AWS managed permission (B) có thể không đạt least privilege; CMP (A) là cách khắc phục.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref14",
+      "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+      "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+      "section": "Configure customer managed permissions",
+      "snapshot_id": "007db9a554d3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2023-08-03",
+      "quote": "The existing AWS managed permission grants both read and write permissions. Therefore, you need to create a customer managed permission to refine the resource access permissions",
+      "supports": "AWS nói thẳng: với kịch bản share IPAM pool tới development account theo least privilege, AWS managed permission (B) cấp cả đọc lẫn ghi nên KHÔNG đủ; phải dùng customer managed permission (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref15",
+      "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+      "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+      "section": "Configure customer managed permissions",
+      "snapshot_id": "007db9a554d3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2023-08-03",
+      "quote": "With a customer managed permission, you can select and tailor the actions that the development accounts can perform on the IPAM pool, such as write-only actions.",
+      "supports": "Vế \"customer-managed permission that includes write-only actions\" của A chính là cấu hình AWS mô tả cho development account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref16",
+      "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+      "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+      "section": "Update customer managed permissions",
+      "snapshot_id": "007db9a554d3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2023-08-03",
+      "quote": "Add a condition with aws:PrincipalTag that allows only the users or roles tagged with team = networking to access the shared IPAM pool.",
+      "supports": "Vế \"condition that uses aws:PrincipalTag for allowed identities\" của A là cách AWS giới hạn chỉ các IAM principal cụ thể được thao tác trên IPAM pool đã share.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref17",
+      "url": "https://aws.amazon.com/blogs/security/configure-fine-grained-access-to-your-resources-shared-using-aws-resource-access-manager/",
+      "title": "Configure fine-grained access to your resources shared using AWS Resource Access Manager (AWS Security Blog)",
+      "section": "Solution overview",
+      "snapshot_id": "007db9a554d3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2023-08-03",
+      "quote": "The networking account in the infrastructure OU follows the best practice of least privilege and grants only the permissions that accounts receiving these resources, such as development accounts, require",
+      "supports": "Kịch bản của đề (infrastructure account share IPAM pool tới development account, least privilege) trùng kịch bản blog AWS dùng CMP.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:54:33Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q107:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:44+00:00",
+      "change": "Reconciliation: mismatch (blind A, source B). Kiểm tra cả hai phía: B hoạt động nhờ IAM policy ở account nhận (ref11); A khớp tài liệu least privilege của RAM với ví dụ IPAM (ref13), aws:PrincipalTag hợp lệ, 'write-only' = Allocate/Release (ref12). Không có bằng chứng phân định -> hạ từ verified xuống disputed, giữ A (medium).",
+      "previous_answer": [
+        "Q107:A"
+      ]
+    },
+    {
+      "version": "r1-audit",
+      "date": "2026-09-30T20:41:04+00:00",
+      "change": "AUDIT: status disputed -> verified; confidence medium -> high; researched_answer giữ A (differs_from_source=true, source B). Bằng chứng mới: blog AWS Security (ref14-ref17, snapshot 007db9a554d3) trình bày đúng kịch bản đề với giải pháp CMP write-only + aws:PrincipalTag và nói AWS managed permission cấp cả đọc lẫn ghi. Cập nhật option_reviews A (evidence direct) và B, confidence, explanation, memory tip.",
+      "previous_answer": [
+        "Q107:A"
+      ]
+    }
+  ],
+  "notes_vi": "Từ khóa: RAM + 'least privilege' -> customer managed permission (chọn đúng action + condition). AWS managed permission là trần quyền mặc định, thường rộng hơn nhu cầu."
+}

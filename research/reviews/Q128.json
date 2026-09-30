@@ -2,9 +2,9 @@
   "question_id": "Q128",
   "question_content_hash": "ef8c2a7616c7af2f789f543ac3a2f3e332b0f02d5a0e05c9081fa8676c111195",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:20:31+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -28,15 +28,14 @@
     {
       "unit_id": "Q128:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Tạo trail mới rồi xóa trail cũ là không cần thiết và làm mất trail hiện có (trái yêu cầu cập nhật trail đang có); tạo trail mới với prefix mới trước khi sửa bucket policy vẫn gặp cùng lỗi policy. Chỉ cần sửa prefix trong bucket policy.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "A tạo/xóa trail không cần thiết và có thể thất bại vì prefix policy chưa phù hợp.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -44,52 +43,41 @@
       "unit_id": "Q128:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Tài liệu CloudTrail nói lỗi này do bucket policy có prefix sai trong statement s3:PutObject cấp cho CloudTrail; cấp quyền PutBucketPolicy cho engineer không đổi prefix trong policy nên CloudTrail vẫn báo lỗi.",
+      "reason_vi": "B PutBucketPolicy cho engineer không sửa resource prefix được cho CloudTrail write.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q128:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đúng quy trình AWS: dùng S3 console cập nhật prefix trong Resource của bucket policy, sau đó dùng CloudTrail console đặt cùng prefix cho trail.",
+      "reason_vi": "C sửa bucket policy prefix rồi sửa trail prefix đúng luồng AWS hướng dẫn.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q128:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GetBucketPolicy chỉ cho engineer đọc policy; prefix sai trong Resource của statement s3:PutObject vẫn giữ nguyên nên CloudTrail vẫn thấy policy không đủ.",
+      "reason_vi": "D GetBucketPolicy không cấp CloudTrail PutObject vào prefix mới.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -119,16 +107,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu CloudTrail có mục 'Changing a prefix for an existing bucket' nêu đúng thông báo lỗi, nguyên nhân (prefix sai trong bucket policy) và cách xử lý trùng C; UpdateTrail API xác nhận lỗi thuộc về nội dung policy của bucket.",
+    "reason_vi": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Blind loại B/D bằng suy luận; lần này bổ sung bằng chứng trực tiếp: trang CloudTrail bucket policy nói lỗi 'There is a problem with the bucket policy' khi đổi prefix xảy ra vì 'bucket policy with an incorrect prefix' và cách sửa là chỉnh Resource của statement s3:PutObject; UpdateTrail API định nghĩa InsufficientS3BucketPolicyException là policy trên bucket không đủ. B/D chỉ đổi quyền của engineer (PutBucketPolicy/GetBucketPolicy) mà không đổi prefix nên không xử lý nguyên nhân. A tạo trail mới rồi xóa trail gốc là thừa và trái yêu cầu cập nhật trail hiện có. Giữ C, verified, high.",
+  "reconciliation_vi": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
   "explanation_vi": {
-    "why_correct": "Prefix nằm trong Resource ARN của statement s3:PutObject cấp cho cloudtrail.amazonaws.com; khi đổi prefix, policy cũ không cho CloudTrail ghi vào đường dẫn mới nên phải sửa prefix trong bucket policy trước rồi mới đổi prefix trên trail.",
+    "why_correct": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
     "others": {
-      "Q128:A": "Tạo trail mới với prefix mới vẫn vướng cùng bucket policy, và xóa trail gốc là thừa, trái yêu cầu cập nhật trail hiện có.",
-      "Q128:B": "Lỗi nằm ở prefix trong policy dành cho CloudTrail, không phải quyền PutBucketPolicy của engineer; thêm quyền này không đổi prefix.",
-      "Q128:D": "Quyền GetBucketPolicy chỉ cho đọc policy, không sửa được prefix sai nên CloudTrail vẫn báo lỗi."
+      "Q128:A": "A tạo/xóa trail không cần thiết và có thể thất bại vì prefix policy chưa phù hợp.",
+      "Q128:B": "B PutBucketPolicy cho engineer không sửa resource prefix được cho CloudTrail write.",
+      "Q128:D": "D GetBucketPolicy không cấp CloudTrail PutObject vào prefix mới."
     }
   },
   "keywords": [
@@ -145,7 +133,7 @@
       "meaning_vi": "Cập nhật trail hiện có, không cần tạo/xóa trail."
     }
   ],
-  "memory_tip_vi": "Nếu đổi prefix/bucket của CloudTrail mà gặp lỗi bucket policy -> nghĩ đến sửa Resource (bucket/prefix/AWSLogs/...) trong statement s3:PutObject cho cloudtrail.amazonaws.com trước; kiểm tra: lỗi là quyền của CloudTrail trên bucket, không phải quyền của người thao tác.",
+  "memory_tip_vi": "Nếu đổi CloudTrail prefix, cập nhật S3 policy resource prefix trước.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -238,7 +226,40 @@
       "previous_answer": [
         "Q128:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q128:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q128:C"
+      ],
+      "note_vi": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+      "technical_change": false
     }
   ],
-  "notes_vi": ""
+  "notes_vi": "Bucket policy phải cho CloudTrail ghi đúng prefix mới trước khi cập nhật prefix của trail.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

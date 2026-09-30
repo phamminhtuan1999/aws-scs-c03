@@ -2,9 +2,9 @@
   "question_id": "Q038",
   "question_content_hash": "1ea7abbe6025b36e2965201307a5e6eef7ca95792e68756fc892f9ab9b4787c0",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:43:36Z",
-  "last_reviewed_at": "2026-09-30T19:52:36Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,28 +33,27 @@
     {
       "unit_id": "Q038:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Security group DB cho phép mọi traffic từ toàn bộ CIDR của application VPC, nên mọi instance trong VPC ứng dụng đều truy cập được; network ACL cũng chỉ lọc theo CIDR ở mức subnet, không phân biệt từng instance.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CIDR cho phép mọi instance trong dải ứng dụng.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q038:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Rule DB dựa trên toàn bộ CIDR application VPC nên mọi instance ứng dụng đều qua được; inbound rule trên SG ứng dụng là thừa (SG stateful) và việc gắn một SG cho cả DB và app không giới hạn theo instance.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CIDR vẫn không chọn riêng các instance được phép.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -62,30 +61,28 @@
       "unit_id": "Q038:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Với peering cùng Region (khác account) có thể tham chiếu SG của VPC peer (dạng account/sg-id); DB SG chỉ cho TCP 1521 từ SG ứng dụng, nên chỉ instance được gắn SG đó mới truy cập, kể cả instance mới tạo. SG ứng dụng không cần inbound vì outbound mặc định cho phép và SG stateful.",
+      "reason_vi": "DB inbound 1521 từ application SG chọn đúng tập EC2 động.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q038:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Không thay đổi SG của database; NACL mới cho phép mọi traffic từ toàn CIDR ứng dụng; inbound rule trên SG ứng dụng không hạn chế ai kết nối tới DB. Không có kiểm soát theo instance ở phía DB.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Quy tắc inbound application không cấp quyền vào database.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -118,16 +115,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu VPC peering xác nhận có thể tham chiếu security group của VPC peer ở account khác cùng Region (account/sg-id); đây là lựa chọn duy nhất giới hạn truy cập theo instance thay vì theo CIDR cả VPC.",
+    "reason_vi": "Kết luận đúng; cần outbound application SG cho phép tới DB, không suy ra chỉ từ stateful.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ B: B cũng dùng security group nhưng rule phía DB cho phép toàn bộ CIDR của application VPC, nên mọi instance ứng dụng (kể cả instance không cần DB) đều kết nối được; inbound rule trên SG ứng dụng là thừa vì SG stateful. A và D dựa trên CIDR/NACL ở mức subnet, không phân biệt từng instance. Điều kiện cần cho C (peering cùng Region, khác account) được tài liệu hỗ trợ trực tiếp. Giữ C, verified, high.",
+  "reconciliation_vi": "Kết luận đúng; cần outbound application SG cho phép tới DB, không suy ra chỉ từ stateful.",
   "explanation_vi": {
-    "why_correct": "Security group DB chỉ cho TCP 1521 từ security group ứng dụng (tham chiếu qua peering cùng Region bằng account/sg-id); chỉ instance nào được gắn SG ứng dụng mới vào được DB, kể cả instance mới tạo, và SG ứng dụng không cần inbound vì SG stateful.",
+    "why_correct": "Trong VPC peering cùng Region, database security group có thể tham chiếu application security group ở tài khoản khác; chỉ gắn nhóm ứng dụng này vào các EC2 được phép truy cập cổng 1521.",
     "others": {
-      "Q038:A": "SG DB mở mọi traffic từ toàn CIDR application VPC và NACL cũng lọc theo CIDR, nên mọi instance ứng dụng đều truy cập được DB.",
-      "Q038:B": "Rule DB theo CIDR của cả application VPC nên không giới hạn theo instance; inbound rule trên SG ứng dụng là thừa.",
-      "Q038:D": "Không siết SG của DB, NACL còn mở mọi traffic từ toàn CIDR ứng dụng; inbound rule trên SG ứng dụng không kiểm soát ai kết nối tới DB."
+      "Q038:A": "CIDR cho phép mọi instance trong dải ứng dụng.",
+      "Q038:B": "CIDR vẫn không chọn riêng các instance được phép.",
+      "Q038:D": "Quy tắc inbound application không cấp quyền vào database."
     }
   },
   "keywords": [
@@ -144,7 +141,7 @@
       "meaning_vi": "Peering cùng Region khác account vẫn tham chiếu được SG của peer (account/sg-id)."
     }
   ],
-  "memory_tip_vi": "Nếu chỉ một nhóm instance (IP động) được vào DB qua VPC peering -> nghĩ đến rule SG phía DB tham chiếu SG ứng dụng; kiểm tra peering phải cùng Region (khác Region thì chỉ dùng CIDR).",
+  "memory_tip_vi": "Nếu hai VPC peering cùng Region, tham chiếu account-id/security-group-id thay vì CIDR để chọn EC2.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -243,6 +240,23 @@
       "previous_answer": [
         "Q038:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Kết luận đúng; cần outbound application SG cho phép tới DB, không suy ra chỉ từ stateful.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q038:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q038:C"
+      ],
+      "note_vi": "Kết luận đúng; cần outbound application SG cho phép tới DB, không suy ra chỉ từ stateful.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -254,5 +268,24 @@
         "corrected": "2026-09-30T19:52:36Z"
       }
     }
+  },
+  "notes_vi": "Kết luận đúng; cần outbound application SG cho phép tới DB, không suy ra chỉ từ stateful.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q038:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q038:C"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

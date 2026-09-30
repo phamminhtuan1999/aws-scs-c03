@@ -2,9 +2,9 @@
   "question_id": "Q114",
   "question_content_hash": "870b95419f5a38ac4c3a7699e771f446c8cc13a53aad2e47d216ead16c2dc41a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,16 +34,13 @@
       "unit_id": "Q114:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "CPU cao là một dấu hiệu gián tiếp được AWS nêu, quyền IAM role giúp đánh giá phạm vi ảnh hưởng; nhưng phân loại MITRE ATT&CK/threat purpose chỉ là nhãn của chính finding nên không xác thực được gì. Thiếu bằng chứng trực tiếp (tiến trình, DNS, kết nối mạng) như C.",
+      "reason_vi": "A CPU/tactic/role chỉ là dấu hiệu hoặc ngữ cảnh, chưa xác nhận tiến trình mining.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref9",
-        "ref10",
-        "ref11",
-        "ref14"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -51,13 +48,13 @@
       "unit_id": "Q114:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Đếm số finding, thời điểm launch và alert của Security Hub CSPM không cho thấy tiến trình hay lưu lượng đào coin; không xác thực được finding.",
+      "reason_vi": "B số findings và launch time không xác nhận hành vi mining.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -65,36 +62,28 @@
       "unit_id": "Q114:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Chi tiết tiến trình trong finding, truy vấn DNS tới domain mining và kết nối outbound qua VPC Flow Logs là đúng các nguồn mà finding crypto dựa vào, cho phép xác thực và đánh giá phạm vi.",
+      "reason_vi": "C kiểm tra tiến trình, đích DNS và traffic liên quan mining.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref8",
-        "ref9",
-        "ref10",
-        "ref12",
-        "ref13"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q114:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Route 53 DNS records là cấu hình domain, không phải log truy vấn; severity GuardDuty chỉ là mức phân loại; lịch sử Session Manager chỉ cho biết phiên quản trị, không xác thực hoạt động đào coin.",
+      "reason_vi": "D Session history, DNS records và severity không thay thế kiểm tra tiến trình/kết nối.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref2"
       ],
       "evidence_kind": "inference"
     }
@@ -131,20 +120,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu GuardDuty cho thấy finding crypto dựa trên DNS query, kết nối mạng (flow logs) và tiến trình (Runtime Monitoring); blog AWS liệt kê kết nối tới IP/cổng mining pool và tiến trình lạ là dấu hiệu chính. Giữ medium vì 'tốt nhất' giữa A và C là phán đoán mức độ trực tiếp của bằng chứng, không có tài liệu nào xếp hạng đúng ba nguồn này.",
-    "open_issues": [
-      "A không hoàn toàn vô dụng: CPU cao là dấu hiệu được AWS nêu (ref14) và quyền IAM role giúp đánh giá impact; A thua C vì một vế (MITRE tactic) chỉ là metadata của finding.",
-      "Process details chỉ có khi bật GuardDuty Runtime Monitoring; VPC Flow Logs phải do khách hàng bật vì GuardDuty dùng luồng flow log riêng (ref12)."
-    ]
+    "level": "high",
+    "reason_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind (câu medium nên đã xét kỹ A). Tìm thêm: blog AWS Security (cập nhật 2026-09-22) liệt kê dấu hiệu đào coin là kết nối tới IP lạ/cổng mining pool, CPU/GPU cao bất thường, lưu lượng mạng bất thường và tiến trình lạ (ref9, ref10) – ba vế của C trùng các dấu hiệu trực tiếp; A chỉ trùng vế CPU. Trang GuardDuty finding format cho thấy tactic/threat purpose là nhãn phân loại của finding (ref11), nên 'examine MITRE ATT&CK tactic' không giúp xác thực. Runtime Monitoring finding gắn với tiến trình cụ thể (ref13). Lưu ý điều kiện: flow logs phải được bật riêng (ref12). B và D dựa trên metadata/cấu hình (số finding, launch time, severity, Route 53 records) nên không xác thực. Giữ C, verified, medium.",
+  "reconciliation_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
   "explanation_vi": {
-    "why_correct": "C phân tích đúng dữ liệu gốc mà finding crypto dựa vào: tiến trình liên quan finding (Runtime Monitoring), DNS query tới domain mining và kết nối outbound (VPC Flow Logs) – vừa xác nhận có đào coin thật, vừa cho thấy phạm vi (đích kết nối, thời gian, lượng dữ liệu).",
+    "why_correct": "Process, DNS mining domains và outbound flows là bằng chứng trực tiếp để kiểm chứng hoạt động mining và phạm vi kết nối.",
     "others": {
-      "Q114:A": "CPU cao chỉ là dấu hiệu gián tiếp và phân loại MITRE ATT&CK chỉ là nhãn của chính finding, nên A thiếu bằng chứng trực tiếp như tiến trình và kết nối mạng.",
-      "Q114:B": "Số finding, thời điểm launch và alert của Security Hub CSPM là metadata tổng hợp, không cho thấy tiến trình hay lưu lượng đào coin.",
-      "Q114:D": "Route 53 DNS records là cấu hình domain (không phải log truy vấn), severity chỉ là mức phân loại, và lịch sử Session Manager không chứng minh hoạt động đào coin."
+      "Q114:A": "A CPU/tactic/role chỉ là dấu hiệu hoặc ngữ cảnh, chưa xác nhận tiến trình mining.",
+      "Q114:B": "B số findings và launch time không xác nhận hành vi mining.",
+      "Q114:D": "D Session history, DNS records và severity không thay thế kiểm tra tiến trình/kết nối."
     }
   },
   "keywords": [
@@ -161,7 +147,7 @@
       "meaning_vi": "Hỏi nguồn dữ liệu để phân tích, không hỏi hành động khắc phục."
     }
   ],
-  "memory_tip_vi": "Nếu cần xác thực finding GuardDuty trên EC2 -> nghĩ đến dữ liệu gốc: process (Runtime Monitoring), DNS query logs, VPC Flow Logs; kiểm tra các vế chỉ là metadata của finding (severity, MITRE tactic, số lượng finding) thì không phải bằng chứng.",
+  "memory_tip_vi": "Nếu điều tra mining, đối chiếu process + mining destination + network flow.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -364,9 +350,14 @@
       "type": "typo",
       "location": "Q114:stem:0",
       "detail_vi": "'Indicates' viết hoa giữa câu (lỗi chính tả nhỏ)."
+    },
+    {
+      "type": "data",
+      "location": "Q114",
+      "detail_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có."
     }
   ],
-  "notes_vi": "Keyword: validate + assess impact -> nguồn dữ liệu gốc (process, DNS, flow logs) thay vì metadata/tổng hợp.",
+  "notes_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
   "history": [
     {
       "version": "r1",
@@ -381,6 +372,39 @@
       "previous_answer": [
         "Q114:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q114:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q114:C"
+      ],
+      "note_vi": "Process details phụ thuộc finding/data source; nếu finding không có process, lấy telemetry host bổ sung, không khẳng định mọi GuardDuty finding đều có.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

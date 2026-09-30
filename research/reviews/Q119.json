@@ -2,9 +2,9 @@
   "question_id": "Q119",
   "question_content_hash": "055fd439b6f7fd61aa7b51d21e58706cf42641c7188bd055cd208c341850ed64",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:20:47+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,32 +34,27 @@
       "unit_id": "Q119:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "EC2 (cùng ELB, NAT Gateway) thuộc Permitted Services và chính sách AWS nêu port-scanning là một hoạt động security assessment được phép trên tài sản của khách hàng; chỉ port flooding bị cấm.",
+      "reason_vi": "A port scanning VPC của công ty được phép trong phạm vi tài nguyên được quản lý.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref5",
-        "ref8"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q119:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "S3 không có trong Permitted Services và namespace bucket S3 là của chính dịch vụ AWS (dùng chung toàn cầu), trong khi khách hàng không được đánh giá bảo mật chính dịch vụ AWS.",
+      "reason_vi": "B brute force S3 namespace là hành vi bucket walking bị cấm.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref6",
-        "ref7"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -67,44 +62,41 @@
       "unit_id": "Q119:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Amazon RDS nằm trong Permitted Services; kiểm thử SQL injection trên ứng dụng web của chính công ty (backend RDS PostgreSQL) là pentest ứng dụng hợp lệ, không thuộc hoạt động bị cấm.",
+      "reason_vi": "C kiểm thử SQL injection ứng dụng của công ty/RDS nằm trong phạm vi được phép.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3",
-        "ref8"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q119:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Packet flooding thuộc nhóm DoS/protocol flooding – nằm trong Prohibited Activities (DoS chỉ được mô phỏng theo chính sách DDoS Simulation Testing riêng).",
+      "reason_vi": "D packet flooding không thuộc bài pentest thông thường được phép.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref9"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q119:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "DNS zone walking qua Route 53 Hosted Zones được liệt kê rõ là hoạt động bị cấm.",
+      "reason_vi": "E DNS zone walking Route 53 là hoạt động bị cấm.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -142,16 +134,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A, C. Trang chính sách pentest của AWS nêu trực tiếp: EC2 và RDS là Permitted Services; định nghĩa 'security assessment' gồm port-scanning và injection; DNS zone walking qua Route 53 và DoS/flooding bị cấm; S3 không có trong danh sách được phép.",
+    "reason_vi": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, C, trùng blind. Blind còn băn khoăn trang chính sách không nêu tên 'port scanning'; khi đọc lại snapshot dd2e9933d60b tìm thấy mục định nghĩa 'security assessment' liệt kê trực tiếp port-scanning và injection (ref8) – nâng bằng chứng của A và C lên direct. Cũng bổ sung ref9: cấm dùng bất kỳ công cụ nào để thực hiện DoS (bác D). B: S3 không có trong Permitted Services (phải làm việc với AWS Support), và brute force namespace bucket dùng chung là nhắm vào chính dịch vụ AWS. Giữ A, C, verified, high.",
+  "reconciliation_vi": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
   "explanation_vi": {
-    "why_correct": "A: port scanning tài nguyên EC2 của chính công ty trong VPC là 'security assessment' được phép không cần phê duyệt vì EC2 thuộc Permitted Services. C: chạy công cụ SQL injection vào ứng dụng web của công ty (backend Amazon RDS – dịch vụ được phép) cũng là hoạt động assessment được liệt kê (injection).",
+    "why_correct": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
     "others": {
-      "Q119:B": "S3 không nằm trong Permitted Services và namespace bucket S3 là của chính dịch vụ AWS dùng chung, khách hàng không được đánh giá bảo mật dịch vụ AWS.",
-      "Q119:D": "Packet flooding là DoS/port-protocol flooding – thuộc Prohibited Activities (chỉ mô phỏng DDoS theo chính sách riêng).",
-      "Q119:E": "DNS zone walking qua Route 53 Hosted Zones được liệt kê rõ là hoạt động bị cấm."
+      "Q119:B": "B brute force S3 namespace là hành vi bucket walking bị cấm.",
+      "Q119:D": "D packet flooding không thuộc bài pentest thông thường được phép.",
+      "Q119:E": "E DNS zone walking Route 53 là hoạt động bị cấm."
     }
   },
   "keywords": [
@@ -168,7 +160,7 @@
       "meaning_vi": "Được phép không cần duyệt với Permitted Services, trừ Prohibited Activities."
     }
   ],
-  "memory_tip_vi": "Nếu hỏi hoạt động pentest nào được phép trên AWS -> nghĩ đến Permitted Services (EC2, RDS, Aurora, CloudFront, Lambda…) cho scan/injection trên tài nguyên của mình; kiểm tra danh sách cấm: Route 53 zone walking, DoS/flooding, S3 bucket takeover.",
+  "memory_tip_vi": "Nếu pentest AWS, kiểm tra permitted services và prohibited activities hiện hành.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -323,7 +315,43 @@
         "Q119:A",
         "Q119:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q119:A",
+        "Q119:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q119:A",
+        "Q119:C"
+      ],
+      "note_vi": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Nhớ: danh sách Permitted Services (EC2, RDS, Aurora, CloudFront, API Gateway, Lambda, ...) và Prohibited Activities (Route 53 zone walking/hijacking/pharming, DoS/flooding, S3 bucket takeover, subdomain takeover)."
+  "notes_vi": "Port scan tài nguyên thuộc quyền quản lý và SQL injection test ứng dụng trên các service được phép phù hợp policy; các hành vi flooding/namespace/DNS nêu còn lại bị cấm.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A",
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q132",
   "question_content_hash": "9fb520538b57efe053a2f2c7a8703f82929fff2037482226f459af551e11924f",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:21:50+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,59 +29,56 @@
       "unit_id": "Q132:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty không cho tắt riêng một detection nền tảng: chỉ suspend/disable cả dịch vụ hoặc tắt từng protection plan; Custom Detection Rules (bật/tắt theo rule) chỉ gồm rule opt-in dựa trên CloudTrail management events. Dù tắt được thì cũng mất visibility cho loại hành vi đó trong cả Region.",
+      "reason_vi": "A không có thao tác tắt một FTP rule như mô tả.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref7",
-        "ref8",
-        "ref9"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q132:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Trusted IP list dùng cho IP public bên ngoài mà bạn tin cậy, GuardDuty không sinh finding cho các IP đó - tức mất hẳn visibility; client đến từ nhiều nơi nên cũng không thể liệt kê, và đưa chính FTP server vào list không đúng cơ chế.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "B trusted IP list rộng có thể che các findings khác và không chọn chính xác hành vi false positive.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q132:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Suppression rule tự archive các finding mới khớp tiêu chí (ví dụ finding type + instance ID của FTP server), giảm nhiễu nhưng finding vẫn được sinh và lưu 90 ngày để xem lại.",
+      "reason_vi": "C suppression theo finding/resource cụ thể giảm noise, vẫn giữ archived findings.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref6",
-        "ref11"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q132:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty không có API xóa finding (chỉ có ArchiveFindings/UnarchiveFindings); dù có thì xóa finding làm mất visibility và tăng overhead so với suppression rule có sẵn.",
+      "reason_vi": "D GuardDuty không có API xóa findings tùy ý như mô tả; dùng archive/suppress.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "ref6"
       ],
       "evidence_kind": "inference"
     }
@@ -115,17 +112,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu GuardDuty mô tả suppression rule đúng như C (auto-archive, finding vẫn được sinh và lưu 90 ngày) và khuyến nghị trực tiếp dùng nó cho brute force nhắm vào server hợp lệ; không có cơ chế tắt riêng 'FTP rule'.",
+    "level": "medium",
+    "reason_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Bổ sung bằng chứng trực tiếp cho A (blind chỉ suy luận): GuardDuty FAQ và API DetectorFeatureConfiguration cho thấy mức bật/tắt là cả dịch vụ hoặc từng protection plan (S3, EKS, Malware, RDS, Lambda, Runtime...), không có detection FTP riêng. Đã kiểm tra tính năng mới Custom Detection Rules (bật/tắt từng rule): tài liệu nói hiện chỉ hỗ trợ CloudTrail management events và là rule opt-in, nên không áp dụng cho phát hiện brute force dựa trên lưu lượng mạng - A vẫn không khả thi. Lưu ý FAQ 'Can I write custom detections? No' đã lỗi thời so với Custom Detection Rules nên không dùng làm bằng chứng. Thêm bằng chứng cho C: trang finding types khuyến nghị suppression rule (finding type + instance) cho SSHBruteForce nhắm vào bastion host - tình huống tương tự FTP server. Giữ C, verified, high.",
+  "reconciliation_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
   "explanation_vi": {
-    "why_correct": "Suppression rule (filter với hành động auto-archive) theo finding type + instance của FTP server tự archive finding lặp lại; GuardDuty vẫn sinh finding và lưu 90 ngày ở mục Archived, nên giảm nhiễu mà không mất visibility - đúng khuyến nghị của AWS cho brute force nhắm vào server hợp lệ.",
+    "why_correct": "Suppression rule hẹp archive finding false positive mà GuardDuty vẫn tiếp tục tạo finding và giữ archived view.",
     "others": {
-      "Q132:A": "GuardDuty không có 'FTP rule' để tắt riêng (chỉ tắt cả dịch vụ hoặc từng protection plan), và tắt detection sẽ mất visibility trong Region.",
-      "Q132:B": "Trusted IP list làm GuardDuty ngừng sinh finding cho IP đó (mất visibility), áp dụng cho IP public bên ngoài chứ không phải để đánh dấu chính FTP server.",
-      "Q132:D": "GuardDuty không có API xóa finding (chỉ archive/unarchive), và xóa finding làm mất visibility, lại thêm vận hành Lambda không cần thiết."
+      "Q132:A": "A không có thao tác tắt một FTP rule như mô tả.",
+      "Q132:B": "B trusted IP list rộng có thể che các findings khác và không chọn chính xác hành vi false positive.",
+      "Q132:D": "D GuardDuty không có API xóa findings tùy ý như mô tả; dùng archive/suppress."
     }
   },
   "keywords": [
@@ -139,10 +136,10 @@
     },
     {
       "phrase": "visibility of potential anomalous behavior",
-      "meaning_vi": "Không được ngừng sinh hay xóa finding; archive vẫn giữ để xem lại."
+      "meaning_vi": "Suppression archive finding90ngày, nhưng ngừng chuyển finding khớp tới Security Hub/EventBridge; cần filter hẹp."
     }
   ],
-  "memory_tip_vi": "Nếu finding GuardDuty lặp lại là hành vi hợp lệ đã biết (false positive) -> nghĩ đến suppression rule (auto-archive theo finding type + resource, vẫn giữ finding); kiểm tra: trusted IP list làm GuardDuty ngừng sinh finding, còn finding không xóa được.",
+  "memory_tip_vi": "Nếu suppress false positive, scope theo finding + resource cụ thể; tránh rule quá rộng.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -300,8 +297,8 @@
   "source_issues": [
     {
       "type": "data",
-      "location": "Q132:stem:0",
-      "detail_vi": "Danh sách finding type GuardDuty hiện có SSHBruteForce, RDPBruteForce, WinRMBruteForce nhưng không có finding brute force riêng cho FTP; tình huống trong đề là giả định. Không ảnh hưởng đáp án vì cách xử lý false positive (suppression rule) giống nhau."
+      "location": "Q132",
+      "detail_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi."
     }
   ],
   "history": [
@@ -318,7 +315,40 @@
       "previous_answer": [
         "Q132:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q132:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q132:C"
+      ],
+      "note_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Stem nói 'flagged the finding as a false positive' tương ứng UpdateFindingsFeedback (not useful) - chỉ là phản hồi, không lọc finding."
+  "notes_vi": "Suppressed findings không gửi EventBridge/Security Hub và không dùng trong attack-sequence correlation. GuardDuty docs không có finding FTP brute-force tương ứng tiền đề; không khẳng định visibility hoàn toàn không đổi.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

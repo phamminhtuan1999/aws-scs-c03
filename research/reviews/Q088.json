@@ -2,9 +2,9 @@
   "question_id": "Q088",
   "question_content_hash": "e171d8d03cc780375d433860a2855484bf04517ec5974b8502e8ef3b55164ec4",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:56:43Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -55,61 +55,56 @@
       "unit_id": "Q088:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "aws:SecureTransport = true nghĩa là request đi qua HTTPS; Deny khi true sẽ chặn chính các request đã mã hóa và cho phép (không chặn) HTTP - ngược yêu cầu.",
+      "reason_vi": "Deny khi SecureTransport=true sẽ chặn HTTPS.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q088:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Deny s3:* trên bucket và object khi aws:SecureTransport = false, tức chặn mọi request HTTP không mã hóa; trùng với ví dụ bucket policy chính thức của S3 để chỉ cho phép HTTPS.",
+      "reason_vi": "explicit deny cho kết nối không TLS.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q088:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "s3:x-amz-server-side-encryption liên quan server-side encryption (mã hóa at rest), không kiểm tra TLS; áp dụng cho s3:* còn chặn cả các request đọc/list không mang header này, kể cả khi dùng HTTPS.",
+      "reason_vi": "Kiểm tra server-side encryption ở rest, không kiểm tra transit.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q088:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Cũng dựa trên header SSE (at rest) chứ không phải in transit; giá trị true cho header SSE không phải giá trị hợp lệ (AES256/aws:kms...) nên điều kiện gần như luôn đúng và chặn mọi thao tác.",
+      "reason_vi": "SSE header phải là thuật toán chuỗi; boolean true không kiểm tra TLS.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref3"
       ],
       "evidence_kind": "inference"
     }
@@ -144,16 +139,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu S3 đưa ra đúng bucket policy Deny s3:* với Bool aws:SecureTransport false để chặn HTTP; A đảo logic (chặn HTTPS), C và D dùng khóa SSE (mã hóa at rest), không phải in transit.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Đã đọc lại 4 ảnh từng ký tự (phóng to phần Condition): A = Bool aws:SecureTransport \"true\", B = Bool aws:SecureTransport \"false\", C = StringNotEquals s3:x-amz-server-side-encryption \"AES256\", D = StringNotEquals s3:x-amz-server-side-encryption true (không nháy); phần còn lại (Version 2012-10-17, Sid AllowSSLRequestsOnly, Action s3:*, Effect Deny, Resource bucket và bucket/*, Principal *) giống nhau - transcription của blind đúng. Đối thủ gần nhất là A: aws:SecureTransport true nghĩa là request qua HTTPS, nên Deny khi true chặn chính request đã mã hóa. C/D kiểm tra header SSE (at rest) và còn chặn GET/List. Giữ B, verified.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "aws:SecureTransport = false nghĩa là request đi qua HTTP (không TLS); policy B Deny s3:* trên bucket và object khi điều kiện này đúng, nên mọi thao tác không mã hóa in transit đều bị chặn - trùng ví dụ chính thức của S3.",
+    "why_correct": "Deny s3:* với Bool aws:SecureTransport=false trên bucket và objects chặn HTTP, buộc TLS khi truyền.",
     "others": {
-      "Q088:A": "Deny khi aws:SecureTransport = true sẽ chặn các request HTTPS và để lọt HTTP, ngược với yêu cầu.",
-      "Q088:C": "Header s3:x-amz-server-side-encryption liên quan mã hóa at rest (SSE-S3), không kiểm tra TLS, và còn chặn GET/List vốn không gửi header này.",
-      "Q088:D": "Cũng dựa trên header SSE (at rest) chứ không phải in transit; giá trị true không phải giá trị hợp lệ của header nên điều kiện gần như luôn đúng và chặn mọi thao tác."
+      "Q088:A": "Deny khi SecureTransport=true sẽ chặn HTTPS.",
+      "Q088:C": "Kiểm tra server-side encryption ở rest, không kiểm tra transit.",
+      "Q088:D": "SSE header phải là thuật toán chuỗi; boolean true không kiểm tra TLS."
     }
   },
   "keywords": [
@@ -166,7 +161,7 @@
       "meaning_vi": "Effect Deny, Action s3:*, điều kiện aws:SecureTransport = false."
     }
   ],
-  "memory_tip_vi": "Nếu đề nói 'in transit' cho S3 -> nghĩ đến Deny + Bool aws:SecureTransport \"false\"; kiểm tra đừng nhầm với s3:x-amz-server-side-encryption (at rest) và đừng đảo true/false.",
+  "memory_tip_vi": "Nếu cần buộc HTTPS cho S3, Deny aws:SecureTransport=false trên cả bucket ARN và object ARN.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -249,9 +244,19 @@
       "type": "typo",
       "location": "Q088:C",
       "detail_vi": "Sid 'AllowSSLRequestsOnly' được dùng cho cả policy C và D dù nội dung là điều kiện SSE (không liên quan SSL); không ảnh hưởng tính hợp lệ nhưng gây nhầm."
+    },
+    {
+      "type": "data",
+      "location": "Q088",
+      "detail_vi": "Dòng Sid AllowSSLRequestsOnly không đổi ý nghĩa Effect:Deny."
+    },
+    {
+      "type": "data",
+      "location": "Q088",
+      "detail_vi": "Khi áp dụng thực tế cần cân nhắc ngoại lệ AWS service principals cho redacted network context."
     }
   ],
-  "notes_vi": "Sid giống nhau ở cả 4 ảnh; chỉ khác phần Condition.",
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "history": [
     {
       "version": "r1",
@@ -270,6 +275,45 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key B khớp blind; kiểm tra lại A (đảo logic true/false) và C/D (khóa SSE at rest); giữ B, verified (high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q088:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q088:B"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q088:B"
+    ],
+    "candidate_answers": [
+      [
+        "Q088:B"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

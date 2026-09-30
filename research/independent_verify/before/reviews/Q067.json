@@ -1,0 +1,304 @@
+{
+  "question_id": "Q067",
+  "question_content_hash": "8c1d600929cc4edbec1382a65c9433b416e0785b429c587adfeabe62d0e9b9b8",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:48:50Z",
+  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5",
+    "blind_performed_by": {
+      "agent": "scs-researcher (blind)",
+      "model": "claude-opus-5-5"
+    }
+  },
+  "blind_record_sha256": "8ab7eb26a9e4d065fec25d443fc023fc8db98b5e5202ab422ff4c832262bd81d",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Tổ chức dùng AWS Organizations với nhiều account; cần quản lý tập trung.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Cấp cho người dùng (workforce users) quyền truy cập Amazon Q Developer.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn cơ chế identity đúng mà Amazon Q Developer hỗ trợ (IAM Identity Center vs Amazon Cognito).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q067:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Amazon Q Developer Pro dùng IAM Identity Center (organization instance ở management account) để quản lý identity người dùng; khi tạo Q Developer profile, một managed application QDevProfile-region được tạo trong IAM Identity Center và người dùng/nhóm được subscribe tập trung.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q067:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cognito identity pool dùng để cấp temporary AWS credentials cho người dùng của ứng dụng do mình xây; tài liệu Q Developer không dùng Cognito làm nguồn identity cho workforce users, nên không cấp được quyền dùng Q Developer tập trung.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref1",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q067:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS managed application là khái niệm của IAM Identity Center, không phải của Amazon Cognito; không thể cấu hình Q Developer làm managed application trong Cognito.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref2",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q067:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Identity pool là tính năng của Amazon Cognito, không tồn tại trong IAM Identity Center; bước này trộn lẫn hai dịch vụ nên không thực hiện được.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q067:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu Amazon Q Developer nêu rõ dùng IAM Identity Center (organization instance) và tự tạo managed application QDevProfile-region; các lựa chọn khác dùng Cognito hoặc trộn khái niệm.",
+      "open_issues": [
+        "Bảng 'AWS managed applications' hiện tại của IAM Identity Center liệt kê Kiro, không còn ghi tên Amazon Q Developer; tài liệu Q Developer vẫn mô tả managed application QDevProfile-region."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:48:50Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/getting-started-idc.html",
+      "title": "Getting started with IAM Identity Center - Amazon Q Developer",
+      "section": "Getting started with IAM Identity Center",
+      "snapshot_id": "f6b5220ef640",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "administrators use IAM Identity Center to manage the identities of those whom they plan on subscribing to Amazon Q Developer Pro",
+      "supports": "Q Developer dùng IAM Identity Center để quản lý identity người dùng được subscribe.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/subscribe-management.html",
+      "title": "Subscribe users to Amazon Q Developer Pro in a management account - Amazon Q Developer",
+      "section": "Resources created",
+      "snapshot_id": "ea32a09f8174",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A managed application called QDevProfile-region, in the IAM Identity Center that is set up in your management account.",
+      "supports": "Q Developer được thiết lập như một managed application trong IAM Identity Center.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/deployment-options.html",
+      "title": "Step 1: Choose a deployment option - Amazon Q Developer",
+      "section": "Deployment option 2",
+      "snapshot_id": "ce581dac2fad",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Because IAM Identity Center is installed in a management account, it is considered to be an organization instance, which has more features",
+      "supports": "Với AWS Organizations, bật IAM Identity Center ở management account (organization instance) để quản lý tập trung.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html",
+      "title": "Amazon Cognito identity pools - Amazon Cognito",
+      "section": "Amazon Cognito identity pools",
+      "snapshot_id": "aee3aa4ccc52",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Identity pools generate temporary AWS credentials for the users of your app",
+      "supports": "Identity pool là tính năng Cognito dành cho người dùng ứng dụng, không phải cơ chế cấp quyền Q Developer.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/awsapps.html",
+      "title": "AWS managed applications - AWS IAM Identity Center",
+      "section": "AWS managed applications",
+      "snapshot_id": "8bf3b89f0c86",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS IAM Identity Center streamlines and simplifies the task of connecting your workforce users to AWS managed applications",
+      "supports": "AWS managed applications là khái niệm của IAM Identity Center dành cho workforce users.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/upgrade-to-kiro.html",
+      "title": "Upgrade to Kiro - Amazon Q Developer",
+      "section": "Upgrade to Kiro",
+      "snapshot_id": "117bf17fa3c3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Kiro console is a rebrand of the Amazon Q Developer console, with all the same functionality.",
+      "supports": "Điều kiện thời gian: tính đến 2026-09 console Amazon Q Developer đã đổi tên thành Kiro console nhưng giữ nguyên chức năng quản lý subscription (vẫn qua IAM Identity Center).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/awsapps-that-work-with-identity-center.html",
+      "title": "AWS managed applications that you can use with IAM Identity Center",
+      "section": "Table footnote 1",
+      "snapshot_id": "1ed315c1af2f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For Kiro, account instances of IAM Identity Center are supported unless your users require access to the full set of Kiro features on AWS websites.",
+      "supports": "Bảng AWS managed applications hiện liệt kê Kiro (tên mới) là ứng dụng dùng IAM Identity Center; cơ chế managed application không đổi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/getting-started-q-dev.html",
+      "title": "Getting started with Amazon Q Developer",
+      "section": "Getting started with Amazon Q Developer",
+      "snapshot_id": "a16e0a142a06",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "walks you through the setup process for personal accounts (Builder IDs) and workforce identities in AWS IAM Identity Center",
+      "supports": "Phương thức đăng nhập Q Developer là Builder ID hoặc IAM Identity Center; không có Amazon Cognito.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "outdated",
+      "location": "Q067:stem:0",
+      "detail_vi": "Tính đến 2026-09-30: Amazon Q Developer (CLI/IDE/console) đã được rebrand thành Kiro; Kiro console là Q Developer console đổi tên với cùng chức năng, và bảng AWS managed applications của IAM Identity Center liệt kê Kiro thay vì Amazon Q Developer. Cơ chế trong đáp án A (IAM Identity Center + managed application QDevProfile-region) vẫn được tài liệu Q Developer mô tả nên đáp án không đổi; chỉ tên sản phẩm có thể khác trên console hiện tại."
+    },
+    {
+      "type": "typo",
+      "location": "Q067:C",
+      "detail_vi": "Lựa chọn C thiếu dấu chấm cuối câu."
+    }
+  ],
+  "source_answer": [
+    "Q067:A"
+  ],
+  "researched_answer": [
+    "Q067:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu Q Developer nêu trực tiếp: dùng IAM Identity Center (organization instance ở management account) để quản lý người dùng subscribe Q Developer Pro, và tự tạo managed application QDevProfile-region. Q Developer chỉ hỗ trợ Builder ID hoặc IAM Identity Center, không có Cognito.",
+    "open_issues": [
+      "Điều kiện thời gian: từ khi rebrand sang Kiro (trước 2026-09), console và bảng managed applications dùng tên Kiro; câu hỏi viết theo tên cũ Amazon Q Developer nhưng cơ chế không đổi."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key đều là A. Đã kiểm tra thêm phía phản bác: (1) trang 'Upgrade to Kiro' xác nhận Q Developer CLI/console được rebrand thành Kiro với cùng chức năng, việc quản lý subscription vẫn qua IAM Identity Center; (2) trang Getting started của Q Developer chỉ nêu hai cách đăng nhập là Builder ID và IAM Identity Center, không có Amazon Cognito, nên B/C không có cơ sở; (3) identity pool là khái niệm của Cognito nên D trộn sai dịch vụ. Việc đổi tên chỉ là điều kiện thời gian ghi vào source_issues, không làm đổi đáp án; giữ A, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Amazon Q Developer Pro dùng IAM Identity Center (organization instance trong management account) làm nguồn identity; khi tạo profile, Q Developer được đăng ký như một AWS managed application (QDevProfile-region) để subscribe người dùng/nhóm tập trung cho cả organization.",
+    "others": {
+      "Q067:B": "Cognito identity pool cấp temporary credentials cho người dùng ứng dụng của bạn; Q Developer không dùng Cognito làm nguồn đăng nhập (chỉ Builder ID hoặc IAM Identity Center).",
+      "Q067:C": "'AWS managed application' là khái niệm của IAM Identity Center, Cognito không có cơ chế đăng ký Q Developer làm managed application.",
+      "Q067:D": "IAM Identity Center không có 'identity pool' (đó là tính năng của Cognito), nên bước này không thực hiện được."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "centrally give users the ability to access Amazon Q Developer",
+      "meaning_vi": "Cấp quyền tập trung cho workforce users dùng Q Developer → IAM Identity Center + managed application."
+    },
+    {
+      "phrase": "AWS Organizations",
+      "meaning_vi": "Nhiều account → dùng organization instance của IAM Identity Center ở management account."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần cấp quyền workforce users dùng một ứng dụng AWS (Q Developer/Kiro, Q Business…) tập trung cho organization -> nghĩ đến IAM Identity Center + AWS managed application; kiểm tra Cognito chỉ dành cho người dùng ứng dụng tự xây (customer identity).",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM Identity Center",
+      "Amazon Q Developer",
+      "Kiro",
+      "Amazon Cognito",
+      "AWS Organizations"
+    ],
+    "reason_vi": "Đề kiểm tra chọn đúng dịch vụ quản lý identity workforce (IAM Identity Center) so với customer identity (Cognito)."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:48:50Z",
+      "change": "blind verdict ['Q067:A'] (proposed_status=verified)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:05:05+00:00",
+      "change": "reconciliation: source=['Q067:A'], final=['Q067:A'], status=verified",
+      "previous_answer": [
+        "Q067:A"
+      ]
+    }
+  ],
+  "notes_vi": "Cơ chế: Q Developer Pro -> IAM Identity Center organization instance -> managed application QDevProfile-region -> subscribe users/groups."
+}

@@ -2,9 +2,9 @@
   "question_id": "Q111",
   "question_content_hash": "c9b73a46568e4d5d321c527f268bb18267e3a15af22fe388b4fc71d1b8d3204d",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,16 +34,14 @@
       "unit_id": "Q111:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Organizations không áp 'IAM policy' lên account: IAM identity-based policy gắn vào user/group/role, còn policy của Organizations là SCP/RCP. Theo đúng chữ, cơ chế trong A không tồn tại; chỉ khi hiểu ngầm thành SCP/RCP (đã được C diễn đạt đúng) mới gây deny.",
+      "reason_vi": "A Organizations dùng SCP/RCP, không gắn IAM identity policy lên account như mô tả.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref8",
-        "ref9",
-        "ref11",
-        "ref12",
-        "ref13"
+        "ref4",
+        "ref1",
+        "ref6"
       ],
       "evidence_kind": "inference"
     },
@@ -51,58 +49,61 @@
       "unit_id": "Q111:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Automatic rotation chỉ đổi key material; key ID/ARN/policy giữ nguyên và KMS tự chọn đúng material khi giải mã, nên không làm mất quyền truy cập.",
+      "reason_vi": "B rotation giữ key identity và dữ liệu cũ vẫn giải mã được.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref4",
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q111:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "SCP gắn ở OU của member account deny các KMS API giới hạn quyền tối đa của role instance profile, nên IAM policy cho phép vẫn không có tác dụng.",
+      "reason_vi": "C SCP deny KMS có thể chặn quyền của instance role.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
         "ref4",
-        "ref5"
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q111:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Nếu key policy bỏ câu lệnh cho phép account (root) dùng IAM policy, IAM policy của instance profile trở nên vô hiệu và EC2 không dùng được key.",
+      "reason_vi": "D xóa delegation cho IAM trong key policy có thể làm IAM permissions không đủ.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
+        "ref4",
         "ref1",
-        "ref2",
-        "ref3"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q111:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Cho key administrator thêm quyền kms:RevokeGrant không gỡ quyền của account/IAM policy; EC2 dùng key qua IAM policy chứ không qua grant.",
+      "reason_vi": "E cấp quyền RevokeGrant không đồng nghĩa đã thu hồi grant; ứng dụng đang dùng IAM permissions.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref10",
-        "ref1"
+        "ref4",
+        "ref1",
+        "ref6"
       ],
       "evidence_kind": "inference"
     }
@@ -140,19 +141,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "C và D được tài liệu hỗ trợ trực tiếp (key policy thiếu quyền account → IAM policy vô hiệu; SCP deny ghi đè IAM allow). B và E chắc chắn sai. Hạ xuống medium vì A viết mơ hồ: nếu người đọc hiểu 'IAM policy do Organizations áp' là SCP/RCP deny theo ARN key thì A cũng gây lỗi.",
-    "open_issues": [
-      "A: 'Organizations has applied an IAM policy to the AWS account' không phải loại policy có thật; RCP (từ 11/2024) hỗ trợ KMS và có thể deny theo ARN key, nhưng RCP không phải IAM policy. Theo đúng chữ, chỉ C và D hợp lệ → đúng Choose two."
-    ]
+    "level": "high",
+    "reason_vi": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, D, trùng blind. Đã tìm cách đọc để A đúng: IAM docs liệt kê SCP và RCP của Organizations là các loại policy riêng (ref12), còn IAM identity-based policy chỉ gắn vào user/group/role (ref11) – Organizations không 'áp IAM policy lên account'. RCP có hỗ trợ KMS (ref13) nên một RCP deny ARN key sẽ chặn được, nhưng A gọi sai tên cơ chế và C đã mô tả đúng cơ chế SCP; với Choose two, C và D là hai lựa chọn duy nhất đúng theo chữ. B: rotation giữ nguyên key ID/ARN/policy (ref6, ref7). E: thêm kms:RevokeGrant cho key admin không gỡ quyền IAM của account (ref10). Giữ C, D, verified; hạ confidence xuống medium vì wording của A.",
+  "reconciliation_vi": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
   "explanation_vi": {
-    "why_correct": "C: SCP gắn vào OU của member account đặt giới hạn quyền tối đa; deny các KMS API ghi đè Allow trong IAM policy của instance profile. D: default key policy có câu lệnh cho phép account dùng IAM policy; nếu câu lệnh này bị bỏ, IAM policy cho phép dùng key trở nên vô hiệu.",
+    "why_correct": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
     "others": {
-      "Q111:A": "Organizations không áp 'IAM policy' lên account (policy của Organizations là SCP/RCP), nên nguyên nhân như mô tả không tồn tại.",
-      "Q111:B": "Automatic rotation chỉ tạo key material mới, key ID/ARN và key policy giữ nguyên nên ứng dụng vẫn dùng key bình thường.",
-      "Q111:E": "Cho key administrator quyền kms:RevokeGrant không làm mất quyền của account; EC2 dùng key qua IAM policy chứ không qua grant."
+      "Q111:A": "A Organizations dùng SCP/RCP, không gắn IAM identity policy lên account như mô tả.",
+      "Q111:B": "B rotation giữ key identity và dữ liệu cũ vẫn giải mã được.",
+      "Q111:E": "E cấp quyền RevokeGrant không đồng nghĩa đã thu hồi grant; ứng dụng đang dùng IAM permissions."
     }
   },
   "keywords": [
@@ -169,7 +168,7 @@
       "meaning_vi": "IAM policy đúng → tìm nguyên nhân ở key policy hoặc SCP."
     }
   ],
-  "memory_tip_vi": "Nếu IAM policy đúng mà vẫn không dùng được KMS key -> nghĩ đến key policy đã bỏ quyền account (root) hoặc SCP/RCP deny; kiểm tra rotation không đổi key ID/ARN nên không gây lỗi truy cập.",
+  "memory_tip_vi": "Nếu IAM allow mà KMS vẫn deny, kiểm tra SCP và key policy trước.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -355,14 +354,8 @@
       "kind": "inference"
     }
   ],
-  "source_issues": [
-    {
-      "type": "ambiguous",
-      "location": "Q111:A",
-      "detail_vi": "'Organizations has applied an IAM policy to the AWS account' không phải loại policy thật của Organizations (SCP/RCP); wording lai giữa các khái niệm."
-    }
-  ],
-  "notes_vi": "Rotation và RevokeGrant là distractor; hai nguyên nhân hợp lệ là SCP deny và key policy bỏ quyền IAM của account. A mô tả sai tên cơ chế (IAM policy thay vì SCP/RCP).",
+  "source_issues": [],
+  "notes_vi": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
   "history": [
     {
       "version": "r1",
@@ -378,6 +371,42 @@
         "Q111:C",
         "Q111:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q111:C",
+        "Q111:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q111:C",
+        "Q111:D"
+      ],
+      "note_vi": "SCP deny vẫn thắng IAM allow; bỏ quyền cho account sử dụng IAM policies trong key policy cũng khiến IAM allow mất hiệu lực.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C",
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

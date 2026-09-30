@@ -1,0 +1,372 @@
+{
+  "question_id": "Q048",
+  "question_content_hash": "90a38d1b392f0a62dcbe954ffba6a601dcffae4f885249f3ef38a49fbcdde587",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:08:00Z",
+  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "45061bc39d6d10286217c768dc1b008fc3005ac043060117b044b131cc7608b3",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Auditor bên thứ ba truy cập nhiều account qua cross-account IAM role (sts:AssumeRole).",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Auditor chỉ gặp lỗi với MỘT SỐ account (không phải tất cả) -> nguyên nhân mang tính riêng cho từng account/role.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Choose THREE nguyên nhân có thể.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q048:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Role cho bên thứ ba thường có điều kiện sts:ExternalId trong trust policy; nếu auditor không truyền hoặc truyền sai ExternalId cho role của account đó thì AssumeRole bị từ chối.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q048:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Assume role không dùng password của account đích; auditor đăng nhập một lần bằng identity của mình. Sai password thì hỏng toàn bộ, không phải chỉ một số account.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q048:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Với cross-account, principal gọi phải được cấp quyền identity-based gọi sts:AssumeRole cho ARN của role ở account kia; thiếu quyền cho role của một số account sẽ gây lỗi ở các account đó.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q048:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không có yêu cầu nào về việc 'đặt EC2 role thành role của account đích'; EC2 role (instance profile) chỉ cung cấp credential cho ứng dụng trên instance, không liên quan cơ chế assume role cross-account ở đây.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q048:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Secret access key của auditor dùng để ký mọi request (SigV4); nếu sai thì mọi lời gọi (kể cả AssumeRole vào mọi account) đều thất bại, không giải thích được việc chỉ một số account bị lỗi.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q048:F",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "RoleArn là tham số bắt buộc của AssumeRole và mỗi account có ARN role riêng; thiếu hoặc sai ARN cho account nào thì truy cập account đó thất bại.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref6",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q048:A",
+      "Q048:C",
+      "Q048:F"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Ba yếu tố cần cho AssumeRole cross-account theo tài liệu STS/IAM: quyền sts:AssumeRole, đúng RoleArn, đúng ExternalId; đều là nguyên nhân theo từng account.",
+      "open_issues": [
+        "Loại E dựa trên suy luận 'chỉ một số account' bị lỗi; nếu đọc đề lỏng hơn E cũng có thể gây lỗi truy cập nói chung."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:45:43Z"
+  },
+  "source_answer": [
+    "Q048:A",
+    "Q048:C",
+    "Q048:F"
+  ],
+  "researched_answer": [
+    "Q048:A",
+    "Q048:C",
+    "Q048:F"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Trang IAM 'Troubleshoot IAM roles – I can't assume a role' liệt kê trực tiếp: quyền sts:AssumeRole cho role cần assume, điều kiện trust policy (gồm external ID), và tên role chính xác trong ARN — đúng A, C, F; SigV4 troubleshooting cho thấy credential sai làm hỏng mọi request ký bằng nó.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Blind = A, C, F; source key = A, C, F (khớp). Bổ sung bằng chứng trực tiếp: trang IAM 'I can't assume a role' nêu (1) IAM policy phải cho phép sts:AssumeRole cho role cần assume (C), (2) phải thỏa điều kiện trust policy như external ID (A), (3) dùng đúng tên role trong ARN khi assume qua STS API/CLI (F). Với E, trang SigV4 troubleshooting nói request bị lỗi khi 'IAM credentials used to sign the request are incorrect' — secret key của auditor ký mọi lời gọi AssumeRole nên sai key làm hỏng truy cập vào tất cả account, không giải thích được việc chỉ 'some of the accounts' bị lỗi; tương tự B (password dùng chung). D không ứng với cơ chế AWS nào. Giữ A, C, F.",
+  "explanation_vi": {
+    "why_correct": "AssumeRole cross-account chỉ thành công khi: danh tính của auditor được cấp sts:AssumeRole cho đúng ARN role ở account đích (C), auditor gọi đúng RoleArn của từng account (F), và truyền đúng ExternalId nếu trust policy của role yêu cầu (A) — cả ba đều là lỗi riêng theo từng account/role nên giải thích được việc chỉ một số account bị lỗi.",
+    "others": {
+      "Q048:B": "Assume role không dùng password của account đích; password của auditor nếu sai thì hỏng đăng nhập ngay từ đầu cho mọi account chứ không chỉ một số account.",
+      "Q048:D": "Không có yêu cầu 'đặt EC2 role thành role của account đích'; instance profile chỉ cung cấp credential cho ứng dụng trên instance, không liên quan cơ chế cross-account role.",
+      "Q048:E": "Secret key của auditor ký mọi request, kể cả AssumeRole vào mọi account, nên nếu sai thì mọi truy cập đều lỗi chứ không riêng một số account."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "cross-account IAM roles",
+      "meaning_vi": "Truy cập qua sts:AssumeRole: cần quyền gọi AssumeRole, đúng RoleArn, thỏa trust policy."
+    },
+    {
+      "phrase": "third party",
+      "meaning_vi": "Bên thứ ba -> role thường yêu cầu external ID trong trust policy."
+    },
+    {
+      "phrase": "some of the accounts",
+      "meaning_vi": "Lỗi chỉ ở một số account -> nguyên nhân riêng theo từng role/account, không phải credential chung của auditor."
+    }
+  ],
+  "memory_tip_vi": "Nếu bên thứ ba không assume được cross-account role ở MỘT SỐ account -> nghĩ đến quyền sts:AssumeRole cho ARN đó, RoleArn đúng, ExternalId/điều kiện trust policy; kiểm tra: lỗi credential chung (password/secret key) sẽ làm hỏng mọi account.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "AWS STS"
+    ],
+    "reason_vi": "Khắc phục sự cố truy cập cross-account bằng IAM role, external ID và sts:AssumeRole."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html",
+      "title": "AssumeRole - AWS Security Token Service",
+      "section": "Description",
+      "snapshot_id": "f4520419abc3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The administrator must attach a policy that allows the user to call AssumeRole for the ARN of the role in the other account.",
+      "supports": "Thiếu quyền sts:AssumeRole cho role đích gây lỗi (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html",
+      "title": "Access to AWS accounts owned by third parties",
+      "section": "intro",
+      "snapshot_id": "e2928ff25691",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You must specify this ID when you define the trust policy for the role. The third party must provide this ID when they assume the role.",
+      "supports": "External ID thiếu/sai khiến bên thứ ba không assume được role (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html",
+      "title": "Access to AWS accounts owned by third parties",
+      "section": "intro",
+      "snapshot_id": "e2928ff25691",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "They require your role's ARN in order to assume the role.",
+      "supports": "Bên thứ ba cần đúng role ARN để assume role (F).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv.html",
+      "title": "AWS Signature Version 4 for API requests",
+      "section": "intro",
+      "snapshot_id": "2c45e1b48f9a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the SDK and CLI clients authenticate your requests by using the access keys that you provide.",
+      "supports": "Access key/secret key xác thực mọi request của auditor; sai key làm hỏng tất cả, không chỉ một số account (E).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html",
+      "title": "Use an IAM role to grant permissions to applications running on Amazon EC2 instances",
+      "section": "intro",
+      "snapshot_id": "6b2b86b393b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can and should use an IAM role to manage temporary credentials for applications that run on an Amazon EC2 instance.",
+      "supports": "EC2 role chỉ là nguồn credential cho ứng dụng trên instance, không phải yêu cầu của cross-account access (D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html",
+      "title": "AssumeRole - AWS Security Token Service",
+      "section": "Request Parameters - RoleArn",
+      "snapshot_id": "f4520419abc3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Amazon Resource Name (ARN) of the role to assume.",
+      "supports": "RoleArn là tham số (bắt buộc) xác định role cần assume (F).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_roles.html",
+      "title": "Troubleshoot IAM roles",
+      "section": "I can't assume a role",
+      "snapshot_id": "0f2131ed9136",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Verify that your IAM policy grants you permission to call sts:AssumeRole for the role that you want to assume.",
+      "supports": "Thiếu quyền sts:AssumeRole cho role đích là nguyên nhân không assume được role (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_roles.html",
+      "title": "Troubleshoot IAM roles",
+      "section": "I can't assume a role",
+      "snapshot_id": "0f2131ed9136",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A Condition can specify an expiration date, an external ID, or that a request must come only from specific IP addresses.",
+      "supports": "Không thỏa điều kiện external ID trong trust policy khiến AssumeRole thất bại (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_roles.html",
+      "title": "Troubleshoot IAM roles",
+      "section": "I can't assume a role",
+      "snapshot_id": "0f2131ed9136",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you assume a role using AWS STS API or AWS CLI, make sure to use the exact name of your role in the ARN.",
+      "supports": "Role ARN sai/không đúng tên role là nguyên nhân không assume được role (F).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-troubleshooting.html",
+      "title": "Troubleshoot Signature Version 4 signing for AWS API requests",
+      "section": "intro / Credential errors",
+      "snapshot_id": "914cc5227cbb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Verify that the authentication credentials for the access key and secret key are correct.",
+      "supports": "Secret key sai làm mọi request ký bằng nó thất bại (kể cả AssumeRole vào mọi account), không riêng một số account (loại E).",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q048:D",
+      "detail_vi": "Lựa chọn D diễn đạt mơ hồ ('EC2 role ... must be set to the destination account role'), không tương ứng cơ chế AWS cụ thể."
+    }
+  ],
+  "notes_vi": "Lỗi assume role cross-account theo từng account -> kiểm tra quyền sts:AssumeRole, RoleArn, ExternalId (và trust policy).",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:08:00Z",
+      "change": "Blind verdict (scs-researcher): answer=A,C,F, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key A,C,F; bổ sung trang IAM 'I can't assume a role' (sts:AssumeRole, external ID, role ARN) và SigV4 troubleshooting cho lập luận loại E; open issue về E được giải quyết.",
+      "previous_answer": [
+        "Q048:A",
+        "Q048:C",
+        "Q048:F"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha 59cd318385→45061bc39d; last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:51:17Z",
+      "previous_answer": [
+        "Q048:A",
+        "Q048:C",
+        "Q048:F"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:51:17Z"
+      }
+    }
+  }
+}

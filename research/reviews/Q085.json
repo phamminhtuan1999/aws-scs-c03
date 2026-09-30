@@ -2,9 +2,9 @@
   "question_id": "Q085",
   "question_content_hash": "07077d65dae99e458b70ded1058b0d8a905220307a9145735c7ff80d182f1043",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:39Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q085:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "OpenSearch Service là engine search/analytics cho log analytics; Security Analytics dùng detector + detection rules (Sigma/custom) trên log được ingest và tạo alert gửi qua notification channel, trong đó Amazon SNS là channel type được hỗ trợ.",
+      "reason_vi": "search + security detectors/rules + SNS channel.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,57 +47,54 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q085:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Security Hub (CSPM) thu thập và hiển thị findings (control findings, findings từ GuardDuty/Inspector/Macie...), không phải công cụ ingest/search log thô; custom action chỉ gửi thủ công các finding được chọn tới EventBridge, không phải cơ chế match log với detection rules.",
+      "reason_vi": "Security Hub xử lý findings, không search raw logs hay tự match logs bằng custom actions.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref8",
-        "ref9"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q085:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Logs Insights đáp ứng việc search, nhưng subscription filter chỉ gửi log tới Kinesis Data Streams, Firehose, Lambda (hoặc logical destination) chứ không gửi thẳng tới SNS topic như phương án mô tả; cảnh báo SNS trong CloudWatch thường cần metric filter + alarm hoặc Lambda trung gian, không có trong phương án.",
+      "reason_vi": "CloudWatch subscription filters không gửi trực tiếp SNS; phải dùng metric/alarm hoặc processor.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7",
-        "ref11"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q085:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Quick Sight là công cụ BI dashboard; threshold alert chỉ áp dụng cho visual KPI/Gauge/Table/Pivot và thông báo qua email, không phải cơ chế detection rule trên log gần thời gian thực gửi tới SNS topic.",
+      "reason_vi": "QuickSight không là near-real-time security rule engine với SNS như mô tả.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref10"
+        "ref1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -136,18 +133,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Trang Security Analytics của OpenSearch Service mô tả trực tiếp detector áp rules lên log đã ingest và gửi alert khi khớp rule; trang Alerting xác nhận Amazon SNS là channel type được hỗ trợ. Subscription filter của CloudWatch Logs không có SNS trong danh sách đích.",
-    "open_issues": [
-      "Security Analytics cần domain OpenSearch 2.5 trở lên; trang Security Analytics chỉ nêu ví dụ Slack/email, việc gửi SNS dựa trên trang Alerting/Notifications (SNS là channel type được hỗ trợ)."
-    ]
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A. Đã kiểm tra lại đối thủ mạnh nhất là C: API PutSubscriptionFilter liệt kê đích hỗ trợ chỉ gồm Kinesis Data Streams, logical destination (Kinesis/Firehose), Firehose và Lambda - không có SNS, nên C như mô tả không gửi alert tới SNS (muốn vậy phải dùng metric filter + CloudWatch alarm hoặc Lambda trung gian, không có trong phương án). Đọc lại mục Alerts của Security Analytics: alert được kích hoạt khi detector khớp một hoặc nhiều rules và gửi tới channel đã chọn; SNS là channel type được hỗ trợ. B (custom action là thao tác thủ công trên findings) và D (Quick Sight threshold alert qua email) không đáp ứng. Giữ A, verified.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Amazon OpenSearch Service vừa ingest và search log (OpenSearch API) gần thời gian thực, vừa có Security Analytics: detector áp detection rules lên log và khi khớp rule sẽ tạo alert gửi tới notification channel, trong đó Amazon SNS là channel được hỗ trợ.",
+    "why_correct": "OpenSearch Security Analytics phân tích security logs theo detection rules và phát cảnh báo đến SNS notification channel.",
     "others": {
-      "Q085:B": "Security Hub làm việc với findings chứ không ingest/search log thô, và custom action chỉ là thao tác thủ công gửi finding đã chọn tới EventBridge, không phải cơ chế match detection rules.",
-      "Q085:C": "Logs Insights search được log nhưng subscription filter chỉ gửi tới Kinesis, Firehose hoặc Lambda, không gửi trực tiếp alert tới SNS topic như phương án mô tả.",
-      "Q085:D": "Quick Sight là công cụ BI dashboard; alert của nó là threshold alert qua email trên visual, không phải detection rule trên log gần thời gian thực gửi tới SNS."
+      "Q085:B": "Security Hub xử lý findings, không search raw logs hay tự match logs bằng custom actions.",
+      "Q085:C": "CloudWatch subscription filters không gửi trực tiếp SNS; phải dùng metric/alarm hoặc processor.",
+      "Q085:D": "QuickSight không là near-real-time security rule engine với SNS như mô tả."
     }
   },
   "keywords": [
@@ -164,7 +159,7 @@
       "meaning_vi": "Quy tắc phát hiện mối đe dọa áp lên log - gợi ý Security Analytics (detector + rules) của OpenSearch."
     }
   ],
-  "memory_tip_vi": "Nếu đề cần search log + detection rules + alert tới SNS trong một giải pháp -> nghĩ đến OpenSearch Service Security Analytics; kiểm tra: subscription filter của CloudWatch Logs không gửi thẳng tới SNS (chỉ Kinesis/Firehose/Lambda).",
+  "memory_tip_vi": "Nếu cần search security logs và detection alerts, dùng OpenSearch Security Analytics với SNS notification channel.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -338,7 +333,7 @@
     }
   ],
   "source_issues": [],
-  "notes_vi": "Phương án D thiếu dấu chấm cuối câu (không ảnh hưởng nội dung). Ghi chú: Amazon QuickSight hiện được đổi tên trong tài liệu thành Amazon Quick Sight.",
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "history": [
     {
       "version": "r1",
@@ -351,6 +346,45 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key A khớp blind; kiểm tra lại C (PutSubscriptionFilter không có đích SNS) và mục Alerts của Security Analytics; giữ A, verified (high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q085:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q085:A"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q085:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q085:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

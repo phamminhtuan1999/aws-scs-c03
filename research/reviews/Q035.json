@@ -2,9 +2,9 @@
   "question_id": "Q035",
   "question_content_hash": "08c4e4488a6fe834cfcbafe64245578bdbb274b3c6080ec1aaad89570b0e67ec",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,12 +29,12 @@
       "unit_id": "Q035:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Import key material vào AWS KMS là tính năng BYOK cho KMS key, không liên quan tới SSH host key mà EC2 Instance Connect dùng để xác thực máy chủ.",
+      "reason_vi": "Sai: KMS key không quản lý SSH host-key trust của Instance Connect.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -42,28 +42,26 @@
       "unit_id": "Q035:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Host key mới không tự động được tải lên AWS trusted host keys database; cần chạy script eic_harvest_hostkeys trên instance để tải host key mới lên, đúng với việc upload thủ công host key mới.",
+      "reason_vi": "Đúng: cập nhật host-key database bằng eic_harvest_hostkeys.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q035:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AmazonSSMManagedInstanceCore cấp quyền cho Systems Manager quản lý instance; EC2 Instance Connect không dựa vào quyền này, và kết nối đã hoạt động trước khi rotate nên đây không phải nguyên nhân.",
+      "reason_vi": "Sai: SSM policy không cập nhật EC2 Instance Connect host-key trust.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -71,12 +69,12 @@
       "unit_id": "Q035:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "EC2 Instance Connect tự đẩy SSH public key tạm thời (60 giây) cho người dùng; lỗi nằm ở host key của máy chủ chứ không phải key pair của người dùng, nên tạo key pair mới không sửa được.",
+      "reason_vi": "Sai: tạo login key pair mới không sửa server host key bị stale.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -111,31 +109,29 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. Trang troubleshooting EC2 mô tả đúng lỗi 'Host key validation failed for EC2 Instance Connect' sau khi rotate host key và cách khắc phục là tải host key mới lên AWS trusted host keys database bằng script eic_harvest_hostkeys.",
-    "open_issues": [
-      "Tài liệu dùng script eic_harvest_hostkeys để tải lên; 'manually upload' trong B hiểu là chủ động chạy script này."
-    ]
+    "reason_vi": "Giữ B; AWS docs trực tiếp chỉ eic_harvest_hostkeys sau rotation.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất D (tạo SSH key pair mới): EC2 Instance Connect tự đẩy SSH public key tạm thời 60 giây, lỗi nằm ở host key của máy chủ (phía instance) chứ không ở key của người dùng. Re-fetch trang troubleshooting xác nhận: host key mới không tự động được upload lên AWS trusted host keys database, lỗi xảy ra với browser-based client, và cách sửa là chạy eic_harvest_hostkeys. Giữ B, verified, high.",
+  "reconciliation_vi": "Giữ B; AWS docs trực tiếp chỉ eic_harvest_hostkeys sau rotation.",
   "explanation_vi": {
-    "why_correct": "Sau khi rotate, host key mới không tự động có trong AWS trusted host keys database nên EC2 Instance Connect báo lỗi xác thực host key; cần tải host key mới lên (chạy script eic_harvest_hostkeys trên instance).",
+    "why_correct": "Chạy eic_harvest_hostkeys để cập nhật host keys mới vào trusted host-key database của EC2 Instance Connect. Đây là host key của server, khác key pair đăng nhập của client.",
     "others": {
-      "Q035:A": "Import key material vào AWS KMS là BYOK cho KMS key, không liên quan SSH host key.",
-      "Q035:C": "AmazonSSMManagedInstanceCore phục vụ Systems Manager, không liên quan xác thực host key của EC2 Instance Connect.",
-      "Q035:D": "Key pair là khóa của người dùng; lỗi nằm ở host key của instance nên tạo key pair mới không sửa được."
+      "Q035:A": "Sai: KMS key không quản lý SSH host-key trust của Instance Connect.",
+      "Q035:C": "Sai: SSM policy không cập nhật EC2 Instance Connect host-key trust.",
+      "Q035:D": "Sai: tạo login key pair mới không sửa server host key bị stale."
     }
   },
   "keywords": [
     {
       "phrase": "rotated the host keys",
-      "meaning_vi": "Host key mới chưa được đăng ký với EC2 Instance Connect."
+      "meaning_vi": "Host key server mới chưa có trong trust DB."
     },
     {
       "phrase": "failed host key validation",
-      "meaning_vi": "Lỗi xác thực máy chủ, không phải lỗi quyền hay key người dùng."
+      "meaning_vi": "Chạy eic_harvest_hostkeys để cập nhật."
     }
   ],
-  "memory_tip_vi": "Nếu EC2 Instance Connect báo host key validation failed sau khi rotate host key -> nghĩ đến tải host key mới lên AWS trusted host keys database (eic_harvest_hostkeys); kiểm tra: không phải lỗi key pair hay quyền SSM.",
+  "memory_tip_vi": "Nếu EC2 Instance Connect lỗi sau host-key rotation, harvest host keys mới trên instance.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -243,6 +239,23 @@
       "previous_answer": [
         "Q035:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; AWS docs trực tiếp chỉ eic_harvest_hostkeys sau rotation.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q035:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q035:B"
+      ],
+      "note_vi": "Giữ B; AWS docs trực tiếp chỉ eic_harvest_hostkeys sau rotation.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -254,5 +267,20 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "notes_vi": "Giữ B; AWS docs trực tiếp chỉ eic_harvest_hostkeys sau rotation.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q035:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

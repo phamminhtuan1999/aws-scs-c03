@@ -2,9 +2,9 @@
   "question_id": "Q007",
   "question_content_hash": "b240f9c584d7bc1890ca1e551b3f8e8a68c36d524424c828a1b9fae27e18f79a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -55,20 +55,21 @@
       "unit_id": "Q007:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Effect là Allow nên policy này cấp thêm quyền S3 cho Bob thay vì từ chối; ngược với yêu cầu deny.",
+      "reason_vi": "Sai: Allow không deny Bob.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q007:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Dùng đúng định dạng ARN của AWS STS federated user session (arn:aws:sts::acct:federated-user/Bob) với Effect Deny; explicit deny trong resource-based policy ghi đè mọi allow, và chỉ tác động tới bucket này nên quyền khác của Bob không đổi.",
+      "verdict": "undetermined",
+      "reason_vi": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -76,38 +77,37 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref3",
-        "ref4"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q007:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Principal arn:aws:iam::acct:user/Bob là IAM user principal, khác với federated user session principal (arn:aws:sts::...:federated-user/...); policy này nhắm sai loại principal nên không chắc chặn được phiên federated user Bob và có thể chặn nhầm một IAM user tên Bob.",
+      "reason_vi": "Sai: IAM user/Bob khác STS federated-user/Bob.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q007:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "assumed-role/Bob/role-session-name là role session principal của một role tên Bob với session name cố định, không phải federated user Bob (GetFederationToken); chỉ khớp đúng một phiên role đó.",
+      "reason_vi": "Sai: assumed-role session là loại principal khác.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref5"
+        "ref6"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -132,43 +132,42 @@
   "source_answer": [
     "Q007:B"
   ],
-  "researched_answer": [
-    "Q007:B"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Trang IAM Principal nêu rõ ba định dạng ARN khác nhau cho AWS STS federated user session, IAM user và role session; chỉ B vừa Deny vừa đúng principal federated user.",
+    "level": "medium",
+    "reason_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
     "open_issues": [
-      "Resource ở mọi phương án chỉ là bucket ARN (thiếu /*) nên thực tế chỉ chặn action cấp bucket; lỗi chung của cả 4 phương án, không làm đổi lựa chọn."
+      "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
     ]
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Đã kiểm tra lại các phương án cạnh tranh mạnh nhất: C (arn:aws:iam::...:user/Bob) và D (arn:aws:sts::...:assumed-role/Bob/...) đều là loại principal khác với federated user session theo trang IAM Principal (ref1, ref2, ref5); A dùng Allow nên không từ chối. Đã xem lại ảnh D: ký tự Action mờ ('s3:*'), không ảnh hưởng. Không tìm thấy cách đọc nào khiến phương án khác đúng; giữ B.",
+  "reconciliation_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
   "explanation_vi": {
-    "why_correct": "B dùng Effect Deny với principal đúng định dạng AWS STS federated user session (arn:aws:sts::account-id:federated-user/Bob); explicit deny trong bucket policy ghi đè mọi Allow, và vì chỉ gắn trên bucket này nên chỉ ảnh hưởng quyền S3 trên bucket, các quyền khác của Bob giữ nguyên.",
+    "why_correct": "B xác định đúng STS federated-user/Bob và dùng explicit deny, nhưng bucket ARN không bao phủ GetObject/DeleteObject. Cần cả bucket ARN và bucket/* để chặn toàn bộ truy cập dữ liệu như đề yêu cầu.",
     "others": {
-      "Q007:A": "Effect là Allow nên policy cấp thêm quyền S3 cho Bob thay vì từ chối truy cập.",
-      "Q007:C": "arn:aws:iam::account-id:user/Bob là IAM user principal, không phải phiên federated user Bob, nên nhắm sai principal (và có thể chặn nhầm một IAM user tên Bob).",
-      "Q007:D": "assumed-role/Bob/role-session-name là role session của một IAM role tên Bob với session name cố định, không phải federated user Bob."
+      "Q007:A": "Sai: Allow không deny Bob.",
+      "Q007:B": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
+      "Q007:C": "Sai: IAM user/Bob khác STS federated-user/Bob.",
+      "Q007:D": "Sai: assumed-role session là loại principal khác."
     }
   },
   "keywords": [
     {
-      "phrase": "federated user named Bob",
-      "meaning_vi": "Phiên AWS STS federated user (GetFederationToken) — principal có ARN dạng arn:aws:sts::account-id:federated-user/Bob."
+      "phrase": "federated user",
+      "meaning_vi": "Chỉ đúng principal STS federated-user mới match."
     },
     {
-      "phrase": "by using a bucket policy",
-      "meaning_vi": "Dùng resource-based policy gắn trên bucket, có thể chỉ định trực tiếp ARN của phiên làm Principal."
+      "phrase": "Bob",
+      "meaning_vi": "Danh tính phiên có tên Bob."
     },
     {
-      "phrase": "Any other permissions that Bob has must remain intact",
-      "meaning_vi": "Chỉ thêm một Deny phạm vi hẹp trên bucket, không sửa identity policy của Bob."
+      "phrase": "bucket policy",
+      "meaning_vi": "Deny phải bao phủ cả bucket và object ARN."
     }
   ],
-  "memory_tip_vi": "Nếu cần chặn một principal cụ thể bằng bucket policy -> nghĩ đến Effect Deny + đúng định dạng ARN principal (sts federated-user/, sts assumed-role/, iam user/); kiểm tra loại principal và Resource có cả bucket lẫn bucket/*.",
+  "memory_tip_vi": "Nếu deny cả bucket và dữ liệu S3, liệt kê cả ARN bucket và ARN bucket/*.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -263,17 +262,17 @@
   ],
   "source_issues": [
     {
-      "type": "data",
-      "location": "Q007:A",
-      "detail_vi": "Mọi phương án chỉ ghi Resource arn:aws:s3:::DOC-EXAMPLE-BUCKET, thiếu arn:aws:s3:::DOC-EXAMPLE-BUCKET/*; policy thực tế sẽ không chặn GetObject/PutObject. Không ảnh hưởng việc chọn principal."
-    },
-    {
       "type": "layout",
       "location": "Q007:D",
       "detail_vi": "Ký tự Action trong ảnh D bị mờ ('s3:*' đọc không rõ)."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q007",
+      "detail_vi": "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access."
     }
   ],
-  "notes_vi": "Điểm phân biệt duy nhất là Effect và định dạng Principal ARN.",
+  "notes_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
   "history": [
     {
       "version": "r1",
@@ -294,6 +293,21 @@
       "previous_answer": [
         "Q007:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q007:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Bucket ARN không deny object APIs; principal đúng không đủ để verified whole policy.",
+      "technical_change": true
     }
   ],
   "timestamp_correction": {
@@ -305,5 +319,23 @@
         "corrected": "2026-09-30T19:41:20Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q007:B"
+    ],
+    "candidate_answers": [
+      "Q007:B"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

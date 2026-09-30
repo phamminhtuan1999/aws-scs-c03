@@ -2,9 +2,9 @@
   "question_id": "Q120",
   "question_content_hash": "d29f1a58eeb8af645517f12609ca34d62ca462e5d3d7286206ddc8421ebcbba7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:20:47+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,13 +34,13 @@
       "unit_id": "Q120:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "MFA được bật cho root user và IAM user, không gán cho role dùng bởi EC2; role cung cấp credential tạm thời tự động nên MFA không liên quan tới lỗi truy cập SQS.",
+      "reason_vi": "A không gắn MFA device trực tiếp vào IAM role như IAM user.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref4"
+        "Q120-r2-1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -48,60 +48,59 @@
       "unit_id": "Q120:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Explicit deny trong bất kỳ policy nào (kể cả resource-based policy của queue SQS) sẽ ghi đè allow; kiểm tra queue policy là bước troubleshoot hợp lý và không mở rộng quyền.",
+      "reason_vi": "B explicit deny trong queue policy có thể chặn role.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref8"
+        "Q120-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q120:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM role không có long-term access key; instance dùng credential tạm thời do role cung cấp, nên không có 'access key gắn vào role' để kiểm tra.",
+      "reason_vi": "C role không có access key dài hạn gắn trực tiếp; EC2 dùng temporary credentials.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "Q120-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q120:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AmazonSQSFullAccess cấp sqs:* trên mọi resource – vi phạm least privilege; đồng thời không giải quyết được nếu có explicit deny.",
+      "reason_vi": "D SQSFullAccess mở rộng quyền quá mức và không thắng explicit deny.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7",
-        "ref1"
+        "Q120-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q120:E",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Nếu identity-based policy của role không còn statement allow hành động SQS cần thiết thì request bị implicit deny; kiểm tra policy của role là bước troubleshoot đúng, giữ least privilege.",
+      "reason_vi": "E role cần identity permissions phù hợp với queue/action.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref8"
+        "Q120-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -136,16 +135,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B, E. Logic đánh giá policy IAM nêu trực tiếp: explicit deny (kể cả trong resource-based policy của queue) ghi đè allow, và thiếu allow trong identity-based policy của role dẫn tới implicit deny; role không có access key, MFA không gán cho role, AmazonSQSFullAccess vi phạm least privilege.",
+    "reason_vi": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, E, trùng blind. Xét lại đối thủ C (kiểm tra access key của role): trang IAM roles nêu trực tiếp role không có long-term credential như access key; instance dùng credential tạm thời do role cấp, nên C không phải bước troubleshoot có nghĩa. D sửa được triệu chứng thiếu allow nhưng cấp sqs:* – trái least privilege và vẫn thua explicit deny. A: MFA dành cho root user/IAM user, không gán cho role của EC2. Giữ B, E, verified, high.",
+  "reconciliation_vi": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
   "explanation_vi": {
-    "why_correct": "B: explicit deny trong SQS queue policy (resource-based) ghi đè mọi allow, nên phải kiểm tra queue policy không deny role. E: nếu policy của role không còn allow hành động SQS cần thiết thì request bị implicit deny. Cả hai là bước kiểm tra, không mở rộng quyền.",
+    "why_correct": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
     "others": {
-      "Q120:A": "Thiết bị MFA gán cho root user/IAM user, không gán cho role của EC2; role cấp credential tạm thời tự động nên MFA không liên quan.",
-      "Q120:C": "IAM role không có long-term access key; instance dùng credential tạm thời của role nên không có 'access key gắn vào role' để kiểm tra.",
-      "Q120:D": "AmazonSQSFullAccess cấp toàn quyền SQS – vi phạm least privilege và không vượt qua được explicit deny nếu có."
+      "Q120:A": "A không gắn MFA device trực tiếp vào IAM role như IAM user.",
+      "Q120:C": "C role không có access key dài hạn gắn trực tiếp; EC2 dùng temporary credentials.",
+      "Q120:D": "D SQSFullAccess mở rộng quyền quá mức và không thắng explicit deny."
     }
   },
   "keywords": [
@@ -162,7 +161,7 @@
       "meaning_vi": "Nguyên nhân nằm ở policy (identity-based hoặc resource-based)."
     }
   ],
-  "memory_tip_vi": "Nếu EC2 dùng role mất quyền truy cập SQS sau thay đổi IAM -> kiểm tra explicit deny trong queue policy và allow trong policy của role; kiểm tra: role không có access key/MFA, không vá bằng policy FullAccess.",
+  "memory_tip_vi": "Nếu SQS AccessDenied, kiểm tra identity allow + resource deny + KMS/SCP khi có.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -278,6 +277,18 @@
       "quote": "There are two ways to give your users permissions to your Amazon SQS queues: using the Amazon SQS policy system and using the IAM policy system.",
       "supports": "Quyền truy cập SQS đến từ cả queue policy và IAM policy – hai nơi cần kiểm tra (B, E).",
       "kind": "direct"
+    },
+    {
+      "id": "Q120-r2-1",
+      "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/troubleshooting-access-denied.html",
+      "title": "Troubleshoot an access denied error in Amazon SQS - Amazon Simple Queue Service",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "An explicit deny in either policy overrides an explicit allow.",
+      "supports": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+      "kind": "direct",
+      "snapshot_id": "7455a2790404",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -302,7 +313,43 @@
         "Q120:B",
         "Q120:E"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q120:B",
+        "Q120:E"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q120:B",
+        "Q120:E"
+      ],
+      "note_vi": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Troubleshoot quyền: kiểm tra explicit deny (resource policy/SCP/boundary) và allow trong identity policy; không vá bằng policy full access."
+  "notes_vi": "Kiểm tra queue policy deny và role IAM allow giữ least privilege, thay vì cấp toàn quyền để thử.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B",
+      "E"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

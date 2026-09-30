@@ -2,9 +2,9 @@
   "question_id": "Q104",
   "question_content_hash": "077015d844168e4ba4f7c46331ed4294c3702c3b882e78a8e74e0ac0af8a36df",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,66 +34,62 @@
       "unit_id": "Q104:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Secrets Manager lưu secret được mã hóa và Lambda lấy qua SDK lúc runtime nên đáp ứng R1, R2; nhưng tính phí theo mỗi secret mỗi tháng và theo API call, đắt hơn SecureString standard của Parameter Store (không tính phí thêm). Không cần tính năng rotation của Secrets Manager.",
+      "reason_vi": "Đáp ứng chức năng nhưng có phí secret/API và lợi ích rotation không được yêu cầu.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q104-r2-1",
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q104:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lambda authorizer kiểm soát ai được gọi API (xác thực caller đến API Gateway); nó không lưu trữ/mã hóa client token của SaaS và không cung cấp token cho Lambda để gọi ra ngoài.",
+      "reason_vi": "API Gateway authorizer xác thực caller, không lưu/cấp token SaaS cho Lambda.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "Q104-r2-1",
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q104:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "SecureString được Parameter Store mã hóa bằng KMS key (có thể dùng AWS managed key aws/ssm, không tốn phí lưu key); standard parameter và standard throughput không tính phí thêm; Lambda gọi GetParameter với decryption lúc runtime. Chi phí chỉ là KMS request (có free tier).",
+      "reason_vi": "Đúng trong giả định standard tier/default throughput: KMS-encrypted parameter, runtime SDK retrieval.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3",
-        "ref4"
+        "Q104-r2-1",
+        "ref7"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q104:D",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Nếu hiểu đúng chữ 'Use AWS KMS to encrypt the client token' là tự mã hóa (encryption helpers) thì phải dùng customer managed key ($1/tháng + phí Decrypt) vì AWS managed key không dùng trực tiếp được -> đắt hơn C. Nếu chỉ dựa vào mã hóa at rest mặc định của Lambda (aws/lambda, không tốn phí) thì chi phí gần bằng 0, nhưng khi đó token hiện plaintext với ai có quyền xem cấu hình function, và env var là cấu hình cố định theo version, trái khuyến nghị dùng Secrets Manager thay env var cho credential.",
+      "reason_vi": "Có thể runtime decrypt token đã mã hóa trong environment; chi phí key/API phụ thuộc cấu hình, nên không loại vì environment tĩnh.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5",
-        "ref7",
-        "ref8",
-        "ref9",
-        "ref10"
+        "Q104-r2-1",
+        "ref7"
       ],
       "evidence_kind": "inference"
     }
@@ -131,19 +127,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn C. Giá Parameter Store standard (không phí thêm) và Secrets Manager (tính theo secret + API call) được nêu trực tiếp; loại D dựa trên cách đọc chữ 'Use AWS KMS to encrypt' (cần customer managed key) và khuyến nghị bảo mật của Lambda, nên để medium.",
-    "open_issues": [
-      "Cách đọc khác của D: chỉ dựa vào mã hóa at rest mặc định của Lambda env var bằng AWS managed key (AWS không tính phí dùng key này) thì D có chi phí gần 0, có thể không đắt hơn C; đề không nói rõ nên tồn tại rủi ro diễn giải.",
-      "Lưu lượng GetParameter rất cao có thể cần higher throughput (có phí) và KMS request vượt free tier — đề không nêu."
-    ]
+    "reason_vi": "D không sai vì environment variables là static/không mã hóa; encrypted environment có thể runtime decrypt, so sánh chi phí phụ thuộc key/request assumptions.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xem xét kỹ cách đọc chi phí của D theo yêu cầu: trang 'Securing Lambda environment variables' xác nhận Lambda luôn mã hóa env var at rest bằng AWS managed key và 'AWS doesn't charge you to use this key' — nên nếu D chỉ là mã hóa mặc định thì chi phí ~0. Tuy vậy D viết 'Use AWS KMS to encrypt the client token', là một bước mã hóa chủ động; tài liệu KMS nói AWS managed key không dùng trực tiếp cho cryptographic operations, nên phải có customer managed key ($1/tháng) và phí Decrypt, đắt hơn SecureString dùng aws/ssm (không phí lưu key, standard parameter/throughput miễn phí). Ngoài ra cùng trang Lambda khuyến nghị dùng Secrets Manager thay env var cho credential; env var với key mặc định hiển thị plaintext cho người có quyền xem cấu hình. A (Secrets Manager) đáp ứng nhưng tính phí theo secret/tháng + API call. B không liên quan (authorizer kiểm soát caller vào API). Giữ verified, medium, ghi open issue về cách đọc D.",
+  "reconciliation_vi": "D không sai vì environment variables là static/không mã hóa; encrypted environment có thể runtime decrypt, so sánh chi phí phụ thuộc key/request assumptions.",
   "explanation_vi": {
-    "why_correct": "SecureString trong Parameter Store được mã hóa at rest bằng KMS (có thể dùng AWS managed key aws/ssm, không phí lưu key); standard parameter không tính phí thêm; Lambda gọi GetParameter với decryption qua SDK lúc runtime — đáp ứng mã hóa + truyền token với chi phí thấp nhất.",
+    "why_correct": "C là lựa chọn mặc định tiết kiệm cho token tĩnh: standard SecureString được KMS mã hóa, Lambda lấy qua SDK với decryption. So sánh chi phí thực còn phụ thuộc throughput, caching và key.",
     "others": {
-      "Q104:A": "Secrets Manager đáp ứng kỹ thuật nhưng tính phí theo mỗi secret mỗi tháng và theo API call, đắt hơn SecureString standard; không cần tính năng rotation.",
-      "Q104:B": "Lambda authorizer kiểm soát ai được gọi API Gateway; không lưu/mã hóa token SaaS và không cấp token cho Lambda để gọi ra ngoài.",
-      "Q104:D": "Tự mã hóa bằng KMS cần customer managed key ($1/tháng + phí Decrypt) và env var là cấu hình cố định, không được khuyến nghị cho credential; nếu chỉ dựa vào mã hóa mặc định thì token lộ plaintext cho người xem cấu hình function."
+      "Q104:A": "Đáp ứng chức năng nhưng có phí secret/API và lợi ích rotation không được yêu cầu.",
+      "Q104:B": "API Gateway authorizer xác thực caller, không lưu/cấp token SaaS cho Lambda.",
+      "Q104:D": "Có thể runtime decrypt token đã mã hóa trong environment; chi phí key/API phụ thuộc cấu hình, nên không loại vì environment tĩnh."
     }
   },
   "keywords": [
@@ -157,10 +150,10 @@
     },
     {
       "phrase": "MOST cost-effectively",
-      "meaning_vi": "Không cần rotation -> Parameter Store standard SecureString (không phí thêm) rẻ hơn Secrets Manager."
+      "meaning_vi": "SecureString standard là default tiết kiệm; chi phí thật phụ thuộc key, volume và caching."
     }
   ],
-  "memory_tip_vi": "Nếu cần lưu secret mã hóa cho Lambda với chi phí thấp nhất và không yêu cầu rotation -> nghĩ đến Parameter Store SecureString (standard); kiểm tra: nếu đề cần rotation tự động/cross-account secret thì Secrets Manager; tự mã hóa bằng KMS phải dùng customer managed key ($1/tháng).",
+  "memory_tip_vi": "Nếu token tĩnh nhỏ không cần rotation, SecureString standard là lựa chọn mặc định tiết kiệm; chi phí thực còn phụ thuộc API volume và key.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -304,6 +297,18 @@
       "quote": "we recommend that you use AWS Secrets Manager instead of environment variables to store database credentials",
       "supports": "AWS khuyến nghị kho secret thay vì env var cho credential; bất lợi bảo mật của D.",
       "kind": "direct"
+    },
+    {
+      "id": "Q104-r2-1",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html",
+      "title": "AWS Systems Manager Parameter Store - AWS Systems Manager",
+      "accessed_at": "2026-09-30",
+      "quote": "Use SecureString for configuration values that require encryption, such as",
+      "supports": "Standard parameters free; SecureString KMS encryption; Secrets Manager per-secret/API charges.",
+      "kind": "direct",
+      "snapshot_id": "9185602979b5",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -311,6 +316,16 @@
       "type": "typo",
       "location": "Q104:C",
       "detail_vi": "Cụm 'retrieve the value or the SecureString parameter' có lẽ là lỗi đánh máy của 'value of the SecureString parameter'; không ảnh hưởng nghĩa."
+    },
+    {
+      "type": "data",
+      "location": "Q104",
+      "detail_vi": "Không khẳng định environment variables không mã hóa: Lambda luôn encrypt at rest."
+    },
+    {
+      "type": "data",
+      "location": "Q104",
+      "detail_vi": "MOST cost-effective phụ thuộc caching, request volume, key dùng chung; C là intended default static-token solution."
     }
   ],
   "history": [
@@ -327,7 +342,46 @@
       "previous_answer": [
         "Q104:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. D không sai vì environment variables là static/không mã hóa; encrypted environment có thể runtime decrypt, so sánh chi phí phụ thuộc key/request assumptions.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q104:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q104:C"
+      ],
+      "note_vi": "D không sai vì environment variables là static/không mã hóa; encrypted environment có thể runtime decrypt, so sánh chi phí phụ thuộc key/request assumptions.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Lambda docs khuyến nghị Secrets Manager cho database credentials, nhưng tiêu chí đề là MOST cost-effective và không cần rotation."
+  "notes_vi": "D không sai vì environment variables là static/không mã hóa; encrypted environment có thể runtime decrypt, so sánh chi phí phụ thuộc key/request assumptions.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q104:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q104:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q118",
   "question_content_hash": "20872d866fb9d45e2216d66df61a62b724f8a24699736f6d402a837f5668d779",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:19:20+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,8 +38,8 @@
     {
       "unit_id": "Q118:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Từ 23/07/2026 ALB hỗ trợ gửi access logs trực tiếp tới CloudWatch Logs (vended logs); Logs Insights lọc được theo danh sách IP (filter ... in [...]) và vẽ biểu đồ cho truy vấn stats. Trước mốc này ALB chỉ ghi access logs vào S3 nên option này không khả thi.",
+      "verdict": "undetermined",
+      "reason_vi": "A hiện có ALB → CloudWatch Logs và Logs Insights; không còn sai vì ALB chỉ hỗ trợ S3.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,60 +47,53 @@
       ],
       "reference_ids": [
         "ref5",
-        "ref6",
-        "ref7",
-        "ref8",
-        "ref9",
-        "ref10",
-        "ref11"
+        "Q118-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q118:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "ALB không gửi log trực tiếp tới Amazon Redshift; đích hỗ trợ chỉ là S3 (legacy) hoặc CloudWatch Logs, Data Firehose, S3 (qua tích hợp CloudWatch).",
+      "verdict": "undetermined",
+      "reason_vi": "B không có native direct ALB log destination Redshift như mô tả.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref5",
+        "Q118-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q118:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "ALB không gửi log trực tiếp tới Amazon OpenSearch Service; muốn vào OpenSearch phải qua trung gian (ví dụ Data Firehose), trái với chữ 'directly'.",
+      "verdict": "undetermined",
+      "reason_vi": "C không có native direct ALB log destination OpenSearch như mô tả.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "ref5",
+        "Q118-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q118:D",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "ALB ghi access logs vào S3; Athena truy vấn log ALB trên S3 bằng SQL (có thể so với bảng IP đã biết) và Amazon Quick Sight dùng Athena làm dataset để trực quan hóa.",
+      "verdict": "undetermined",
+      "reason_vi": "D S3 logs + Athena + visualization đáp ứng yêu cầu.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "ref5",
+        "Q118-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -134,21 +127,20 @@
   "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "D (S3 -> Athena -> Amazon Quick Sight) được tài liệu hỗ trợ trực tiếp và đúng ở mọi thời điểm. Nhưng từ 23/07/2026 ALB gửi được access logs trực tiếp tới CloudWatch Logs (cấu hình từ tab Integrations của load balancer), và Logs Insights có thể lọc theo danh sách IP (filter ... in [...] hoặc lookup table từ 31/03/2026) và vẽ biểu đồ – nên A cũng đáp ứng đủ yêu cầu. Câu single-choice có 2 đáp án bảo vệ được, đề không có tiêu chí chi phí/vận hành để phân định.",
+    "level": "high",
+    "reason_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
     "open_issues": [
-      "Đề có thể được viết trước 23/07/2026; trong bối cảnh đó D là đáp án duy nhất (khớp source key).",
-      "Không có tiêu chí least cost / least operational effort để chọn giữa A và D theo hành vi AWS hiện tại."
+      "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs."
     ]
   },
-  "reconciliation_vi": "Source key = D; blind chọn D nhưng đề xuất ambiguous vì A mới khả thi. Theo bias-guard, chỉ nâng lên verified nếu có bằng chứng trực tiếp mới cho thấy A không đáp ứng. Đã kiểm tra lại: (1) What's New 23/07/2026 (ref6) xác nhận ALB access logs giao tới CloudWatch Logs ở mọi Region thương mại và GovCloud, cấu hình qua tab Integrations của ALB (console/CLI/SDK) – nên 'Configure the ALB to send logs directly to CloudWatch Logs' là mô tả hợp lệ; trang ELB (ref5, ref10) xác nhận access logs nằm trong tích hợp và phân tích bằng Logs Insights; (2) bằng chứng mới làm A MẠNH hơn: lệnh lookup của Logs Insights (What's New 31/03/2026, ref11/ref12) cho phép join log với bảng CSV (ví dụ danh sách IP đã biết) ngay lúc truy vấn, cộng với khả năng vẽ biểu đồ cho truy vấn stats (ref8). Không tìm thấy bằng chứng A thiếu yêu cầu. Không chọn 'outdated' vì đáp án nguồn D vẫn đúng ở hiện tại (không phải hành vi của D thay đổi) – vấn đề là câu hỏi giờ có 2 đáp án khả thi. Không chọn verified-kèm-điều-kiện-thời-gian vì lựa chọn mới khả thi nằm ngay trong đề (A). Kết luận: ambiguous; researched_answer = null (trước 23/07/2026 D là đáp án duy nhất).",
+  "reconciliation_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
   "explanation_vi": {
-    "why_correct": "CHƯA KẾT LUẬN (ambiguous): theo bối cảnh cũ (trước 23/07/2026) chỉ D đúng – ALB ghi access logs vào S3, Athena truy vấn bằng SQL (join với bảng IP đã biết) và Amazon Quick Sight trực quan hóa. Từ 23/07/2026 ALB gửi được access logs trực tiếp tới CloudWatch Logs, và Logs Insights lọc theo danh sách IP rồi vẽ biểu đồ được, nên A cũng đáp ứng; câu chỉ cho chọn 1 nên không chấm điểm.",
+    "why_correct": "Chưa có đáp án chắc chắn: A và D đều khả thi với tài liệu hiện hành: ALB đã hỗ trợ CloudWatch Logs; S3/Athena/visualization vẫn hợp lệ.",
     "others": {
-      "Q118:A": "Trước 23/07/2026 ALB không gửi log tới CloudWatch Logs nên A sai; từ mốc này A khả thi (Logs Insights + filter/lookup + biểu đồ) – đây là lý do câu hỏi bị ambiguous.",
-      "Q118:B": "ALB không gửi log trực tiếp tới Amazon Redshift; đích hỗ trợ chỉ là S3 (legacy) hoặc CloudWatch Logs, Data Firehose, S3.",
-      "Q118:C": "ALB không gửi log trực tiếp tới Amazon OpenSearch Service; phải qua trung gian như Data Firehose, trái với chữ 'directly'.",
-      "Q118:D": "Luôn khả thi: S3 -> Athena (SQL, join với danh sách IP) -> Amazon Quick Sight để trực quan hóa; là đáp án duy nhất trong bối cảnh trước 23/07/2026 (source key)."
+      "Q118:A": "A hiện có ALB → CloudWatch Logs và Logs Insights; không còn sai vì ALB chỉ hỗ trợ S3.",
+      "Q118:B": "B không có native direct ALB log destination Redshift như mô tả.",
+      "Q118:C": "C không có native direct ALB log destination OpenSearch như mô tả.",
+      "Q118:D": "D S3 logs + Athena + visualization đáp ứng yêu cầu."
     }
   },
   "keywords": [
@@ -162,10 +154,10 @@
     },
     {
       "phrase": "access logs for an Application Load Balancer (ALB)",
-      "meaning_vi": "ALB access logs: S3 (legacy) hoặc, từ 07/2026, CloudWatch Logs/Firehose/S3 qua vended logs."
+      "meaning_vi": "ALB hiện hỗ trợ đích log S3 và CloudWatch Logs; phải xác định loại log/đích trước khi chọn Athena hay Logs Insights."
     }
   ],
-  "memory_tip_vi": "Nếu đề hỏi phân tích + trực quan hóa ALB access logs -> nghĩ đến S3 + Athena + Quick Sight; kiểm tra mốc 23/07/2026: từ đó ALB gửi được log tới CloudWatch Logs (Logs Insights) nên đề cũ có thể có 2 đáp án.",
+  "memory_tip_vi": "Nếu đề dùng từ directly, tra destination hiện hành trước khi loại.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -335,6 +327,18 @@
       "quote": "Posted on: Mar 31, 2026",
       "supports": "Mốc thời gian của lệnh lookup (31/03/2026), bổ sung khả năng join danh sách IP trong Logs Insights.",
       "kind": "direct"
+    },
+    {
+      "id": "Q118-r2-2",
+      "url": "https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html",
+      "title": "Query AWS CloudTrail logs - Amazon Athena",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "Lake queries within the CloudTrail console itself, using CloudTrail Lake",
+      "supports": "A và D đều khả thi với tài liệu hiện hành: ALB đã hỗ trợ CloudWatch Logs; S3/Athena/visualization vẫn hợp lệ.",
+      "kind": "direct",
+      "snapshot_id": "5431a82a2229",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -342,6 +346,11 @@
       "type": "outdated",
       "location": "Q118:A",
       "detail_vi": "Từ 23/07/2026 (What's New) ALB gửi được access logs trực tiếp tới CloudWatch Logs, nên A không còn sai về mặt kỹ thuật; câu single-choice có 2 đáp án khả thi theo hành vi AWS hiện tại. Đáp án nguồn D vẫn đúng và là đáp án duy nhất trước mốc này."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q118",
+      "detail_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs."
     }
   ],
   "history": [
@@ -358,7 +367,41 @@
       "previous_answer": [
         "Q118:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Bối cảnh trước 07/2026: ALB access logs chỉ vào S3 -> Athena + Quick Sight là đáp án duy nhất. Tên 'Amazon Quick Sight' khớp với thương hiệu hiện tại (Amazon Quick)."
+  "notes_vi": "Không khẳng định ngày ra mắt nếu chưa đối chứng release note; tính năng hiện hành được xác nhận trực tiếp bằng ALB docs.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": null,
+    "candidate_answers": [
+      [
+        "A"
+      ],
+      [
+        "D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

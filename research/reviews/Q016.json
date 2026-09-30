@@ -2,9 +2,9 @@
   "question_id": "Q016",
   "question_content_hash": "e0866a55184ec7e87a3f30fe3ec2e9dd098e038ee84a5195a853bd9241b5ea6e",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:40:00Z",
-  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -37,16 +37,15 @@
     {
       "unit_id": "Q016:A",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Volume EBS riêng có thể tồn tại sau khi instance terminate, nhưng bị gắn với một AZ, phải attach vào instance khác mới xem được, không có cơ chế giữ 1 năm và phát sinh nhiều volume phải quản lý thủ công — kém hơn log tập trung.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Sai: EBS riêng không tự bảo đảm không bị xóa/khả dụng sau termination.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "Q016-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -54,45 +53,44 @@
       "unit_id": "Q016:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Chỉ copy log sang EFS mỗi ngày một lần nên log phát sinh kể từ lần copy cuối vẫn mất khi instance bị scale-in; không giải quyết vấn đề mất log.",
+      "reason_vi": "Sai: copy mỗi ngày có thể mất log giữa hai lần copy trước scale-in.",
       "requirement_ids": [
         "R1"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "Q016-r2-1"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q016:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CloudWatch agent gửi log liên tục ra CloudWatch Logs, tách khỏi vòng đời instance; log group mặc định giữ vô thời hạn và có thể đặt retention 365 ngày trở lên, đáp ứng yêu cầu 1 năm.",
+      "reason_vi": "Đúng: stream log tập trung và retention >=365 ngày.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "Q016-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q016:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lifecycle hook chỉ trì hoãn terminate để xem log thủ công trong 1 giờ; hook là best-effort, sau timeout instance vẫn bị terminate và log không được lưu trữ bền vững 1 năm.",
+      "reason_vi": "Sai: review thủ công không cung cấp lưu trữ bền một năm.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "Q016-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -205,6 +203,18 @@
       "quote": "The volume and instance must be in the same Availability Zone.",
       "supports": "Log trên EBS bị giới hạn trong một AZ và phải attach mới đọc được — hạn chế về availability của A.",
       "kind": "inference"
+    },
+    {
+      "id": "Q016-r2-1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html",
+      "title": "Manually create or edit the CloudWatch agent configuration file - Amazon CloudWatch",
+      "accessed_at": "2026-09-30",
+      "quote": "publishing to CloudWatch. If you're using the agent only to",
+      "supports": "CloudWatch agent streams configured local logs and supports retention_in_days including 365; new groups default never-expire, existing retention must be checked.",
+      "kind": "direct",
+      "snapshot_id": "3d623fa89c36",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_answer": [
@@ -218,35 +228,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "CloudWatch agent đưa log ra CloudWatch Logs, tách khỏi vòng đời instance; log group mặc định giữ vô thời hạn hoặc đặt retention 365 ngày trở lên. Các lựa chọn khác vẫn có thể mất log hoặc không bảo đảm lưu 1 năm.",
-    "open_issues": [
-      "C không nêu cấu hình retention; mặc định log được giữ vô thời hạn nên vẫn thỏa ≥1 năm. Instance cần IAM role cho agent (đề không nêu)."
-    ]
+    "reason_vi": "Giữ C; không suy mặc định never-expire áp dụng log group hiện có; đặt/kiểm tra >=365 ngày.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind (C) trùng khóa nguồn (C). Đã kiểm tra lại đối thủ mạnh nhất là A (EBS volume riêng): volume tồn tại sau terminate nhưng bị giới hạn một AZ, phải attach thủ công để đọc, không có cơ chế lưu giữ 1 năm và phải quản lý nhiều volume. B chỉ copy mỗi ngày nên vẫn mất log từ lần copy cuối; D chỉ trì hoãn terminate theo kiểu best-effort. Giữ C.",
+  "reconciliation_vi": "Giữ C; không suy mặc định never-expire áp dụng log group hiện có; đặt/kiểm tra >=365 ngày.",
   "explanation_vi": {
-    "why_correct": "CloudWatch agent gửi log liên tục từ EC2 sang Amazon CloudWatch Logs, nên log không mất khi instance bị scale-in; CloudWatch Logs là dịch vụ bền vững, mặc định giữ log vô thời hạn hoặc đặt retention từ 365 ngày để đáp ứng audit 1 năm.",
+    "why_correct": "Đưa CloudWatch agent vào AMI để các instance mới stream log ra CloudWatch Logs trước scale-in. Đặt retention ít nhất 365 ngày và kiểm tra retention của log group hiện có.",
     "others": {
-      "Q016:A": "Volume EBS có thể giữ log sau terminate nhưng bị gắn một AZ, phải attach thủ công mới đọc được và phát sinh nhiều volume cần quản lý, không có chính sách lưu giữ 1 năm.",
-      "Q016:B": "Copy sang EFS mỗi ngày một lần nên log phát sinh sau lần copy cuối vẫn mất khi instance bị scale-in.",
-      "Q016:D": "Lifecycle hook chỉ giữ instance ở Terminating:Wait tạm thời để xem thủ công; hết thời gian instance vẫn bị terminate và log không được lưu 1 năm."
+      "Q016:A": "Sai: EBS riêng không tự bảo đảm không bị xóa/khả dụng sau termination.",
+      "Q016:B": "Sai: copy mỗi ngày có thể mất log giữa hai lần copy trước scale-in.",
+      "Q016:D": "Sai: review thủ công không cung cấp lưu trữ bền một năm."
     }
   },
   "keywords": [
     {
-      "phrase": "logs were lost after a scale-in event",
-      "meaning_vi": "Log lưu cục bộ mất khi instance bị terminate: cần đưa log ra ngoài instance."
+      "phrase": "Auto Scaling group",
+      "meaning_vi": "Instance termination có thể xóa local logs."
     },
     {
-      "phrase": "durability and availability of log data",
-      "meaning_vi": "Lưu log tập trung ở dịch vụ bền vững (CloudWatch Logs)."
+      "phrase": "scale-in event",
+      "meaning_vi": "Stream logs trước khi scale-in."
     },
     {
-      "phrase": "minimum of 1 year",
-      "meaning_vi": "Retention log group ≥ 365 ngày (hoặc mặc định vô thời hạn)."
+      "phrase": "1 year",
+      "meaning_vi": "Retention log group ít nhất 365 ngày."
     }
   ],
-  "memory_tip_vi": "Nếu log trên EC2 trong Auto Scaling group bị mất khi scale-in -> nghĩ đến CloudWatch agent đẩy log sang CloudWatch Logs và đặt retention; kiểm tra phương án copy định kỳ hoặc lifecycle hook vẫn để lọt log.",
+  "memory_tip_vi": "Nếu log chỉ nằm trên instance Auto Scaling, stream ra dịch vụ log tập trung và đặt retention trước khi scale-in.",
   "tags": {
     "domains": [
       "1 Detection"
@@ -283,7 +291,38 @@
       "previous_answer": [
         "Q016:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; không suy mặc định never-expire áp dụng log group hiện có; đặt/kiểm tra >=365 ngày.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q016:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q016:C"
+      ],
+      "note_vi": "Giữ C; không suy mặc định never-expire áp dụng log group hiện có; đặt/kiểm tra >=365 ngày.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Tách log khỏi vòng đời instance bằng CloudWatch agent → CloudWatch Logs, đặt retention ≥365 ngày."
+  "notes_vi": "Giữ C; không suy mặc định never-expire áp dụng log group hiện có; đặt/kiểm tra >=365 ngày.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q016:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

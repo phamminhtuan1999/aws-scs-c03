@@ -2,9 +2,9 @@
   "question_id": "Q052",
   "question_content_hash": "2ff2f3b409aa4dc359024ba476c40e0c35f0f925d56b15b24db86dc40fc4f74b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -33,57 +33,61 @@
     {
       "unit_id": "Q052:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty không có cấu hình gọi Lambda trực tiếp; findings được publish tới EventBridge (và tùy chọn export ra S3), việc gọi Lambda phải qua EventBridge rule.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "GuardDuty không cấu hình gọi Lambda trực tiếp theo loại finding.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
         "ref1",
-        "ref2"
+        "Q052-r2-2",
+        "Q052-r2-3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q052:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS Config rule được kích hoạt bởi thay đổi cấu hình tài nguyên hoặc định kỳ; 'CryptoCurrency:EC2/*' là loại finding của GuardDuty, không phải sự kiện thay đổi cấu hình của Config.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Config không phải nguồn phát hiện đào tiền mã hóa.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4",
-        "ref3"
+        "ref1",
+        "Q052-r2-2",
+        "Q052-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q052:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "GuardDuty tự động gửi findings thành event lên EventBridge; rule lọc source aws.guardduty / finding type CryptoCurrency:EC2/* có thể nhắm target là Lambda function để cô lập instance.",
+      "reason_vi": "EventBridge hỗ trợ GuardDuty finding và target Lambda.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref3"
+        "Q052-r2-2",
+        "Q052-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q052:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS Config không phát hiện hay sinh sự kiện 'CryptoCurrency:EC2/*'; đó là finding của GuardDuty, nên rule dựa trên Config sẽ không bao giờ khớp.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Config event không thay thế GuardDuty finding.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4",
-        "ref3"
+        "ref1",
+        "Q052-r2-2",
+        "Q052-r2-3"
       ],
       "evidence_kind": "inference"
     }
@@ -119,18 +123,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu GuardDuty nêu findings được gửi tới EventBridge và EventBridge có thể gửi tới Lambda; CryptoCurrency:EC2/* là loại finding của GuardDuty, không phải sự kiện AWS Config.",
-    "open_issues": [
-      "Security group stateful: đổi security group có thể không cắt ngay kết nối đã được theo dõi; ảnh hưởng chung tới tiền đề, không phân biệt giữa các lựa chọn."
-    ]
+    "reason_vi": "Đúng event wiring; security group quarantine không chắc cắt connection đang tracking.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn C. Đã kiểm tra đối thủ A: GuardDuty chỉ xuất findings tới EventBridge (và tùy chọn S3), không có tùy chọn gọi Lambda trực tiếp; B và D dựa trên AWS Config, vốn đánh giá theo thay đổi cấu hình/định kỳ và không sinh sự kiện CryptoCurrency:EC2/*. Giữ C, verified, confidence high.",
+  "reconciliation_vi": "Đúng event wiring; security group quarantine không chắc cắt connection đang tracking.",
   "explanation_vi": {
-    "why_correct": "GuardDuty tự gửi mỗi finding thành event tới Amazon EventBridge; rule EventBridge lọc source aws.guardduty và finding type CryptoCurrency:EC2/* rồi gọi Lambda để chuyển instance sang security group isolate.",
+    "why_correct": "Dùng EventBridge rule nhận GuardDuty findings và lọc CryptoCurrency:EC2 để gọi Lambda cách ly đã có. Cách ly security group không nhất thiết cắt ngay kết nối đã được tracking.",
     "others": {
-      "Q052:A": "GuardDuty không có cấu hình gọi Lambda trực tiếp; findings chỉ được publish tới EventBridge (và tùy chọn export S3).",
-      "Q052:B": "Config rule chạy khi có thay đổi cấu hình tài nguyên hoặc định kỳ; CryptoCurrency:EC2/* là finding GuardDuty, không phải thay đổi cấu hình.",
-      "Q052:D": "EventBridge đúng nhưng nguồn sai: AWS Config không phát hiện hay phát sự kiện CryptoCurrency:EC2/*, nên rule không bao giờ khớp."
+      "Q052:A": "GuardDuty không cấu hình gọi Lambda trực tiếp theo loại finding.",
+      "Q052:B": "Config không phải nguồn phát hiện đào tiền mã hóa.",
+      "Q052:D": "Config event không thay thế GuardDuty finding."
     }
   },
   "keywords": [
@@ -144,10 +146,10 @@
     },
     {
       "phrase": "isolate",
-      "meaning_vi": "Security group không có outbound rule để chặn traffic ra của instance bị nghi."
+      "meaning_vi": "Cách ly SG chỉ chắc cho new/untracked traffic; tracked connections có thể tiếp tục."
     }
   ],
-  "memory_tip_vi": "Nếu cần tự động phản ứng khi GuardDuty có finding -> nghĩ đến EventBridge rule (source aws.guardduty, lọc finding type) gọi Lambda/SSM; kiểm tra lựa chọn nói 'GuardDuty gọi trực tiếp' hoặc dùng AWS Config cho finding GuardDuty là sai nguồn.",
+  "memory_tip_vi": "Nếu đã có Lambda phản ứng với GuardDuty, nối EventBridge và lọc đúng finding type.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -213,6 +215,30 @@
       "quote": "AWS Config runs evaluations for the rule when there is a resource that matches the rule's scope and there is a change in configuration of the resource.",
       "supports": "Config rule kích hoạt theo thay đổi cấu hình tài nguyên, không theo finding GuardDuty.",
       "kind": "direct"
+    },
+    {
+      "id": "Q052-r2-2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/compromised-ec2.html",
+      "title": "Remediating a potentially compromised Amazon EC2 instance - Amazon GuardDuty",
+      "accessed_at": "2026-09-30",
+      "quote": "The existing tracked connections won't be terminated as a",
+      "supports": "Credentials bị đánh cắp phải được xử lý riêng; thay SG không nhất thiết ngắt established tracked connections.",
+      "kind": "direct",
+      "snapshot_id": "0cb119da269e",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q052-r2-3",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html",
+      "title": "Amazon EC2 security group connection tracking - Amazon Elastic Compute Cloud",
+      "accessed_at": "2026-09-30",
+      "quote": "When you change a security group rule, its tracked connections",
+      "supports": "Tracked connections không bị ngắt ngay khi đổi SG; originally untracked connections bị ngắt khi rule bị bỏ, auto-tracked connections có ngoại lệ.",
+      "kind": "direct",
+      "snapshot_id": "6dd3de8df183",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -223,8 +249,8 @@
     },
     {
       "type": "data",
-      "location": "Q052:D",
-      "detail_vi": "'CryptoCurrency:ЕС2/*' chứa ký tự Cyrillic U+0415 'Е' và U+0421 'С' (homoglyph) thay cho 'EC2' Latin."
+      "location": "Q052",
+      "detail_vi": "Không nên hứa quarantine SG dừng mọi outbound connection hiện hữu."
     }
   ],
   "history": [
@@ -239,6 +265,42 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key C khớp blind; giữ C, status verified (confidence high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng event wiring; security group quarantine không chắc cắt connection đang tracking.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q052:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q052:C"
+      ],
+      "note_vi": "Đúng event wiring; security group quarantine không chắc cắt connection đang tracking.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Đúng event wiring; security group quarantine không chắc cắt connection đang tracking.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q052:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q052:C"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

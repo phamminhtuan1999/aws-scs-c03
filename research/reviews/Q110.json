@@ -2,9 +2,9 @@
   "question_id": "Q110",
   "question_content_hash": "8b1c84154d192eeb862e615bbc12f3be52bad88408444bf0bcf86b1f514ea633",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:00+00:00",
-  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,30 +34,28 @@
       "unit_id": "Q110:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Roles Anywhere dùng trust anchor (CA) và role tin cậy rolesanywhere.amazonaws.com để container ngoài AWS đổi chứng chỉ X.509 lấy credential tạm.",
+      "reason_vi": "A dùng đúng cơ chế Roles Anywhere và service principal.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "Q110-r2-1",
+        "Q110-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q110:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Trộn khái niệm: trust anchor thuộc IAM Roles Anywhere; role federation tin cậy principal Federated của IdP, không có 'IAM service principal'. Cấu hình như mô tả không tạo được luồng cấp credential.",
+      "reason_vi": "B gán trust anchor cho IAM federation chung và sai service principal.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref6",
-        "ref7"
+        "Q110-r2-1",
+        "Q110-r2-2"
       ],
       "evidence_kind": "inference"
     },
@@ -65,32 +63,33 @@
       "unit_id": "Q110:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS managed application trong IAM Identity Center cấp SSO cho người dùng/nhóm, không cấp temporary credential cho container chạy ngoài AWS.",
+      "reason_vi": "C assignment ứng dụng cho người dùng không cấp workload credentials theo cơ chế nêu trong đề.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q110-r2-1",
+        "Q110-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q110:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Customer managed application (SAML/OAuth) phục vụ người dùng workforce; gán cho nhóm người dùng không giúp workload lấy credential AWS tạm.",
+      "reason_vi": "D ứng dụng customer managed cho nhóm người dùng không thay thế Roles Anywhere cho workload.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "Q110-r2-1",
+        "Q110-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -121,16 +120,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu IAM Roles Anywhere mô tả trực tiếp use case: workload (server, container) chạy ngoài AWS lấy temporary credentials; trust anchor = CA; role phải tin cậy rolesanywhere.amazonaws.com.",
+    "reason_vi": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại B (đối thủ mạnh nhất vì cũng nhắc 'trust anchor'): 'trust anchor' là khái niệm của IAM Roles Anywhere (ref3), còn role cho IAM federation tin cậy principal Federated của IdP (ref6), không có 'IAM service principal' nào cấp credential cho workload; B trộn hai cơ chế nên không cấu hình được. C/D: ứng dụng trong IAM Identity Center phục vụ single sign-on cho người dùng/nhóm workforce (ref4, ref5), không cấp credential cho container. Giữ A, verified, high.",
+  "reconciliation_vi": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
   "explanation_vi": {
-    "why_correct": "IAM Roles Anywhere cho workload chạy ngoài AWS dùng chứng chỉ X.509 (do CA đã đăng ký làm trust anchor cấp) để lấy temporary credentials của một IAM role; role đó phải tin cậy service principal rolesanywhere.amazonaws.com.",
+    "why_correct": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
     "others": {
-      "Q110:B": "Trust anchor không thuộc IAM federation; role federation tin principal Federated của IdP, không có 'IAM service principal' cấp credential cho workload.",
-      "Q110:C": "AWS managed application trong IAM Identity Center dùng cho single sign-on của người dùng, không cấp temporary credentials cho container ngoài AWS.",
-      "Q110:D": "Customer managed application (SAML/OAuth) gán cho nhóm người dùng là truy cập workforce, không phải cơ chế để workload lấy credential AWS."
+      "Q110:B": "B gán trust anchor cho IAM federation chung và sai service principal.",
+      "Q110:C": "C assignment ứng dụng cho người dùng không cấp workload credentials theo cơ chế nêu trong đề.",
+      "Q110:D": "D ứng dụng customer managed cho nhóm người dùng không thay thế Roles Anywhere cho workload."
     }
   },
   "keywords": [
@@ -147,7 +146,7 @@
       "meaning_vi": "Chi tiết gây nhiễu: Identity Center dành cho người dùng workforce."
     }
   ],
-  "memory_tip_vi": "Nếu server/container chạy ngoài AWS cần temporary credentials -> nghĩ đến IAM Roles Anywhere (trust anchor = CA, role tin rolesanywhere.amazonaws.com); kiểm tra IAM Identity Center chỉ phục vụ người dùng workforce, không phải workload.",
+  "memory_tip_vi": "Nếu workload ngoài AWS có PKI, cân nhắc Roles Anywhere; kiểm tra trust policy.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -250,10 +249,34 @@
       "quote": "OIDC connects applications, like GitHub Actions, that do not run on AWS to AWS resources.",
       "supports": "IAM federation (OIDC) có thể dùng cho workload ngoài AWS nhưng qua IdP, không qua trust anchor như B mô tả.",
       "kind": "inference"
+    },
+    {
+      "id": "Q110-r2-1",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/getting-started.html",
+      "title": "Getting started with IAM Roles Anywhere - IAM Roles Anywhere",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "The first step of using IAM Roles Anywhere is creating",
+      "supports": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+      "kind": "direct",
+      "snapshot_id": "7df001e53ae4",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q110-r2-2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+      "title": "IAM roles - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "that run outside of AWS, such as IAM Roles Anywhere",
+      "supports": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+      "kind": "direct",
+      "snapshot_id": "b483f70a1ede",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [],
-  "notes_vi": "IAM Identity Center trong đề là chi tiết gây nhiễu: nó quản lý truy cập của người dùng, không phải workload.",
+  "notes_vi": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
   "history": [
     {
       "version": "r1",
@@ -268,6 +291,39 @@
       "previous_answer": [
         "Q110:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q110:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q110:A"
+      ],
+      "note_vi": "Roles Anywhere dùng chứng chỉ X.509 và trust anchor để cấp credentials tạm thời cho workload ngoài AWS.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

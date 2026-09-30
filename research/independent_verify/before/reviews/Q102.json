@@ -1,0 +1,345 @@
+{
+  "question_id": "Q102",
+  "question_content_hash": "637cffeb9ebac647a010f9062ec7e99ff9e7e11ddec3d3e8009db83638ca0f3b",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:03:48Z",
+  "last_reviewed_at": "2026-09-30T20:14:24Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "cb647e7d9362322e4ab1edf69c82a515a5157d4510637aa1bbf1571755cd823c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Chặn người dùng ở các quốc gia không có giấy phép phân phối truy cập ảnh.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ảnh lưu trong S3 và phân phối qua CloudFront; phải 'secure' – không để vòng qua CloudFront truy cập trực tiếp S3.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn HAI hành động.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q102:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Bucket policy chỉ cho CloudFront (OAC, đúng distribution) đọc bucket, ngăn user truy cập trực tiếp origin S3 để né geo restriction của CloudFront.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q102:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Geolocation routing chọn bản ghi theo vị trí nguồn DNS query (thường là vị trí DNS resolver) và không có cơ chế 'deny list'; chỉ tác động phân giải DNS, người dùng vẫn truy cập được qua domain CloudFront/S3 hoặc resolver khác nên không bảo vệ nội dung.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5",
+        "ref9",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q102:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CloudFront geographic restrictions hỗ trợ denylist quốc gia, chặn người dùng ở quốc gia bị cấm truy cập nội dung phân phối qua distribution.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q102:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không tìm thấy condition key theo quốc gia trong global condition keys hay trong danh sách condition key của S3 (chỉ có aws:SourceIp theo dải IP); hơn nữa khi đi qua CloudFront, S3 không thấy IP người xem.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q102:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Restrict Viewer Access là cài đặt cache behavior yêu cầu signed URL/signed cookie, không tạo deny list quốc gia.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q102:A",
+      "Q102:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "CloudFront geo restriction (denylist) chặn theo quốc gia; tài liệu CloudFront khuyến nghị dùng OAC để ngăn truy cập trực tiếp origin. Các lựa chọn còn lại không có cơ chế deny theo quốc gia.",
+      "open_issues": [
+        "Route 53 docs nói geolocation routing có thể 'limit content' theo vùng có quyền phân phối, nhưng đó là allowlist ở mức DNS, dễ bị vòng qua; B vẫn kém xa C."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6",
+      "ref7",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T20:03:48Z"
+  },
+  "source_answer": [
+    "Q102:A",
+    "Q102:C"
+  ],
+  "researched_answer": [
+    "Q102:A",
+    "Q102:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A, C. CloudFront geo restriction hỗ trợ denylist và trả 403; tài liệu CloudFront khuyến nghị OAC để ngăn truy cập trực tiếp origin. Route 53 geolocation chỉ tác động phân giải DNS, không có denylist; S3 bucket policy không có condition key theo quốc gia; Restrict Viewer Access là signed URL/cookie.",
+    "open_issues": [
+      "Route 53 docs nói geolocation routing có thể 'limit content' theo vùng có quyền phân phối, nhưng đó là cơ chế DNS (allowlist theo bản ghi), dễ bị vòng qua; B vẫn kém xa C và không đi cùng A thành cặp bảo vệ nội dung."
+    ]
+  },
+  "reconciliation_vi": "Source key = A, C, trùng blind. Đã xét lại B – phương án cạnh tranh mạnh nhất vì trang Route 53 nói geolocation routing có thể giới hạn nội dung theo vùng có quyền phân phối (ref9). Tuy nhiên đó chỉ là chọn bản ghi DNS theo vị trí resolver, không có 'deny list', vùng không có bản ghi chỉ nhận 'no answer' (ref10), và user vẫn truy cập trực tiếp domain CloudFront – nên không 'secure the images'. CloudFront geo restriction chặn ở edge bằng 403 (ref11), và OAC trên bucket policy ngăn vòng qua CloudFront. D: không có condition key quốc gia cho S3; E: Restrict Viewer Access là signed URL/cookie. Giữ A, C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "C: CloudFront geo restriction với denylist trả 403 cho viewer ở các quốc gia không có giấy phép. A: bucket policy chỉ cho phép CloudFront OAC đọc bucket, nên user không thể truy cập thẳng S3 để né geo restriction.",
+    "others": {
+      "Q102:B": "Route 53 geolocation chỉ chọn bản ghi DNS theo vị trí resolver, không có deny list và dễ bị vòng qua (dùng thẳng domain CloudFront/S3), nên không bảo vệ nội dung.",
+      "Q102:D": "S3 bucket policy không có condition key theo quốc gia, và khi đi qua CloudFront S3 không thấy IP của viewer.",
+      "Q102:E": "Restrict Viewer Access yêu cầu signed URL/signed cookie, không tạo deny list quốc gia."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "countries where the company does not have a distribution license",
+      "meaning_vi": "Chặn theo quốc gia -> CloudFront geo restriction (denylist)."
+    },
+    {
+      "phrase": "using Amazon CloudFront to serve the images",
+      "meaning_vi": "Phải khóa origin S3 cho riêng CloudFront (OAC) để không bị vòng qua."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần chặn nội dung CloudFront theo quốc gia -> nghĩ đến CloudFront geo restriction + OAC khóa S3 origin; kiểm tra Route 53 geolocation chỉ là định tuyến DNS và Restrict Viewer Access là signed URL/cookie.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon CloudFront",
+      "Amazon S3",
+      "Amazon Route 53"
+    ],
+    "reason_vi": "Bảo vệ edge theo địa lý và khóa origin S3 sau CloudFront."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/georestrictions.html",
+      "title": "Restrict the geographic distribution of your content - Amazon CloudFront",
+      "section": "Restrict the geographic distribution of your content",
+      "snapshot_id": "ee644b1ecac2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Prevent your users from accessing your content if they’re in one of the banned countries on your denylist.",
+      "supports": "CloudFront geo restriction hỗ trợ denylist quốc gia.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/georestrictions.html",
+      "title": "Restrict the geographic distribution of your content - Amazon CloudFront",
+      "section": "Use a third-party geolocation service",
+      "snapshot_id": "ee644b1ecac2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "use a CloudFront origin access control to prevent users from accessing your content directly from the origin.",
+      "supports": "OAC ngăn truy cập trực tiếp S3 origin, bổ trợ cho geo restriction.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html",
+      "title": "Restrict access to an Amazon S3 origin - Amazon CloudFront",
+      "section": "Create a new origin access control / bucket policy",
+      "snapshot_id": "9da59a4a16bb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "allow CloudFront to access the bucket only when the request is on behalf of the CloudFront distribution that contains the S3 origin.",
+      "supports": "Bucket policy giới hạn truy cập cho CloudFront OAC.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geo.html",
+      "title": "Geolocation routing - Amazon Route 53",
+      "section": "Geolocation routing",
+      "snapshot_id": "c9907525d7ed",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can choose the resources that serve your traffic based on where your users are located, meaning the location that DNS queries come from.",
+      "supports": "Geolocation routing là chọn bản ghi DNS theo nguồn query, không phải kiểm soát truy cập nội dung.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-edns0.html",
+      "title": "How Amazon Route 53 uses EDNS0 to estimate the location of a user - Amazon Route 53",
+      "section": "EDNS0",
+      "snapshot_id": "02ce73a2fb7d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "uses the source IP address of the DNS resolver to guess where the user is",
+      "supports": "Vị trí trong geolocation routing có thể là vị trí resolver, không phải vị trí thật của viewer.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys - AWS Identity and Access Management",
+      "section": "aws:SourceIp",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use this key to compare the requester's IP address with the IP address that you specify in the policy.",
+      "supports": "Policy chỉ lọc theo dải IP (aws:SourceIp), không có key theo quốc gia trên trang global condition keys.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_s3.html",
+      "title": "Actions, resources, and condition keys for Amazon S3 - Service Authorization Reference",
+      "section": "Condition keys for Amazon S3",
+      "snapshot_id": "82fd99d73895",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Actions, resources, and condition keys for Amazon S3",
+      "supports": "Danh sách condition key của S3 không có key theo quốc gia/geo (tìm 'country|geo' không có kết quả).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistValuesCacheBehavior.html",
+      "title": "Cache behavior settings - Amazon CloudFront",
+      "section": "Restrict viewer access (use signed URLs or signed cookies)",
+      "snapshot_id": "25bfdf0ace2c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you want requests for objects that match the PathPattern for this cache behavior to use signed URLs, choose Yes.",
+      "supports": "Restrict Viewer Access là signed URL/cookie, không phải geo restriction.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geo.html",
+      "title": "Geolocation routing - Amazon Route 53",
+      "section": "Geolocation routing",
+      "snapshot_id": "c9907525d7ed",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can also use geolocation routing to limit content to only the locations where you have distribution rights.",
+      "supports": "Lập luận mạnh nhất cho B: Route 53 geolocation cũng có thể giới hạn phân phối theo vùng – nhưng ở mức DNS và theo cách tạo bản ghi cho vùng được phép, không có 'deny list'.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geo.html",
+      "title": "Geolocation routing - Amazon Route 53",
+      "section": "Geolocation routing – default record",
+      "snapshot_id": "c9907525d7ed",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you don't create a default record, Route 53 returns a \"no answer\" response for queries from those locations.",
+      "supports": "Route 53 chỉ 'chặn' bằng cách không trả lời DNS (không có denylist); user vẫn có thể truy cập qua domain CloudFront hoặc resolver khác.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/georestrictions.html",
+      "title": "Restrict the geographic distribution of your content - Amazon CloudFront",
+      "section": "How geographic restrictions work",
+      "snapshot_id": "ee644b1ecac2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudFront returns an HTTP status code 403 (Forbidden) to the user.",
+      "supports": "CloudFront geo restriction chặn thực sự ở tầng HTTP tại edge (403) cho viewer thuộc quốc gia bị cấm.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Kết hợp chuẩn: geo restriction (denylist) trên CloudFront + OAC để không vòng qua CloudFront.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:03:48Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q102:A\", \"Q102:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:14:24Z",
+      "change": "Reconciliation: khớp source key AC; status verified (high); đáp án không đổi. Thêm tham chiếu mới: ref9, ref10, ref11; cập nhật reference_ids của một số option_reviews.",
+      "previous_answer": [
+        "Q102:A",
+        "Q102:C"
+      ]
+    }
+  ]
+}

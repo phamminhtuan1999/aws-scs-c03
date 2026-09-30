@@ -2,9 +2,9 @@
   "question_id": "Q057",
   "question_content_hash": "c9e98edef03b65bed0c2b24bdc03e4cf203ba01931f240f7d54531f637e541d3",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:12:44Z",
-  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,56 +34,52 @@
       "unit_id": "Q057:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Identity Center không tự tạo customer managed policy; phải tạo policy cùng tên (và path) trong từng account được gán, nếu không việc gán permission set sẽ thất bại. Giữ cùng quyền ở mỗi account là best practice.",
+      "reason_vi": "Tạo policy cùng name/path ở target accounts khắc phục missing policy.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q057:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Permission set được phép kết hợp AWS managed và customer managed policy nên việc tách ra không giải quyết gì; permission set chứa customer managed policy vẫn lỗi nếu policy chưa tồn tại ở account đích.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Permission set được phép kết hợp AWS managed và customer managed policy.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref2"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q057:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Lỗi gán không do 'xung đột logic' giữa các policy (IAM đánh giá hợp các Allow, Deny thắng) mà do customer managed policy không tồn tại ở account thành viên.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Xung đột Allow/Deny không phải lý do mặc định khiến provision policy reference lỗi.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q057:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Đưa customer managed policy vào permission set hiện có vẫn đòi hỏi policy phải tồn tại ở từng account; khi cập nhật/provision sẽ lỗi tương tự.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chỉnh permission set cũ vẫn cần customer policy tồn tại ở account đích.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2",
         "ref1"
       ],
       "evidence_kind": "inference"
@@ -116,16 +112,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Hai trang IAM Identity Center nói trực tiếp: phải tạo customer managed policy cùng tên và path ở mỗi account được gán permission set, và việc gán thất bại nếu policy không tồn tại ở member account — đúng tình huống và cách khắc phục của A.",
+    "reason_vi": "Đúng name/path bắt buộc; same permissions khuyến nghị.",
     "open_issues": []
   },
-  "reconciliation_vi": "Khớp: blind = A; source key = A. Kiểm tra phương án cạnh tranh: B (tách AWS managed và customer managed policy thành hai permission set) — trang permissionsetcustom cho phép kết hợp cả hai loại policy trong một permission set, và permission set chứa customer managed policy vẫn thất bại nếu policy chưa có ở account đích. C (xung đột logic policy) không phải nguyên nhân lỗi gán: IAM chỉ đánh giá policy khi dùng quyền, còn lỗi gán do tham chiếu policy không tồn tại. D (sửa permission set hiện có) vẫn tham chiếu cùng customer managed policy nên lỗi provision tương tự. Không có bằng chứng phản bác A; giữ kết luận.",
+  "reconciliation_vi": "Đúng name/path bắt buộc; same permissions khuyến nghị.",
   "explanation_vi": {
-    "why_correct": "Permission set chỉ lưu tham chiếu (tên + path) tới customer managed policy; IAM Identity Center không tự tạo policy này, nên phải tạo policy cùng tên/path trong từng account được gán — nếu thiếu, việc gán permission set sẽ thất bại. Giữ cùng quyền ở mỗi account để hành vi nhất quán.",
+    "why_correct": "Customer managed policy phải tồn tại ở mỗi account đích với đúng name và path để provision permission set; cùng nội dung quyền là khuyến nghị nhất quán, không phải điều kiện kỹ thuật bắt buộc.",
     "others": {
-      "Q057:B": "Một permission set được phép kết hợp AWS managed và customer managed policy; tách ra không giải quyết việc customer managed policy chưa tồn tại ở account đích.",
-      "Q057:C": "Lỗi gán không do 'xung đột logic' giữa các policy (Deny thắng khi đánh giá quyền) mà do policy được tham chiếu không có trong member account.",
-      "Q057:D": "Thêm cùng customer managed policy vào permission set hiện có vẫn đòi policy tồn tại ở từng account, nên provision vẫn lỗi."
+      "Q057:B": "Permission set được phép kết hợp AWS managed và customer managed policy.",
+      "Q057:C": "Xung đột Allow/Deny không phải lý do mặc định khiến provision policy reference lỗi.",
+      "Q057:D": "Chỉnh permission set cũ vẫn cần customer policy tồn tại ở account đích."
     }
   },
   "keywords": [
@@ -142,7 +138,7 @@
       "meaning_vi": "Triệu chứng khi customer managed policy chưa có ở account đích."
     }
   ],
-  "memory_tip_vi": "Nếu permission set có customer managed policy và gán vào nhiều account bị lỗi → nghĩ đến việc tạo policy cùng tên + path ở mọi account đích; kiểm tra AWS managed policy thì không cần bước này.",
+  "memory_tip_vi": "Nếu assignment có customer managed policy bị lỗi, kiểm tra policy cùng name và path ở mọi account đích.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -209,8 +205,14 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q057",
+      "detail_vi": "A nói same permissions nhưng bỏ path; giải thích phải bổ sung path và phân biệt khuyến nghị nội dung."
+    }
+  ],
+  "notes_vi": "Đúng name/path bắt buộc; same permissions khuyến nghị.",
   "history": [
     {
       "version": "r1",
@@ -225,6 +227,41 @@
       "previous_answer": [
         "Q057:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng name/path bắt buộc; same permissions khuyến nghị.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q057:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q057:A"
+      ],
+      "note_vi": "Đúng name/path bắt buộc; same permissions khuyến nghị.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q057:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q057:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

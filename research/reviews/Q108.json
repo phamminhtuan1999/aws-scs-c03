@@ -2,9 +2,9 @@
   "question_id": "Q108",
   "question_content_hash": "782167d9a1cfb4a9a6c81ca8c4c610e741c9345862bc0fa0befda03828da9731",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,29 +34,28 @@
       "unit_id": "Q108:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Role cross-account có policy bao phủ mọi loại sự cố; khi gọi AssumeRole truyền session policy phù hợp loại sự cố, quyền của session là giao của identity-based policy và session policy. Mỗi session có session policy riêng nên một người có thể mở nhiều session song song với quyền tối thiểu khác nhau.",
+      "reason_vi": "session permission là giao của role policy và session policy.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q108:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Permissions boundary gắn vào chính IAM role (entity) nên áp dụng cho mọi session của role, không thay đổi động theo từng session/loại sự cố; muốn đổi phải sửa role, ảnh hưởng các sự cố đang xử lý song song.",
+      "reason_vi": "Boundary gắn role, không thay đổi độc lập theo mỗi concurrent session.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -64,28 +63,27 @@
       "unit_id": "Q108:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Session policy chỉ giới hạn, không cấp quyền; role không có quyền nào thì session (giao với session policy) cũng không có quyền gì.",
+      "reason_vi": "Session policy không tự cấp quyền vượt role baseline rỗng.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q108:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWSSecurityIncidentResponseServiceRolePolicy là policy của service-linked role cho dịch vụ Security Incident Response, không thể gắn vào user/group/role tự tạo; tạo role tạm bằng Lambda cho mỗi sự cố cũng không phải cơ chế cấp quyền theo session.",
+      "reason_vi": "Tạo role mỗi incident tăng vận hành; managed service-role policy không là responder permissions tùy incident.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -117,16 +115,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu IAM/STS nêu session policy truyền khi AssumeRole giới hạn quyền theo từng session (giao với policy của role) và không cấp thêm quyền; permissions boundary gắn với entity; policy trong D là service-linked role policy không gắn được.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại đối thủ mạnh nhất là C: dù 'session policy' là cơ chế đúng, AssumeRole nêu rõ session policy không thể cấp nhiều quyền hơn identity-based policy của role, nên role không có quyền thì session cũng không có quyền. B: permissions boundary gắn vào role (entity) nên áp chung cho mọi session, không thay đổi theo từng sự cố xử lý song song. D: AWSSecurityIncidentResponseServiceRolePolicy không gắn được vào role tự tạo. Giữ verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Role cross-account có policy bao phủ mọi loại sự cố; khi gọi AssumeRole, người phản hồi truyền session policy theo loại sự cố và quyền của session là giao của hai policy — mỗi session song song có quyền tối thiểu riêng.",
+    "why_correct": "Role có quyền baseline cho incident types; session policy truyền mỗi AssumeRole chỉ giữ subset cần cho incident đó, độc lập với các session đồng thời.",
     "others": {
-      "Q108:B": "Permissions boundary gắn vào chính role nên áp cho mọi session, không thay đổi động theo từng sự cố đang xử lý song song.",
-      "Q108:C": "Session policy chỉ thu hẹp, không cấp quyền; role không có quyền nào thì session cũng không có quyền.",
-      "Q108:D": "AWSSecurityIncidentResponseServiceRolePolicy là policy của service-linked role, không gắn được vào role tự tạo; tạo role tạm bằng Lambda cũng không phải cơ chế cấp quyền theo session."
+      "Q108:B": "Boundary gắn role, không thay đổi độc lập theo mỗi concurrent session.",
+      "Q108:C": "Session policy không tự cấp quyền vượt role baseline rỗng.",
+      "Q108:D": "Tạo role mỗi incident tăng vận hành; managed service-role policy không là responder permissions tùy incident."
     }
   },
   "keywords": [
@@ -143,7 +141,7 @@
       "meaning_vi": "Session policy thu hẹp quyền của role theo từng lần assume."
     }
   ],
-  "memory_tip_vi": "Nếu cần thu hẹp quyền động theo từng lần assume role -> nghĩ đến session policy (quyền = policy của role ∩ session policy); kiểm tra: role phải có sẵn quyền bao phủ, còn permissions boundary áp cố định cho cả role.",
+  "memory_tip_vi": "Nếu cần quyền khác nhau cho các session song song, truyền session policy từng AssumeRole; role phải có quyền baseline.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -224,7 +222,46 @@
       "previous_answer": [
         "Q108:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q108:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q108:A"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Từ khóa: 'dynamically assign minimal permissions' + nhiều sự cố song song với STS -> session policy khi AssumeRole (chỉ thu hẹp, không cấp)."
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q108:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q108:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

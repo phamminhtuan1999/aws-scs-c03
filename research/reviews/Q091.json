@@ -2,9 +2,9 @@
   "question_id": "Q091",
   "question_content_hash": "174cb44a472948b1d83f8d125a66e6d265662fd96cc4ddc75db22aa4da696e20",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:21Z",
-  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,61 +34,57 @@
       "unit_id": "Q091:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Key material mới (khác) không giải mã được data key đã mã hóa bằng key material cũ; AWS nói muốn khôi phục key phải reimport CÙNG key material. Với symmetric key, import key material mới chỉ phục vụ on-demand rotation, không thay thế material đã bị xóa.",
+      "reason_vi": "Material mới không giải mã ciphertext dùng material đã xóa.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q091-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q091:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Snapshot của volume mã hóa cũng được mã hóa bằng cùng KMS key; khi attach volume tạo từ snapshot, EC2 vẫn phải gọi KMS (CreateGrant/Decrypt) để giải mã data key, mà key đang không dùng được. B cũng không giải mã data key của volume hiện tại.",
+      "reason_vi": "Snapshot mã hóa cùng key vẫn cần key material cũ.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref6",
-        "ref3"
+        "Q091-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q091:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Reimport đúng key material gốc vào chính KMS key đó đưa key về trạng thái dùng được; khi attach, EC2 dùng KMS key giải mã encrypted data key của volume và attach thành công.",
+      "reason_vi": "khôi phục material cũ giữ key identity.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3"
+        "Q091-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q091:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "KMS key mới có key ID/ciphertext khác; symmetric ciphertext của KMS gắn với KMS key đã mã hóa nó nên key mới (dù cùng hay khác material) không giải mã được data key của volume.",
+      "reason_vi": "Key mới/material mới không thay thế KMS key bảo vệ data key.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "Q091-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -119,18 +115,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu KMS nêu trực tiếp: KMS key mất key material thì không dùng được và chỉ khôi phục bằng cách reimport CÙNG key material; tài liệu cũng dùng đúng ví dụ EBS attach thất bại. Đối thủ mạnh nhất B bị bác vì volume tạo từ snapshot vẫn cần cùng KMS key khi attach.",
-    "open_issues": [
-      "Đáp án ngầm giả định công ty còn giữ bản sao key material gốc (KMS không export được key material)."
-    ]
+    "reason_vi": "Chỉ material gắn dữ liệu cũ mới khôi phục decrypt; không suy rộng thành KMS imported material không hỗ trợ rotation hiện nay.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã kiểm tra lại đối thủ mạnh nhất B (khôi phục từ snapshot cũ): tài liệu EBS mô tả khi attach volume tạo từ snapshot mã hóa, EC2 gửi CreateGrant tới KMS để giải mã data key – snapshot mã hóa bằng cùng KMS key nên B cũng thất bại khi key không dùng được (bổ sung ref6, nâng B từ inference lên direct). A/D bị bác bởi quy định 'reimport the same key material' và 'KMS keys with the same imported key material are not interoperable'. Giữ C, verified, high.",
+  "reconciliation_vi": "Chỉ material gắn dữ liệu cũ mới khôi phục decrypt; không suy rộng thành KMS imported material không hỗ trợ rotation hiện nay.",
   "explanation_vi": {
-    "why_correct": "KMS key có imported key material bị xóa sẽ không dùng được; cách duy nhất khôi phục là reimport đúng key material gốc vào chính key đó. Khi key dùng được lại, EC2 giải mã được encrypted data key của volume và attach thành công.",
+    "why_correct": "Reimport đúng key material cũ vào chính KMS key ban đầu để phục hồi khả năng giải mã data key của EBS.",
     "others": {
-      "Q091:A": "Key material mới khác material cũ nên không giải mã được data key đã mã hóa trước đó; AWS yêu cầu reimport CÙNG key material.",
-      "Q091:B": "Snapshot cũng mã hóa bằng cùng KMS key, nên volume khôi phục từ snapshot vẫn cần key đó để giải mã data key khi attach.",
-      "Q091:D": "KMS key mới là key khác; ciphertext gắn với KMS key đã tạo ra nó nên key mới không giải mã được data key của volume."
+      "Q091:A": "Material mới không giải mã ciphertext dùng material đã xóa.",
+      "Q091:B": "Snapshot mã hóa cùng key vẫn cần key material cũ.",
+      "Q091:D": "Key mới/material mới không thay thế KMS key bảo vệ data key."
     }
   },
   "keywords": [
@@ -143,7 +137,7 @@
       "meaning_vi": "Phải làm CHÍNH KMS key đó dùng được lại, không thay bằng key/material khác."
     }
   ],
-  "memory_tip_vi": "Nếu KMS key dùng imported key material bị xóa material -> nghĩ đến reimport đúng key material gốc vào cùng key; kiểm tra: material mới hoặc key mới không giải mã được ciphertext cũ.",
+  "memory_tip_vi": "Nếu imported key material cũ bị xóa, reimport chính material đó vào chính key để giải mã dữ liệu cũ.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -233,10 +227,28 @@
       "quote": "When you attach the encrypted volume to an instance, Amazon EC2 sends a CreateGrant request to AWS KMS so that it can decrypt the data key.",
       "supports": "Volume tạo từ snapshot mã hóa vẫn cần KMS key giải mã data key khi attach; key không dùng được thì B cũng thất bại.",
       "kind": "direct"
+    },
+    {
+      "id": "Q091-r2-1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-import-key-material.html",
+      "title": "Step 4: Import the key material - AWS Key Management Service",
+      "accessed_at": "2026-09-30",
+      "quote": "being used in any cryptographic operation. To use the KMS",
+      "supports": "PendingImport key is unusable; reimport original associated material to restore cryptographic operations.",
+      "kind": "direct",
+      "snapshot_id": "e195bd7b63b4",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Đáp án phụ thuộc giả định công ty còn giữ bản gốc key material bên ngoài AWS (AWS khuyến nghị giữ bản sao vì KMS không export được key material).",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q091",
+      "detail_vi": "Current KMS hỗ trợ imported symmetric on-demand rotation; không nói tuyệt đối key không thể có material mới, mà material mới không phục hồi ciphertext cũ."
+    }
+  ],
+  "notes_vi": "Chỉ material gắn dữ liệu cũ mới khôi phục decrypt; không suy rộng thành KMS imported material không hỗ trợ rotation hiện nay.",
   "history": [
     {
       "version": "r1",
@@ -251,6 +263,45 @@
       "previous_answer": [
         "Q091:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Chỉ material gắn dữ liệu cũ mới khôi phục decrypt; không suy rộng thành KMS imported material không hỗ trợ rotation hiện nay.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q091:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q091:C"
+      ],
+      "note_vi": "Chỉ material gắn dữ liệu cũ mới khôi phục decrypt; không suy rộng thành KMS imported material không hỗ trợ rotation hiện nay.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q091:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q091:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

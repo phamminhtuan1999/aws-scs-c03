@@ -2,9 +2,9 @@
   "question_id": "Q015",
   "question_content_hash": "361130071e9fdad23fbadae1f246933b79755b8c3b08b2b9b852239eb58db7cf",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:38:00Z",
-  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -32,15 +32,15 @@
     {
       "unit_id": "Q015:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Phần tạo khóa bằng AWS KMS + CloudHSM key store đúng, nhưng Athena chỉ là dịch vụ truy vấn SQL trên dữ liệu S3, tự nó không ghi lại việc sử dụng khóa; nguồn audit thực sự là CloudTrail.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chưa đủ: Athena truy vấn log nhưng không thay CloudTrail recorder; custom-store limitation vẫn còn.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
         "ref1",
-        "ref5",
+        "ref6",
         "ref2"
       ],
       "evidence_kind": "inference"
@@ -49,12 +49,14 @@
       "unit_id": "Q015:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Custom key store là tính năng của AWS KMS; Amazon S3 không tạo hay quản lý KMS key trong custom key store, dù phần audit bằng CloudTrail là đúng.",
+      "reason_vi": "Sai: S3 không cung cấp KMS data-key generation.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "ref6",
+        "ref2"
       ],
       "evidence_kind": "inference"
     },
@@ -62,12 +64,13 @@
       "unit_id": "Q015:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty là dịch vụ phát hiện mối đe dọa, tạo finding chứ không cung cấp nhật ký audit chi tiết từng lần sử dụng khóa như CloudTrail.",
+      "reason_vi": "Sai: GuardDuty là threat detection, không audit mọi KMS operation.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4",
+        "ref1",
+        "ref6",
         "ref2"
       ],
       "evidence_kind": "inference"
@@ -76,7 +79,7 @@
       "unit_id": "Q015:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS KMS tạo symmetric KMS key có key material sinh trong CloudHSM cluster qua custom key store, dùng để sinh data key; CloudTrail ghi mọi thao tác KMS kể cả cryptographic operations như GenerateDataKey và Decrypt.",
+      "reason_vi": "KMS quản lý khóa và CloudTrail audit; data-key pair dùng standard-store key riêng.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -84,11 +87,10 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref6",
+        "ref2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -213,36 +215,34 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "D là lựa chọn duy nhất đúng cả phần tạo khóa (AWS KMS với CloudHSM key store) và phần audit (CloudTrail ghi mọi thao tác AWS KMS). Điểm phân biệt giữa A/C/D là dịch vụ audit, được tài liệu hỗ trợ trực tiếp.",
-    "open_issues": [
-      "GenerateDataKeyPair không chấp nhận KMS key trong custom key store; data key pair asymmetric phải dùng một KMS key symmetric ở key store chuẩn. Chi tiết này ảnh hưởng như nhau tới A, C, D nên không đổi lựa chọn."
-    ]
+    "level": "medium",
+    "reason_vi": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind (D) trùng khóa nguồn (D). Đã kiểm tra lại đối thủ mạnh nhất là A: Athena có thể truy vấn log CloudTrail, nhưng tự Athena không ghi lại việc dùng khóa; nguồn audit là CloudTrail, mà A không nêu. Kiểm tra thêm trang CloudHSM key store: chỉ hỗ trợ khóa AES symmetric, và GenerateDataKeyPair không nhận KMS key trong custom key store — đây là điểm lệch nhỏ của đề nhưng áp dụng như nhau cho A/C/D. Giữ D.",
+  "reconciliation_vi": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
   "explanation_vi": {
-    "why_correct": "AWS KMS custom key store (CloudHSM key store) tạo KMS key symmetric có key material sinh và dùng trong CloudHSM cluster, dùng để sinh data key cho ứng dụng; AWS CloudTrail ghi lại mọi thao tác AWS KMS nên đáp ứng yêu cầu audit việc dùng khóa. Lưu ý: data key pair asymmetric phải dùng KMS key ở key store chuẩn vì GenerateDataKeyPair không hỗ trợ custom key store.",
+    "why_correct": "D dùng KMS với CloudHSM custom key store và CloudTrail để kiểm soát, audit khóa. Riêng asymmetric data-key pair cần symmetric KMS key trong standard store; GenerateDataKeyPair không hỗ trợ custom key store.",
     "others": {
-      "Q015:A": "Phần tạo khóa đúng nhưng Athena chỉ là công cụ truy vấn SQL, không tự ghi lại việc sử dụng khóa như CloudTrail.",
-      "Q015:B": "Custom key store là tính năng của AWS KMS; Amazon S3 không tạo hay quản lý khóa trong CloudHSM key store.",
-      "Q015:C": "Phần tạo khóa đúng nhưng GuardDuty là dịch vụ phát hiện mối đe dọa, không cung cấp nhật ký audit từng lần dùng khóa."
+      "Q015:A": "Chưa đủ: Athena truy vấn log nhưng không thay CloudTrail recorder; custom-store limitation vẫn còn.",
+      "Q015:B": "Sai: S3 không cung cấp KMS data-key generation.",
+      "Q015:C": "Sai: GuardDuty là threat detection, không audit mọi KMS operation."
     }
   },
   "keywords": [
     {
-      "phrase": "custom key store that is backed by an AWS CloudHSM cluster",
-      "meaning_vi": "AWS KMS CloudHSM key store: key material nằm trong cluster CloudHSM của bạn."
+      "phrase": "custom key store",
+      "meaning_vi": "Custom store chỉ hỗ trợ symmetric KMS master keys."
     },
     {
-      "phrase": "audit the use of the keys",
-      "meaning_vi": "Ghi vết API sử dụng khóa: AWS CloudTrail."
+      "phrase": "asymmetric data key pairs",
+      "meaning_vi": "GenerateDataKeyPair không dùng custom-store key."
     },
     {
-      "phrase": "data key pairs",
-      "meaning_vi": "GenerateDataKeyPair: cần KMS key symmetric ở key store chuẩn, không dùng key trong custom key store."
+      "phrase": "audit",
+      "meaning_vi": "CloudTrail ghi KMS API operations."
     }
   ],
-  "memory_tip_vi": "Nếu cần khóa KMS với key material trong CloudHSM của mình -> nghĩ đến AWS KMS custom key store (CloudHSM key store) + CloudTrail để audit; kiểm tra các giới hạn: chỉ symmetric, không data key pair, không auto rotation.",
+  "memory_tip_vi": "Nếu cần GenerateDataKeyPair, dùng symmetric KMS key thông thường để bảo vệ pair, không dùng key trong custom store.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -260,8 +260,8 @@
   "source_issues": [
     {
       "type": "data",
-      "location": "Q015:stem:1",
-      "detail_vi": "Đề nói dùng data key pair asymmetric, nhưng GenerateDataKeyPair không hỗ trợ KMS key trong custom key store; cần một KMS key khác trong key store chuẩn. Không phân biệt được các lựa chọn vì A/C/D có cùng phần tạo khóa."
+      "location": "Q015",
+      "detail_vi": "Không lựa chọn nào thỏa nếu mọi data keys bắt buộc sinh bằng custom-store key; phân biệt key type và API capability."
     }
   ],
   "history": [
@@ -286,7 +286,42 @@
       "previous_answer": [
         "Q015:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q015:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q015:D"
+      ],
+      "note_vi": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Điểm phân biệt thực tế là dịch vụ audit: CloudTrail ghi lại mọi API call của AWS KMS."
+  "notes_vi": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q015:D",
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q015:D"
+    ],
+    "candidate_answers": [
+      "Q015:D"
+    ],
+    "root_adjudication": "D dùng dịch vụ KMS và CloudTrail. Đề chỉ ràng buộc symmetric KMS keys vào custom store, không nói mọi data-key pair phải dùng chính các key đó; GenerateDataKeyPair cần symmetric key riêng ở standard store.",
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

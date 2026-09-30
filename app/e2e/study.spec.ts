@@ -46,7 +46,11 @@ test.describe('study', () => {
     await page.getByRole('button', { name: 'Check answer' }).click();
     await expect(page.locator('[data-feedback="Q001"]')).toBeVisible();
     await expect(page.getByText('Giải thích')).toBeVisible();
-    await expect(page.locator('p.answer-line')).toContainText('Answer:');
+    // The independent r2 pass found no complete literal answer for Q001.
+    // Its original C key remains visible without being called a verified answer.
+    await expect(page.locator('p.answer-line')).toContainText('Source key (not verified): C');
+    await expect(page.getByText('✓ Correct', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('✗ Incorrect', { exact: true })).toHaveCount(0);
     await expect(page.locator('p.answer-line')).toContainText('You chose: A');
     await expect(page.getByRole('radio', { name: 'Choice A' })).toBeDisabled();
     await snap(page, 'desktop-study-02-after-check-real-research', { fullPage: true });
@@ -345,14 +349,15 @@ test.describe('mobile', () => {
     await snap(page, 'mobile-03-review-screen');
     // footer never covers content: scroll to the bottom and compare positions
     await page.getByRole('button', { name: 'Return to question' }).click();
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const gap = await page.evaluate(() => {
+    // Returning to the question runs a focus/scroll-to-top effect. Wait for that
+    // render to settle while checking the actual footer gap, rather than racing it.
+    await expect.poll(async () => page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
       const nav = document.querySelector('.exam-bottomnav')!.getBoundingClientRect();
       const main = document.querySelector('.exam-main')!;
       const last = main.lastElementChild!.getBoundingClientRect();
       return nav.top - last.bottom;
-    });
-    expect(gap, 'the fixed footer must not cover the last element').toBeGreaterThanOrEqual(0);
+    }), { message: 'the fixed footer must not cover the last element' }).toBeGreaterThanOrEqual(0);
     await snap(page, 'mobile-04-exam-scrolled-bottom');
     await page.getByRole('button', { name: 'End exam' }).click();
     await snap(page, 'mobile-05-end-dialog');

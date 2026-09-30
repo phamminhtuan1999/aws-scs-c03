@@ -2,9 +2,9 @@
   "question_id": "Q100",
   "question_content_hash": "fd6c2ad16e74605b15578c0467d121dd617ea2807fa336a013d894c3966b3456",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:56:18Z",
-  "last_reviewed_at": "2026-09-30T20:14:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,15 +34,14 @@
       "unit_id": "Q100:A",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Permissions boundary gắn cho từng IAM user/role; có thể giới hạn DeleteBucket nhưng phải gắn cho mọi principal ở mọi account, không mở rộng tốt như kiểm soát tập trung.",
+      "reason_vi": "Boundary phải gắn/quản lý từng IAM identity.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref7"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -50,14 +49,14 @@
       "unit_id": "Q100:B",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Bucket policy là resource-based policy gắn từng bucket; có thể Deny s3:DeleteBucket nhưng phải cấu hình và duy trì cho mọi bucket (kể cả bucket mới) ở mọi account – kém mở rộng.",
+      "reason_vi": "Bucket policy phải áp từng bucket.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -65,32 +64,29 @@
       "unit_id": "Q100:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Tag policy chỉ chuẩn hóa tag (key/value, case) và có thể chặn thao tác gắn tag không tuân thủ; không kiểm soát quyền xóa bucket.",
+      "reason_vi": "Tag policies chuẩn hóa tags, không cấm DeleteBucket.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q100:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "SCP kiểm soát tập trung quyền tối đa cho IAM user/role trong organization; một SCP Deny s3:DeleteBucket gắn ở root áp dụng cho mọi OU và member account.",
+      "reason_vi": "Đúng cho principals member accounts: SCP tập trung permission guardrail.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -126,18 +122,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. SCP là kiểm soát tập trung, Deny ở root áp dụng cho mọi OU/member account kể cả root user; permissions boundary và bucket policy phải cấu hình theo từng principal/bucket; tag policy không kiểm soát quyền xóa.",
-    "open_issues": [
-      "SCP không áp dụng cho user/role trong management account; đề không nêu ngoại lệ này."
-    ]
+    "reason_vi": "SCP không áp cho management account, external principals hay service-linked roles; định nghĩa any bucket phải có scope.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại B (bucket policy Deny s3:DeleteBucket): về kỹ thuật chặn được nhưng phải gắn cho từng bucket, kể cả bucket tạo mới, ở mọi account – kém mở rộng; A (permissions boundary) cũng phải gắn cho từng user/role và không áp dụng cho root user, trong khi SCP ảnh hưởng mọi principal kể cả root user của member account (ref7). C (tag policy) chỉ chuẩn hóa tag. RCP cũng phù hợp nhưng không có trong lựa chọn. Giữ D, verified, high.",
+  "reconciliation_vi": "SCP không áp cho management account, external principals hay service-linked roles; định nghĩa any bucket phải có scope.",
   "explanation_vi": {
-    "why_correct": "Một SCP Deny s3:DeleteBucket gắn ở root của organization tự động áp dụng cho mọi OU và member account (kể cả account mới và root user của member account), nên là cách kiểm soát tập trung, mở rộng nhất.",
+    "why_correct": "Deny s3:DeleteBucket bằng SCP ở root/OU áp guardrail tập trung cho principals trong member accounts và dễ mở rộng.",
     "others": {
-      "Q100:A": "Permissions boundary phải gắn cho từng IAM user/role trong từng account và không áp dụng cho root user, nên khó mở rộng toàn org.",
-      "Q100:B": "Bucket policy chặn được DeleteBucket nhưng phải cấu hình cho từng bucket (kể cả bucket mới) ở mọi account – không mở rộng.",
-      "Q100:C": "Tag policy chỉ chuẩn hóa key/value tag, không kiểm soát quyền xóa S3 bucket."
+      "Q100:A": "Boundary phải gắn/quản lý từng IAM identity.",
+      "Q100:B": "Bucket policy phải áp từng bucket.",
+      "Q100:C": "Tag policies chuẩn hóa tags, không cấm DeleteBucket."
     }
   },
   "keywords": [
@@ -150,7 +144,7 @@
       "meaning_vi": "Một chính sách tập trung thay vì cấu hình từng bucket/từng principal."
     }
   ],
-  "memory_tip_vi": "Nếu cần CẤM một hành động cho mọi account trong org và hỏi MOST scalable -> nghĩ đến SCP Deny gắn ở root/OU; kiểm tra SCP không áp dụng cho management account và không cấp quyền.",
+  "memory_tip_vi": "Nếu cần cấm DeleteBucket tập trung cho member accounts, dùng SCP; kiểm tra ngoại lệ management account và service-linked roles.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -256,8 +250,14 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Resource control policies (RCPs) cũng có thể dùng cho kiểm soát tài nguyên toàn org nhưng không có trong lựa chọn.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q100",
+      "detail_vi": "SCP không áp management account, service-linked roles hoặc external principals; literal any bucket/user toàn tổ chức cần phạm vi chính xác."
+    }
+  ],
+  "notes_vi": "SCP không áp cho management account, external principals hay service-linked roles; định nghĩa any bucket phải có scope.",
   "history": [
     {
       "version": "r1",
@@ -272,6 +272,45 @@
       "previous_answer": [
         "Q100:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. SCP không áp cho management account, external principals hay service-linked roles; định nghĩa any bucket phải có scope.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q100:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q100:D"
+      ],
+      "note_vi": "SCP không áp cho management account, external principals hay service-linked roles; định nghĩa any bucket phải có scope.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q100:D"
+    ],
+    "candidate_answers": [
+      [
+        "Q100:D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

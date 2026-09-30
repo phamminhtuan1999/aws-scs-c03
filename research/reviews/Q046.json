@@ -2,9 +2,9 @@
   "question_id": "Q046",
   "question_content_hash": "add7a0a883ab3e011f06722810c4978c313cb200cd38d937f59a292ef3337d3a",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:56:00Z",
-  "last_reviewed_at": "2026-09-30T19:51:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,64 +29,66 @@
       "unit_id": "Q046:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đúng cơ chế: HSM được truy cập qua ENI trong subnet của central account, nên dùng AWS RAM share subnet đó (VPC sharing) để account mới chạy client instance trong subnet, rồi thêm inbound rule cổng 2223-2225 từ private IP của client vào security group của cluster.",
+      "reason_vi": "VPC subnet sharing tạo đường kết nối tới HSM tập trung.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref5",
-        "ref6",
         "ref7",
-        "ref8",
-        "ref9"
+        "ref9",
+        "Q046-r2-3",
+        "Q046-r2-4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q046:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "IAM chỉ điều khiển CloudHSM management API; thao tác mã hóa trên HSM xác thực bằng HSM user (khác IAM user) qua kết nối mạng tới HSM. Role cross-account không tạo đường mạng tới HSM; tạo IAM user mới cũng trái best practice.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "IAM user/role không thay thế đăng nhập crypto user HSM.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref6",
-        "ref10"
+        "ref7",
+        "ref9",
+        "Q046-r2-3",
+        "Q046-r2-4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q046:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Credential STS/IAM Identity Center không cấp quyền thực hiện thao tác trên HSM; HSM yêu cầu HSM user credential và kết nối mạng từ client, nên cách này không giải quyết việc chia sẻ HSM.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "STS IAM role không tự xác thực tới data plane HSM.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref6"
+        "ref7",
+        "ref9",
+        "Q046-r2-3",
+        "Q046-r2-4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q046:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "AWS RAM chỉ hỗ trợ chia sẻ CloudHSM backup (cloudhsm:Backup), không hỗ trợ chia sẻ HSM/cluster theo ID; nên không thể share 'ID of the HSM' qua RAM.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "RAM không chia sẻ live HSM ID; khả năng share CloudHSM là backup.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref8"
+        "ref7",
+        "ref9",
+        "Q046-r2-3",
+        "Q046-r2-4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -119,16 +121,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Nay có bằng chứng user guide trực tiếp: HSM được truy cập qua ENI trong subnet của cluster và client chỉ cần kết nối mạng tới ENI; VPC sharing (AWS RAM, ec2:Subnet) cho account khác trong organization tạo resource trong subnet chia sẻ; security group của cluster điều khiển kết nối; RAM chỉ share được CloudHSM Backup.",
+    "reason_vi": "Đúng; HSM crypto users khác IAM users, RAM share subnet khác CloudHSM backup sharing.",
     "open_issues": []
   },
-  "reconciliation_vi": "Blind = A, source key = A (khớp). Blind dựa chính vào bài re:Post Knowledge Center; lần này bổ sung bằng chứng user guide/tài liệu chính thức: (1) CloudHSM cluster architecture — HSM có ENI trong subnet của account sở hữu và client cài được trên bất kỳ máy nào 'as long as it can connect to the HSM ENIs'; (2) VPC user guide — sau khi share subnet, participant trong cùng organization tạo được resource trong subnet đó; (3) RAM shareable resources — ec2:Subnet chia sẻ được, còn CloudHSM chỉ có cloudhsm:Backup (loại D); (4) CloudHSM security group page — SG của cluster cho phép EC2 nói chuyện với HSM qua cổng 2223-2225; (5) AWS Security Blog — quyền truy cập cross-account vào CloudHSM được kiểm soát ở tầng mạng (peering/security group) và HSM user. B, C sai vì IAM/STS chỉ điều khiển management API, không tạo đường mạng hay HSM user. Giữ nguyên A với bằng chứng mạnh hơn.",
+  "reconciliation_vi": "Đúng; HSM crypto users khác IAM users, RAM share subnet khác CloudHSM backup sharing.",
   "explanation_vi": {
-    "why_correct": "Thao tác trên HSM đi qua ENI của HSM trong subnet của central account, nên cách chia sẻ là dùng AWS RAM share subnet đó (VPC sharing) để account mới chạy client instance trong subnet, rồi mở security group của cluster (cổng 2223-2225) cho private IP của client instance.",
+    "why_correct": "Chia sẻ subnet VPC chứa CloudHSM bằng AWS RAM, triển khai CloudHSM client trong subnet đó và cho phép kết nối qua HSM security group; thao tác mật mã còn cần user CloudHSM.",
     "others": {
-      "Q046:B": "IAM role cross-account chỉ cho gọi CloudHSM management API; thao tác mã hóa cần kết nối mạng tới HSM và HSM user (khác IAM user), nên cách này không chia sẻ được HSM.",
-      "Q046:C": "Token STS qua IAM Identity Center không phải credential của HSM và không tạo đường mạng tới HSM, nên không thực hiện được thao tác trên HSM.",
-      "Q046:D": "AWS RAM không hỗ trợ share HSM hay cluster theo ID (với CloudHSM chỉ share được Backup), nên bước đầu của lựa chọn này không thực hiện được."
+      "Q046:B": "IAM user/role không thay thế đăng nhập crypto user HSM.",
+      "Q046:C": "STS IAM role không tự xác thực tới data plane HSM.",
+      "Q046:D": "RAM không chia sẻ live HSM ID; khả năng share CloudHSM là backup."
     }
   },
   "keywords": [
@@ -145,7 +147,7 @@
       "meaning_vi": "VPC sharing qua AWS RAM chỉ áp dụng cho account trong cùng organization."
     }
   ],
-  "memory_tip_vi": "Nếu account khác cần dùng CloudHSM của central account -> nghĩ đến AWS RAM share subnet (VPC sharing) + mở security group cluster cổng 2223-2225 cho client; kiểm tra: RAM chỉ share được CloudHSM Backup, IAM/STS không cấp quyền thao tác trên HSM.",
+  "memory_tip_vi": "Nếu dùng CloudHSM chung qua shared VPC, cấu hình cả kết nối security group và crypto user.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -289,6 +291,30 @@
       "quote": "At the network layer, you can remove connectivity by deleting the VPC peering or by modifying the CloudHSM security groups",
       "supports": "Truy cập cross-account vào CloudHSM được kiểm soát ở tầng mạng (security group), không qua IAM role (loại B/C).",
       "kind": "inference"
+    },
+    {
+      "id": "Q046-r2-3",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/hsm-users.html",
+      "title": "Users in AWS CloudHSM - AWS CloudHSM",
+      "accessed_at": "2026-09-30",
+      "quote": "Unlike most AWS services and resources, you do not use",
+      "supports": "HSM users khác IAM users và xác thực operations trên HSM trực tiếp.",
+      "kind": "direct",
+      "snapshot_id": "f37fe4b4f9c6",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q046-r2-4",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/sharing.html",
+      "title": "Working with shared backups in AWS CloudHSM - AWS CloudHSM",
+      "accessed_at": "2026-09-30",
+      "quote": "CloudHSM integrates with AWS Resource Access Manager (AWS RAM) to",
+      "supports": "CloudHSM AWS RAM sharing được document cho backups, không share live HSM ID như phương ánD.",
+      "kind": "direct",
+      "snapshot_id": "f0ea93d2d40d",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -303,7 +329,7 @@
       "detail_vi": "\"now dedicated account\" nên là \"new dedicated account\"."
     }
   ],
-  "notes_vi": "Chia sẻ CloudHSM cross-account = VPC sharing (RAM share subnet) + security group; RAM chỉ share được CloudHSM backup.",
+  "notes_vi": "Đúng; HSM crypto users khác IAM users, RAM share subnet khác CloudHSM backup sharing.",
   "history": [
     {
       "version": "r1",
@@ -326,6 +352,23 @@
       "previous_answer": [
         "Q046:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; HSM crypto users khác IAM users, RAM share subnet khác CloudHSM backup sharing.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q046:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q046:A"
+      ],
+      "note_vi": "Đúng; HSM crypto users khác IAM users, RAM share subnet khác CloudHSM backup sharing.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -337,5 +380,23 @@
         "corrected": "2026-09-30T19:51:17Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q046:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q046:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

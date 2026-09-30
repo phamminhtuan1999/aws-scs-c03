@@ -1,0 +1,293 @@
+URL: https://aws.amazon.com/blogs/security/can-i-do-that-with-policy-understanding-the-aws-service-authorization-reference/
+TITLE: Can I do that with policy? Understanding the AWS Service Authorization Reference | AWS Security Blog
+
+## AWS Security Blog
+
+# Can I do that with policy? Understanding the AWS Service Authorization Reference
+
+Understanding what AWS Identity and Access Management (IAM) policies can control helps you build better security controls and avoid spending time on approaches that won’t work. You’ve likely encountered questions like:
+
+- Can I use AWS Organizations service control policies (SCPs) to prevent the creation of security groups that allow traffic from 0.0.0.0/0?
+
+- Can I block uploads unless objects are encrypted?
+
+- Can I prevent functions with more than 512 MB of memory allocated?
+
+Some of these are possible with IAM policies. Others are not. The difference is determined by a fundamental principle of AWS authorization: Policies make decisions based on information available in the authorization context at the time of the API call.
+
+In this blog post, you learn how to use the AWS Service Authorization Reference to determine what’s achievable with IAM policies, recognize scenarios that need alternative solutions, and build more effective security controls in your AWS environment.
+
+## Understanding AWS authorization context
+
+When you make an AWS API request through the AWS Management Console, AWS Command Line Interface (AWS CLI), or AWS SDK, the specific AWS service (such as Amazon S3 or Amazon EC2) receiving the request assembles a request context containing information about that request. This context is used for policy evaluation decisions. Request context is structured using the Principal, Action, Resource, Condition (PARC) model, which has four key components.
+
+- Principal: Identifies the requester and their attributes (tags, session context)
+
+- Action: Specifies the AWS API operation being requested (for example, s3:PutObject, ec2:RunInstances)
+
+- Resource: Defines the target AWS resource using Amazon Resource Names (ARNs)
+
+- Condition: Provides additional context available at request time, such as IP address, time, encryption parameters, MFA status, and service-specific attributes
+
+The following example shows the typical request context for an Amazon S3 object upload:
+
+- Principal: AIDA123456789EXAMPLE
+
+- Action: s3:PutObject
+
+- Resource: arn:aws:s3:::my-bucket/documents/samplereport.pdf
+
+- Condition:
+
+- aws:PrincipalTag/Department=Finance
+
+- aws:RequestedRegion=us-east-1
+
+- aws:SourceIp=x.x.x.x
+
+- aws:MultiFactorAuthPresent=true
+
+- s3:x-amz-server-side-encryption=AES256
+
+- s3:x-amz-storage-class=STANDARD_IA
+
+IAM policies can evaluate request metadata like encryption method and storage class being specified. However, it cannot evaluate the actual file contents, object size, or specific data patterns. Policy evaluation occurs at the time of the request, using the information present in the authorization context.
+
+## An essential resource: The Service Authorization Reference
+
+The Service Authorization Reference is the authoritative documentation for understanding what policies can control. For every AWS service, it documents:
+
+- Actions: Every controllable operation
+
+- Resources: Resource types that can be targeted
+
+- Condition keys: The exact context information available for policy decisions
+
+Condition keys are broadly divided into two categories. Global condition keys, which can be used across AWS services, and service-specific condition keys, which are defined for use with an individual AWS service. Use the Service Authorization Reference to find the global-condition keys or service-specific condition keys for each AWS service.
+
+## How to use the Service Authorization Reference
+
+Follow these steps to determine if your requirement can be controlled with IAM policies:
+
+- Navigate to your service: Go to the page for the specific AWS service you’re working with, such as Actions, resources, and condition keys for Amazon S3.
+
+- Find the action you want: Find the API operation you want to control. Be precise, different actions have different available condition keys.
+
+- Examine available condition keys: The Condition keys column shows what context information AWS makes available for that action.
+
+- Make your feasibility determination: If the information you need isn’t listed as a condition key, you will not be able to control it with IAM policies alone.
+
+Let’s take an example from the Amazon Elastic Compute Cloud (Amazon EC2) ec2:RunInstances action to see what you can and can’t control. In the Service Authorization Reference under the Amazon EC2 section, examine the RunInstances action and check the Resource types column. The RunInstances action affects multiple resource types, each with its own set of condition keys.
+
+For the instance* resource type:
+
+- ec2:InstanceType: Can restrict instance types
+
+- ec2:EbsOptimized: Can require EBS optimization
+
+- aws:RequestTag/: Can enforce tagging requirements
+
+For the network-interface* resource type:
+
+- ec2:Subnet: Can control subnet placement
+
+- ec2:Vpc: Can limit to specific virtual private clouds (VPCs)
+
+- ec2:AssociatePublicIpAddress: Can control public IP assignment
+
+Note: These are a few examples from the many condition keys available for each resource type under the RunInstances action. The Service Authorization Reference lists dozens of condition keys across resource types (instance, network interface, security group, subnet, volume, and so on) that RunInstances affects. Consult the complete reference to see the available options for your specific use case.
+
+## Access the Service Authorization Reference programmatically
+
+Beyond the human-readable documentation, AWS provides the Service Authorization Reference in machine-readable JSON format to streamline automation of policy management workflows. Use this programmatic access to incorporate authorization metadata into your development and security workflows.
+
+For detailed information about the JSON structure and field definitions, see the Simplified AWS service information for programmatic access.
+
+Developers can use tools like the IAM MCP Server for AWS IAM operations. This server provides AI assistants with the ability to manage IAM users, roles, policies, and permissions while following security best practices.
+
+## Using IAM policies to control specific scenarios
+
+The following examples show how you can use IAM policies to control specific scenarios.
+
+### Example 1: Enforce AES256 server-side encryption on S3 objects
+
+In the Amazon S3 Service Authorization Reference, under s3:PutObject action, the s3:x-amz-server-side-encryption condition key is available in the authorization context, which can be used to control the server-side encryption of S3 objects with AES-256. Here is the required policy.
+
+Policy 1: Deny Amazon S3 object upload if the encryption doesn’t use AES-256
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "DenyUnencryptedObjectUploads",
+"Effect": "Deny",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::my-bucket/*",
+"Condition": {
+"StringNotEquals": {
+"s3:x-amz-server-side-encryption": "AES256"
+}
+}
+}
+]
+}
+
+Policy 1 is a resource-based policy that can be applied on an S3 bucket to restrict object uploads. It denies a PutObject request when the server-side encryption isn’t using the AES-256 encryption algorithm.
+
+### Example 2: Allow different instance types based on the user’s cost center tag.
+
+When checking the Amazon EC2 Service Authorization Reference for ec2:RunInstances, the ec2:InstanceType condition key, which is resource specific, is available. To restrict instance types based on who is launching them (rather than just what is being launched), you can either combine this with a global condition key or attach different policies to different principals. By using aws:PrincipalTag/tag-key alongside ec2:InstanceType, you can identify the user’s cost center from their IAM identity tags and then apply different instance type restrictions accordingly. This allows a single policy to dynamically enforce different permissions based on the requester’s identity.
+
+Policy 2: Restricting EC2 instance types by cost center
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "AllowDevInstanceTypes",
+"Effect": "Allow",
+"Action": "ec2:RunInstances",
+"Resource": "arn:aws:ec2:*:*:instance/*",
+"Condition": {
+"StringEquals": {
+"aws:PrincipalTag/CostCenter": "Development"
+},
+"StringLike": {
+"ec2:InstanceType": "t3.*"
+}
+}
+},
+{
+"Sid": "AllowProdInstanceTypes",
+"Effect": "Allow",
+"Action": "ec2:RunInstances",
+"Resource": "arn:aws:ec2:*:*:instance/*",
+"Condition": {
+"StringEquals": {
+"aws:PrincipalTag/CostCenter": "Production"
+},
+"StringLike": {
+"ec2:InstanceType": [
+"m5.*",
+"c5.*",
+"r5.*"
+]
+}
+}
+}
+]
+}
+
+This is an identity-based policy that you can attach to IAM users, groups, or roles to control EC2 instance launches based on cost allocation. In the first statement, aws:PrincipalTag, which is a global condition key (tags attached to the IAM user or role), is used to determine which instance types are allowed. Users tagged with CostCenter=Development can only launch cost-effective T3 instance types (t3.micro, t3.small, t3.medium, and so on)with the service specific key ec2:InstanceType.
+
+In the second statement, users tagged with CostCenter=Production can launch more powerful instance types from the M5 (general purpose), C5 (compute optimized), and R5 (memory optimized) families. This approach lets organizations enforce cost controls and allocate resources based on workload requirements. Each cost center maintains flexibility for its specific needs.
+
+Note: Additional resources are required in the IAM policy to successfully launch EC2 instances. For the complete list, see Launch Instances.
+
+### Example 3: Users can only access and update DynamoDB items where the partition key matches their username.
+
+You have identified that GetItem, PutItem,and UpdateItem actions are required. Corresponding to these actions, you can use the condition key to expose partition key values in the authorization context as described in the Amazon DynamoDB Service Authorization Reference
+
+Policy 3: DynamoDB fine-grained access control
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"dynamodb:GetItem",
+"dynamodb:PutItem",
+"dynamodb:UpdateItem"
+],
+"Resource": "arn:aws:dynamodb:us-east-1:111122223333:table/UserProfiles",
+"Condition": {
+"ForAllValues:StringEquals": {
+"dynamodb:LeadingKeys": ["${aws:username}"]
+}
+}
+}
+]
+}
+
+The policy allows users to perform read and write actions (GetItem, PutItem, and UpdateItem) on the UserProfiles table, but only for items where the partition key value equals their own username (using the ${aws:username} policy variable). For example, if user alice attempts to access an item with partition key bob, the request will be denied.
+
+## Scenarios that need more than policies alone
+
+Some requirements can’t be met using IAM policies. Here are three common scenarios that aren’t achievable with IAM policies alone.
+
+### Scenario 1: Block users from creating security group rules that allow traffic from 0.0.0.0/0 on TCP port 22
+
+Upon checking the Amazon EC2 Service Authorization Reference, you will find that the ec2:AuthorizeSecurityGroupIngress action is required in an IAM policy to add an inbound access rules to a security group.
+
+To verify this in the Service Authorization Reference, navigate to the Amazon EC2 Service Authorization Reference and search for the AuthorizeSecurityGroupIngress action, which is the action that creates security group rules. After you locate this action, review the Condition keys column and look for condition keys related to CIDR blocks, IP ranges, ports, or protocols. Available condition keys for ec2:AuthorizeSecurityGroupIngress include:
+
+- aws:ResourceTag/${TagKey}: Filters access by a tag key and value pair of a resource
+
+- ec2:ResourceTag/${TagKey}: Filters access by a tag key and value pair of a resource
+
+- ec2:SecurityGroupID: Filters access by the ID of a security group
+
+- ec2:Vpc: Filters access by the ARN of the VPC
+
+Notice there are no condition keys for CIDR blocks (such as 0.0.0.0/0), port numbers (such as 22), or protocols (such as TCP). The authorization context doesn’t include information about the specific CIDR blocks, ports, or protocols being added to the security group rule, so IAM policies can’t control these attributes.
+
+Solution
+
+Take a reactive approach using the AWS Config managed rule INCOMING_SSH_DISABLED to detect overly permissive rules. You can also use a combination of Amazon EventBridge and Lambda to either send a notification to your security team for the non-compliant configuration or to restrict the security group through an automation. For more information, see How to Automatically Revert and Receive Notifications About Changes to Your Amazon VPC Security Groups.
+
+### Scenario 2: Prevent creation of Lambda functions with more than 512 MB of memory allocated
+
+Following the same verification methodology described in Scenario 1, navigate to the AWS Lambda Service Authorization Reference and examine the CreateFunction action’s condition keys for the function* resource type.
+
+Available condition keys for lambda:CreateFunction with the function* resource type include:
+
+- lambda:CodeSigningConfigArn: Filters access by the ARN of the code signing
+
+- configuration-lambda:Layer: Filters access by the ARN of a version of an AWS Lambda layer
+
+- lambda:VpcIds: Filters access by the ID of the VPC configured for the Lambda function
+
+There is no condition key for memory allocation (MemorySize parameter), timeout settings, storage configuration (EphemeralStorage), or runtime selection. Because memory allocation isn’t exposed in the authorization context, IAM policies can’t restrict this parameter.
+
+Solution
+
+- Use a policy-as-code (PaC) approach with AWS CloudFormation Hooks. For more information, see A practical guide to getting started with policy as code.
+
+- Use AWS Service Catalog to provide pre-approved Lambda configurations.
+
+- Use LAMBDA_FUNCTION_SETTINGS_CHECK to apply an AWS Config rule to detect non-compliant functions.
+
+## Key takeaways
+
+Keep these principles in mind when working with IAM policies:
+
+- Policies control what’s in the authorization context, not all elements you see in API documentation
+
+- The Service Authorization Reference is authoritative; if something isn’t listed as a condition key, you can’t control it with policies
+
+- Different actions have different available contexts even within the same service
+
+- Alternative approaches exist. AWS Config, EventBridge, and service-specific controls can be used to achieve your goals when policies alone can’t
+
+- Layered security is essential; combine preventive, detective, and responsive controls to help ensure that your data is secure
+
+## Conclusion
+
+In this post, you learned how to use the AWS Service Authorization Reference to determine what’s achievable with IAM policies and recognize scenarios that require alternative solutions. By understanding that policies can only make decisions based on information available in the authorization context, you can build more effective security controls and avoid spending time on approaches that won’t work.
+
+The Service Authorization Reference is your authoritative source for understanding policy capabilities. When you need to implement a control, start there to see if the required condition keys exist. If they don’t, you will need to layer in detective or responsive controls using services like AWS Config, Amazon EventBridge, or AWS Lambda.
+
+Remember that effective AWS security isn’t about finding one perfect control, it’s about combining preventive, detective, and responsive measures to create defense in depth. IAM policies are powerful tools for prevention and work as part of a comprehensive security strategy.
+
+Next steps:
+
+- Explore IAM policy simulator to test and troubleshoot your policies
+
+- Read IAM policy types: How and when to use them to understand when to use different policy types
+
+- Watch the video on Understanding AWS IAM Policy Language: Elements, Evaluation, and Best Practices
+
+If you have feedback about this post, submit comments in the Comments section below.
+
+Loading comments…

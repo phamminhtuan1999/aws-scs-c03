@@ -2,9 +2,9 @@
   "question_id": "Q010",
   "question_content_hash": "70ed77e5500092e29bf77f2c1bd91845316282c78a3c194a22416a60d79dd32d",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -34,44 +34,44 @@
       "unit_id": "Q010:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Dùng root user không giải quyết nguyên nhân: primary multi-Region key có replica sẽ không bị xóa cho tới khi mọi replica bị xóa, bất kể ai gửi yêu cầu. Key policy đã cho kms:* nên root không cần thiết.",
+      "reason_vi": "Sai: root không bỏ qua thời gian chờ hoặc dependency replica.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q010-r2-1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q010:B",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Primary key có replica bị giữ ở trạng thái PendingReplicaDeletion vô thời hạn; phải lên lịch xóa các replica key ở các Region khác (tối thiểu 7 ngày). Khi replica cuối cùng bị xóa, waiting period của primary mới bắt đầu.",
+      "verdict": "undetermined",
+      "reason_vi": "Phù hợp ý định: tìm và schedule các replica cùng key ID với 7 ngày.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
+        "Q010-r2-1",
         "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q010:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Vấn đề không phải thiếu quyền: key policy đã cho kms:* và việc lên lịch xóa đã thành công. Thêm IAM permission rồi gửi lại yêu cầu không xử lý các replica key.",
+      "reason_vi": "Sai: thêm quyền kms:* không xử lý dependency replica.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref1"
+        "Q010-r2-1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -79,14 +79,14 @@
       "unit_id": "Q010:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Disable rồi lên lịch 30 ngày vừa chậm hơn (30 > 7 ngày tối thiểu) vừa không xử lý replica key, nên primary vẫn không bị xóa.",
+      "reason_vi": "Sai: 30 ngày làm chậm hơn và không xử lý replica.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4"
+        "Q010-r2-1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     }
@@ -114,44 +114,41 @@
   "source_answer": [
     "Q010:B"
   ],
-  "researched_answer": [
-    "Q010:B"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Tài liệu KMS nêu trực tiếp primary multi-Region key chỉ bị xóa sau khi mọi replica bị xóa, và key ID 'mrk-' cùng attack đa Region chỉ tới đúng tình huống này; chỉ B xử lý replica. Độ tin cậy giảm vì đề có nhiều lỗi dữ liệu và mô tả 'still enabled and usable' mâu thuẫn với tài liệu.",
+    "reason_vi": "State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn.",
     "open_issues": [
-      "Theo tài liệu, key đã lên lịch xóa ở trạng thái PendingDeletion hoặc PendingReplicaDeletion đều không dùng được cho cryptographic operations, trái với câu 'still enabled and usable' trong đề.",
-      "ARN sai định dạng ('arn:aws;kms'), account ID trong đề (1234156789012) không khớp ARN (123456789012)."
+      "ARN chứa dấu ;, account ID và key ID có lỗi; enabled/usable mâu thuẫn state; không thể xóa ngay."
     ]
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Đã tìm cách đọc để phương án khác đúng: A (root user) và C (thêm IAM permission) chỉ đúng nếu vấn đề là thiếu quyền, nhưng đề nói key policy đã cho kms:* và việc lên lịch xóa đã thực hiện; D chậm hơn (30 ngày) và không xử lý replica. Trang ScheduleKeyDeletion xác nhận KMS không xóa primary key còn replica và waiting period của primary chỉ bắt đầu khi replica cuối cùng bị xóa; trang Deleting keys xác nhận phải lên lịch xóa mọi replica trước. Giữ B, confidence medium do lỗi dữ liệu trong đề.",
+  "reconciliation_vi": "State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn.",
   "explanation_vi": {
-    "why_correct": "Key ID có tiền tố mrk- là multi-Region key; KMS không xóa primary key khi còn replica (primary ở PendingReplicaDeletion vô thời hạn), nên phải tìm các Region có replica và lên lịch xóa chúng với waiting period tối thiểu 7 ngày — khi replica cuối cùng bị xóa, waiting period của primary mới bắt đầu.",
+    "why_correct": "mrk- gợi ý multi-Region key: phải xóa mọi replica trước khi primary bắt đầu thời gian chờ tối thiểu 7 ngày. Tuy nhiên key đã scheduled deletion không thể vẫn enabled/usable như đề mô tả.",
     "others": {
-      "Q010:A": "Root user không thay đổi quy tắc 'primary chỉ bị xóa sau khi mọi replica bị xóa'; key policy đã cho kms:* nên không cần root.",
-      "Q010:C": "Quyền không phải vấn đề (key policy đã cho kms:*); gửi lại yêu cầu xóa không xử lý các replica key.",
-      "Q010:D": "Disable rồi lên lịch 30 ngày chậm hơn mức tối thiểu 7 ngày và vẫn không xử lý replica, nên primary vẫn không bị xóa."
+      "Q010:A": "Sai: root không bỏ qua thời gian chờ hoặc dependency replica.",
+      "Q010:C": "Sai: thêm quyền kms:* không xử lý dependency replica.",
+      "Q010:D": "Sai: 30 ngày làm chậm hơn và không xử lý replica."
     }
   },
   "keywords": [
     {
-      "phrase": "key/mrk-",
-      "meaning_vi": "Tiền tố mrk- trong key ID = multi-Region key (có thể có replica ở Region khác)."
+      "phrase": "multiple AWS Regions",
+      "meaning_vi": "mrk key có thể có replicas ở Region khác."
     },
     {
-      "phrase": "multiple AWS Regions",
-      "meaning_vi": "Attack đa Region -> có thể attacker đã tạo replica key ở Region khác."
+      "phrase": "enabled and usable",
+      "meaning_vi": "State này mâu thuẫn scheduled deletion."
     },
     {
       "phrase": "as quickly as possible",
-      "meaning_vi": "Chọn waiting period tối thiểu 7 ngày và xử lý đúng nguyên nhân chặn việc xóa."
+      "meaning_vi": "Thời gian chờ tối thiểu là 7 ngày mỗi key."
     }
   ],
-  "memory_tip_vi": "Nếu KMS key đã lên lịch xóa mà chưa bị xóa và key ID bắt đầu bằng mrk- -> nghĩ đến replica của multi-Region key; kiểm tra phải lên lịch xóa hết replica trước (waiting period 7–30 ngày).",
+  "memory_tip_vi": "Nếu primary ở PendingReplicaDeletion, xóa replicas trước rồi tính thời gian chờ primary.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -227,6 +224,18 @@
       "quote": "PendingReplicaDeletion and it cannot be replicated or used in cryptographic operations.",
       "supports": "Mâu thuẫn với mô tả 'still enabled and usable' trong đề (source issue).",
       "kind": "direct"
+    },
+    {
+      "id": "Q010-r2-1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html",
+      "title": "Delete an AWS KMS key - AWS Key Management Service",
+      "accessed_at": "2026-09-30",
+      "quote": "waiting period. To recover the KMS key, you can cancel",
+      "supports": "Multi-Region primary deletion waits for all replicas to be deleted; 7–30-day primary waiting period begins after replicas disappear.",
+      "kind": "direct",
+      "snapshot_id": "933a307f5157",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -236,22 +245,17 @@
       "detail_vi": "ARN ghi 'arn:aws;kms' (dấu ';' thay ':'); key ID 'mrk-0bb0212cd9864fdea0dcamzo26efb5670' chứa ký tự không phải hex."
     },
     {
-      "type": "data",
-      "location": "Q010:stem:0",
-      "detail_vi": "Account ID 1234156789012 (13 chữ số) không khớp với 123456789012 trong ARN."
-    },
-    {
-      "type": "data",
-      "location": "Q010:stem:2",
-      "detail_vi": "Đề nói key 'still enabled and usable', nhưng tài liệu hiện tại nói primary key ở PendingReplicaDeletion không dùng được cho cryptographic operations."
-    },
-    {
       "type": "typo",
       "location": "Q010:C",
       "detail_vi": "'lo allow' — đúng ra là 'to allow'."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q010",
+      "detail_vi": "ARN chứa dấu ;, account ID và key ID có lỗi; enabled/usable mâu thuẫn state; không thể xóa ngay."
     }
   ],
-  "notes_vi": "Dấu hiệu then chốt là tiền tố 'mrk-' trong key ID (multi-Region key) và việc attack trải trên nhiều Region.",
+  "notes_vi": "State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn.",
   "history": [
     {
       "version": "r1",
@@ -272,6 +276,21 @@
       "previous_answer": [
         "Q010:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q010:B"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "State enabled/usable mâu thuẫn PendingReplicaDeletion, nên B chỉ là ý định sau sửa nguồn.",
+      "technical_change": true
     }
   ],
   "timestamp_correction": {
@@ -283,5 +302,23 @@
         "corrected": "2026-09-30T19:41:20Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q010:B",
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q010:B"
+    ],
+    "candidate_answers": [
+      "Q010:B"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

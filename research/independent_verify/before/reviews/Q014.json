@@ -1,0 +1,287 @@
+{
+  "question_id": "Q014",
+  "question_content_hash": "6abecb49d3a786d573db7ef023c9e7403cd57a4bf767dee79ca8144ccd5a6f14",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:36:00Z",
+  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_record_sha256": "e70c8fc502e8dc3cd1397639f0aa0ef0934a7dd4cc7a571cbf3bcd7176d1fc69",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Đánh giá thay đổi cấu hình của một tài nguyên AWS để kiểm tra tuân thủ (compliance).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Khi có nhiều thay đổi liên tiếp nhanh, chỉ ghi lại cấu hình mới nhất (tác động tích lũy).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Cách làm hiệu quả vận hành nhất (MOST operationally efficient).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q014:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "CloudTrail ghi từng API call (hành động), không ghi trạng thái cấu hình; API call gần nhất thường chỉ thay đổi một thuộc tính nên không thể hiện tác động tích lũy của nhiều thay đổi, lại phải tự lọc và suy luận.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q014:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AWS Config ghi configuration item của tài nguyên và đánh giá rule tuân thủ; chế độ Daily (periodic) recording chỉ ghi một CI thể hiện trạng thái mới nhất trong 24 giờ nếu khác CI trước — đúng yêu cầu ghi cấu hình cuối cùng.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q014:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "CloudWatch không tự ghi API call mà cần CloudTrail đẩy log sang CloudWatch Logs; kết quả vẫn là API call riêng lẻ, không phải cấu hình tài nguyên, nên API call cuối không thể hiện tác động tích lũy và vận hành phức tạp hơn.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q014:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS Cloud Map là dịch vụ service discovery (ánh xạ tên logic tới tài nguyên), không phát hiện hay ghi lại thay đổi cấu hình tài nguyên.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q014:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu AWS Config (RecordingMode, Recording frequency, What's New 11/2023) nêu rõ daily recording chỉ ghi CI trạng thái mới nhất khi có nhiều thay đổi; các lựa chọn khác không ghi trạng thái cấu hình.",
+      "open_issues": [
+        "Đề không nhắc tên 'periodic/daily recording'; tính năng này có từ 11/2023. Dù vậy B vẫn là lựa chọn duy nhất ghi trạng thái cấu hình."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:36:00Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingMode.html",
+      "title": "RecordingMode - AWS Config API Reference",
+      "section": "RecordingMode",
+      "snapshot_id": "bed1c553587d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Daily recording allows you to receive a configuration item (CI) representing the most recent state of your resources over the last 24-hour period",
+      "supports": "AWS Config có thể chỉ ghi trạng thái cấu hình mới nhất thay vì mọi thay đổi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/select-resources.html",
+      "title": "Recording AWS Resources with AWS Config",
+      "section": "Recording frequency for AWS Config",
+      "snapshot_id": "b157ba8aa727",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Config continuously detects when supported resource types are created, changed, or deleted. AWS Config records these events as configuration items (CIs).",
+      "supports": "AWS Config phát hiện và ghi thay đổi cấu hình tài nguyên dưới dạng configuration item.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2023/11/aws-config-periodic-recording/",
+      "title": "AWS Config now supports periodic recording",
+      "section": "What's New (Nov 26, 2023)",
+      "snapshot_id": "d8a6650d9c5d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With periodic recording, you will receive a configuration item representing the most recent state of the instance over the 24-hour period",
+      "supports": "Nhiều thay đổi trong kỳ chỉ tạo một CI trạng thái mới nhất (tác động tích lũy); có từ 11/2023.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html",
+      "title": "What Is AWS CloudTrail?",
+      "section": "Introduction",
+      "snapshot_id": "64383f1a6ba1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Actions taken by a user, role, or an AWS service are recorded as events in CloudTrail.",
+      "supports": "CloudTrail ghi hành động (API event), không phải trạng thái cấu hình tài nguyên.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/cloud-map/latest/dg/what-is-cloud-map.html",
+      "title": "What Is AWS Cloud Map?",
+      "section": "Introduction",
+      "snapshot_id": "4f3bf5f88b2e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Cloud Map is a fully managed solution that you can use to map logical names to the backend services and resources that your applications depend on.",
+      "supports": "Cloud Map là service discovery, không theo dõi thay đổi cấu hình.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_components.html",
+      "title": "Components of an AWS Config Rule",
+      "section": "How AWS Config Rules Work",
+      "snapshot_id": "ecb39138acd8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "it checks whether these changes do not comply with the conditions in your rules",
+      "supports": "AWS Config rules đánh giá tuân thủ dựa trên thay đổi cấu hình (yêu cầu compliance).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/monitor-cloudtrail-log-files-with-cloudwatch-logs.html",
+      "title": "Monitoring CloudTrail Log Files with Amazon CloudWatch Logs",
+      "section": "Introduction",
+      "snapshot_id": "a22d8714ccd3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use Amazon CloudWatch Logs to monitor, store, and access your log files from CloudTrail.",
+      "supports": "Lọc API call bằng CloudWatch thực chất dựa vào log CloudTrail gửi sang CloudWatch Logs (C phức tạp hơn).",
+      "kind": "inference"
+    }
+  ],
+  "source_answer": [
+    "Q014:B"
+  ],
+  "researched_answer": [
+    "Q014:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Tài liệu AWS Config (RecordingMode, Recording frequency) và What's New 11/2023 nêu rõ periodic/daily recording chỉ tạo một configuration item thể hiện trạng thái mới nhất khi có nhiều thay đổi; các lựa chọn khác không ghi trạng thái cấu hình.",
+    "open_issues": [
+      "Đề không gọi tên periodic (daily) recording; tính năng này có từ 26/11/2023. Trước đó AWS Config chỉ ghi liên tục mọi thay đổi, nhưng B vẫn là lựa chọn duy nhất ghi trạng thái cấu hình tài nguyên."
+    ]
+  },
+  "reconciliation_vi": "Blind (B) trùng khóa nguồn (B). Đã kiểm tra lại đối thủ mạnh nhất là A (CloudTrail): CloudTrail ghi sự kiện API, không ghi configuration item; API call cuối chỉ phản ánh một thay đổi, không phải trạng thái tích lũy. Vì vậy hạ A và C từ meets_but_suboptimal xuống does_not_meet (lý do: không đáp ứng yêu cầu thể hiện cumulative impact). What's New 11/2023 mô tả đúng ví dụ nhiều thay đổi trong 24 giờ chỉ tạo một CI trạng thái mới nhất. Giữ B.",
+  "explanation_vi": {
+    "why_correct": "AWS Config ghi cấu hình tài nguyên dưới dạng configuration item và đánh giá tuân thủ bằng Config rules; chế độ periodic (daily) recording chỉ ghi một CI thể hiện trạng thái mới nhất khi tài nguyên đổi nhiều lần, đúng yêu cầu ghi tác động tích lũy với ít công vận hành.",
+    "others": {
+      "Q014:A": "CloudTrail chỉ ghi API call, API call cuối không cho biết cấu hình tổng thể sau nhiều thay đổi và phải tự lọc, suy luận.",
+      "Q014:C": "CloudWatch phải dựa vào log CloudTrail để lọc API call, vẫn không có trạng thái cấu hình tích lũy và tốn công xây dựng.",
+      "Q014:D": "AWS Cloud Map là dịch vụ service discovery, không phát hiện hay ghi lại thay đổi cấu hình tài nguyên."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "record only the latest configuration",
+      "meaning_vi": "Chỉ ghi cấu hình mới nhất: gợi ý AWS Config periodic (daily) recording."
+    },
+    {
+      "phrase": "in quick succession",
+      "meaning_vi": "Nhiều thay đổi liên tiếp; không cần một bản ghi cho mỗi thay đổi."
+    },
+    {
+      "phrase": "compliance standards",
+      "meaning_vi": "Đánh giá tuân thủ cấu hình: AWS Config rules."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần trạng thái cấu hình tài nguyên và đánh giá compliance -> nghĩ đến AWS Config (periodic recording khi chỉ cần trạng thái mới nhất); kiểm tra: CloudTrail trả lời \"ai gọi API gì\", không phải \"cấu hình hiện tại là gì\".",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "1 Detection"
+    ],
+    "services": [
+      "AWS Config",
+      "AWS CloudTrail",
+      "Amazon CloudWatch",
+      "AWS Cloud Map"
+    ],
+    "reason_vi": "Theo dõi và đánh giá tuân thủ cấu hình tài nguyên bằng AWS Config (governance) và phát hiện thay đổi cấu hình."
+  },
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:36:00Z",
+      "change": "blind verdict B (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "change": "reconciliation: Q014:A và Q014:C đổi verdict meets_but_suboptimal -> does_not_meet (API call cuối không thể hiện cumulative impact); đáp án không đổi.",
+      "previous_answer": [
+        "Q014:B"
+      ],
+      "date": "2026-09-30T19:41:10Z"
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:10Z",
+      "change": "reconciliation: blind B trùng khóa nguồn B; giữ nguyên, status verified.",
+      "previous_answer": [
+        "Q014:B"
+      ]
+    }
+  ],
+  "notes_vi": "Từ khóa 'record only the latest configuration' tương ứng AWS Config daily/periodic recording."
+}

@@ -1,0 +1,3106 @@
+{
+  "scope": "Q001-Q036",
+  "method": "Independent solve from blind questions, all source images, and primary AWS documentation; keys/reviews not read before this persistence.",
+  "blinded": true,
+  "answer_key_exposure_before_persistence": false,
+  "persisted_at_utc": "2026-09-30T21:33:39.983997+00:00",
+  "primary_sources_opened_before_persistence": [
+    {
+      "id": "lambda",
+      "url": "https://docs.aws.amazon.com/lambda/latest/dg/permissions-source-function-arn.html",
+      "supported_claim": "Lambda runtime calls use execution-role credentials; lambda:SourceFunctionArn is a different context key from aws:SourceArn.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "s3resource",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+      "supported_claim": "Object operations such as GetObject require object ARNs; bucket ARN alone covers bucket operations.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "principal",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "supported_claim": "IAM user, assumed-role session, and STS federated-user are distinct principals; Lambda function ARN is not an IAM principal.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "sts",
+      "url": "https://docs.aws.amazon.com/cli/latest/reference/sts/get-session-token.html",
+      "supported_claim": "GetSessionToken with serial number and token code produces MFA-authenticated temporary credentials.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "scp",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_syntax.html",
+      "supported_claim": "Deny with NotAction and StringNotEquals RequestedRegion restricts regions while exempting named global APIs; default FullAWSAccess permits unless denied.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "via",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/conditions-kms.html",
+      "supported_claim": "kms:ViaService restricts forward-access requests; SES and WorkMail are supported; Resource * in a key policy means the attached key.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "cognito",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-integrating-user-pools-with-identity-pools.html",
+      "supported_claim": "User pools issue JWT tokens; identity pools exchange identities for temporary AWS credentials.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "authorizer",
+      "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html",
+      "supported_claim": "HTTP API Lambda authorizers can evaluate authentication tokens before forwarding authorized requests.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "idp",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
+      "supported_claim": "External IdP connection exchanges IAM Identity Center and IdP SAML metadata; identity source configuration includes connection settings.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "scim",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-with-scim.html",
+      "supported_claim": "Enable Identity Center automatic provisioning and obtain endpoint/token before configuring SCIM at external IdP; SCIM is distinct from SAML authentication.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "lock",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+      "supported_claim": "Compliance retention cannot be bypassed by administrators/root during retention; governance can be bypassed with permission.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "replica",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html",
+      "supported_claim": "Object Lock replication requires enabled destination Object Lock and replicates retention metadata.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "delete",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html",
+      "supported_claim": "Multi-Region primary deletion waits for all replicas to be deleted; 7–30-day primary waiting period begins after replicas disappear.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "keystate",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html",
+      "supported_claim": "PendingReplicaDeletion and PendingDeletion keys cannot perform cryptographic operations.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "ssm",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html",
+      "supported_claim": "Session Manager provides managed shell sessions without inbound SSH ports or SSH keys, including hybrid nodes.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "ssmssh",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html",
+      "supported_claim": "Actual SSH over Session Manager requires a public key/PEM already associated with the managed node.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "ssmprice",
+      "url": "https://aws.amazon.com/systems-manager/pricing/",
+      "supported_claim": "Pricing page explicitly records Advanced Instances Tier removal June 30, 2026, and hybrid Session Manager $0.05/session effective September 30, 2026; EC2 Session Manager has no additional charge.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "runtime",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring.html",
+      "supported_claim": "Runtime Monitoring analyzes OS, network, and file events using agent support; EKS Fargate is not supported.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "eks",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html",
+      "supported_claim": "EKS Protection analyzes EKS audit logs through an independent data stream.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "iotclient",
+      "url": "https://docs.aws.amazon.com/iot/latest/developerguide/basic-policy-variables.html",
+      "supported_claim": "Untrusted ClientId substitutions can broaden policy resources; ClientId self-reference does not bind a client to a trusted thing.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "iotthing",
+      "url": "https://docs.aws.amazon.com/iot/latest/developerguide/thing-policy-variables.html",
+      "supported_claim": "ThingName policy variable requires associated authenticated principal and matching thing-name client ID.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "config",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/how-does-config-work.html",
+      "supported_claim": "AWS Config configuration items describe resource configuration state and change history.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "daily",
+      "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingMode.html",
+      "supported_claim": "Daily recording captures latest configuration change over 24 hours; continuous recording records changes as they occur.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "hsm",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-cloudhsm.html",
+      "supported_claim": "CloudHSM custom stores create symmetric AES-256 KMS key material in HSM and perform supported cryptographic operations there.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "pair",
+      "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_GenerateDataKeyPair.html",
+      "supported_claim": "GenerateDataKeyPair cannot use a KMS key in a custom key store.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "kmsaudit",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/logging-using-cloudtrail.html",
+      "supported_claim": "CloudTrail logs AWS KMS API operations for auditing.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "cwagent",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html",
+      "supported_claim": "CloudWatch agent streams configured local logs and supports retention_in_days including 365; new groups default never-expire, existing retention must be checked.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "perimeter",
+      "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html",
+      "supported_claim": "Endpoint policies constrain all traversing principals; SCPs constrain organization principals; resource and principal organization keys implement data perimeters.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "pit",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterToPointInTime.html",
+      "supported_claim": "PITR restores a new database cluster at a requested time within available retention.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "revokeidc",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/revoke-user-permissions.html",
+      "supported_claim": "Complete revocation includes deny/SCP, assignment removal and sessions; disabling a user alone does not invalidate already-issued role sessions.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "lake",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-event-data-store.html",
+      "supported_claim": "CloudTrail Lake SQL queries organizational event data stores for event history.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "inspector",
+      "url": "https://docs.aws.amazon.com/inspector/latest/user/scanning-ec2.html",
+      "supported_claim": "Inspector detects EC2 package vulnerabilities and network exposure; it does not patch them.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "patch",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager.html",
+      "supported_claim": "Patch Manager automates patch installation and patch compliance.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "maciedaily",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-asdd-how-it-works.html",
+      "supported_claim": "Automated discovery evaluates representative supported S3 object samples daily; discovery jobs can inspect selected buckets more thoroughly.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "snapshot",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/share-encrypted-snapshot.html",
+      "supported_claim": "Encrypted snapshot sharing requires customer managed key access for recipient accounts; default AWS managed RDS key snapshots cannot be shared.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "mysql",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Security.html",
+      "supported_claim": "require_secure_transport=ON enforces TLS for Aurora MySQL.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "postgres",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Security.html",
+      "supported_claim": "Aurora PostgreSQL TLS enforcement uses rds.force_ssl, not require_secure_transport.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "wafrate",
+      "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedStatement.html",
+      "supported_claim": "Current WAF rate-based Limit minimum is 10; evaluation windows include 300 seconds; rate limiting is approximate.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "nacl",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html",
+      "supported_claim": "NACLs are stateless, evaluate lowest rule first, and TLS outbound return traffic requires inbound ephemeral ports.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "taskrole",
+      "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html",
+      "supported_claim": "Task IAM role provides AWS permissions to containers in a task; containers within the task are not a credential isolation boundary.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "rotate",
+      "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html",
+      "supported_claim": "Secrets Manager supports configured automated secret rotation, including RDS integration.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "vpce",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-policy-condition.html",
+      "supported_claim": "KMS policy aws:SourceVpce identifies endpoint; SourceIp is not usable to identify requests through interface endpoints.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "dns",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-connect.html",
+      "supported_claim": "KMS interface endpoints with private DNS resolve normal KMS endpoint names to private endpoint addresses.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "revokerole",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html",
+      "supported_claim": "Role-session revocation attaches a deny for temporary credentials issued before the revocation time.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "ssekms",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+      "supported_claim": "Reading SSE-KMS objects requires S3 access and KMS decrypt authorization; customer managed keys allow separate key policy control.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "gdsource",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html",
+      "supported_claim": "GuardDuty collects its foundational sources independently; DNS monitoring requires AWS resolver rather than a custom DNS resolver.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "gdhub",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/securityhub-integration.html",
+      "supported_claim": "GuardDuty automatically sends findings when Security Hub integration is enabled by both services.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "gdevent",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+      "supported_claim": "GuardDuty findings can trigger EventBridge targets, including SNS notifications.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "cognitopwd",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html",
+      "supported_claim": "User-pool password policy controls Cognito local users and already has a minimum-length constraint.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "iampwd",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html",
+      "supported_claim": "IAM account password policies govern IAM users, not federated users authenticated by an external IdP.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "macieorg",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/accounts-mgmt-ao.html",
+      "supported_claim": "Organizations Macie delegated administrator centrally manages discovery and findings in member accounts.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "maciepublish",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/findings-publish-frequency.html",
+      "supported_claim": "Publishing sensitive-data findings to Security Hub is opt-in, configured per account and Region; default publication concerns policy findings.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "macie",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html",
+      "supported_claim": "Macie discovers sensitive S3 data with managed identifiers; findings integrate with EventBridge for SNS notification.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "string",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-string-match.html",
+      "supported_claim": "WAF string match rules can match HTTP header values including User-Agent.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "sqli",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-sqli-match.html",
+      "supported_claim": "WAF SQL injection statements inspect request components for SQL injection patterns.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "wafresources",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html",
+      "supported_claim": "WAF associates with supported resources including ALB and CloudFront, not a bare EC2 instance.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "sg",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+      "supported_claim": "Security group rules allow traffic and cannot express deny rules or inspect HTTP headers.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "host",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html",
+      "supported_claim": "After host key rotation, manually run eic_harvest_hostkeys to update the EC2 Instance Connect trusted host-key database.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "ctinsight",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-insights-events-with-cloudtrail.html",
+      "supported_claim": "CloudTrail Insights detects unusual API write-call rates against a baseline; user attribution requires investigation of underlying events.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "hubinsight",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-custom-insights.html",
+      "supported_claim": "Custom insights group/filter findings; this is not itself sequential multi-stage attack correlation.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "hubevent",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-all-findings.html",
+      "supported_claim": "Security Hub finding events can trigger EventBridge and Lambda remediation.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "flow",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-cwl.html",
+      "supported_claim": "VPC Flow Logs in CloudWatch describe traffic with address, time, and bytes fields for queries.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    },
+    {
+      "id": "metrics",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+      "supported_claim": "Metric filters extract log events and dimensions for counters and alarms.",
+      "access_date": "2026-09-30",
+      "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+    }
+  ],
+  "questions": [
+    {
+      "independent_answer": null,
+      "status": "ambiguous",
+      "explanation": "Không lựa chọn nào sửa đủ policy: GetObject cần ARN object, còn mã chạy trong Lambda dùng execution role, không phải service principal Lambda với SourceArn này. C chỉ sửa phần Resource và có thể là ý định của đề.",
+      "source_ids": [
+        "lambda",
+        "s3resource",
+        "principal"
+      ],
+      "keywords": [
+        "MyLambdaFunction",
+        "read the objects",
+        "bucket policy"
+      ],
+      "conditional_tip": "Nếu Lambda gọi S3 bằng mã ứng dụng, kiểm tra execution role và ARN object cùng các điều kiện policy.",
+      "source_issues": "SourceArn thiếu Region/account; C có khoảng trắng trong ARN ảnh; không có đáp án đầy đủ.",
+      "candidates": [
+        "Q001:C"
+      ],
+      "id": "Q001",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q001:A",
+          "verdict_reason_vi": "Sai: ARN function không phải IAM principal hợp lệ.",
+          "source_ids": [
+            "lambda",
+            "s3resource",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q001:B",
+          "verdict_reason_vi": "Sai: thêm action không sửa Resource object và principal.",
+          "source_ids": [
+            "lambda",
+            "s3resource",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q001:C",
+          "verdict_reason_vi": "Chưa đủ: /* sửa ARN object nhưng principal/điều kiện vẫn không cấp quyền cho execution role.",
+          "source_ids": [
+            "lambda",
+            "s3resource",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q001:D",
+          "verdict_reason_vi": "Sai: đảo principal và resource không cấp quyền đọc S3.",
+          "source_ids": [
+            "lambda",
+            "s3resource",
+            "principal"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "lambda",
+          "url": "https://docs.aws.amazon.com/lambda/latest/dg/permissions-source-function-arn.html",
+          "supported_claim": "Lambda runtime calls use execution-role credentials; lambda:SourceFunctionArn is a different context key from aws:SourceArn.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "s3resource",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+          "supported_claim": "Object operations such as GetObject require object ARNs; bucket ARN alone covers bucket operations.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "principal",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+          "supported_claim": "IAM user, assumed-role session, and STS federated-user are distinct principals; Lambda function ARN is not an IAM principal.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": [
+        "Q002:S1",
+        "Q002:S5",
+        "Q002:S3"
+      ],
+      "status": "ambiguous",
+      "explanation": "User pool → app client → HTTP API Lambda authorizer là luồng xác thực bằng token phù hợp cho người dùng ngoài. Nếu temporary credentials nghĩa là thông tin xác thực AWS STS, đề còn thiếu identity pool.",
+      "source_ids": [
+        "cognito",
+        "authorizer"
+      ],
+      "keywords": [
+        "external users",
+        "temporary credentials",
+        "user databases"
+      ],
+      "conditional_tip": "Nếu yêu cầu temporary AWS credentials, thêm Cognito identity pool; nếu chỉ token JWT, dùng user pool/app client/authorizer.",
+      "source_issues": "Không xác định loại temporary credentials; Lambda authorizer hợp lệ nhưng native JWT authorizer có thể ít quản trị hơn.",
+      "candidates": [
+        "Q002:S1",
+        "Q002:S5",
+        "Q002:S3"
+      ],
+      "id": "Q002",
+      "question_type": "ordering",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q002:S1",
+          "verdict_reason_vi": "Chọn trước: user pool quản lý danh tính và phát token.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        },
+        {
+          "id": "Q002:S2",
+          "verdict_reason_vi": "Không cần cho xác thực người dùng: role cấp quyền AWS cho backend.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        },
+        {
+          "id": "Q002:S3",
+          "verdict_reason_vi": "Chọn sau app client: authorizer kiểm tra token trước backend.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        },
+        {
+          "id": "Q002:S4",
+          "verdict_reason_vi": "Sai: tự lưu mật khẩu theo microservice tăng quản trị.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        },
+        {
+          "id": "Q002:S5",
+          "verdict_reason_vi": "Chọn sau user pool: app client định cấu hình ứng dụng dùng token.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        },
+        {
+          "id": "Q002:S6",
+          "verdict_reason_vi": "Không phù hợp nhất: Identity Center phục vụ workforce, không thay user pool ứng dụng khách.",
+          "source_ids": [
+            "cognito",
+            "authorizer"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "cognito",
+          "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-integrating-user-pools-with-identity-pools.html",
+          "supported_claim": "User pools issue JWT tokens; identity pools exchange identities for temporary AWS credentials.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "authorizer",
+          "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html",
+          "supported_claim": "HTTP API Lambda authorizers can evaluate authentication tokens before forwarding authorized requests.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q003:B",
+      "status": "verified",
+      "explanation": "Dùng GetSessionToken kèm serial MFA và mã OTP, rồi dùng bộ thông tin xác thực tạm thời trả về cho CLI. Đổi điều kiện deny sang true sẽ đảo mục tiêu bảo vệ.",
+      "source_ids": [
+        "sts"
+      ],
+      "keywords": [
+        "multi-factor authentication",
+        "AWS CLI",
+        "Amazon EC2 commands"
+      ],
+      "conditional_tip": "Nếu CLI bị deny bởi aws:MultiFactorAuthPresent, lấy và dùng thông tin xác thực tạm thời có MFA.",
+      "source_issues": "D tham chiếu NotAction không tồn tại; SAML/AssumeRole có thể là giải pháp khác nếu cấu hình đầy đủ.",
+      "candidates": null,
+      "id": "Q003",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q003:A",
+          "verdict_reason_vi": "Sai: true sẽ deny phiên MFA.",
+          "source_ids": [
+            "sts"
+          ]
+        },
+        {
+          "id": "Q003:B",
+          "verdict_reason_vi": "Đúng: token tạm thời xác thực MFA đáp ứng policy.",
+          "source_ids": [
+            "sts"
+          ]
+        },
+        {
+          "id": "Q003:C",
+          "verdict_reason_vi": "Có thể thiết kế MFA qua SAML nhưng cần federation/role mới, không phải sửa trực tiếp ít thay đổi nhất.",
+          "source_ids": [
+            "sts"
+          ]
+        },
+        {
+          "id": "Q003:D",
+          "verdict_reason_vi": "Không chọn: phương án nhắc NotAction không có trong policy ảnh và thêm role không cần thiết.",
+          "source_ids": [
+            "sts"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "sts",
+          "url": "https://docs.aws.amazon.com/cli/latest/reference/sts/get-session-token.html",
+          "supported_claim": "GetSessionToken with serial number and token code produces MFA-authenticated temporary credentials.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q004:C",
+      "status": "verified",
+      "explanation": "Deny với NotAction loại trừ các global service và StringNotEquals eu-west-1 chặn API ngoài Region cho OU. Explicit deny vẫn có hiệu lực khi SCP mặc định FullAWSAccess tồn tại.",
+      "source_ids": [
+        "scp"
+      ],
+      "keywords": [
+        "default SCP",
+        "eu-west-1",
+        "global services"
+      ],
+      "conditional_tip": "Nếu OU đang có FullAWSAccess, dùng explicit deny ngoài Region với ngoại lệ global phù hợp.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q004",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q004:A",
+          "verdict_reason_vi": "Sai: StringEquals deny ngay Region được phép.",
+          "source_ids": [
+            "scp"
+          ]
+        },
+        {
+          "id": "Q004:B",
+          "verdict_reason_vi": "Sai: allow không hạn chế quyền đang được FullAWSAccess cho phép.",
+          "source_ids": [
+            "scp"
+          ]
+        },
+        {
+          "id": "Q004:C",
+          "verdict_reason_vi": "Đúng: deny ngoài eu-west-1, trừ global services đã liệt kê.",
+          "source_ids": [
+            "scp"
+          ]
+        },
+        {
+          "id": "Q004:D",
+          "verdict_reason_vi": "Sai: allow có điều kiện không tạo explicit deny ngoài Region.",
+          "source_ids": [
+            "scp"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "scp",
+          "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_syntax.html",
+          "supported_claim": "Deny with NotAction and StringNotEquals RequestedRegion restricts regions while exempting named global APIs; default FullAWSAccess permits unless denied.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": [
+        "Q005:S1",
+        "Q005:S3",
+        "Q005:S4"
+      ],
+      "status": "ambiguous",
+      "explanation": "Nếu S1 bao gồm toàn bộ trao đổi SAML, cấu hình identity source → bật SCIM ở Identity Center → bật SCIM ở IdP là một chuỗi hợp lệ. Đề chỉ yêu cầu external IdP nên không chứng minh SCIM bắt buộc và không có một chuỗi ba bước duy nhất.",
+      "source_ids": [
+        "idp",
+        "scim"
+      ],
+      "keywords": [
+        "identity provider",
+        "identity source",
+        "SAML metadata"
+      ],
+      "conditional_tip": "Nếu cần tự động provision người dùng, cấu hình SAML trước rồi bật SCIM ở AWS trước IdP.",
+      "source_issues": "Lỗi chữ exlemai/specifics; SAML metadata là bước hợp lệ còn SCIM không được yêu cầu rõ; thứ tự ba slot mơ hồ.",
+      "candidates": [
+        "Q005:S1",
+        "Q005:S3",
+        "Q005:S4"
+      ],
+      "id": "Q005",
+      "question_type": "ordering",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q005:S1",
+          "verdict_reason_vi": "Hợp lệ: cấu hình external identity source, bao gồm kết nối SAML.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        },
+        {
+          "id": "Q005:S2",
+          "verdict_reason_vi": "Sai: API endpoint của IdP không phải principal SAML trong trust policy.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        },
+        {
+          "id": "Q005:S3",
+          "verdict_reason_vi": "Hợp lệ nếu dùng SCIM: lấy endpoint/token trước cấu hình IdP.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        },
+        {
+          "id": "Q005:S4",
+          "verdict_reason_vi": "Hợp lệ nếu dùng SCIM: dùng endpoint/token từ Identity Center.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        },
+        {
+          "id": "Q005:S5",
+          "verdict_reason_vi": "Hợp lệ và cần cho trao đổi SAML, không thể coi là distractor sai.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        },
+        {
+          "id": "Q005:S6",
+          "verdict_reason_vi": "Hợp lệ và cần cho trao đổi SAML, không thể coi là distractor sai.",
+          "source_ids": [
+            "idp",
+            "scim"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "idp",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-connect-idp.html",
+          "supported_claim": "External IdP connection exchanges IAM Identity Center and IdP SAML metadata; identity source configuration includes connection settings.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "scim",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/how-to-with-scim.html",
+          "supported_claim": "Enable Identity Center automatic provisioning and obtain endpoint/token before configuring SCIM at external IdP; SCIM is distinct from SAML authentication.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q006:C",
+      "status": "verified",
+      "explanation": "Policy chỉ cho ExampleRole dùng key gắn policy qua WorkMail hoặc SES ở us-west-2. Resource * trong key policy chỉ key này, không phải mọi key trong account.",
+      "source_ids": [
+        "via"
+      ],
+      "keywords": [
+        "key policy",
+        "customer managed key"
+      ],
+      "conditional_tip": "Nếu Resource * xuất hiện trong KMS key policy, đọc nó là key đang gắn policy.",
+      "source_issues": "SES và WorkMail đều có trong danh sách ViaService hiện hành.",
+      "candidates": null,
+      "id": "Q006",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q006:A",
+          "verdict_reason_vi": "Sai: role là principal được cấp quyền, không phải service nhận quyền do role cấp.",
+          "source_ids": [
+            "via"
+          ]
+        },
+        {
+          "id": "Q006:B",
+          "verdict_reason_vi": "Sai: không quy định nội dung email hay owner mà giới hạn luồng gọi dịch vụ.",
+          "source_ids": [
+            "via"
+          ]
+        },
+        {
+          "id": "Q006:C",
+          "verdict_reason_vi": "Đúng: role và ViaService/Region phải khớp.",
+          "source_ids": [
+            "via"
+          ]
+        },
+        {
+          "id": "Q006:D",
+          "verdict_reason_vi": "Sai: * không mở rộng sang mọi customer managed key.",
+          "source_ids": [
+            "via"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "via",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/conditions-kms.html",
+          "supported_claim": "kms:ViaService restricts forward-access requests; SES and WorkMail are supported; Resource * in a key policy means the attached key.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": null,
+      "status": "ambiguous",
+      "explanation": "B xác định đúng STS federated-user/Bob và dùng explicit deny, nhưng bucket ARN không bao phủ GetObject/DeleteObject. Cần cả bucket ARN và bucket/* để chặn toàn bộ truy cập dữ liệu như đề yêu cầu.",
+      "source_ids": [
+        "principal",
+        "s3resource"
+      ],
+      "keywords": [
+        "federated user",
+        "Bob",
+        "bucket policy"
+      ],
+      "conditional_tip": "Nếu deny cả bucket và dữ liệu S3, liệt kê cả ARN bucket và ARN bucket/*.",
+      "source_issues": "Tất cả ảnh chỉ có bucket ARN, không đáp án đầy đủ cho object access.",
+      "candidates": [
+        "Q007:B"
+      ],
+      "id": "Q007",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q007:A",
+          "verdict_reason_vi": "Sai: Allow không deny Bob.",
+          "source_ids": [
+            "principal",
+            "s3resource"
+          ]
+        },
+        {
+          "id": "Q007:B",
+          "verdict_reason_vi": "Chưa đủ: đúng federated principal nhưng thiếu ARN object /*.",
+          "source_ids": [
+            "principal",
+            "s3resource"
+          ]
+        },
+        {
+          "id": "Q007:C",
+          "verdict_reason_vi": "Sai: IAM user/Bob khác STS federated-user/Bob.",
+          "source_ids": [
+            "principal",
+            "s3resource"
+          ]
+        },
+        {
+          "id": "Q007:D",
+          "verdict_reason_vi": "Sai: assumed-role session là loại principal khác.",
+          "source_ids": [
+            "principal",
+            "s3resource"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "principal",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+          "supported_claim": "IAM user, assumed-role session, and STS federated-user are distinct principals; Lambda function ARN is not an IAM principal.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "s3resource",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security_iam_service-with-iam.html",
+          "supported_claim": "Object operations such as GetObject require object ARNs; bucket ARN alone covers bucket operations.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": {
+        "Q008:P1": null,
+        "Q008:P2": "Q008:R4",
+        "Q008:P3": "Q008:R3",
+        "Q008:P4": "Q008:R1",
+        "Q008:P5": null
+      },
+      "status": "unresolved",
+      "explanation": "P1 và P5 trùng nguyên văn nên cả hai phù hợp R5, trái quy tắc mỗi đáp án dùng một lần. P2→R4, P3→R3 và P4→R1 hợp lý; đề không có chiến lược riêng đủ để gán R2.",
+      "source_ids": [
+        "flow",
+        "metrics",
+        "ctinsight",
+        "hubinsight",
+        "hubevent"
+      ],
+      "keywords": [
+        "one time",
+        "multi-stage attacks",
+        "office hours"
+      ],
+      "conditional_tip": "Nếu hai prompt trùng nhau mà đáp án chỉ dùng một lần, giữ trạng thái unresolved và sửa nguồn trước khi chấm.",
+      "source_issues": "Đã xem ảnh và xác nhận hàng 1/hàng 5 trùng; distances là typo instances; không ép một full mapping.",
+      "candidates": null,
+      "id": "Q008",
+      "question_type": "matching",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q008:P1",
+          "verdict_reason_vi": "P1: phù hợp R5 vì bytes/destination/time, nhưng bị trùng P5.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:P2",
+          "verdict_reason_vi": "P2: R4; metric filters đếm lỗi theo source IP trong một giờ.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:P3",
+          "verdict_reason_vi": "P3: R3 gần nhất; Insights phát hiện tốc độ API bất thường, cần lọc CloudTrail để xác định privileged user/delete.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:P4",
+          "verdict_reason_vi": "P4: R1; EventBridge/Lambda có thể cách ly instance theo finding.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:P5",
+          "verdict_reason_vi": "P5: phù hợp R5 giống P1, không thể gán khác để hoàn thành one-use.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:R1",
+          "verdict_reason_vi": "R1: cần tự động remediation, phù hợp P4.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:R2",
+          "verdict_reason_vi": "R2: custom insights nhóm findings không tự chứng minh tương quan chuỗi tấn công; thiếu prompt riêng.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:R3",
+          "verdict_reason_vi": "R3: P3 là gần nhất nhưng cần scope API và user bổ sung.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:R4",
+          "verdict_reason_vi": "R4: P2 đếm xác thực thất bại theo IP.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        },
+        {
+          "id": "Q008:R5",
+          "verdict_reason_vi": "R5: đồng thời P1 và P5, gây lỗi đề.",
+          "source_ids": [
+            "flow",
+            "metrics",
+            "ctinsight",
+            "hubinsight",
+            "hubevent"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "flow",
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-cwl.html",
+          "supported_claim": "VPC Flow Logs in CloudWatch describe traffic with address, time, and bytes fields for queries.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "metrics",
+          "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+          "supported_claim": "Metric filters extract log events and dimensions for counters and alarms.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "ctinsight",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-insights-events-with-cloudtrail.html",
+          "supported_claim": "CloudTrail Insights detects unusual API write-call rates against a baseline; user attribution requires investigation of underlying events.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "hubinsight",
+          "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-custom-insights.html",
+          "supported_claim": "Custom insights group/filter findings; this is not itself sequential multi-stage attack correlation.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "hubevent",
+          "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-all-findings.html",
+          "supported_claim": "Security Hub finding events can trigger EventBridge and Lambda remediation.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q009:B",
+      "status": "verified",
+      "explanation": "Dùng Object Lock compliance và replication sang bucket đích đã bật Object Lock để sao chép retention. Trong thời hạn retention, ngay cả administrator/root cũng không xóa vĩnh viễn version được bảo vệ.",
+      "source_ids": [
+        "lock",
+        "replica"
+      ],
+      "keywords": [
+        "administrator access",
+        "secondary Region",
+        "permanently delete"
+      ],
+      "conditional_tip": "Nếu phải chống cả administrator trong thời hạn lưu giữ, dùng compliance retention và bảo đảm bucket replica cũng bật Object Lock.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q009",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q009:A",
+          "verdict_reason_vi": "Sai: governance có thể bị bypass/gỡ bởi quyền phù hợp.",
+          "source_ids": [
+            "lock",
+            "replica"
+          ]
+        },
+        {
+          "id": "Q009:B",
+          "verdict_reason_vi": "Đúng khi bucket đích bật Object Lock và replication retention.",
+          "source_ids": [
+            "lock",
+            "replica"
+          ]
+        },
+        {
+          "id": "Q009:C",
+          "verdict_reason_vi": "Sai: ReplicateDelete không chặn admin trực tiếp xóa version.",
+          "source_ids": [
+            "lock",
+            "replica"
+          ]
+        },
+        {
+          "id": "Q009:D",
+          "verdict_reason_vi": "Sai: versioning vẫn cho phép người có quyền xóa version.",
+          "source_ids": [
+            "lock",
+            "replica"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "lock",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+          "supported_claim": "Compliance retention cannot be bypassed by administrators/root during retention; governance can be bypassed with permission.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "replica",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html",
+          "supported_claim": "Object Lock replication requires enabled destination Object Lock and replicates retention metadata.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q010:B",
+      "status": "ambiguous",
+      "explanation": "mrk- gợi ý multi-Region key: phải xóa mọi replica trước khi primary bắt đầu thời gian chờ tối thiểu 7 ngày. Tuy nhiên key đã scheduled deletion không thể vẫn enabled/usable như đề mô tả.",
+      "source_ids": [
+        "delete",
+        "keystate"
+      ],
+      "keywords": [
+        "multiple AWS Regions",
+        "enabled and usable",
+        "as quickly as possible"
+      ],
+      "conditional_tip": "Nếu primary ở PendingReplicaDeletion, xóa replicas trước rồi tính thời gian chờ primary.",
+      "source_issues": "ARN chứa dấu ;, account ID và key ID có lỗi; enabled/usable mâu thuẫn state; không thể xóa ngay.",
+      "candidates": [
+        "Q010:B"
+      ],
+      "id": "Q010",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q010:A",
+          "verdict_reason_vi": "Sai: root không bỏ qua thời gian chờ hoặc dependency replica.",
+          "source_ids": [
+            "delete",
+            "keystate"
+          ]
+        },
+        {
+          "id": "Q010:B",
+          "verdict_reason_vi": "Phù hợp ý định: tìm và schedule các replica cùng key ID với 7 ngày.",
+          "source_ids": [
+            "delete",
+            "keystate"
+          ]
+        },
+        {
+          "id": "Q010:C",
+          "verdict_reason_vi": "Sai: thêm quyền kms:* không xử lý dependency replica.",
+          "source_ids": [
+            "delete",
+            "keystate"
+          ]
+        },
+        {
+          "id": "Q010:D",
+          "verdict_reason_vi": "Sai: 30 ngày làm chậm hơn và không xử lý replica.",
+          "source_ids": [
+            "delete",
+            "keystate"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "delete",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html",
+          "supported_claim": "Multi-Region primary deletion waits for all replicas to be deleted; 7–30-day primary waiting period begins after replicas disappear.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "keystate",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html",
+          "supported_claim": "PendingReplicaDeletion and PendingDeletion keys cannot perform cryptographic operations.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q011:B",
+      "status": "ambiguous",
+      "explanation": "Session Manager shell đáp ứng truy cập bảo trì không cần SSH key và không mở inbound port. SSH thực sự qua Session Manager vẫn cần key; tính phí theo machine-hours của đề không khớp pricing hiện hành.",
+      "source_ids": [
+        "ssm",
+        "ssmssh",
+        "ssmprice"
+      ],
+      "keywords": [
+        "on-premises servers",
+        "SSH keys",
+        "machine hours"
+      ],
+      "conditional_tip": "Nếu không muốn SSH keys, dùng native Session Manager shell và kiểm tra phí hybrid hiện hành theo phiên.",
+      "source_issues": "Pricing chính thức: bỏ Advanced Instances Tier 2026-06-30; $0.05/hybrid session từ 2026-09-30, không hourly; hoàn toàn isolated còn cần outbound/private service path.",
+      "candidates": [
+        "Q011:B"
+      ],
+      "id": "Q011",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q011:A",
+          "verdict_reason_vi": "Sai: bastion cần đường mạng và quản trị SSH keys.",
+          "source_ids": [
+            "ssm",
+            "ssmssh",
+            "ssmprice"
+          ]
+        },
+        {
+          "id": "Q011:B",
+          "verdict_reason_vi": "Gần nhất: Session Manager shell, nhưng không thỏa literal SSH không key và machine-hours.",
+          "source_ids": [
+            "ssm",
+            "ssmssh",
+            "ssmprice"
+          ]
+        },
+        {
+          "id": "Q011:C",
+          "verdict_reason_vi": "Sai: CloudShell không tự cung cấp truy cập riêng tới máy EC2/on-premises.",
+          "source_ids": [
+            "ssm",
+            "ssmssh",
+            "ssmprice"
+          ]
+        },
+        {
+          "id": "Q011:D",
+          "verdict_reason_vi": "Sai: interface endpoint chỉ là đường kết nối dịch vụ, không thay quản lý phiên/xác thực.",
+          "source_ids": [
+            "ssm",
+            "ssmssh",
+            "ssmprice"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "ssm",
+          "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html",
+          "supported_claim": "Session Manager provides managed shell sessions without inbound SSH ports or SSH keys, including hybrid nodes.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "ssmssh",
+          "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html",
+          "supported_claim": "Actual SSH over Session Manager requires a public key/PEM already associated with the managed node.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "ssmprice",
+          "url": "https://aws.amazon.com/systems-manager/pricing/",
+          "supported_claim": "Pricing page explicitly records Advanced Instances Tier removal June 30, 2026, and hybrid Session Manager $0.05/session effective September 30, 2026; EC2 Session Manager has no additional charge.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q012:C",
+      "status": "verified",
+      "explanation": "GuardDuty EKS Protection phân tích audit logs; Runtime Monitoring bổ sung sự kiện OS, mạng và file. EventBridge chuyển finding tới SNS email, với runtime agent và loại node được hỗ trợ.",
+      "source_ids": [
+        "eks",
+        "runtime",
+        "gdevent"
+      ],
+      "keywords": [
+        "audit logs",
+        "file events",
+        "email alerts"
+      ],
+      "conditional_tip": "Nếu cần audit lẫn OS/network/file, bật hai tính năng GuardDuty và xác nhận node hỗ trợ runtime agent.",
+      "source_issues": "Runtime Monitoring không hỗ trợ EKS Fargate; không cần bật CloudWatch audit stream riêng cho GuardDuty.",
+      "candidates": null,
+      "id": "Q012",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q012:A",
+          "verdict_reason_vi": "Sai: Security Hub tổng hợp posture/findings, không tự thu mọi runtime event.",
+          "source_ids": [
+            "eks",
+            "runtime",
+            "gdevent"
+          ]
+        },
+        {
+          "id": "Q012:B",
+          "verdict_reason_vi": "Sai: Inspector/Detective không thay EKS audit và runtime threat detection này.",
+          "source_ids": [
+            "eks",
+            "runtime",
+            "gdevent"
+          ]
+        },
+        {
+          "id": "Q012:C",
+          "verdict_reason_vi": "Đúng: bật cả EKS Protection và Runtime Monitoring, route findings qua EventBridge tới SNS.",
+          "source_ids": [
+            "eks",
+            "runtime",
+            "gdevent"
+          ]
+        },
+        {
+          "id": "Q012:D",
+          "verdict_reason_vi": "Sai: cảnh báo mọi audit log không tương đương phát hiện nguy cơ runtime.",
+          "source_ids": [
+            "eks",
+            "runtime",
+            "gdevent"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "eks",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html",
+          "supported_claim": "EKS Protection analyzes EKS audit logs through an independent data stream.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "runtime",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring.html",
+          "supported_claim": "Runtime Monitoring analyzes OS, network, and file events using agent support; EKS Fargate is not supported.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "gdevent",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_eventbridge.html",
+          "supported_claim": "GuardDuty findings can trigger EventBridge targets, including SNS notifications.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": [
+        "Q013:A",
+        "Q013:E"
+      ],
+      "status": "ambiguous",
+      "explanation": "Dùng thing name làm client ID và policy server-side ràng buộc iot:Connect với ThingName của danh tính đã gắn thing. A/E là ý định đúng nhưng chuỗi biến của E phải sửa dấu đóng và dùng đầy đủ resource ARN.",
+      "source_ids": [
+        "iotclient",
+        "iotthing"
+      ],
+      "keywords": [
+        "client ID",
+        "special characters",
+        "privilege scope"
+      ],
+      "conditional_tip": "Nếu ClientId do client kiểm soát, bind Connect vào authenticated ThingName ở policy server-side.",
+      "source_issues": "E đóng biến bằng ) thay }; shorthand client/... thiếu ARN; literal policy không hợp lệ.",
+      "candidates": [
+        "Q013:A",
+        "Q013:E"
+      ],
+      "id": "Q013",
+      "question_type": "multiple_response",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q013:A",
+          "verdict_reason_vi": "Đúng khi policy xác thực cũng buộc client ID khớp thing.",
+          "source_ids": [
+            "iotclient",
+            "iotthing"
+          ]
+        },
+        {
+          "id": "Q013:B",
+          "verdict_reason_vi": "Sai: Trojan có thể bỏ qua kiểm tra phía client.",
+          "source_ids": [
+            "iotclient",
+            "iotthing"
+          ]
+        },
+        {
+          "id": "Q013:C",
+          "verdict_reason_vi": "Sai: AWSIoTWirelessDataAccess/principal client không phải iot:Connect resource policy phù hợp.",
+          "source_ids": [
+            "iotclient",
+            "iotthing"
+          ]
+        },
+        {
+          "id": "Q013:D",
+          "verdict_reason_vi": "Sai: ClientId tự tham chiếu vẫn cho client tự chọn resource.",
+          "source_ids": [
+            "iotclient",
+            "iotthing"
+          ]
+        },
+        {
+          "id": "Q013:E",
+          "verdict_reason_vi": "Đúng về ý định nếu sửa ${iot:Connection.Thing.ThingName} và ARN, với principal đã gắn thing.",
+          "source_ids": [
+            "iotclient",
+            "iotthing"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "iotclient",
+          "url": "https://docs.aws.amazon.com/iot/latest/developerguide/basic-policy-variables.html",
+          "supported_claim": "Untrusted ClientId substitutions can broaden policy resources; ClientId self-reference does not bind a client to a trusted thing.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "iotthing",
+          "url": "https://docs.aws.amazon.com/iot/latest/developerguide/thing-policy-variables.html",
+          "supported_claim": "ThingName policy variable requires associated authenticated principal and matching thing-name client ID.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q014:B",
+      "status": "verified",
+      "explanation": "AWS Config configuration item là bản ghi trạng thái cấu hình phù hợp để đánh giá tác động tích lũy. Nếu chỉ muốn trạng thái cuối theo khoảng thời gian, cấu hình Daily recording; Continuous mặc định không bảo đảm chỉ một bản ghi cuối.",
+      "source_ids": [
+        "config",
+        "daily"
+      ],
+      "keywords": [
+        "configuration changes",
+        "latest configuration",
+        "cumulative impact"
+      ],
+      "conditional_tip": "Nếu muốn chỉ trạng thái cấu hình mới nhất trong 24 giờ, đặt AWS Config Daily recording.",
+      "source_issues": "Không có cơ sở hiện hành cho khẳng định mọi thay đổi nhanh tự động bị gộp bởi Continuous recorder.",
+      "candidates": null,
+      "id": "Q014",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q014:A",
+          "verdict_reason_vi": "Sai: CloudTrail ghi API activity, không snapshot cấu hình tích lũy.",
+          "source_ids": [
+            "config",
+            "daily"
+          ]
+        },
+        {
+          "id": "Q014:B",
+          "verdict_reason_vi": "Đúng: xem CI mới nhất của AWS Config, chọn recording frequency phù hợp.",
+          "source_ids": [
+            "config",
+            "daily"
+          ]
+        },
+        {
+          "id": "Q014:C",
+          "verdict_reason_vi": "Sai: CloudWatch không thay resource configuration item.",
+          "source_ids": [
+            "config",
+            "daily"
+          ]
+        },
+        {
+          "id": "Q014:D",
+          "verdict_reason_vi": "Sai: Cloud Map phục vụ service discovery, không ghi trạng thái compliance.",
+          "source_ids": [
+            "config",
+            "daily"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "config",
+          "url": "https://docs.aws.amazon.com/config/latest/developerguide/how-does-config-work.html",
+          "supported_claim": "AWS Config configuration items describe resource configuration state and change history.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "daily",
+          "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingMode.html",
+          "supported_claim": "Daily recording captures latest configuration change over 24 hours; continuous recording records changes as they occur.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q015:D",
+      "status": "ambiguous",
+      "explanation": "KMS custom CloudHSM store đáp ứng symmetric master key và CloudTrail audit. GenerateDataKeyPair không hỗ trợ custom key store, nên cần một KMS key thông thường riêng nếu còn phải tạo asymmetric data key pairs.",
+      "source_ids": [
+        "hsm",
+        "pair",
+        "kmsaudit"
+      ],
+      "keywords": [
+        "custom key store",
+        "asymmetric data key pairs",
+        "audit"
+      ],
+      "conditional_tip": "Nếu cần GenerateDataKeyPair, dùng symmetric KMS key thông thường để bảo vệ pair, không dùng key trong custom store.",
+      "source_issues": "Không lựa chọn nào thỏa nếu mọi data keys bắt buộc sinh bằng custom-store key; phân biệt key type và API capability.",
+      "candidates": [
+        "Q015:D"
+      ],
+      "id": "Q015",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q015:A",
+          "verdict_reason_vi": "Chưa đủ: Athena truy vấn log nhưng không thay CloudTrail recorder; custom-store limitation vẫn còn.",
+          "source_ids": [
+            "hsm",
+            "pair",
+            "kmsaudit"
+          ]
+        },
+        {
+          "id": "Q015:B",
+          "verdict_reason_vi": "Sai: S3 không cung cấp KMS data-key generation.",
+          "source_ids": [
+            "hsm",
+            "pair",
+            "kmsaudit"
+          ]
+        },
+        {
+          "id": "Q015:C",
+          "verdict_reason_vi": "Sai: GuardDuty là threat detection, không audit mọi KMS operation.",
+          "source_ids": [
+            "hsm",
+            "pair",
+            "kmsaudit"
+          ]
+        },
+        {
+          "id": "Q015:D",
+          "verdict_reason_vi": "Gần nhất: KMS/CloudHSM và CloudTrail, nhưng asymmetric pair cần key ngoài custom store.",
+          "source_ids": [
+            "hsm",
+            "pair",
+            "kmsaudit"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "hsm",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/keystore-cloudhsm.html",
+          "supported_claim": "CloudHSM custom stores create symmetric AES-256 KMS key material in HSM and perform supported cryptographic operations there.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "pair",
+          "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_GenerateDataKeyPair.html",
+          "supported_claim": "GenerateDataKeyPair cannot use a KMS key in a custom key store.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "kmsaudit",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/logging-using-cloudtrail.html",
+          "supported_claim": "CloudTrail logs AWS KMS API operations for auditing.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q016:C",
+      "status": "verified",
+      "explanation": "Đưa CloudWatch agent vào AMI để các instance mới stream log ra CloudWatch Logs trước scale-in. Đặt retention ít nhất 365 ngày và kiểm tra retention của log group hiện có.",
+      "source_ids": [
+        "cwagent"
+      ],
+      "keywords": [
+        "Auto Scaling group",
+        "scale-in event",
+        "1 year"
+      ],
+      "conditional_tip": "Nếu log chỉ nằm trên instance Auto Scaling, stream ra dịch vụ log tập trung và đặt retention trước khi scale-in.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q016",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q016:A",
+          "verdict_reason_vi": "Sai: EBS riêng không tự bảo đảm không bị xóa/khả dụng sau termination.",
+          "source_ids": [
+            "cwagent"
+          ]
+        },
+        {
+          "id": "Q016:B",
+          "verdict_reason_vi": "Sai: copy mỗi ngày có thể mất log giữa hai lần copy trước scale-in.",
+          "source_ids": [
+            "cwagent"
+          ]
+        },
+        {
+          "id": "Q016:C",
+          "verdict_reason_vi": "Đúng: stream log tập trung và retention >=365 ngày.",
+          "source_ids": [
+            "cwagent"
+          ]
+        },
+        {
+          "id": "Q016:D",
+          "verdict_reason_vi": "Sai: review thủ công không cung cấp lưu trữ bền một năm.",
+          "source_ids": [
+            "cwagent"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "cwagent",
+          "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html",
+          "supported_claim": "CloudWatch agent streams configured local logs and supports retention_in_days including 365; new groups default never-expire, existing retention must be checked.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q017:A",
+      "status": "verified",
+      "explanation": "Giới hạn S3 gateway endpoint theo cả PrincipalOrgID và ResourceOrgID để chặn principal/bucket ngoài organization trên đường ra duy nhất. Chỉ sửa instance role hoặc SCP không ngăn kẻ tấn công dùng thông tin xác thực ngoài organization qua endpoint mặc định.",
+      "source_ids": [
+        "perimeter"
+      ],
+      "keywords": [
+        "default access policy",
+        "outside",
+        "exfiltrating data"
+      ],
+      "conditional_tip": "Nếu attacker có thể dùng credentials khác trên máy bị xâm nhập, đặt resource perimeter ở endpoint thay vì chỉ sửa instance role.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q017",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q017:A",
+          "verdict_reason_vi": "Đúng: ràng buộc principal và tài nguyên trong org trên mọi request qua endpoint.",
+          "source_ids": [
+            "perimeter"
+          ]
+        },
+        {
+          "id": "Q017:B",
+          "verdict_reason_vi": "Sai: instance role vốn hạn chế bucket; attacker có thể dùng credentials khác.",
+          "source_ids": [
+            "perimeter"
+          ]
+        },
+        {
+          "id": "Q017:C",
+          "verdict_reason_vi": "Sai: chặn 443 làm job S3 ngừng hoạt động.",
+          "source_ids": [
+            "perimeter"
+          ]
+        },
+        {
+          "id": "Q017:D",
+          "verdict_reason_vi": "Chưa đủ: SCP không kiểm soát principal ngoài organization và Allow riêng không thay deny.",
+          "source_ids": [
+            "perimeter"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "perimeter",
+          "url": "https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/perimeter-implementation.html",
+          "supported_claim": "Endpoint policies constrain all traversing principals; SCPs constrain organization principals; resource and principal organization keys implement data perimeters.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q018:A",
+      "status": "verified",
+      "explanation": "Khôi phục đúng cluster bằng PITR tới 3:14 PM của ngày cách đây 5 ngày, trước thời điểm tấn công và trong retention 14 ngày. PITR tạo cluster mới; cần quy đổi timezone đúng khi nhập timestamp.",
+      "source_ids": [
+        "pit"
+      ],
+      "keywords": [
+        "last known good version",
+        "14 days",
+        "3:15 PM"
+      ],
+      "conditional_tip": "Nếu thời điểm bắt đầu tấn công đã biết và nằm trong retention, PITR tới ngay trước thời điểm đó.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q018",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q018:A",
+          "verdict_reason_vi": "Đúng: thời điểm gần nhất được nêu trước cuộc tấn công.",
+          "source_ids": [
+            "pit"
+          ]
+        },
+        {
+          "id": "Q018:B",
+          "verdict_reason_vi": "Sai: snapshot gần nhất có thể sau tấn công hoặc mất dữ liệu hơn PITR.",
+          "source_ids": [
+            "pit"
+          ]
+        },
+        {
+          "id": "Q018:C",
+          "verdict_reason_vi": "Sai: khôi phục database khác không phục hồi cluster bị ảnh hưởng.",
+          "source_ids": [
+            "pit"
+          ]
+        },
+        {
+          "id": "Q018:D",
+          "verdict_reason_vi": "Sai: 14 ngày gây mất dữ liệu không cần thiết.",
+          "source_ids": [
+            "pit"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "pit",
+          "url": "https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBClusterToPointInTime.html",
+          "supported_claim": "PITR restores a new database cluster at a requested time within available retention.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": null,
+      "status": "ambiguous",
+      "explanation": "CloudTrail Lake phù hợp thu thập lịch sử tổ chức, nhưng IAM user khác Identity Center user. Disable người dùng Identity Center một mình không thu hồi các AWS role session đã phát hành, nên D không đáp ứng ngay lập tức mọi account như viết.",
+      "source_ids": [
+        "revokeidc",
+        "lake",
+        "principal"
+      ],
+      "keywords": [
+        "compromised IAM user",
+        "immediately",
+        "previous 7 days"
+      ],
+      "conditional_tip": "Nếu danh tính dùng Identity Center, thực hiện quy trình revoke cả assignment/session và deny role sessions, rồi query CloudTrail Lake.",
+      "source_issues": "Không option đáp ứng literal IAM user + mọi AWS account + immediate; cần phân biệt credentials/IdC user/role session.",
+      "candidates": [
+        "Q019:D"
+      ],
+      "id": "Q019",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q019:A",
+          "verdict_reason_vi": "Chưa đủ: IAM user chỉ thuộc một account; disable ở management account không thu hồi mọi assumed-role session.",
+          "source_ids": [
+            "revokeidc",
+            "lake",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q019:B",
+          "verdict_reason_vi": "Sai: xóa policy không giải quyết đầy đủ active role sessions, Security Hub không truy vấn mọi API log.",
+          "source_ids": [
+            "revokeidc",
+            "lake",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q019:C",
+          "verdict_reason_vi": "Sai: xóa assignments không tự thu hồi active role sessions; Logs Insights không trực tiếp query S3 trail.",
+          "source_ids": [
+            "revokeidc",
+            "lake",
+            "principal"
+          ]
+        },
+        {
+          "id": "Q019:D",
+          "verdict_reason_vi": "Gần nhất về truy vấn: Lake đúng, nhưng identity sai phạm vi và disable đơn lẻ không revoke active sessions.",
+          "source_ids": [
+            "revokeidc",
+            "lake",
+            "principal"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "revokeidc",
+          "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/revoke-user-permissions.html",
+          "supported_claim": "Complete revocation includes deny/SCP, assignment removal and sessions; disabling a user alone does not invalidate already-issued role sessions.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "lake",
+          "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-event-data-store.html",
+          "supported_claim": "CloudTrail Lake SQL queries organizational event data stores for event history.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "principal",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+          "supported_claim": "IAM user, assumed-role session, and STS federated-user are distinct principals; Lambda function ARN is not an IAM principal.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q020:A",
+      "status": "verified",
+      "explanation": "Inspector phát hiện lỗ hổng phần mềm trên EC2; Systems Manager Patch Manager triển khai bản vá và kiểm tra compliance. Hai dịch vụ bổ sung cho nhau để phát hiện và khắc phục.",
+      "source_ids": [
+        "inspector",
+        "patch"
+      ],
+      "keywords": [
+        "detect and mitigate",
+        "software vulnerabilities",
+        "EC2 instances"
+      ],
+      "conditional_tip": "Nếu yêu cầu cả phát hiện CVE và khắc phục, kết hợp vulnerability scanner với Patch Manager.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q020",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q020:A",
+          "verdict_reason_vi": "Đúng: Inspector để phát hiện, Patch Manager để vá.",
+          "source_ids": [
+            "inspector",
+            "patch"
+          ]
+        },
+        {
+          "id": "Q020:B",
+          "verdict_reason_vi": "Sai: firewall/antivirus không thay CVE scanning và patching.",
+          "source_ids": [
+            "inspector",
+            "patch"
+          ]
+        },
+        {
+          "id": "Q020:C",
+          "verdict_reason_vi": "Sai: log/metric monitoring không cung cấp vulnerability scanning/remediation.",
+          "source_ids": [
+            "inspector",
+            "patch"
+          ]
+        },
+        {
+          "id": "Q020:D",
+          "verdict_reason_vi": "Sai: Malware Protection tìm malware, không thay package vulnerability assessment.",
+          "source_ids": [
+            "inspector",
+            "patch"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "inspector",
+          "url": "https://docs.aws.amazon.com/inspector/latest/user/scanning-ec2.html",
+          "supported_claim": "Inspector detects EC2 package vulnerabilities and network exposure; it does not patch them.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "patch",
+          "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager.html",
+          "supported_claim": "Patch Manager automates patch installation and patch compliance.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q021:C",
+      "status": "verified",
+      "explanation": "Macie automated discovery lấy mẫu đại diện hằng ngày để xác định bucket có dữ liệu nhạy cảm, rồi chạy discovery jobs toàn bộ phạm vi object được hỗ trợ trong bucket đó. Đây là luồng ít quản trị nhất trong các lựa chọn.",
+      "source_ids": [
+        "maciedaily"
+      ],
+      "keywords": [
+        "many S3 buckets",
+        "additional scanning",
+        "LEAST administrative overhead"
+      ],
+      "conditional_tip": "Nếu phải ưu tiên scan sâu trong nhiều bucket, dùng automated discovery để chọn bucket rồi chạy targeted jobs.",
+      "source_issues": "Full scan chỉ các object đủ điều kiện và định dạng/storage class được hỗ trợ, không mọi object/version tuyệt đối.",
+      "candidates": null,
+      "id": "Q021",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q021:A",
+          "verdict_reason_vi": "Sai: replicate để scan thêm chi phí và vận hành.",
+          "source_ids": [
+            "maciedaily"
+          ]
+        },
+        {
+          "id": "Q021:B",
+          "verdict_reason_vi": "Sai: tự Lambda/on-upload tăng triển khai và vẫn cần discovery job phù hợp.",
+          "source_ids": [
+            "maciedaily"
+          ]
+        },
+        {
+          "id": "Q021:C",
+          "verdict_reason_vi": "Đúng: automated sampling trước, full job trên bucket liên quan sau.",
+          "source_ids": [
+            "maciedaily"
+          ]
+        },
+        {
+          "id": "Q021:D",
+          "verdict_reason_vi": "Sai: thêm DynamoDB/custom inventory không cần cho Macie native results.",
+          "source_ids": [
+            "maciedaily"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "maciedaily",
+          "url": "https://docs.aws.amazon.com/macie/latest/user/discovery-asdd-how-it-works.html",
+          "supported_claim": "Automated discovery evaluates representative supported S3 object samples daily; discovery jobs can inspect selected buckets more thoroughly.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q022:D",
+      "status": "verified",
+      "explanation": "Mã hóa snapshot bằng customer managed KMS key và cấp quyền snapshot/key cho hai account nhận. Bên nhận cần key policy cùng IAM permission để copy/restore theo cơ chế RDS hỗ trợ.",
+      "source_ids": [
+        "snapshot"
+      ],
+      "keywords": [
+        "two accounts",
+        "encrypted",
+        "decrypt the snapshots"
+      ],
+      "conditional_tip": "Nếu chia sẻ encrypted RDS snapshot khác account, dùng customer managed key và cấp quyền cả snapshot lẫn key.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q022",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q022:A",
+          "verdict_reason_vi": "Sai: không thể export AWS managed KMS key material.",
+          "source_ids": [
+            "snapshot"
+          ]
+        },
+        {
+          "id": "Q022:B",
+          "verdict_reason_vi": "Sai: import vào key khác không giúp key đó giải mã ciphertext của snapshot cũ.",
+          "source_ids": [
+            "snapshot"
+          ]
+        },
+        {
+          "id": "Q022:C",
+          "verdict_reason_vi": "Sai: default AWS managed RDS key không hỗ trợ chia sẻ encrypted snapshot.",
+          "source_ids": [
+            "snapshot"
+          ]
+        },
+        {
+          "id": "Q022:D",
+          "verdict_reason_vi": "Đúng: customer key có cross-account key access và snapshot sharing.",
+          "source_ids": [
+            "snapshot"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "snapshot",
+          "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/share-encrypted-snapshot.html",
+          "supported_claim": "Encrypted snapshot sharing requires customer managed key access for recipient accounts; default AWS managed RDS key snapshots cannot be shared.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q023:A",
+      "status": "ambiguous",
+      "explanation": "require_secure_transport=ON bắt buộc TLS cho Aurora MySQL. Aurora PostgreSQL dùng rds.force_ssl, nên A chỉ đúng khi bổ sung engine MySQL mà đề hiện không nêu.",
+      "source_ids": [
+        "mysql",
+        "postgres"
+      ],
+      "keywords": [
+        "Aurora cluster",
+        "all connections",
+        "in transit"
+      ],
+      "conditional_tip": "Nếu Aurora MySQL, bật require_secure_transport; nếu PostgreSQL, bật rds.force_ssl.",
+      "source_issues": "Engine không được chỉ định; API/parameter khác giữa hai Aurora engines.",
+      "candidates": [
+        "Q023:A"
+      ],
+      "id": "Q023",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q023:A",
+          "verdict_reason_vi": "Đúng có điều kiện: require_secure_transport thuộc Aurora MySQL.",
+          "source_ids": [
+            "mysql",
+            "postgres"
+          ]
+        },
+        {
+          "id": "Q023:B",
+          "verdict_reason_vi": "Sai: Kerberos xác thực không tự bắt buộc TLS cho mọi kết nối.",
+          "source_ids": [
+            "mysql",
+            "postgres"
+          ]
+        },
+        {
+          "id": "Q023:C",
+          "verdict_reason_vi": "Sai: ACM certificate không phải cơ chế attach/enforce TLS của Aurora.",
+          "source_ids": [
+            "mysql",
+            "postgres"
+          ]
+        },
+        {
+          "id": "Q023:D",
+          "verdict_reason_vi": "Chưa đủ: thêm proxy không tự chặn đường kết nối trực tiếp hoặc bắt buộc TLS nếu chưa cấu hình.",
+          "source_ids": [
+            "mysql",
+            "postgres"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "mysql",
+          "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Security.html",
+          "supported_claim": "require_secure_transport=ON enforces TLS for Aurora MySQL.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "postgres",
+          "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Security.html",
+          "supported_claim": "Aurora PostgreSQL TLS enforcement uses rds.force_ssl, not require_secure_transport.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q024:C",
+      "status": "verified",
+      "explanation": "Thực thi bộ đếm theo IP trong ứng dụng bằng state dùng chung và cập nhật atomic để áp mức 3 lần trong cửa sổ trượt 5 phút. WAF rate-based rule hiện có minimum 10 và chỉ xấp xỉ, nên không thể cấu hình chính xác 3.",
+      "source_ids": [
+        "wafrate"
+      ],
+      "keywords": [
+        "stateless application",
+        "3 times",
+        "5-minute period"
+      ],
+      "conditional_tip": "Nếu hạn mức nhỏ hơn WAF minimum hoặc cần chính xác, enforce bằng application counter dùng chung.",
+      "source_issues": "Không dùng số minimum WAF 100 đã lỗi thời; stateless fleet không được dùng counter local per instance.",
+      "candidates": null,
+      "id": "Q024",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q024:A",
+          "verdict_reason_vi": "Sai: WAF Limit nhỏ nhất hiện là 10, không phải 3.",
+          "source_ids": [
+            "wafrate"
+          ]
+        },
+        {
+          "id": "Q024:B",
+          "verdict_reason_vi": "Sai: alert/Lambda không phải synchronous read quota enforcement.",
+          "source_ids": [
+            "wafrate"
+          ]
+        },
+        {
+          "id": "Q024:C",
+          "verdict_reason_vi": "Đúng có điều kiện: counter phải chia sẻ across EC2 và enforce cửa sổ trượt/atomic.",
+          "source_ids": [
+            "wafrate"
+          ]
+        },
+        {
+          "id": "Q024:D",
+          "verdict_reason_vi": "Sai: TTL xóa bất đồng bộ và provisioned capacity không tạo quota per IP.",
+          "source_ids": [
+            "wafrate"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "wafrate",
+          "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_RateBasedStatement.html",
+          "supported_claim": "Current WAF rate-based Limit minimum is 10; evaluation windows include 300 seconds; rate limiting is approximate.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q025:B",
+      "status": "verified",
+      "explanation": "B deny inbound 3306 trước allow inbound ephemeral 1024–65535, đồng thời allow outbound 443. Thứ tự này vừa chặn MySQL vừa cho phép response TLS trong NACL stateless.",
+      "source_ids": [
+        "nacl"
+      ],
+      "keywords": [
+        "custom network ACL",
+        "port 443",
+        "port 3306"
+      ],
+      "conditional_tip": "Nếu dùng NACL cho outbound HTTPS, mở inbound ephemeral và đặt deny đặc biệt trước range allow.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q025",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q025:A",
+          "verdict_reason_vi": "Sai: inbound 443 không cho return traffic tới ephemeral port của client.",
+          "source_ids": [
+            "nacl"
+          ]
+        },
+        {
+          "id": "Q025:B",
+          "verdict_reason_vi": "Đúng: deny 3306 số nhỏ hơn rule allow ephemeral; outbound 443.",
+          "source_ids": [
+            "nacl"
+          ]
+        },
+        {
+          "id": "Q025:C",
+          "verdict_reason_vi": "Sai: allow 1024–65535 trước deny 3306 sẽ match 3306 và bỏ qua deny sau.",
+          "source_ids": [
+            "nacl"
+          ]
+        },
+        {
+          "id": "Q025:D",
+          "verdict_reason_vi": "Sai: không mở inbound ephemeral nên response TLS bị chặn.",
+          "source_ids": [
+            "nacl"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "nacl",
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html",
+          "supported_claim": "NACLs are stateless, evaluate lowest rule first, and TLS outbound return traffic requires inbound ephemeral ports.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q026:D",
+      "status": "ambiguous",
+      "explanation": "Secrets Manager với rotation và IAM task role có quyền tối thiểu là thiết kế phù hợp nhất. Inline policy cũng hợp lệ khi gắn vào task role; role chỉ cô lập theo task, không bảo đảm chỉ một container trong cùng task hay ngăn DBA chia sẻ credentials họ đã biết.",
+      "source_ids": [
+        "taskrole",
+        "rotate"
+      ],
+      "keywords": [
+        "rotated periodically",
+        "application only",
+        "plaintext"
+      ],
+      "conditional_tip": "Nếu nhiều container cần quyền khác nhau, tách task và role; chỉ cấp GetSecretValue cho role ứng dụng, không DBA.",
+      "source_issues": "B mô tả inline policy chưa xác định nơi attach; D không đảm bảo isolation giữa containers; rotation phải cấu hình, không mặc định.",
+      "candidates": [
+        "Q026:B",
+        "Q026:D"
+      ],
+      "id": "Q026",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "medium",
+      "per_option": [
+        {
+          "id": "Q026:A",
+          "verdict_reason_vi": "Sai: Parameter Store không cung cấp RDS rotation native; EC2 instance profile không thay task role.",
+          "source_ids": [
+            "taskrole",
+            "rotate"
+          ]
+        },
+        {
+          "id": "Q026:B",
+          "verdict_reason_vi": "Có thể đúng nếu inline policy gắn task role và rotation bật; không thể loại chỉ vì inline policy.",
+          "source_ids": [
+            "taskrole",
+            "rotate"
+          ]
+        },
+        {
+          "id": "Q026:C",
+          "verdict_reason_vi": "Sai: Parameter Store mã hóa không tự cung cấp rotation yêu cầu.",
+          "source_ids": [
+            "taskrole",
+            "rotate"
+          ]
+        },
+        {
+          "id": "Q026:D",
+          "verdict_reason_vi": "Tốt nhất: Secrets Manager rotation và task IAM role, với giới hạn task/container và DBA access.",
+          "source_ids": [
+            "taskrole",
+            "rotate"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "taskrole",
+          "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html",
+          "supported_claim": "Task IAM role provides AWS permissions to containers in a task; containers within the task are not a credential isolation boundary.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "rotate",
+          "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html",
+          "supported_claim": "Secrets Manager supports configured automated secret rotation, including RDS integration.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": [
+        "Q027:A",
+        "Q027:C"
+      ],
+      "status": "verified",
+      "explanation": "KMS interface endpoint với private DNS đưa kết nối vào private endpoint; key policy ràng buộc SourceVpce buộc request qua endpoint đó. Để cưỡng chế thật sự, dùng deny ngoài endpoint hoặc loại bỏ mọi đường allow thay thế.",
+      "source_ids": [
+        "vpce",
+        "dns"
+      ],
+      "keywords": [
+        "within the AWS network",
+        "public service endpoints"
+      ],
+      "conditional_tip": "Nếu policy phải bắt buộc qua VPCE, deny request không có SourceVpce phù hợp và xét các service integration cần ngoại lệ.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q027",
+      "question_type": "multiple_response",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q027:A",
+          "verdict_reason_vi": "Đúng: SourceVpce kiểm tra endpoint ID, với policy enforce đầy đủ.",
+          "source_ids": [
+            "vpce",
+            "dns"
+          ]
+        },
+        {
+          "id": "Q027:B",
+          "verdict_reason_vi": "Sai: thêm virtual private gateway không tự cung cấp KMS private endpoint.",
+          "source_ids": [
+            "vpce",
+            "dns"
+          ]
+        },
+        {
+          "id": "Q027:C",
+          "verdict_reason_vi": "Đúng: endpoint và private DNS cho đường gọi private.",
+          "source_ids": [
+            "vpce",
+            "dns"
+          ]
+        },
+        {
+          "id": "Q027:D",
+          "verdict_reason_vi": "Sai: import key material không thay đường network của KMS API.",
+          "source_ids": [
+            "vpce",
+            "dns"
+          ]
+        },
+        {
+          "id": "Q027:E",
+          "verdict_reason_vi": "Sai: SourceIp 10.0.0.0/16 không nhận diện request qua interface endpoint.",
+          "source_ids": [
+            "vpce",
+            "dns"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "vpce",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-policy-condition.html",
+          "supported_claim": "KMS policy aws:SourceVpce identifies endpoint; SourceIp is not usable to identify requests through interface endpoints.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "dns",
+          "url": "https://docs.aws.amazon.com/kms/latest/developerguide/vpce-connect.html",
+          "supported_claim": "KMS interface endpoints with private DNS resolve normal KMS endpoint names to private endpoint addresses.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q028:D",
+      "status": "verified",
+      "explanation": "Thu hồi các session của IAM role gắn instance profile để credentials bị đánh cắp không còn gọi AWS API. Thay inbound security group không chặn API call thực hiện từ bên ngoài bằng credentials đó.",
+      "source_ids": [
+        "revokerole"
+      ],
+      "keywords": [
+        "InstanceCredentialExfiltration",
+        "API access keys",
+        "first step"
+      ],
+      "conditional_tip": "Nếu instance credentials bị dùng ngoài AWS, revoke role sessions trước rồi tiếp tục xử lý nguồn xâm nhập.",
+      "source_issues": "Revoke có thể ảnh hưởng ứng dụng; không ngăn attacker lấy credentials mới nếu instance vẫn bị kiểm soát.",
+      "candidates": null,
+      "id": "Q028",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q028:A",
+          "verdict_reason_vi": "Sai: inbound network rule không vô hiệu hóa AWS credentials bị đánh cắp.",
+          "source_ids": [
+            "revokerole"
+          ]
+        },
+        {
+          "id": "Q028:B",
+          "verdict_reason_vi": "Sai: inventory không ngăn attacker dùng token.",
+          "source_ids": [
+            "revokerole"
+          ]
+        },
+        {
+          "id": "Q028:C",
+          "verdict_reason_vi": "Sai: vulnerability scan không thu hồi token.",
+          "source_ids": [
+            "revokerole"
+          ]
+        },
+        {
+          "id": "Q028:D",
+          "verdict_reason_vi": "Đúng: revoke active role sessions issued trước thời điểm thu hồi.",
+          "source_ids": [
+            "revokerole"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "revokerole",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_revoke-sessions.html",
+          "supported_claim": "Role-session revocation attaches a deny for temporary credentials issued before the revocation time.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q029:B",
+      "status": "verified",
+      "explanation": "SSE-KMS với customer managed key chia quyền S3 cho operations và quyền decrypt cho security. Đọc plaintext cần đồng thời quyền GetObject và kms:Decrypt, nên một bên cấu hình sai không tự đủ quyền.",
+      "source_ids": [
+        "ssekms"
+      ],
+      "keywords": [
+        "separate the duties",
+        "plaintext data",
+        "encryption keys"
+      ],
+      "conditional_tip": "Nếu cần hai nhóm cùng cho phép mới đọc được plaintext, dùng customer-key SSE-KMS và tách quyền S3/KMS.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q029",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q029:A",
+          "verdict_reason_vi": "Sai: SSE-S3 không có customer KMS policy riêng để chia hai tầng quyền.",
+          "source_ids": [
+            "ssekms"
+          ]
+        },
+        {
+          "id": "Q029:B",
+          "verdict_reason_vi": "Đúng: enforce customer-key SSE-KMS và tách S3/key policy administration.",
+          "source_ids": [
+            "ssekms"
+          ]
+        },
+        {
+          "id": "Q029:C",
+          "verdict_reason_vi": "Sai: SSE-S3 do S3 quản lý key không đáp ứng tách quyền decrypt này.",
+          "source_ids": [
+            "ssekms"
+          ]
+        },
+        {
+          "id": "Q029:D",
+          "verdict_reason_vi": "Sai: SSE-C dùng khóa khách hàng cung cấp, không có KMS key policy như mô tả.",
+          "source_ids": [
+            "ssekms"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "ssekms",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+          "supported_claim": "Reading SSE-KMS objects requires S3 access and KMS decrypt authorization; customer managed keys allow separate key policy control.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q030:A",
+      "status": "verified",
+      "explanation": "Chọn security account làm delegated administrator cho Macie và Security Hub để quản lý discovery xuyên organization và tổng hợp findings. Bật publication sensitive-data findings theo account/Region cần thiết, vì Macie không gửi loại này mặc định.",
+      "source_ids": [
+        "macieorg",
+        "maciepublish"
+      ],
+      "keywords": [
+        "across the organization",
+        "single location",
+        "sensitive data"
+      ],
+      "conditional_tip": "Nếu muốn Macie sensitive findings trong Security Hub, bật publication loại này và kiểm tra từng account/Region.",
+      "source_issues": "Publication sensitive findings opt-in; delegated administrator không tự thay publication settings mọi member account.",
+      "candidates": null,
+      "id": "Q030",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q030:A",
+          "verdict_reason_vi": "Đúng: Macie phát hiện S3 sensitive data và Security Hub tổng hợp findings.",
+          "source_ids": [
+            "macieorg",
+            "maciepublish"
+          ]
+        },
+        {
+          "id": "Q030:B",
+          "verdict_reason_vi": "Sai: Inspector không phân loại dữ liệu nhạy cảm trong S3.",
+          "source_ids": [
+            "macieorg",
+            "maciepublish"
+          ]
+        },
+        {
+          "id": "Q030:C",
+          "verdict_reason_vi": "Sai: Inspector vẫn không tạo sensitive-data inventory.",
+          "source_ids": [
+            "macieorg",
+            "maciepublish"
+          ]
+        },
+        {
+          "id": "Q030:D",
+          "verdict_reason_vi": "Sai: Trusted Advisor không là đích tích hợp Macie sensitive findings thay Security Hub.",
+          "source_ids": [
+            "macieorg",
+            "maciepublish"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "macieorg",
+          "url": "https://docs.aws.amazon.com/macie/latest/user/accounts-mgmt-ao.html",
+          "supported_claim": "Organizations Macie delegated administrator centrally manages discovery and findings in member accounts.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "maciepublish",
+          "url": "https://docs.aws.amazon.com/macie/latest/user/findings-publish-frequency.html",
+          "supported_claim": "Publishing sensitive-data findings to Security Hub is opt-in, configured per account and Region; default publication concerns policy findings.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q031:B",
+      "status": "verified",
+      "explanation": "GuardDuty không thấy DNS requests dùng custom resolver như OpenDNS, nên không sinh DNS finding tương ứng để gửi Security Hub. GuardDuty tự thu nguồn log nền tảng; không cần tự bật VPC Flow Logs cho nó.",
+      "source_ids": [
+        "gdsource",
+        "gdhub"
+      ],
+      "keywords": [
+        "DNS requests",
+        "test domain",
+        "single AWS Region"
+      ],
+      "conditional_tip": "Nếu test DNS finding, dùng AWS resolver và domain/test threat-list phù hợp loại finding.",
+      "source_issues": "example.com tự thân không chứng minh malicious domain; cần biết test/threat-list đã cấu hình.",
+      "candidates": null,
+      "id": "Q031",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q031:A",
+          "verdict_reason_vi": "Sai: GuardDuty thu nguồn log độc lập, không cần khách tự tạo Flow Logs.",
+          "source_ids": [
+            "gdsource",
+            "gdhub"
+          ]
+        },
+        {
+          "id": "Q031:B",
+          "verdict_reason_vi": "Đúng: custom DNS không được foundational DNS monitoring hỗ trợ.",
+          "source_ids": [
+            "gdsource",
+            "gdhub"
+          ]
+        },
+        {
+          "id": "Q031:C",
+          "verdict_reason_vi": "Sai: tích hợp GuardDuty/Security Hub tự có khi hai dịch vụ đã bật; không cần forward custom.",
+          "source_ids": [
+            "gdsource",
+            "gdhub"
+          ]
+        },
+        {
+          "id": "Q031:D",
+          "verdict_reason_vi": "Sai: hệ thống chỉ một Region, không có vấn đề cross-Region như phương án.",
+          "source_ids": [
+            "gdsource",
+            "gdhub"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "gdsource",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html",
+          "supported_claim": "GuardDuty collects its foundational sources independently; DNS monitoring requires AWS resolver rather than a custom DNS resolver.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "gdhub",
+          "url": "https://docs.aws.amazon.com/guardduty/latest/ug/securityhub-integration.html",
+          "supported_claim": "GuardDuty automatically sends findings when Security Hub integration is enabled by both services.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": [
+        "Q032:B",
+        "Q032:C"
+      ],
+      "status": "verified",
+      "explanation": "Đặt độ dài mật khẩu ở Cognito user pool cho người dùng local và ở Active Directory cho danh tính federation. IAM password policy không áp lên password của external IdP.",
+      "source_ids": [
+        "cognitopwd",
+        "iampwd"
+      ],
+      "keywords": [
+        "Active Directory",
+        "user database",
+        "required minimum length"
+      ],
+      "conditional_tip": "Nếu danh tính federation, sửa password policy tại IdP thực sự xác thực người dùng.",
+      "source_issues": "Cognito vốn có minimum length >=6; no required minimum là premise không chính xác nếu hiểu theo nghĩa không có bất kỳ minimum nào.",
+      "candidates": null,
+      "id": "Q032",
+      "question_type": "multiple_response",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q032:A",
+          "verdict_reason_vi": "Sai: IAM policy chỉ áp mật khẩu IAM users, không AD-federated users.",
+          "source_ids": [
+            "cognitopwd",
+            "iampwd"
+          ]
+        },
+        {
+          "id": "Q032:B",
+          "verdict_reason_vi": "Đúng: Cognito password policy cho local user database.",
+          "source_ids": [
+            "cognitopwd",
+            "iampwd"
+          ]
+        },
+        {
+          "id": "Q032:C",
+          "verdict_reason_vi": "Đúng: AD kiểm soát password của người dùng được AD xác thực.",
+          "source_ids": [
+            "cognitopwd",
+            "iampwd"
+          ]
+        },
+        {
+          "id": "Q032:D",
+          "verdict_reason_vi": "Sai: SCP giới hạn AWS permissions, không validate password login của AD/Cognito.",
+          "source_ids": [
+            "cognitopwd",
+            "iampwd"
+          ]
+        },
+        {
+          "id": "Q032:E",
+          "verdict_reason_vi": "Sai: IAM condition không cung cấp minimum-password-length login chung này.",
+          "source_ids": [
+            "cognitopwd",
+            "iampwd"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "cognitopwd",
+          "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html",
+          "supported_claim": "User-pool password policy controls Cognito local users and already has a minimum-length constraint.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "iampwd",
+          "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html",
+          "supported_claim": "IAM account password policies govern IAM users, not federated users authenticated by an external IdP.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q033:C",
+      "status": "verified",
+      "explanation": "WAF rule match User-Agent của emulator và block request tới ALB, với default allow cho request khác. Dấu hiệu này xử lý nguồn IP phân tán nhưng attacker có thể đổi User-Agent nên đây là giảm thiểu theo marker đã cho.",
+      "source_ids": [
+        "string",
+        "sg"
+      ],
+      "keywords": [
+        "many IP addresses",
+        "user agent string",
+        "legitimate logins"
+      ],
+      "conditional_tip": "Nếu attack có marker HTTP header ổn định, dùng WAF block marker và kiểm tra false positives.",
+      "source_issues": "User-Agent spoofable; không nên diễn giải đây là biện pháp chặn mọi credential stuffing.",
+      "candidates": null,
+      "id": "Q033",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q033:A",
+          "verdict_reason_vi": "Sai: thông báo số lần login không trực tiếp block attack.",
+          "source_ids": [
+            "string",
+            "sg"
+          ]
+        },
+        {
+          "id": "Q033:B",
+          "verdict_reason_vi": "Sai: security group không có deny hoặc kiểm tra User-Agent.",
+          "source_ids": [
+            "string",
+            "sg"
+          ]
+        },
+        {
+          "id": "Q033:C",
+          "verdict_reason_vi": "Đúng: WAF header string match với Block chặn marker được nêu.",
+          "source_ids": [
+            "string",
+            "sg"
+          ]
+        },
+        {
+          "id": "Q033:D",
+          "verdict_reason_vi": "Sai: allow các User-Agent đã biết không tự block marker này và dễ chặn login hợp lệ.",
+          "source_ids": [
+            "string",
+            "sg"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "string",
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-string-match.html",
+          "supported_claim": "WAF string match rules can match HTTP header values including User-Agent.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "sg",
+          "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+          "supported_claim": "Security group rules allow traffic and cannot express deny rules or inspect HTTP headers.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q034:A",
+      "status": "verified",
+      "explanation": "Đặt hai EC2 sau ALB, gắn WAF SQL injection rule rồi chuyển DNS khi sẵn sàng; hạn chế EC2 chỉ nhận web traffic từ ALB để tránh bypass. Cách này giữ hai backend đang hoạt động và không cần sửa legacy code trong 24 giờ.",
+      "source_ids": [
+        "sqli",
+        "wafresources"
+      ],
+      "keywords": [
+        "24 hours",
+        "least amount of effort",
+        "normal operations"
+      ],
+      "conditional_tip": "Nếu cần giảm SQLi nhanh cho legacy app, WAF ở ALB và chặn mọi direct-backend bypass.",
+      "source_issues": "WAF giảm thiểu theo rule; cần staging/rule validation với mẫu attack và traffic hợp lệ.",
+      "candidates": null,
+      "id": "Q034",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q034:A",
+          "verdict_reason_vi": "Đúng: ALB/WAF trước hai backend và chuyển DNS có kiểm soát.",
+          "source_ids": [
+            "sqli",
+            "wafresources"
+          ]
+        },
+        {
+          "id": "Q034:B",
+          "verdict_reason_vi": "Chưa đủ: CloudFront một EC2 làm giảm HA và direct EC2 path cần chặn riêng.",
+          "source_ids": [
+            "sqli",
+            "wafresources"
+          ]
+        },
+        {
+          "id": "Q034:C",
+          "verdict_reason_vi": "Sai: tự vá legacy source khó đạt yêu cầu ít công sức trong 24 giờ.",
+          "source_ids": [
+            "sqli",
+            "wafresources"
+          ]
+        },
+        {
+          "id": "Q034:D",
+          "verdict_reason_vi": "Sai: WAF không gắn trực tiếp EC2; đóng DB port không ngăn SQLi qua ứng dụng.",
+          "source_ids": [
+            "sqli",
+            "wafresources"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "sqli",
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-sqli-match.html",
+          "supported_claim": "WAF SQL injection statements inspect request components for SQL injection patterns.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        },
+        {
+          "id": "wafresources",
+          "url": "https://docs.aws.amazon.com/waf/latest/developerguide/how-aws-waf-works-resources.html",
+          "supported_claim": "WAF associates with supported resources including ALB and CloudFront, not a bare EC2 instance.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q035:B",
+      "status": "verified",
+      "explanation": "Chạy eic_harvest_hostkeys để cập nhật host keys mới vào trusted host-key database của EC2 Instance Connect. Đây là host key của server, khác key pair đăng nhập của client.",
+      "source_ids": [
+        "host"
+      ],
+      "keywords": [
+        "rotated the host keys",
+        "failed host key validation"
+      ],
+      "conditional_tip": "Nếu EC2 Instance Connect lỗi sau host-key rotation, harvest host keys mới trên instance.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q035",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q035:A",
+          "verdict_reason_vi": "Sai: KMS key không quản lý SSH host-key trust của Instance Connect.",
+          "source_ids": [
+            "host"
+          ]
+        },
+        {
+          "id": "Q035:B",
+          "verdict_reason_vi": "Đúng: cập nhật host-key database bằng eic_harvest_hostkeys.",
+          "source_ids": [
+            "host"
+          ]
+        },
+        {
+          "id": "Q035:C",
+          "verdict_reason_vi": "Sai: SSM policy không cập nhật EC2 Instance Connect host-key trust.",
+          "source_ids": [
+            "host"
+          ]
+        },
+        {
+          "id": "Q035:D",
+          "verdict_reason_vi": "Sai: tạo login key pair mới không sửa server host key bị stale.",
+          "source_ids": [
+            "host"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "host",
+          "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html",
+          "supported_claim": "After host key rotation, manually run eic_harvest_hostkeys to update the EC2 Instance Connect trusted host-key database.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    },
+    {
+      "independent_answer": "Q036:C",
+      "status": "verified",
+      "explanation": "Dùng Macie managed data identifiers để phát hiện dữ liệu nhạy cảm trong S3 và EventBridge chuyển findings tới SNS topic hiện có. Đây là tích hợp native ít triển khai hơn tự viết scanner.",
+      "source_ids": [
+        "macie"
+      ],
+      "keywords": [
+        "sensitive data",
+        "existing",
+        "SNS"
+      ],
+      "conditional_tip": "Nếu đã có SNS topic, route Macie sensitive-data findings bằng EventBridge và kiểm tra topic policy/subscription.",
+      "source_issues": "",
+      "candidates": null,
+      "id": "Q036",
+      "question_type": "multiple_choice",
+      "concluded_at_utc": "2026-09-30T21:33:39.983997+00:00",
+      "confidence": "high",
+      "per_option": [
+        {
+          "id": "Q036:A",
+          "verdict_reason_vi": "Sai: Config đánh giá cấu hình resource, không phân loại nội dung S3.",
+          "source_ids": [
+            "macie"
+          ]
+        },
+        {
+          "id": "Q036:B",
+          "verdict_reason_vi": "Sai: custom Lambda scanner cần tự xây logic và vận hành.",
+          "source_ids": [
+            "macie"
+          ]
+        },
+        {
+          "id": "Q036:C",
+          "verdict_reason_vi": "Đúng: Macie findings → EventBridge → SNS.",
+          "source_ids": [
+            "macie"
+          ]
+        },
+        {
+          "id": "Q036:D",
+          "verdict_reason_vi": "Sai: GuardDuty phát hiện threat, không discovery nội dung sensitive data.",
+          "source_ids": [
+            "macie"
+          ]
+        }
+      ],
+      "citations": [
+        {
+          "id": "macie",
+          "url": "https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html",
+          "supported_claim": "Macie discovers sensitive S3 data with managed identifiers; findings integrate with EventBridge for SNS notification.",
+          "access_date": "2026-09-30",
+          "accessed_by": "web.run; actual primary AWS page opened before conclusions persisted"
+        }
+      ]
+    }
+  ]
+}

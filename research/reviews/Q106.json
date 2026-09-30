@@ -2,9 +2,9 @@
   "question_id": "Q106",
   "question_content_hash": "be8441e96ab104cfe39a8be4a623edb8c09bf1d9f3624570e5204e09eff1f255",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:54:33Z",
-  "last_reviewed_at": "2026-09-30T20:22:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,13 +34,12 @@
       "unit_id": "Q106:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Xóa NAT gateway đang dùng sẽ cắt kết nối internet của application server trong lúc thay thế (vi phạm R2); NAT gateway không có cơ chế 'chỉ subnet X được dùng' — việc chọn subnet nào đi qua NAT nằm ở route table, nên thao tác này vừa gây gián đoạn vừa thừa.",
+      "reason_vi": "Xóa shared NAT làm gián đoạn app.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q106-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -48,45 +47,42 @@
       "unit_id": "Q106:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Network ACL chỉ dùng CIDR làm source/destination, không tham chiếu security group ID; NAT gateway cũng không thể gắn security group. Ngoài ra chặn inbound không phải là chặn kết nối outbound do DB khởi tạo.",
+      "reason_vi": "NACL không tham chiếu security group ID và NAT gateway không gắn SG.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "Q106-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q106:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Mỗi subnet DB có route table riêng; xóa route 0.0.0.0/0 -> NAT gateway ở các route table này làm DB mất đường ra internet, trong khi route table của subnet application server giữ nguyên nên không bị gián đoạn; thay đổi có hiệu lực ngay.",
+      "reason_vi": "cắt internet egress của DB subnets nhưng giữ local routes.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5"
+        "Q106-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q106:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "NAT gateway không có route table riêng để gắn (gateway route table chỉ gắn với internet gateway hoặc virtual private gateway), và route chỉ gồm destination + target, không có quy tắc 'deny'.",
+      "reason_vi": "Route table không có deny connection rules.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6",
-        "ref5"
+        "Q106-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -119,16 +115,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu VPC xác nhận mỗi subnet dùng một route table, route chỉ gồm destination/target; NACL chỉ dùng CIDR; NAT gateway không có security group và không có route table riêng.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ A: tạo NAT gateway mới cho subnet app cũng có thể đạt mục tiêu nhưng phải xóa NAT hiện tại và đổi route của subnet app, gây gián đoạn và NAT gateway không có cơ chế giới hạn subnet nào được dùng (việc đó do route table quyết định). B và D mô tả tính năng không tồn tại (NACL tham chiếu security group ID; route table 'của NAT gateway' với rule deny). Vì mỗi subnet có route table riêng, xóa route 0.0.0.0/0 -> NAT ở route table subnet DB có hiệu lực ngay và không ảnh hưởng subnet app. Giữ verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Đường ra internet của subnet được quyết định bởi route table của subnet đó; vì subnet DB có route table riêng, xóa default route tới NAT gateway khiến DB không thể ra internet ngay lập tức, còn route table của subnet app giữ nguyên nên không bị gián đoạn.",
+    "why_correct": "Xóa default NAT route trong riêng hai route tables của DB subnets; local VPC route giữ kết nối ứng dụng, route của app không đổi.",
     "others": {
-      "Q106:A": "Xóa NAT gateway đang dùng sẽ cắt internet của app server trong lúc thay thế; NAT gateway không tự giới hạn subnet nào được dùng — việc đó nằm ở route table.",
-      "Q106:B": "Network ACL chỉ dùng CIDR, không tham chiếu security group ID, và NAT gateway không có security group; chặn inbound cũng không chặn kết nối outbound do DB khởi tạo.",
-      "Q106:D": "NAT gateway không có route table riêng để gắn, và route table không có rule 'deny' (chỉ destination + target)."
+      "Q106:A": "Xóa shared NAT làm gián đoạn app.",
+      "Q106:B": "NACL không tham chiếu security group ID và NAT gateway không gắn SG.",
+      "Q106:D": "Route table không có deny connection rules."
     }
   },
   "keywords": [
@@ -145,7 +141,7 @@
       "meaning_vi": "Không được động vào NAT gateway/route của subnet app."
     }
   ],
-  "memory_tip_vi": "Nếu cần chặn một nhóm subnet ra internet qua NAT mà không ảnh hưởng subnet khác -> nghĩ đến xóa route 0.0.0.0/0 trong route table của subnet đó; kiểm tra: subnet có route table riêng hay dùng chung (dùng chung thì phải tạo route table mới).",
+  "memory_tip_vi": "Nếu chỉ DB subnets phải mất internet, bỏ NAT default routes của chúng và giữ local VPC route.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -235,9 +231,27 @@
       "quote": "You can associate a route table with an internet gateway or a virtual private gateway.",
       "supports": "Route table chỉ gắn được với IGW/VGW (gateway route table), không có 'route table của NAT gateway'.",
       "kind": "direct"
+    },
+    {
+      "id": "Q106-r2-1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/route-table-options.html",
+      "title": "Example routing options - Amazon Virtual Private Cloud",
+      "accessed_at": "2026-09-30",
+      "quote": "private subnet's route table that routes IPv4 internet traffic",
+      "supports": "Private subnet internet egress uses route to NAT; VPC local route preserves internal connectivity.",
+      "kind": "direct",
+      "snapshot_id": "7e44f390e9c5",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q106",
+      "detail_vi": "Theo topo đề không có đường egress khác; nếu có IPv6/TGW/proxy cần cắt thêm."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -252,7 +266,46 @@
       "previous_answer": [
         "Q106:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q106:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q106:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Từ khóa: 'Each subnet in the VPC uses its own unique route table' -> sửa route table của subnet DB là đủ, không ảnh hưởng subnet khác."
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q106:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q106:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

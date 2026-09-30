@@ -2,7 +2,7 @@
   "question_id": "Q143",
   "question_content_hash": "5e701d4fec826387519b4d870a4d9fafc9afb4b8530d74e2e4028407be9d5576",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:24:42+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
@@ -38,12 +38,12 @@
       "unit_id": "Q143:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Quyền truy cập tài nguyên do permissions policy của role quyết định, không do trust policy; đề không nói role thiếu permissions, và đây cũng không phải vấn đề bảo mật mà là vấn đề chức năng.",
+      "reason_vi": "A trust không chứng minh target role không có resource permissions; đề nói role phục vụ ingest.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q143-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -51,40 +51,39 @@
       "unit_id": "Q143:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Trust policy chỉ tin cậy account 2222222222; khách hàng khác assume trực tiếp từ account của họ sẽ bị từ chối vì account họ không nằm trong Principal.",
+      "reason_vi": "B trust Company B không cho customer account trực tiếp assume role.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "Q143-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q143:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Đúng kịch bản confused deputy: khách hàng khác đưa role ARN (không bí mật) của Company A cho Company B, Company B assume role đó thay mặt họ; thiếu điều kiện sts:ExternalId nên không chặn được.",
+      "reason_vi": "C customer khác có thể đưa ARN của A cho Company B, tạo confused deputy.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q143-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q143:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "ExternalId đặt trong trust policy role của khách hàng khác chỉ ràng buộc việc assume role CỦA HỌ, không giúp 'chặn/intercept' request của Company B tới Company A; ExternalId phải do Company B sinh và duy nhất cho từng khách hàng.",
+      "reason_vi": "D ExternalId là giá trị phân biệt customer do third party quản lý, không cho intercept request như mô tả.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "Q143-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -157,14 +156,21 @@
       "quote": "Roles and users are both AWS identities with permissions policies that determine what the identity can and cannot do in AWS.",
       "supports": "Quyền truy cập tài nguyên do permissions policy quyết định, trust policy không nói lên điều đó (lựa chọn A).",
       "kind": "inference"
+    },
+    {
+      "id": "Q143-r2-1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html",
+      "title": "Access to AWS accounts owned by third parties - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+      "quote": "In addition when a customer gives you a role ARN,",
+      "supports": "Không có ExternalId theo customer, bên thứ ba có thể bị lừa assume role của Company A khi customer khác đưa role ARN đó.",
+      "kind": "direct",
+      "snapshot_id": "e2928ff25691",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
-    {
-      "type": "data",
-      "location": "Q143:stem:0",
-      "detail_vi": "Account ID 1111111111 và 2222222222 chỉ có 10 chữ số; AWS account ID thật có 12 chữ số (ví dụ minh hoạ, không ảnh hưởng đáp án)."
-    },
     {
       "type": "typo",
       "location": "Q143:stem:0",
@@ -174,10 +180,15 @@
       "type": "typo",
       "location": "Q143:stem:3",
       "detail_vi": "Trong ảnh policy thiếu dấu phẩy sau \"Version\": \"2012-10-17\" nên JSON không hợp lệ về cú pháp; không ảnh hưởng ý nghĩa câu hỏi."
+    },
+    {
+      "type": "data",
+      "location": "Q143",
+      "detail_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn."
     }
   ],
-  "notes_vi": "Bên thứ ba phục vụ nhiều khách hàng + trust policy không có sts:ExternalId -> confused deputy.",
-  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "notes_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "blind_record_sha256": "e7cb77373a91aec7ef3471acbe681a88dd372f1c52e0a3bac383ca311b737bf6",
   "source_answer": [
     "Q143:C"
@@ -190,16 +201,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "IAM User Guide (confused deputy) mô tả gần như nguyên văn kịch bản: khách hàng khác cung cấp ARN role của bạn cho bên thứ ba, bên thứ ba assume role đó thay họ; cách phòng là điều kiện sts:ExternalId. Trust policy trong ảnh (đã đọc lại) không có Condition.",
+    "reason_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã đọc lại ảnh policy: Principal AWS = 2222222222, Action sts:AssumeRole, không có Condition (thiếu dấu phẩy sau Version là lỗi trình bày). Đã xét lại B (đối thủ gần nhất): khách hàng khác assume trực tiếp từ account của họ sẽ bị từ chối vì chỉ account 2222222222 được tin cậy (ref3); rủi ro thật là họ lợi dụng Company B làm confused deputy bằng cách đưa ARN role của Company A (ref1), đúng như C. D sai vì ExternalId do Company B kiểm soát và đặt trong role của khách hàng khác không thể 'intercept' request tới Company A (ref2). A không phải vấn đề bảo mật và không suy ra từ trust policy. Giữ C, verified, high.",
+  "reconciliation_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
   "explanation_vi": {
-    "why_correct": "Trust policy tin cậy cả account 2222222222 mà không có điều kiện sts:ExternalId, nên một khách hàng khác của Company B chỉ cần khai báo ARN role (không bí mật) của Company A với Company B là dịch vụ của Company B sẽ assume role đó thay họ - đây là confused deputy.",
+    "why_correct": "Không có ExternalId theo customer, bên thứ ba có thể bị lừa assume role của Company A khi customer khác đưa role ARN đó.",
     "others": {
-      "Q143:A": "Quyền truy cập tài nguyên do permissions policy của role quyết định, trust policy không nói lên điều đó; và đây cũng không phải vấn đề bảo mật.",
-      "Q143:B": "Trust policy chỉ tin account 2222222222, nên khách hàng khác gọi AssumeRole trực tiếp từ account của họ sẽ bị từ chối.",
-      "Q143:D": "ExternalId do Company B sinh và kiểm soát; điều kiện đặt trong role của khách hàng khác chỉ ràng buộc role của họ, không thể chặn/intercept request tới Company A."
+      "Q143:A": "A trust không chứng minh target role không có resource permissions; đề nói role phục vụ ingest.",
+      "Q143:B": "B trust Company B không cho customer account trực tiếp assume role.",
+      "Q143:D": "D ExternalId là giá trị phân biệt customer do third party quản lý, không cho intercept request như mô tả."
     }
   },
   "keywords": [
@@ -216,7 +227,7 @@
       "meaning_vi": "Cần sts:ExternalId duy nhất cho mỗi khách hàng trong trust policy."
     }
   ],
-  "memory_tip_vi": "Nếu role cho bên thứ ba phục vụ nhiều khách hàng mà trust policy chỉ có Principal account -> nghĩ đến confused deputy, thêm Condition sts:ExternalId; kiểm tra khách hàng khác không assume trực tiếp được vì account họ không nằm trong Principal.",
+  "memory_tip_vi": "Nếu third party assume role cho nhiều khách, trust third party + ExternalId riêng theo customer.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -241,6 +252,39 @@
       "previous_answer": [
         "Q143:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q143:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q143:C"
+      ],
+      "note_vi": "Source dùng account IDs 10 digits như placeholders; account ID/ARN thật phải hợp lệ. Không sửa nguyên văn nguồn.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

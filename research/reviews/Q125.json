@@ -2,9 +2,9 @@
   "question_id": "Q125",
   "question_content_hash": "19532dcd32c9c479b8090aec45a70ad860ecdaebfa9e2b8f35f1e7d1f5bc4300",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:24:24+00:00",
-  "last_reviewed_at": "2026-09-30T20:36:52+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,64 +34,62 @@
       "unit_id": "Q125:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Hoạt động về chức năng nhưng tạo access key dài hạn và chia sẻ cho bên thứ ba - AWS khuyến nghị dùng credential tạm thời thay cho access key dài hạn; đây là rủi ro mới, vi phạm R3.",
+      "reason_vi": "A tạo access keys dài hạn, thêm rủi ro so với certificate và temporary credentials.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q125-r2-1",
+        "Q125-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q125:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "IAM Roles Anywhere cho workload ngoài AWS đổi X.509 certificate (do CA đăng ký làm trust anchor) lấy credential tạm thời của role; role trust rolesanywhere.amazonaws.com, profile chỉ định role, policy cho phép Session Manager - không cần credential dài hạn, không mở port.",
+      "reason_vi": "B dùng trust anchor/profile/role để cấp temporary credentials cho Session Manager.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref5",
-        "ref8",
-        "ref9"
+        "Q125-r2-1",
+        "Q125-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q125:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Mở inbound port 22 và phân phát SSH key pair là tạo rủi ro mới, đi ngược mô hình chỉ dùng Session Manager (vốn không cần mở inbound port hay quản lý SSH key).",
+      "reason_vi": "C mở SSH, trái yêu cầu Session Manager only.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "Q125-r2-1",
+        "Q125-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q125:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Trust policy cho phép mọi principal assume role (chỉ lọc theo IP) là trust quá rộng; partner không có AWS identity nên cũng không thể gọi AssumeRole; EC2 Instance Connect còn cần mở inbound SSH port 22 - thêm rủi ro và bỏ mô hình Session Manager.",
+      "reason_vi": "D ARN/IP không tự cấp identity credentials và dùng EC2 Instance Connect thay Session Manager.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "Q125-r2-1",
+        "Q125-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -127,19 +125,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B. IAM Roles Anywhere cấp credential tạm thời cho workload ngoài AWS bằng certificate; trust policy có thể ràng buộc trust anchor qua aws:SourceArn. A (access key dài hạn), C (mở port 22 + SSH key), D (trust mọi principal + EC2 Instance Connect cần port 22) đều thêm rủi ro được tài liệu mô tả.",
-    "open_issues": [
-      "Câu chữ B 'Create an IAM Roles Anywhere trust anchor in the role's trust policy' không chính xác về mặt kỹ thuật: trust anchor là resource riêng; trust policy tin cậy rolesanywhere.amazonaws.com và có thể tham chiếu ARN trust anchor qua aws:SourceArn."
-    ]
+    "level": "medium",
+    "reason_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Kiểm tra lại điểm yếu duy nhất là câu chữ B: tài liệu trust model (ref8) khuyến nghị dùng aws:SourceArn trong role trust policy, với ví dụ ARN trust-anchor – nên 'trust anchor trong trust policy' có thể hiểu là ràng buộc trust anchor trong trust policy, không đổi đáp án. Xác nhận partner không dùng AWS vẫn lấy được credential tạm thời bằng credential helper (ref9). Phản bác các lựa chọn khác: A chia sẻ access key dài hạn trái best practice (ref4); C mở port 22 và phát SSH key trái mô hình Session Manager (ref5); D trust mọi principal (ref7), partner không có AWS identity để AssumeRole, và EC2 Instance Connect cần inbound SSH (ref6). Giữ B, verified, high.",
+  "reconciliation_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
   "explanation_vi": {
-    "why_correct": "IAM Roles Anywhere cho phép partner (không có tài khoản AWS) dùng X.509 certificate do CA đã đăng ký làm trust anchor để đổi lấy credential STS tạm thời của một role chỉ có quyền Session Manager – không có access key dài hạn, không mở port, giữ nguyên mô hình chỉ truy cập qua Session Manager.",
+    "why_correct": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
     "others": {
-      "Q125:A": "Tạo IAM user và chia sẻ access key dài hạn cho bên thứ ba là rủi ro mới; AWS khuyến nghị dùng credential tạm thời.",
-      "Q125:C": "Mở inbound port 22 và phát SSH key pair phá vỡ mô hình chỉ dùng Session Manager và tạo thêm bề mặt tấn công.",
-      "Q125:D": "Trust policy cho mọi principal (chỉ lọc IP) là trust quá rộng, partner không có AWS identity để assume role, và EC2 Instance Connect cần mở inbound SSH port 22."
+      "Q125:A": "A tạo access keys dài hạn, thêm rủi ro so với certificate và temporary credentials.",
+      "Q125:C": "C mở SSH, trái yêu cầu Session Manager only.",
+      "Q125:D": "D ARN/IP không tự cấp identity credentials và dùng EC2 Instance Connect thay Session Manager."
     }
   },
   "keywords": [
@@ -156,7 +152,7 @@
       "meaning_vi": "Giữ mô hình không inbound port; chỉ cần quyền IAM cho ssm:StartSession."
     }
   ],
-  "memory_tip_vi": "Nếu bên ngoài AWS cần credential AWS mà không muốn access key dài hạn -> nghĩ đến IAM Roles Anywhere (certificate + trust anchor + profile -> STS tạm thời); kiểm tra: nếu đề đã khóa truy cập chỉ qua Session Manager thì loại mọi lựa chọn mở port 22/SSH key.",
+  "memory_tip_vi": "Nếu partner không có AWS account, certificate + Roles Anywhere có thể cấp temporary credentials.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -287,21 +283,45 @@
       "quote": "use the credential helper tool that IAM Roles Anywhere provides",
       "supports": "Partner không có tài khoản AWS dùng credential helper (credential_process) với certificate để lấy credential tạm thời cho CLI/SDK – dùng được với Session Manager.",
       "kind": "direct"
+    },
+    {
+      "id": "Q125-r2-1",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/getting-started.html",
+      "title": "Getting started with IAM Roles Anywhere - IAM Roles Anywhere",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "You establish trust between IAM Roles Anywhere and your certificate",
+      "supports": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
+      "kind": "direct",
+      "snapshot_id": "7df001e53ae4",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q125-r2-2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+      "title": "IAM roles - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30T21:30:50.225199+00:00",
+      "quote": "assumable by anyone who needs it. Also, a role does",
+      "supports": "Roles Anywhere cấp credentials tạm từ certificate cho partner ngoài AWS và role chỉ cho Session Manager.",
+      "kind": "direct",
+      "snapshot_id": "b483f70a1ede",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
     {
-      "type": "ambiguous",
-      "location": "Q125:B",
-      "detail_vi": "'Create an IAM Roles Anywhere trust anchor in the role's trust policy' diễn đạt không chính xác: trust anchor là resource riêng trong Roles Anywhere; trust policy của role tin cậy rolesanywhere.amazonaws.com và có thể tham chiếu ARN trust anchor qua aws:SourceArn. Không làm đổi đáp án."
-    },
-    {
       "type": "typo",
       "location": "Q125:D",
       "detail_vi": "'EC2 instance Connect' viết thường chữ 'instance' (tên đúng: EC2 Instance Connect)."
+    },
+    {
+      "type": "data",
+      "location": "Q125",
+      "detail_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy."
     }
   ],
-  "notes_vi": "Partner cần cài credential helper của Roles Anywhere và Session Manager plugin để dùng credential tạm thời với Session Manager.",
+  "notes_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
   "history": [
     {
       "version": "r1",
@@ -316,6 +336,39 @@
       "previous_answer": [
         "Q125:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q125:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q125:B"
+      ],
+      "note_vi": "Trust anchor là resource riêng; trust policy tham chiếu ARN/CA constraints, không tạo trust anchor bên trong JSON policy.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

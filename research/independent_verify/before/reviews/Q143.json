@@ -1,0 +1,246 @@
+{
+  "question_id": "Q143",
+  "question_content_hash": "5e701d4fec826387519b4d870a4d9fafc9afb4b8530d74e2e4028407be9d5576",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:24:42+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Role DataIngestService ở account Company A (1111111111) được Company B (2222222222, bên thứ ba phục vụ nhiều khách hàng) assume để ingest dữ liệu.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Khách hàng muốn chỉ dịch vụ của Company B truy cập dữ liệu của mình, không ai khác.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Trust policy chỉ có Principal AWS = 2222222222, Action sts:AssumeRole, KHÔNG có Condition sts:ExternalId; cần xác định vấn đề bảo mật phát sinh.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q143_image_01.png",
+      "text": "{\n    \"Version\": \"2012-10-17\"\n    \"Statement\": {\n        \"Effect\": \"Allow\",\n        \"Principal\": {\n            \"AWS\": \"2222222222\"\n        },\n        \"Action\": \"sts:AssumeRole\"\n    }\n}",
+      "notes_vi": "Thiếu dấu phẩy sau \"2012-10-17\" (JSON không hợp lệ về cú pháp). Statement là object đơn. Không có Condition (không có sts:ExternalId). Account ID chỉ 10 chữ số."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q143:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Quyền truy cập tài nguyên do permissions policy của role quyết định, không do trust policy; đề không nói role thiếu permissions, và đây cũng không phải vấn đề bảo mật mà là vấn đề chức năng.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q143:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Trust policy chỉ tin cậy account 2222222222; khách hàng khác assume trực tiếp từ account của họ sẽ bị từ chối vì account họ không nằm trong Principal.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q143:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Đúng kịch bản confused deputy: khách hàng khác đưa role ARN (không bí mật) của Company A cho Company B, Company B assume role đó thay mặt họ; thiếu điều kiện sts:ExternalId nên không chặn được.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q143:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "ExternalId đặt trong trust policy role của khách hàng khác chỉ ràng buộc việc assume role CỦA HỌ, không giúp 'chặn/intercept' request của Company B tới Company A; ExternalId phải do Company B sinh và duy nhất cho từng khách hàng.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q143:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "IAM User Guide mô tả gần như nguyên văn kịch bản: khách hàng khác cung cấp role ARN của bạn cho bên thứ ba, bên thứ ba thành confused deputy; cách phòng là điều kiện sts:ExternalId.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2"
+    ],
+    "recorded_at": "2026-09-30T20:24:42+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html",
+      "title": "The confused deputy problem",
+      "section": "Cross-account confused deputy prevention",
+      "snapshot_id": "b08686577ff9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Another AWS customer also starts using Example Corp's service, and this customer also provides the ARN of AWS1:ExampleRole for Example Corp to use.",
+      "supports": "Khách hàng khác đưa role ARN của bạn cho bên thứ ba để truy cập tài nguyên của bạn (lựa chọn C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html",
+      "title": "The confused deputy problem",
+      "section": "Cross-account confused deputy prevention",
+      "snapshot_id": "b08686577ff9",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The ExternalId value must be unique among Example Corp's customers and controlled by Example Corp, not its customers.",
+      "supports": "Thiếu ExternalId là lỗ hổng; ExternalId do bên thứ ba kiểm soát, khách hàng khác không thể dùng nó để 'intercept' (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal",
+      "section": "AWS account principals",
+      "snapshot_id": "879eb6158f92",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can specify AWS account identifiers in the Principal element of a resource-based policy or in condition keys that support principals. This delegates authority to the account.",
+      "supports": "Trust policy chỉ uỷ quyền cho account 2222222222, không cho account khách hàng khác (lựa chọn B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+      "title": "IAM roles",
+      "section": "Role terms",
+      "snapshot_id": "b483f70a1ede",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Roles and users are both AWS identities with permissions policies that determine what the identity can and cannot do in AWS.",
+      "supports": "Quyền truy cập tài nguyên do permissions policy quyết định, trust policy không nói lên điều đó (lựa chọn A).",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q143:stem:0",
+      "detail_vi": "Account ID 1111111111 và 2222222222 chỉ có 10 chữ số; AWS account ID thật có 12 chữ số (ví dụ minh hoạ, không ảnh hưởng đáp án)."
+    },
+    {
+      "type": "typo",
+      "location": "Q143:stem:0",
+      "detail_vi": "'Company's B service' nên là 'Company B's service'."
+    },
+    {
+      "type": "typo",
+      "location": "Q143:stem:3",
+      "detail_vi": "Trong ảnh policy thiếu dấu phẩy sau \"Version\": \"2012-10-17\" nên JSON không hợp lệ về cú pháp; không ảnh hưởng ý nghĩa câu hỏi."
+    }
+  ],
+  "notes_vi": "Bên thứ ba phục vụ nhiều khách hàng + trust policy không có sts:ExternalId -> confused deputy.",
+  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "blind_record_sha256": "e7cb77373a91aec7ef3471acbe681a88dd372f1c52e0a3bac383ca311b737bf6",
+  "source_answer": [
+    "Q143:C"
+  ],
+  "researched_answer": [
+    "Q143:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "IAM User Guide (confused deputy) mô tả gần như nguyên văn kịch bản: khách hàng khác cung cấp ARN role của bạn cho bên thứ ba, bên thứ ba assume role đó thay họ; cách phòng là điều kiện sts:ExternalId. Trust policy trong ảnh (đã đọc lại) không có Condition.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã đọc lại ảnh policy: Principal AWS = 2222222222, Action sts:AssumeRole, không có Condition (thiếu dấu phẩy sau Version là lỗi trình bày). Đã xét lại B (đối thủ gần nhất): khách hàng khác assume trực tiếp từ account của họ sẽ bị từ chối vì chỉ account 2222222222 được tin cậy (ref3); rủi ro thật là họ lợi dụng Company B làm confused deputy bằng cách đưa ARN role của Company A (ref1), đúng như C. D sai vì ExternalId do Company B kiểm soát và đặt trong role của khách hàng khác không thể 'intercept' request tới Company A (ref2). A không phải vấn đề bảo mật và không suy ra từ trust policy. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Trust policy tin cậy cả account 2222222222 mà không có điều kiện sts:ExternalId, nên một khách hàng khác của Company B chỉ cần khai báo ARN role (không bí mật) của Company A với Company B là dịch vụ của Company B sẽ assume role đó thay họ - đây là confused deputy.",
+    "others": {
+      "Q143:A": "Quyền truy cập tài nguyên do permissions policy của role quyết định, trust policy không nói lên điều đó; và đây cũng không phải vấn đề bảo mật.",
+      "Q143:B": "Trust policy chỉ tin account 2222222222, nên khách hàng khác gọi AssumeRole trực tiếp từ account của họ sẽ bị từ chối.",
+      "Q143:D": "ExternalId do Company B sinh và kiểm soát; điều kiện đặt trong role của khách hàng khác chỉ ràng buộc role của họ, không thể chặn/intercept request tới Company A."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "Company B has other customers",
+      "meaning_vi": "Bên thứ ba phục vụ nhiều khách hàng -> nguy cơ confused deputy."
+    },
+    {
+      "phrase": "role ARN",
+      "meaning_vi": "ARN role không phải bí mật; không đủ để xác thực đúng khách hàng."
+    },
+    {
+      "phrase": "only Company B's service to access the customers' data",
+      "meaning_vi": "Cần sts:ExternalId duy nhất cho mỗi khách hàng trong trust policy."
+    }
+  ],
+  "memory_tip_vi": "Nếu role cho bên thứ ba phục vụ nhiều khách hàng mà trust policy chỉ có Principal account -> nghĩ đến confused deputy, thêm Condition sts:ExternalId; kiểm tra khách hàng khác không assume trực tiếp được vì account họ không nằm trong Principal.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "AWS STS"
+    ],
+    "reason_vi": "Trust policy cross-account và phòng confused deputy bằng ExternalId."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:24:42+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q143:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:30:46+00:00",
+      "change": "Reconciliation: khớp source key C; status verified (high); đáp án không đổi; đã đọc lại ảnh trust policy, không thêm tham chiếu mới.",
+      "previous_answer": [
+        "Q143:C"
+      ]
+    }
+  ]
+}

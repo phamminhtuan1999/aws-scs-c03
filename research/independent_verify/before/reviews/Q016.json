@@ -1,0 +1,289 @@
+{
+  "question_id": "Q016",
+  "question_content_hash": "e0866a55184ec7e87a3f30fe3ec2e9dd098e038ee84a5195a853bd9241b5ea6e",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:40:00Z",
+  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_record_sha256": "5c3ddbe885147ca1ce0bea07c212727903526645dcb7ce29e19562a7b7a105ac",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Log không bị mất khi instance bị terminate do scale-in (lưu ngoài instance).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Bảo đảm độ bền (durability) và tính sẵn sàng (availability) của dữ liệu log.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Lưu log tối thiểu 1 năm cho mục đích audit.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Bối cảnh: EC2 trong Auto Scaling group, log hiện lưu cục bộ.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q016:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Volume EBS riêng có thể tồn tại sau khi instance terminate, nhưng bị gắn với một AZ, phải attach vào instance khác mới xem được, không có cơ chế giữ 1 năm và phát sinh nhiều volume phải quản lý thủ công — kém hơn log tập trung.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q016:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Chỉ copy log sang EFS mỗi ngày một lần nên log phát sinh kể từ lần copy cuối vẫn mất khi instance bị scale-in; không giải quyết vấn đề mất log.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q016:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "CloudWatch agent gửi log liên tục ra CloudWatch Logs, tách khỏi vòng đời instance; log group mặc định giữ vô thời hạn và có thể đặt retention 365 ngày trở lên, đáp ứng yêu cầu 1 năm.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q016:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Lifecycle hook chỉ trì hoãn terminate để xem log thủ công trong 1 giờ; hook là best-effort, sau timeout instance vẫn bị terminate và log không được lưu trữ bền vững 1 năm.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q016:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "CloudWatch agent + CloudWatch Logs là cơ chế chuẩn để đưa log ra khỏi instance; retention mặc định vô thời hạn hoặc cấu hình ≥365 ngày. Các lựa chọn khác vẫn có thể mất log hoặc không đảm bảo lưu 1 năm.",
+      "open_issues": [
+        "Lựa chọn C không nêu cấu hình retention; mặc định log group giữ vô thời hạn nên vẫn thỏa ≥1 năm. Instance cũng cần IAM role cho agent (không nêu trong đề)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:36:04Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html",
+      "title": "Collect metrics, logs, and traces using the CloudWatch agent",
+      "section": "Introduction",
+      "snapshot_id": "6bc3ac9e9368",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The logs collected by the CloudWatch agent are processed and stored in Amazon CloudWatch Logs",
+      "supports": "CloudWatch agent đưa log từ EC2 vào CloudWatch Logs (ngoài instance).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html",
+      "title": "Working with log groups and log streams",
+      "section": "Change log data retention in CloudWatch Logs",
+      "snapshot_id": "4912b697555a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, log data is stored in CloudWatch Logs indefinitely.",
+      "supports": "Mặc định log được giữ vô thời hạn, thỏa yêu cầu ≥1 năm.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html",
+      "title": "PutRetentionPolicy - Amazon CloudWatch Logs API",
+      "section": "retentionInDays",
+      "snapshot_id": "6351114a8d4f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Possible values are: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731",
+      "supports": "Có thể đặt retention 365 ngày hoặc lâu hơn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/autoscaling/ec2/userguide/lifecycle-hooks.html",
+      "title": "Amazon EC2 Auto Scaling lifecycle hooks",
+      "section": "Considerations and limitations",
+      "snapshot_id": "86e28041e150",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, termination lifecycle hooks operate on a best-effort basis. If a termination lifecycle hook times out, or is abandoned, Amazon EC2 Auto Scaling proceeds with terminating the instance immediately.",
+      "supports": "Hook ở D chỉ trì hoãn; hết thời gian instance vẫn bị terminate, log không được lưu.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/autoscaling/ec2/userguide/lifecycle-hooks.html",
+      "title": "Amazon EC2 Auto Scaling lifecycle hooks",
+      "section": "Introduction",
+      "snapshot_id": "86e28041e150",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A lifecycle hook provides a specified amount of time (one hour by default) to wait for the action to complete before the instance transitions to the next state.",
+      "supports": "Lifecycle hook chỉ là khoảng chờ tạm thời, không phải kho lưu trữ log.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/ebs-volumes.html",
+      "title": "Amazon EBS volumes",
+      "section": "Introduction",
+      "snapshot_id": "cbd4c7908852",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "EBS volumes persist independently from the running life of an EC2 instance.",
+      "supports": "Volume EBS ở A có thể tồn tại sau khi instance terminate (A hoạt động một phần).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/ebs-volumes.html",
+      "title": "Amazon EBS volumes",
+      "section": "Introduction",
+      "snapshot_id": "cbd4c7908852",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The volume and instance must be in the same Availability Zone.",
+      "supports": "Log trên EBS bị giới hạn trong một AZ và phải attach mới đọc được — hạn chế về availability của A.",
+      "kind": "inference"
+    }
+  ],
+  "source_answer": [
+    "Q016:C"
+  ],
+  "researched_answer": [
+    "Q016:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "CloudWatch agent đưa log ra CloudWatch Logs, tách khỏi vòng đời instance; log group mặc định giữ vô thời hạn hoặc đặt retention 365 ngày trở lên. Các lựa chọn khác vẫn có thể mất log hoặc không bảo đảm lưu 1 năm.",
+    "open_issues": [
+      "C không nêu cấu hình retention; mặc định log được giữ vô thời hạn nên vẫn thỏa ≥1 năm. Instance cần IAM role cho agent (đề không nêu)."
+    ]
+  },
+  "reconciliation_vi": "Blind (C) trùng khóa nguồn (C). Đã kiểm tra lại đối thủ mạnh nhất là A (EBS volume riêng): volume tồn tại sau terminate nhưng bị giới hạn một AZ, phải attach thủ công để đọc, không có cơ chế lưu giữ 1 năm và phải quản lý nhiều volume. B chỉ copy mỗi ngày nên vẫn mất log từ lần copy cuối; D chỉ trì hoãn terminate theo kiểu best-effort. Giữ C.",
+  "explanation_vi": {
+    "why_correct": "CloudWatch agent gửi log liên tục từ EC2 sang Amazon CloudWatch Logs, nên log không mất khi instance bị scale-in; CloudWatch Logs là dịch vụ bền vững, mặc định giữ log vô thời hạn hoặc đặt retention từ 365 ngày để đáp ứng audit 1 năm.",
+    "others": {
+      "Q016:A": "Volume EBS có thể giữ log sau terminate nhưng bị gắn một AZ, phải attach thủ công mới đọc được và phát sinh nhiều volume cần quản lý, không có chính sách lưu giữ 1 năm.",
+      "Q016:B": "Copy sang EFS mỗi ngày một lần nên log phát sinh sau lần copy cuối vẫn mất khi instance bị scale-in.",
+      "Q016:D": "Lifecycle hook chỉ giữ instance ở Terminating:Wait tạm thời để xem thủ công; hết thời gian instance vẫn bị terminate và log không được lưu 1 năm."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "logs were lost after a scale-in event",
+      "meaning_vi": "Log lưu cục bộ mất khi instance bị terminate: cần đưa log ra ngoài instance."
+    },
+    {
+      "phrase": "durability and availability of log data",
+      "meaning_vi": "Lưu log tập trung ở dịch vụ bền vững (CloudWatch Logs)."
+    },
+    {
+      "phrase": "minimum of 1 year",
+      "meaning_vi": "Retention log group ≥ 365 ngày (hoặc mặc định vô thời hạn)."
+    }
+  ],
+  "memory_tip_vi": "Nếu log trên EC2 trong Auto Scaling group bị mất khi scale-in -> nghĩ đến CloudWatch agent đẩy log sang CloudWatch Logs và đặt retention; kiểm tra phương án copy định kỳ hoặc lifecycle hook vẫn để lọt log.",
+  "tags": {
+    "domains": [
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon CloudWatch Logs",
+      "Amazon EC2 Auto Scaling",
+      "Amazon EBS",
+      "Amazon EFS",
+      "Amazon SNS"
+    ],
+    "reason_vi": "Thiết kế thu thập và lưu giữ log bền vững cho audit thuộc phần logging của domain Detection."
+  },
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:40:00Z",
+      "change": "blind verdict C (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:10Z",
+      "change": "reconciliation: blind C trùng khóa nguồn C; đã kiểm tra lại A/B/D; giữ nguyên, status verified.",
+      "previous_answer": [
+        "Q016:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); blind sha 37bdb0faca→5c3ddbe885",
+      "previous_answer": [
+        "Q016:C"
+      ]
+    }
+  ],
+  "notes_vi": "Tách log khỏi vòng đời instance bằng CloudWatch agent → CloudWatch Logs, đặt retention ≥365 ngày."
+}

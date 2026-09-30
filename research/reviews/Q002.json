@@ -2,9 +2,9 @@
   "question_id": "Q002",
   "question_content_hash": "c3413b9d9e6e8440f2890c7cf5a9a0db9f2f2371af7e7acf11accca642ee3d13",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:36:00Z",
-  "last_reviewed_at": "2026-09-30T19:42:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -52,95 +52,92 @@
     {
       "unit_id": "Q002:S1",
       "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "Cognito user pool là user directory được quản lý cho xác thực web/mobile app, loại bỏ việc tự quản lý DB người dùng; phải tạo trước vì app client nằm trong user pool.",
+      "verdict": "undetermined",
+      "reason_vi": "Chọn trước: user pool quản lý danh tính và phát token.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "position": 1
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q002:S2",
       "unit_type": "step",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Task IAM role cho từng microservice là thực hành tốt để service gọi AWS API bằng credentials tạm thời, nhưng nó phục vụ quyền của service chứ không xác thực người dùng bên ngoài; với 3 ô thì kém liên quan hơn bước xác thực token tại API Gateway.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không cần cho xác thực người dùng: role cấp quyền AWS cho backend.",
       "requirement_ids": [
         "R1",
         "R2",
         "R5"
       ],
       "reference_ids": [
-        "ref5"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "inference",
-      "position": null
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q002:S3",
       "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "API Gateway HTTP API gọi Lambda authorizer để quyết định cho phép request, tạo một điểm kiểm tra token tập trung trước khi chuyển tới các microservice (JWT authorizer native cũng làm được nhưng không có trong danh sách).",
+      "verdict": "undetermined",
+      "reason_vi": "Chọn sau app client: authorizer kiểm tra token trước backend.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4",
-        "ref8"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "position": 3
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q002:S4",
       "unit_type": "step",
       "verdict": "does_not_meet",
-      "reason_vi": "Tự lưu credentials người dùng trong DynamoDB nghĩa là tự quản lý user database, trái yêu cầu giảm quản lý và không cung cấp token tạm thời.",
+      "reason_vi": "Sai: tự lưu mật khẩu theo microservice tăng quản trị.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "inference",
-      "position": null
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q002:S5",
       "unit_type": "step",
-      "verdict": "meets",
-      "reason_vi": "App client là cấu hình trong user pool để web app đăng nhập và nhận token (ID/access/refresh) có thời hạn cấu hình được; thực hiện sau khi có user pool.",
+      "verdict": "undetermined",
+      "reason_vi": "Chọn sau user pool: app client định cấu hình ứng dụng dùng token.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
-        "ref7"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "position": 2
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q002:S6",
       "unit_type": "step",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM Identity Center dành cho workforce users truy cập AWS account và ứng dụng, không phải giải pháp xác thực khách hàng bên ngoài cho web app tự xây.",
+      "reason_vi": "Không phù hợp nhất: Identity Center phục vụ workforce, không thay user pool ứng dụng khách.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6"
+        "Q002-r2-1",
+        "ref3"
       ],
-      "evidence_kind": "direct",
-      "position": null
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -271,6 +268,18 @@
       "quote": "Private integrations enable you to create API integrations with private resources in a VPC, such as Application Load Balancers or Amazon ECS container-based applications.",
       "supports": "HTTP API có thể đứng trước các microservice ECS trong VPC (private integration), nên authorizer tại API Gateway bảo vệ tập trung mọi microservice.",
       "kind": "direct"
+    },
+    {
+      "id": "Q002-r2-1",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-integrating-user-pools-with-identity-pools.html",
+      "title": "Accessing AWS services using an identity pool after sign-in - Amazon Cognito",
+      "accessed_at": "2026-09-30",
+      "quote": "as an identity provider to your identity pool, the identity",
+      "supports": "User pools issue JWT tokens; identity pools exchange identities for temporary AWS credentials.",
+      "kind": "direct",
+      "snapshot_id": "829ca93942a5",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -278,6 +287,11 @@
       "type": "layout",
       "location": "Q002:stem:0",
       "detail_vi": "Đề ghi 'HOTSPOT' nhưng thực chất là dạng chọn và sắp xếp 3 bước."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q002",
+      "detail_vi": "Không xác định loại temporary credentials; Lambda authorizer hợp lệ nhưng native JWT authorizer có thể ít quản trị hơn."
     }
   ],
   "source_answer": [
@@ -285,46 +299,41 @@
     "Q002:S5",
     "Q002:S3"
   ],
-  "researched_answer": [
-    "Q002:S1",
-    "Q002:S5",
-    "Q002:S3"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Tài liệu API Gateway mô tả đúng mô hình user pool (issuer) + app client (audience) + authorizer của HTTP API, HTTP API tích hợp được với ECS qua private integration, và token user pool có hạn 5 phút–1 ngày. DynamoDB và IAM Identity Center bị loại rõ. Không lên high vì S2 (IAM role cho microservice) là thực hành tốt có thể gây tranh luận với cụm 'temporary credentials'.",
+    "reason_vi": "Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials.",
     "open_issues": [
-      "S2 cấp credentials tạm thời cho code của microservice gọi AWS API, không xác thực người dùng bên ngoài; nếu hiểu 'temporary credentials' là AWS STS credentials thì có thể tranh luận.",
-      "JWT authorizer native ít công sức hơn Lambda authorizer cho token Cognito nhưng không có trong danh sách."
+      "Không xác định loại temporary credentials; Lambda authorizer hợp lệ nhưng native JWT authorizer có thể ít quản trị hơn."
     ]
   },
-  "reconciliation_vi": "Blind và source key trùng nhau (S1 -> S5 -> S3). Đã thử tìm cách đọc đề khiến S2 thay thế một bước: S2 chỉ cấp quyền AWS cho container (task role), không kiểm tra danh tính người dùng, còn thiếu S5 thì web app không có app client để đăng nhập, thiếu S3 thì không có điểm kiểm tra token chung cho nhiều microservice. Bổ sung tài liệu về thời hạn token (ref7) và private integration HTTP API–ECS (ref8). Giữ nguyên, verified mức medium.",
+  "reconciliation_vi": "Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials.",
   "explanation_vi": {
-    "why_correct": "Cognito user pool là user directory được quản lý (không phải tự vận hành DB người dùng) (S1); app client trong user pool cho web app đăng nhập và nhận token có thời hạn (S5); API Gateway HTTP API với Lambda authorizer kiểm tra token một lần trước khi chuyển request tới các microservice trên ECS (S3).",
+    "why_correct": "User pool → app client → HTTP API Lambda authorizer là luồng xác thực bằng token phù hợp cho người dùng ngoài. Nếu temporary credentials nghĩa là thông tin xác thực AWS STS, đề còn thiếu identity pool.",
     "others": {
-      "Q002:S2": "IAM role cho từng microservice chỉ cấp quyền cho code gọi AWS service, không xác thực người dùng bên ngoài nên không phải một trong 3 bước xác thực.",
-      "Q002:S4": "Lưu credentials người dùng trong DynamoDB là tự quản lý user database, trái yêu cầu giảm overhead và không tạo token tạm thời.",
-      "Q002:S6": "IAM Identity Center dành cho workforce users truy cập AWS account/ứng dụng, không phải để xác thực khách hàng bên ngoài của web app."
+      "Q002:S2": "Không cần cho xác thực người dùng: role cấp quyền AWS cho backend.",
+      "Q002:S4": "Sai: tự lưu mật khẩu theo microservice tăng quản trị.",
+      "Q002:S6": "Không phù hợp nhất: Identity Center phục vụ workforce, không thay user pool ứng dụng khách."
     }
   },
   "keywords": [
     {
-      "phrase": "authenticate external users",
-      "meaning_vi": "Người dùng bên ngoài (khách hàng) → Cognito user pool, không phải IAM Identity Center."
+      "phrase": "external users",
+      "meaning_vi": "Xác thực người dùng ứng dụng ngoài."
     },
     {
       "phrase": "temporary credentials",
-      "meaning_vi": "Token có thời hạn (ID/access token của Cognito), không lưu mật khẩu tự quản."
+      "meaning_vi": "Phân biệt JWT với STS credentials."
     },
     {
-      "phrase": "minimize the management overhead required to maintain user databases",
-      "meaning_vi": "Dùng user directory được quản lý thay vì tự xây bảng người dùng."
+      "phrase": "user databases",
+      "meaning_vi": "Dùng directory được quản lý."
     }
   ],
-  "memory_tip_vi": "Nếu đề cần xác thực người dùng bên ngoài cho nhiều microservice -> nghĩ đến Cognito user pool + app client + authorizer tại API Gateway; kiểm tra: người dùng nội bộ/workforce thì mới là IAM Identity Center.",
+  "memory_tip_vi": "Nếu cần temporary AWS credentials, thêm identity pool; nếu chỉ JWT, dùng user pool/app client/authorizer.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -364,9 +373,26 @@
         "Q002:S5",
         "Q002:S3"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q002:S1",
+        "Q002:S5",
+        "Q002:S3"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials.",
+      "technical_change": true
     }
   ],
-  "notes_vi": "Thứ tự: tạo user pool -> tạo app client trong user pool -> API Gateway HTTP API + authorizer kiểm tra token trước khi chuyển tới microservice trên ECS.",
+  "notes_vi": "Phân biệt JWT token và temporary AWS credentials; user pool không tự phát AWS credentials.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -376,5 +402,31 @@
         "corrected": "2026-09-30T19:42:11Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": [
+      "Q002:S1",
+      "Q002:S5",
+      "Q002:S3"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q002:S1",
+      "Q002:S5",
+      "Q002:S3"
+    ],
+    "candidate_answers": [
+      "Q002:S1",
+      "Q002:S5",
+      "Q002:S3"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

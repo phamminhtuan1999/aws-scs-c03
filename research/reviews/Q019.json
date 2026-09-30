@@ -2,9 +2,9 @@
   "question_id": "Q019",
   "question_content_hash": "6f26e8e7de4e9582a1095fe7d218d0e9858292048e7427f05e36044334e5abd6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:35:22Z",
-  "last_reviewed_at": "2026-09-30T19:45:00Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,17 +38,17 @@
     {
       "unit_id": "Q019:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Athena truy vấn được log CloudTrail của organization trail trong S3 (R3 đạt), nhưng một IAM user chỉ thuộc đúng một account; vô hiệu hóa ở management account không chặn người dùng Identity Center vào các account khác (R2 không đạt).",
+      "verdict": "undetermined",
+      "reason_vi": "Chưa đủ: IAM user chỉ thuộc một account; disable ở management account không thu hồi mọi assumed-role session.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6",
-        "ref1"
+        "Q019-r2-1",
+        "Q019-r2-2",
+        "Q019-r2-3"
       ],
       "evidence_kind": "inference"
     },
@@ -56,14 +56,15 @@
       "unit_id": "Q019:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Gỡ IAM policy của một IAM user ở management account không ảnh hưởng quyền truy cập qua Identity Center ở account khác; Security Hub tổng hợp findings/kiểm tra control, không phải công cụ truy vấn log CloudTrail.",
+      "reason_vi": "Sai: xóa policy không giải quyết đầy đủ active role sessions, Security Hub không truy vấn mọi API log.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "Q019-r2-1",
+        "Q019-r2-2",
+        "Q019-r2-3"
       ],
       "evidence_kind": "inference"
     },
@@ -71,22 +72,23 @@
       "unit_id": "Q019:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Gỡ permission set chỉ thu hồi từng gán quyền, dễ bỏ sót và người dùng vẫn đăng nhập được portal; nghiêm trọng hơn, CloudWatch Logs Insights chỉ truy vấn log group trong CloudWatch Logs (trail phải được cấu hình gửi sang đó), không truy vấn trực tiếp file log trong S3 bucket.",
+      "reason_vi": "Sai: xóa assignments không tự thu hồi active role sessions; Logs Insights không trực tiếp query S3 trail.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref10"
+        "Q019-r2-1",
+        "Q019-r2-2",
+        "Q019-r2-3"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q019:D",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Disable user access trong Identity Center chặn đăng nhập và mất quyền vào mọi account/ứng dụng được gán; CloudTrail Lake chạy SQL trên organization event data store chứa sự kiện của nhiều account và Region.",
+      "verdict": "undetermined",
+      "reason_vi": "Gần nhất về truy vấn: Lake đúng, nhưng identity sai phạm vi và disable đơn lẻ không revoke active sessions.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -94,11 +96,11 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3"
+        "Q019-r2-1",
+        "Q019-r2-2",
+        "Q019-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -126,44 +128,42 @@
   "source_answer": [
     "Q019:D"
   ],
-  "researched_answer": [
-    "Q019:D"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu trực tiếp: Identity Center disable user làm mất quyền vào mọi account được gán; CloudTrail Lake chạy SQL trên organization event data store đa account/Region. A, B, C đều hỏng ở phạm vi chặn hoặc công cụ truy vấn. Giữ mức medium vì đề gọi người dùng Identity Center là 'IAM user'.",
+    "reason_vi": "Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user.",
     "open_issues": [
-      "Đề dùng 'IAM user' cho danh tính Identity Center; nếu hiểu theo nghĩa IAM user thật thì không phương án nào chặn được ở mọi account.",
-      "Disable user không cắt IAM role session đang tồn tại; kế hoạch thực tế cần thêm bước thu hồi session."
+      "Không option đáp ứng literal IAM user + mọi AWS account + immediate; cần phân biệt credentials/IdC user/role session."
     ]
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã kiểm tra lại đối thủ mạnh nhất: A (Athena truy vấn log trong S3 là khả thi) nhưng thao tác trên một IAM user ở management account chỉ có hiệu lực trong account đó, không chặn truy cập qua Identity Center ở các account khác. C: đã tìm thêm xem CloudWatch Logs Insights có truy vấn thẳng S3 không; tài liệu CloudTrail cho thấy phải cấu hình trail gửi event vào CloudWatch Logs log group trước, nên 'directly query ... in the S3 bucket' là sai. B dùng Security Hub để query log là sai công cụ. Giữ D, verified, medium do cách gọi 'IAM user' lẫn lộn.",
+  "reconciliation_vi": "Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user.",
   "explanation_vi": {
-    "why_correct": "Disable user access trong IAM Identity Center làm người dùng không đăng nhập được AWS access portal và mất quyền vào mọi account được gán (chặn ở phạm vi toàn organization); organization event data store của CloudTrail Lake chứa sự kiện của mọi account/Region nên một truy vấn SQL lọc theo người dùng và 7 ngày là đủ.",
+    "why_correct": "CloudTrail Lake truy vấn được lịch sử tổ chức, nhưng IAM user khác Identity Center user. Disable người dùng Identity Center không thu hồi AWS role sessions đã phát hành, nên D không chặn ngay mọi account.",
     "others": {
-      "Q019:A": "Athena truy vấn được log trong S3, nhưng xử lý một IAM user ở management account không chặn người dùng Identity Center dùng các account khác.",
-      "Q019:B": "Gỡ IAM policy ở management account chỉ ảnh hưởng account đó, và Security Hub là nơi tổng hợp findings chứ không phải công cụ query log CloudTrail.",
-      "Q019:C": "Gỡ permission set dễ bỏ sót, và CloudWatch Logs Insights chỉ query log group trong CloudWatch Logs, không query trực tiếp file log trong S3."
+      "Q019:A": "Chưa đủ: IAM user chỉ thuộc một account; disable ở management account không thu hồi mọi assumed-role session.",
+      "Q019:B": "Sai: xóa policy không giải quyết đầy đủ active role sessions, Security Hub không truy vấn mọi API log.",
+      "Q019:C": "Sai: xóa assignments không tự thu hồi active role sessions; Logs Insights không trực tiếp query S3 trail.",
+      "Q019:D": "Gần nhất về truy vấn: Lake đúng, nhưng identity sai phạm vi và disable đơn lẻ không revoke active sessions."
     }
   },
   "keywords": [
     {
-      "phrase": "IAM Identify Center",
-      "meaning_vi": "(gõ sai của IAM Identity Center) – người dùng được quản lý tập trung, nên chặn tại Identity Center có hiệu lực ở mọi account."
+      "phrase": "compromised IAM user",
+      "meaning_vi": "IAM user khác Identity Center user."
     },
     {
-      "phrase": "organizational event data store",
-      "meaning_vi": "Event data store của CloudTrail Lake chứa sự kiện toàn organization, query bằng SQL."
+      "phrase": "immediately",
+      "meaning_vi": "Disable không tự revoke active role sessions."
     },
     {
-      "phrase": "prevent the IAM user from being used in any AWS account",
-      "meaning_vi": "Phạm vi chặn phải là toàn organization, không phải một account."
+      "phrase": "previous 7 days",
+      "meaning_vi": "CloudTrail Lake query lịch sử 7 ngày của tổ chức."
     }
   ],
-  "memory_tip_vi": "Nếu người dùng đăng nhập qua IAM Identity Center và cần chặn ở mọi account -> nghĩ đến Disable user access trong Identity Center; kiểm tra xem đã có organization event data store (CloudTrail Lake) để query SQL chưa, và nhớ session IAM role hiện có vẫn còn hiệu lực đến khi hết hạn.",
+  "memory_tip_vi": "Nếu dùng Identity Center, revoke cả assignment/session và chặn role sessions; dùng CloudTrail Lake để truy vấn lịch sử.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -309,6 +309,42 @@
       "quote": "When you configure your trail to send events to CloudWatch Logs, CloudTrail sends only the events that match your trail settings.",
       "supports": "Muốn dùng Logs Insights phải cấu hình trail gửi event vào log group; Logs Insights không đọc trực tiếp file trong S3 bucket (C).",
       "kind": "inference"
+    },
+    {
+      "id": "Q019-r2-1",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/revoke-user-permissions.html",
+      "title": "Revoke user access - AWS IAM Identity Center",
+      "accessed_at": "2026-09-30",
+      "quote": "sessions expire and the user will not be able to",
+      "supports": "Complete revocation includes deny/SCP, assignment removal and sessions; disabling a user alone does not invalidate already-issued role sessions.",
+      "kind": "direct",
+      "snapshot_id": "8e7c1d0cff3c",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q019-r2-2",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/query-event-data-store.html",
+      "title": "CloudTrail Lake event data stores - AWS CloudTrail",
+      "accessed_at": "2026-09-30",
+      "quote": "CloudTrail Lake event data stores incur charges. When you create",
+      "supports": "CloudTrail Lake SQL queries organizational event data stores for event history.",
+      "kind": "direct",
+      "snapshot_id": "1cbdbff720b6",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q019-r2-3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html",
+      "title": "AWS JSON policy elements: Principal - AWS Identity and Access Management",
+      "accessed_at": "2026-09-30",
+      "quote": "You cannot identify a user group as a principal in",
+      "supports": "IAM user, assumed-role session, and STS federated-user are distinct principals; Lambda function ARN is not an IAM principal.",
+      "kind": "direct",
+      "snapshot_id": "879eb6158f92",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -323,17 +359,17 @@
       "detail_vi": "'arc assigned' -> 'are assigned'; 'performed m the' -> 'performed in the'."
     },
     {
-      "type": "ambiguous",
-      "location": "Q019:stem:0",
-      "detail_vi": "Đề gọi danh tính là 'IAM user' trong khi truy cập được quản lý bằng IAM Identity Center; lựa chọn D ngầm hiểu đây là người dùng Identity Center."
-    },
-    {
       "type": "outdated",
       "location": "Q019:D",
       "detail_vi": "CloudTrail Lake không nhận khách hàng mới từ 31/05/2026; không ảnh hưởng tình huống vì tổ chức đã có organization event data store."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q019",
+      "detail_vi": "Không option đáp ứng literal IAM user + mọi AWS account + immediate; cần phân biệt credentials/IdC user/role session."
     }
   ],
-  "notes_vi": "D là lựa chọn duy nhất vừa chặn người dùng ở phạm vi toàn organization vừa dùng đúng nguồn dữ liệu có sẵn (organization event data store).",
+  "notes_vi": "Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user.",
   "history": [
     {
       "version": "r1",
@@ -348,6 +384,39 @@
       "previous_answer": [
         "Q019:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q019:D"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Disable Identity Center user không revoke active AWS role sessions; sửa kết luận immediate và phân biệt IAM user/IdC user.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q019:D"
+    ],
+    "candidate_answers": [
+      "Q019:D"
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

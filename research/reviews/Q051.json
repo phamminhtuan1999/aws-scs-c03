@@ -2,9 +2,9 @@
   "question_id": "Q051",
   "question_content_hash": "fdd84e820d497fedd0540be830031a5e2f16e009803073137ca7880a24828e03",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q051:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "s3-default-encryption-kms báo NON_COMPLIANT khi bucket không mã hóa bằng KMS key; từ 09/2025 SCP hỗ trợ Condition trong Allow, và SCP theo mô hình deny-by-default nên allow-list ở root chỉ cho s3:PutObject khi có mã hóa KMS sẽ chặn upload khác trên mọi member account (phải thay FullAWSAccess cho PutObject).",
+      "reason_vi": "Đúng managed rule và cơ chế SCP giới hạn PutObject, cần cấu hình evaluation đúng.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,20 +47,16 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref3",
-        "ref4",
-        "ref5",
-        "ref8",
-        "ref9",
-        "ref10"
+        "ref6",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q051:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Rule Config đúng, nhưng bucket policy chỉ deny khi header là SSE-S3; request không có header vẫn được mã hóa mặc định SSE-S3 (và SSE-C không bị chặn), nên không ngăn được mọi object không dùng KMS; thêm việc viết policy cho hàng trăm bucket.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Deny AES256 riêng bỏ sót SSE-C và các trường hợp khác không KMS.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -69,38 +65,40 @@
       "reference_ids": [
         "ref1",
         "ref6",
-        "ref7"
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q051:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "s3-bucket-ssl-requests-only chỉ kiểm tra bucket policy có bắt buộc SSL/TLS (mã hóa khi truyền), không phát hiện bucket không mã hóa bằng KMS.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "s3-bucket-ssl-requests-only kiểm tra TLS thay vì KMS.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1",
+        "ref6",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q051:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Dùng sai Config rule (s3-bucket-ssl-requests-only kiểm tra SSL/TLS, không kiểm tra KMS) nên không phát hiện bucket không dùng KMS; thêm nữa bucket policy chỉ Allow có điều kiện không chặn được principal cùng account đã có IAM Allow cho PutObject (cần Deny).",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Sai rule đánh giá; Allow KMS đơn lẻ không cấm những Allow khác.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
+        "ref1",
         "ref6",
-        "ref11"
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -136,22 +134,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Chỉ A và B dùng đúng rule s3-default-encryption-kms; B chỉ deny header SSE-S3 nên lọt upload không header (mã hóa mặc định SSE-S3) và SSE-C. A khả thi theo tài liệu hiện tại vì SCP Allow hỗ trợ Condition từ 19/09/2025 và allow-list ở root áp dụng cho toàn organization. Confidence medium vì A có các caveat triển khai.",
-    "open_issues": [
-      "A chỉ hiệu lực khi FullAWSAccess (hoặc Allow rộng khác) không còn cho phép s3:PutObject; cách phổ biến hơn là SCP Deny có điều kiện.",
-      "SCP không áp dụng cho user/role trong management account và principal ngoài organization.",
-      "Trước 19/09/2025 SCP Allow không hỗ trợ Condition, khi đó A không thực hiện được và không lựa chọn nào đáp ứng trọn vẹn; kết luận A phụ thuộc hành vi hiện tại.",
-      "Allow có điều kiện theo header s3:x-amz-server-side-encryption sẽ chặn cả upload không header dựa vào default encryption SSE-KMS của bucket (chặt hơn yêu cầu nhưng vẫn không để lọt object không KMS)."
-    ]
+    "level": "high",
+    "reason_vi": "Đúng có điều kiện deny-by-default allowlist; không khẳng định Allow đơn lẻ cấm mọi PutObject hoặc tag/management-account scope.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn A. Kiểm tra lại hai phía: (1) Phía A — trang SCP syntax cho phép Condition trong Allow, What's New 19/09/2025 xác nhận đây là thay đổi mới, và trang SCP evaluation cho thấy allow-list thay FullAWSAccess ở root áp dụng cho mọi OU/account; caveat là FullAWSAccess phải được thay và management account không bị SCP ảnh hưởng. (2) Phía đối thủ — B deny chỉ khi header SSE-S3 nên upload không header vẫn thành SSE-S3 theo default encryption; D dùng sai Config rule và bucket policy chỉ Allow không chặn principal cùng account có IAM Allow (sửa lại nhận định blind rằng phần bucket policy của D 'tự nó có thể chặn'). Giữ A, verified, confidence medium, ghi rõ điều kiện thời gian.",
+  "reconciliation_vi": "Đúng có điều kiện deny-by-default allowlist; không khẳng định Allow đơn lẻ cấm mọi PutObject hoặc tag/management-account scope.",
   "explanation_vi": {
-    "why_correct": "Managed rule s3-default-encryption-kms phát hiện bucket không mã hóa bằng AWS KMS; SCP (từ 09/2025 hỗ trợ Condition trong Allow) theo mô hình deny-by-default nên chỉ Allow s3:PutObject khi request dùng SSE-KMS sẽ chặn upload không dùng KMS trên mọi member account — với điều kiện thay FullAWSAccess cho PutObject.",
+    "why_correct": "Config rule s3-default-encryption-kms phát hiện default encryption không dùng KMS; SCP phải thực sự giới hạn PutObject ở SSE-KMS, thường bằng explicit deny các yêu cầu không hợp lệ. Một Allow có điều kiện đơn lẻ không vô hiệu hóa Allow rộng khác.",
     "others": {
-      "Q051:B": "Rule Config đúng, nhưng chỉ deny khi header là SSE-S3 thì upload không có header (mặc định thành SSE-S3) hoặc SSE-C vẫn lọt, và phải viết policy cho hàng trăm bucket.",
-      "Q051:C": "s3-bucket-ssl-requests-only chỉ kiểm tra bucket policy bắt buộc SSL/TLS (mã hóa khi truyền), không phát hiện bucket không mã hóa bằng KMS.",
-      "Q051:D": "Sai Config rule (kiểm tra SSL/TLS), và bucket policy chỉ Allow không chặn principal cùng account có IAM Allow; muốn bắt buộc SSE-KMS phải Deny."
+      "Q051:B": "Deny AES256 riêng bỏ sót SSE-C và các trường hợp khác không KMS.",
+      "Q051:C": "s3-bucket-ssl-requests-only kiểm tra TLS thay vì KMS.",
+      "Q051:D": "Sai rule đánh giá; Allow KMS đơn lẻ không cấm những Allow khác."
     }
   },
   "keywords": [
@@ -168,7 +161,7 @@
       "meaning_vi": "Phạm vi nhiều account -> ưu tiên guardrail cấp organization (SCP) hơn sửa từng bucket."
     }
   ],
-  "memory_tip_vi": "Nếu cần phát hiện bucket không dùng KMS -> nghĩ đến Config rule s3-default-encryption-kms (không phải s3-bucket-ssl-requests-only); nếu cần chặn upload không KMS trên cả organization -> nghĩ đến SCP có điều kiện s3:x-amz-server-side-encryption; kiểm tra Allow thì phải thay FullAWSAccess, bucket policy thì phải là Deny.",
+  "memory_tip_vi": "Nếu cấm upload không SSE-KMS, dùng deny phù hợp hoặc allowlist SCP không còn Allow rộng khác.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -338,6 +331,16 @@
       "type": "typo",
       "location": "Q051:B",
       "detail_vi": "'server-since encryption' (đúng: server-side encryption), 'AWS. Config' thừa dấu chấm."
+    },
+    {
+      "type": "data",
+      "location": "Q051",
+      "detail_vi": "Từ 'unencrypted' cần hiểu yêu cầu KMS vì S3 hiện mặc định SSE-S3."
+    },
+    {
+      "type": "data",
+      "location": "Q051",
+      "detail_vi": "Header-based guardrail có thể từ chối request bỏ header dù bucket default KMS."
     }
   ],
   "history": [
@@ -352,6 +355,42 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key A khớp blind; thêm What's New 09/2025 và SCP evaluation (allow-list ở root); sửa reason của D (bucket policy chỉ Allow không chặn principal cùng account); giữ A, status verified (confidence medium)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng có điều kiện deny-by-default allowlist; không khẳng định Allow đơn lẻ cấm mọi PutObject hoặc tag/management-account scope.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q051:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q051:A"
+      ],
+      "note_vi": "Đúng có điều kiện deny-by-default allowlist; không khẳng định Allow đơn lẻ cấm mọi PutObject hoặc tag/management-account scope.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Đúng có điều kiện deny-by-default allowlist; không khẳng định Allow đơn lẻ cấm mọi PutObject hoặc tag/management-account scope.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q051:A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q051:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

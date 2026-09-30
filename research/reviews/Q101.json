@@ -2,9 +2,9 @@
   "question_id": "Q101",
   "question_content_hash": "0a6cdb73abccf7b660d077bf3bed19631fbb7dfaf31808f366420a1d6899e0c3",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:58:29Z",
-  "last_reviewed_at": "2026-09-30T20:14:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q101:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Tag policy (enforced cho ec2:instance) chặn tạo resource có giá trị tag environment không hợp lệ; SCP Deny ec2:RunInstances khi aws:RequestTag thiếu (Null) environment/asset chặn launch thiếu tag. Gắn ở root áp dụng toàn org – đúng mô hình AWS khuyến nghị.",
+      "reason_vi": "SCP yêu cầu presence; tag policy kiểm soát giá trị/case khi enforce ec2:instance.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,58 +47,55 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "Q101-r2-1",
+        "Q101-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q101:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Đảo vai trò: tag policy không thể bắt buộc sự có mặt của tag cho thao tác ec2:RunInstances (resource không có tag không bị đánh giá; required tag keys chỉ áp dụng cho IaC). Nên launch thiếu tag qua API/console vẫn thành công.",
+      "reason_vi": "Tag policy không là API permission condition yêu cầu RunInstances như mô tả.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref4",
-        "ref6"
+        "Q101-r2-1",
+        "Q101-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q101:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Config required-tags là rule phát hiện, trigger theo configuration changes sau khi resource đã tồn tại; remediation bằng SSM Automation chỉ sửa sau, không ngăn launch. Cũng chỉ cấu hình tag environment, bỏ sót asset.",
+      "reason_vi": "Config remediation xảy ra sau launch, không phòng ngừa.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref8"
+        "Q101-r2-1",
+        "Q101-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q101:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Vẫn là AWS Config required-tags (phát hiện sau khi launch) + remediation, không ngăn launch; không ràng buộc giá trị environment.",
+      "reason_vi": "Config scope không phải tags độc lập và vẫn là hậu kiểm.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref8"
+        "Q101-r2-1",
+        "Q101-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -134,19 +131,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Tài liệu Organizations nêu tag policy enforcement chặn giá trị tag không hợp lệ (ec2:instance hỗ trợ) nhưng không bắt buộc tag key có mặt, và khuyến nghị dùng SCP để chặn tạo resource khi request thiếu tag; AWS Config required-tags chỉ đánh giá sau thay đổi cấu hình.",
-    "open_issues": [
-      "SCP không áp dụng cho management account.",
-      "Tag policy 'Required tag keys' chỉ áp dụng cho IaC (CloudFormation/Terraform/Pulumi), không làm B đúng với launch qua API/console."
-    ]
+    "reason_vi": "Current tag policy có required-tag reporting/IaC behavior; không nói mọi tag policy không bao giờ required tags; SCP presence vẫn phù hợp.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại B (đảo vai trò tag policy/SCP): kiểm tra tính năng 'Required tag keys' mới của tag policy – tài liệu nêu chỉ dùng cho IaC ở reporting mode, còn basic compliance rules không enforce tag key bị thiếu, nên tag policy không thể bắt buộc tag cho ec2:RunInstances nói chung; SCP 'requires value' về mặt kỹ thuật có thể dùng condition StringEquals nhưng B giao phần kiểm tra sự có mặt cho tag policy nên vẫn hỏng. Xác nhận ec2:instance hỗ trợ enforcement (ref7) cho vế tag policy của A. C/D: required-tags trigger theo configuration changes (ref8) – phát hiện sau khi launch. Giữ A, verified, high. Giữ source_issues typo dấu chấm ở B và C.",
+  "reconciliation_vi": "Current tag policy có required-tag reporting/IaC behavior; không nói mọi tag policy không bao giờ required tags; SCP presence vẫn phù hợp.",
   "explanation_vi": {
-    "why_correct": "Tag policy (enforced cho ec2:instance) chặn tạo instance có giá trị tag environment ngoài Development/Staging/Production, còn SCP Deny ec2:RunInstances khi aws:RequestTag/environment hoặc asset bị thiếu (điều kiện Null) chặn launch thiếu tag; gắn cả hai ở root để áp dụng cho mọi account.",
+    "why_correct": "SCP chặn RunInstances khi thiếu environment/asset; tag policy với enforcement kiểm soát giá trị environment được phép.",
     "others": {
-      "Q101:B": "Đảo vai trò: tag policy không thể bắt buộc tag phải có mặt khi RunInstances (resource không có tag không bị đánh giá, 'Required tag keys' chỉ cho IaC), nên launch thiếu tag vẫn thành công.",
-      "Q101:C": "AWS Config required-tags chỉ đánh giá sau khi instance đã tạo và remediation sửa sau, không ngăn launch; lại chỉ cấu hình tag environment, bỏ sót asset.",
-      "Q101:D": "Vẫn là AWS Config phát hiện + remediation sau khi launch, không ngăn launch và không ràng buộc giá trị của tag environment."
+      "Q101:B": "Tag policy không là API permission condition yêu cầu RunInstances như mô tả.",
+      "Q101:C": "Config remediation xảy ra sau launch, không phòng ngừa.",
+      "Q101:D": "Config scope không phải tags độc lập và vẫn là hậu kiểm."
     }
   },
   "keywords": [
@@ -163,7 +157,7 @@
       "meaning_vi": "Chi tiết gây nhiễu: Config chỉ phát hiện sau, không ngăn launch."
     }
   ],
-  "memory_tip_vi": "Nếu phải NGĂN tạo resource khi thiếu tag -> nghĩ đến SCP Deny với aws:RequestTag + Null; ràng buộc giá trị tag -> tag policy enforced; kiểm tra AWS Config required-tags chỉ phát hiện sau khi tạo.",
+  "memory_tip_vi": "Nếu EC2 bắt buộc tags và giá trị, dùng SCP kiểm tra presence cộng tag policy enforced kiểm tra value.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -281,6 +275,30 @@
       "quote": "Trigger type: Configuration changes",
       "supports": "required-tags chạy khi có configuration change (sau khi resource đã tạo) – là kiểm soát phát hiện, không ngăn launch.",
       "kind": "direct"
+    },
+    {
+      "id": "Q101-r2-1",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_example-tag-policies.html",
+      "title": "Tag policy syntax and examples - AWS Organizations",
+      "accessed_at": "2026-09-30",
+      "quote": "prevent any noncompliant tagging operations on specified services and resources.",
+      "supports": "enforced_for controls noncompliant tagging; required-tag reporting/IaC validation is separate.",
+      "kind": "direct",
+      "snapshot_id": "edd1b415d649",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q101-r2-2",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs) - AWS Organizations",
+      "accessed_at": "2026-09-30",
+      "quote": "the actions that the IAM users and IAM roles in",
+      "supports": "SCP denies actions at request authorization for member principals.",
+      "kind": "direct",
+      "snapshot_id": "0ace6350695a",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -293,9 +311,19 @@
       "type": "typo",
       "location": "Q101:C",
       "detail_vi": "\"Development. Staging, and Production\" – dấu chấm thay vì dấu phẩy sau Development."
+    },
+    {
+      "type": "data",
+      "location": "Q101",
+      "detail_vi": "Tag policy phải có enforced_for EC2 instances, không chỉ định allowed values mà không enforce."
+    },
+    {
+      "type": "data",
+      "location": "Q101",
+      "detail_vi": "Current tag policy có report_required_tag_for và IaC fail/warn integration; không nhầm reporting với native RunInstances deny."
     }
   ],
-  "notes_vi": "Trang 'Services and resource types that support enforcement' liệt kê ec2:instance hỗ trợ enforcement mode.",
+  "notes_vi": "Current tag policy có required-tag reporting/IaC behavior; không nói mọi tag policy không bao giờ required tags; SCP presence vẫn phù hợp.",
   "history": [
     {
       "version": "r1",
@@ -310,6 +338,45 @@
       "previous_answer": [
         "Q101:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current tag policy có required-tag reporting/IaC behavior; không nói mọi tag policy không bao giờ required tags; SCP presence vẫn phù hợp.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q101:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q101:A"
+      ],
+      "note_vi": "Current tag policy có required-tag reporting/IaC behavior; không nói mọi tag policy không bao giờ required tags; SCP presence vẫn phù hợp.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q101:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q101:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

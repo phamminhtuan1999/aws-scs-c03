@@ -1,0 +1,925 @@
+URL: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/example_dynamodb_Scenario_AtomicCounterOperations_section.html
+TITLE: Use atomic counter operations in DynamoDB with an AWS SDK - Amazon DynamoDB
+
+# Use atomic counter operations in DynamoDB with an AWS SDK
+
+The following code examples show how to use atomic counter operations in DynamoDB.
+
+- Increment counters atomically using ADD and SET operations.
+
+- Safely increment counters that might not exist.
+
+- Implement optimistic locking for counter operations.
+
+Java
+
+SDK for Java 2.x
+
+Demonstrate atomic counter operations using AWS SDK for Java 2.x.
+
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+* Increments a counter using the ADD operation.
+*
+* <p>This method demonstrates how to use the ADD operation to atomically
+* increment a counter attribute.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to update
+* @param counterName The name of the counter attribute
+* @param incrementValue The value to increment by
+* @return The response from DynamoDB
+* @throws DynamoDbException if an error occurs during the operation
+*/
+public static UpdateItemResponse incrementCounterWithAdd(
+DynamoDbClient dynamoDbClient,
+String tableName,
+Map<String, AttributeValue> key,
+String counterName,
+int incrementValue) {
+
+// Define the update parameters
+UpdateItemRequest request = UpdateItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.updateExpression("ADD #counterName :increment")
+.expressionAttributeNames(Map.of("#counterName", counterName))
+.expressionAttributeValues(Map.of(
+":increment",
+AttributeValue.builder().n(String.valueOf(incrementValue)).build()))
+.returnValues(ReturnValue.UPDATED_NEW)
+.build();
+
+// Perform the update operation
+return dynamoDbClient.updateItem(request);
+}
+
+/**
+* Increments a counter using the SET operation.
+*
+* <p>This method demonstrates how to use the SET operation with an expression
+* to increment a counter attribute.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to update
+* @param counterName The name of the counter attribute
+* @param incrementValue The value to increment by
+* @return The response from DynamoDB
+* @throws DynamoDbException if an error occurs during the operation
+*/
+public static UpdateItemResponse incrementCounterWithSet(
+DynamoDbClient dynamoDbClient,
+String tableName,
+Map<String, AttributeValue> key,
+String counterName,
+int incrementValue) {
+
+// Define the update parameters
+UpdateItemRequest request = UpdateItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.updateExpression("SET #counterName = #counterName + :increment")
+.expressionAttributeNames(Map.of("#counterName", counterName))
+.expressionAttributeValues(Map.of(
+":increment",
+AttributeValue.builder().n(String.valueOf(incrementValue)).build()))
+.returnValues(ReturnValue.UPDATED_NEW)
+.build();
+
+// Perform the update operation
+return dynamoDbClient.updateItem(request);
+}
+
+/**
+* Increments a counter safely, handling the case where the counter doesn't exist yet.
+*
+* <p>This method demonstrates how to use if_not_exists to safely increment a counter
+* that may not exist yet.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to update
+* @param counterName The name of the counter attribute
+* @param incrementValue The value to increment by
+* @return The response from DynamoDB
+* @throws DynamoDbException if an error occurs during the operation
+*/
+public static UpdateItemResponse incrementCounterSafely(
+DynamoDbClient dynamoDbClient,
+String tableName,
+Map<String, AttributeValue> key,
+String counterName,
+int incrementValue) {
+
+// Define the update parameters
+UpdateItemRequest request = UpdateItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.updateExpression("SET #counterName = if_not_exists(#counterName, :zero) + :increment")
+.expressionAttributeNames(Map.of("#counterName", counterName))
+.expressionAttributeValues(Map.of(
+":increment",
+AttributeValue.builder().n(String.valueOf(incrementValue)).build(),
+":zero", AttributeValue.builder().n("0").build()))
+.returnValues(ReturnValue.UPDATED_NEW)
+.build();
+
+// Perform the update operation
+return dynamoDbClient.updateItem(request);
+}
+
+/**
+* Decrements a counter safely, ensuring it doesn't go below zero.
+*
+* <p>This method demonstrates how to use a condition expression to safely
+* decrement a counter without going below zero.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to update
+* @param counterName The name of the counter attribute
+* @param decrementValue The value to decrement by
+* @return The response from DynamoDB
+* @throws DynamoDbException if an error occurs during the operation or if the counter would go below zero
+*/
+public static UpdateItemResponse decrementCounterSafely(
+DynamoDbClient dynamoDbClient,
+String tableName,
+Map<String, AttributeValue> key,
+String counterName,
+int decrementValue) {
+
+// Define the update parameters
+UpdateItemRequest request = UpdateItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.updateExpression("SET #counterName = #counterName - :decrement")
+.conditionExpression("#counterName >= :decrement")
+.expressionAttributeNames(Map.of("#counterName", counterName))
+.expressionAttributeValues(Map.of(
+":decrement",
+AttributeValue.builder().n(String.valueOf(decrementValue)).build()))
+.returnValues(ReturnValue.UPDATED_NEW)
+.build();
+
+// Perform the update operation
+return dynamoDbClient.updateItem(request);
+}
+
+/**
+* Compares the ADD and SET approaches for incrementing counters.
+*
+* <p>This method demonstrates the differences between using ADD and SET
+* for incrementing counters in DynamoDB.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to update
+* @return Map containing the comparison results
+*/
+public static Map<String, Object> compareAddVsSet(
+DynamoDbClient dynamoDbClient, String tableName, Map<String, AttributeValue> key) {
+
+Map<String, Object> results = new HashMap<>();
+
+try {
+// Reset counters to ensure a fair comparison
+UpdateItemRequest resetRequest = UpdateItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.updateExpression("SET AddCounter = :zero, SetCounter = :zero")
+.expressionAttributeValues(
+Map.of(":zero", AttributeValue.builder().n("0").build()))
+.build();
+
+dynamoDbClient.updateItem(resetRequest);
+
+// Increment with ADD
+long addStartTime = System.nanoTime();
+UpdateItemResponse addResponse = incrementCounterWithAdd(dynamoDbClient, tableName, key, "AddCounter", 1);
+long addEndTime = System.nanoTime();
+long addDuration = addEndTime - addStartTime;
+
+// Increment with SET
+long setStartTime = System.nanoTime();
+UpdateItemResponse setResponse = incrementCounterWithSet(dynamoDbClient, tableName, key, "SetCounter", 1);
+long setEndTime = System.nanoTime();
+long setDuration = setEndTime - setStartTime;
+
+// Record results
+results.put("addResponse", addResponse);
+results.put("setResponse", setResponse);
+results.put("addDuration", addDuration);
+results.put("setDuration", setDuration);
+results.put("success", true);
+
+} catch (DynamoDbException e) {
+results.put("success", false);
+results.put("error", e.getMessage());
+}
+
+return results;
+}
+
+/**
+* Gets the current value of a counter attribute.
+*
+* <p>Helper method to retrieve the current value of a counter attribute.
+*
+* @param dynamoDbClient The DynamoDB client
+* @param tableName The name of the DynamoDB table
+* @param key The key of the item to get
+* @param counterName The name of the counter attribute
+* @return The counter value or null if not found
+* @throws DynamoDbException if an error occurs during the operation
+*/
+public static Integer getCounterValue(
+DynamoDbClient dynamoDbClient, String tableName, Map<String, AttributeValue> key, String counterName) {
+
+// Define the get parameters
+GetItemRequest request = GetItemRequest.builder()
+.tableName(tableName)
+.key(key)
+.projectionExpression(counterName)
+.build();
+
+// Perform the get operation
+GetItemResponse response = dynamoDbClient.getItem(request);
+
+// Return the counter value if it exists, otherwise null
+if (response.item() != null && response.item().containsKey(counterName)) {
+return Integer.parseInt(response.item().get(counterName).n());
+}
+
+return null;
+}
+
+Example usage of atomic counter operations with AWS SDK for Java 2.x.
+
+public static void exampleUsage(DynamoDbClient dynamoDbClient, String tableName) {
+// Example key
+Map<String, AttributeValue> key = new HashMap<>();
+key.put("ProductId", AttributeValue.builder().s("P12345").build());
+
+System.out.println("Demonstrating atomic counter operations in DynamoDB");
+
+try {
+// Example 1: Increment a counter using ADD
+System.out.println("\nExample 1: Incrementing a counter using ADD");
+UpdateItemResponse addResponse = incrementCounterWithAdd(dynamoDbClient, tableName, key, "ViewCount", 1);
+
+System.out.println("Updated counter: " + addResponse.attributes());
+
+// Example 2: Increment a counter using SET
+System.out.println("\nExample 2: Incrementing a counter using SET");
+UpdateItemResponse setResponse = incrementCounterWithSet(dynamoDbClient, tableName, key, "LikeCount", 1);
+
+System.out.println("Updated counter: " + setResponse.attributes());
+
+// Example 3: Increment a counter safely
+System.out.println("\nExample 3: Incrementing a counter safely");
+UpdateItemResponse safeResponse = incrementCounterSafely(dynamoDbClient, tableName, key, "ShareCount", 1);
+
+System.out.println("Updated counter: " + safeResponse.attributes());
+
+// Example 4: Decrement a counter safely
+System.out.println("\nExample 4: Decrementing a counter safely");
+try {
+UpdateItemResponse decrementResponse =
+decrementCounterSafely(dynamoDbClient, tableName, key, "InventoryCount", 1);
+
+System.out.println("Updated counter: " + decrementResponse.attributes());
+} catch (DynamoDbException e) {
+if (e.getMessage().contains("ConditionalCheckFailed")) {
+System.out.println("Cannot decrement counter below zero");
+} else {
+throw e;
+}
+}
+
+// Example 5: Compare ADD vs SET
+System.out.println("\nExample 5: Comparing ADD vs SET");
+Map<String, Object> comparison = compareAddVsSet(dynamoDbClient, tableName, key);
+
+if ((boolean) comparison.get("success")) {
+System.out.println("ADD duration: " + comparison.get("addDuration") + " ns");
+System.out.println("SET duration: " + comparison.get("setDuration") + " ns");
+System.out.println("ADD response: " + comparison.get("addResponse"));
+System.out.println("SET response: " + comparison.get("setResponse"));
+} else {
+System.out.println("Comparison failed: " + comparison.get("error"));
+}
+
+// Explain atomic counter operations
+System.out.println("\nKey points about DynamoDB atomic counter operations:");
+System.out.println("1. Both ADD and SET can be used for atomic counters");
+System.out.println("2. ADD is more concise for simple increments");
+System.out.println("3. SET with an expression is more flexible for complex operations");
+System.out.println("4. Use if_not_exists to handle the case where the counter doesn't exist yet");
+System.out.println("5. Use condition expressions to prevent counters from going below zero");
+System.out.println("6. Atomic operations are guaranteed to be isolated from other writes");
+System.out.println("7. ADD can only be used with number and set data types");
+
+} catch (DynamoDbException e) {
+System.err.println("Error: " + e.getMessage());
+e.printStackTrace();
+}
+}
+
+- For API details, see
+UpdateItem
+in AWS SDK for Java 2.x API Reference.
+
+JavaScript
+
+SDK for JavaScript (v3)
+
+Demonstrate atomic counter operations using AWS SDK for JavaScript.
+
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
+DynamoDBDocumentClient,
+UpdateCommand,
+GetCommand
+} = require("@aws-sdk/lib-dynamodb");
+
+/**
+* Increment a counter using the ADD operation.
+*
+* This function demonstrates using the ADD operation for atomic increments.
+* The ADD operation is atomic and is the recommended way to increment counters.
+*
+* @param {Object} config - AWS configuration object
+* @param {string} tableName - The name of the DynamoDB table
+* @param {Object} key - The key of the item to update
+* @param {string} counterName - The name of the counter attribute
+* @param {number} incrementValue - The value to increment by
+* @returns {Promise<Object>} - The response from DynamoDB
+*/
+async function incrementCounterWithAdd(
+config,
+tableName,
+key,
+counterName,
+incrementValue
+) {
+// Initialize the DynamoDB client
+const client = new DynamoDBClient(config);
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Define the update parameters using ADD
+const params = {
+TableName: tableName,
+Key: key,
+UpdateExpression: `ADD ${counterName} :increment`,
+ExpressionAttributeValues: {
+":increment": incrementValue
+},
+ReturnValues: "UPDATED_NEW"
+};
+
+// Perform the update operation
+const response = await docClient.send(new UpdateCommand(params));
+
+return response;
+}
+
+/**
+* Increment a counter using the SET operation with an expression.
+*
+* This function demonstrates using the SET operation with an expression for increments.
+* While this approach works, it's less idiomatic for simple increments than using ADD.
+*
+* @param {Object} config - AWS configuration object
+* @param {string} tableName - The name of the DynamoDB table
+* @param {Object} key - The key of the item to update
+* @param {string} counterName - The name of the counter attribute
+* @param {number} incrementValue - The value to increment by
+* @returns {Promise<Object>} - The response from DynamoDB
+*/
+async function incrementCounterWithSet(
+config,
+tableName,
+key,
+counterName,
+incrementValue
+) {
+// Initialize the DynamoDB client
+const client = new DynamoDBClient(config);
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Define the update parameters using SET with an expression
+const params = {
+TableName: tableName,
+Key: key,
+UpdateExpression: `SET ${counterName} = ${counterName} + :increment`,
+ExpressionAttributeValues: {
+":increment": incrementValue
+},
+ReturnValues: "UPDATED_NEW"
+};
+
+// Perform the update operation
+const response = await docClient.send(new UpdateCommand(params));
+
+return response;
+}
+
+/**
+* Increment a counter safely, handling the case where the counter might not exist.
+*
+* This function demonstrates using the if_not_exists function with SET to safely
+* increment a counter that might not exist yet.
+*
+* @param {Object} config - AWS configuration object
+* @param {string} tableName - The name of the DynamoDB table
+* @param {Object} key - The key of the item to update
+* @param {string} counterName - The name of the counter attribute
+* @param {number} incrementValue - The value to increment by
+* @param {number} defaultValue - The default value if the counter doesn't exist
+* @returns {Promise<Object>} - The response from DynamoDB
+*/
+async function incrementCounterSafely(
+config,
+tableName,
+key,
+counterName,
+incrementValue,
+defaultValue = 0
+) {
+// Initialize the DynamoDB client
+const client = new DynamoDBClient(config);
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Define the update parameters using SET with if_not_exists
+const params = {
+TableName: tableName,
+Key: key,
+UpdateExpression: `SET ${counterName} = if_not_exists(${counterName}, :default) + :increment`,
+ExpressionAttributeValues: {
+":increment": incrementValue,
+":default": defaultValue
+},
+ReturnValues: "UPDATED_NEW"
+};
+
+// Perform the update operation
+const response = await docClient.send(new UpdateCommand(params));
+
+return response;
+}
+
+/**
+* Increment a counter with optimistic locking to prevent race conditions.
+*
+* This function demonstrates using a condition expression to implement optimistic
+* locking, which prevents race conditions when multiple processes try to update
+* the same counter.
+*
+* @param {Object} config - AWS configuration object
+* @param {string} tableName - The name of the DynamoDB table
+* @param {Object} key - The key of the item to update
+* @param {string} counterName - The name of the counter attribute
+* @param {number} incrementValue - The value to increment by
+* @param {number} expectedValue - The expected current value of the counter
+* @returns {Promise<Object>} - The response from DynamoDB
+*/
+async function incrementCounterWithLocking(
+config,
+tableName,
+key,
+counterName,
+incrementValue,
+expectedValue
+) {
+// Initialize the DynamoDB client
+const client = new DynamoDBClient(config);
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Define the update parameters with a condition expression
+const params = {
+TableName: tableName,
+Key: key,
+UpdateExpression: `SET ${counterName} = ${counterName} + :increment`,
+ConditionExpression: `${counterName} = :expected`,
+ExpressionAttributeValues: {
+":increment": incrementValue,
+":expected": expectedValue
+},
+ReturnValues: "UPDATED_NEW"
+};
+
+try {
+// Perform the update operation
+const response = await docClient.send(new UpdateCommand(params));
+return {
+success: true,
+data: response
+};
+} catch (error) {
+// Check if the error is due to the condition check failing
+if (error.name === "ConditionalCheckFailedException") {
+return {
+success: false,
+error: "Optimistic locking failed: the counter value has changed"
+};
+}
+// Re-throw other errors
+throw error;
+}
+}
+
+/**
+* Get the current value of a counter.
+*
+* Helper function to retrieve the current value of a counter attribute.
+*
+* @param {Object} config - AWS configuration object
+* @param {string} tableName - The name of the DynamoDB table
+* @param {Object} key - The key of the item to get
+* @param {string} counterName - The name of the counter attribute
+* @returns {Promise<number|null>} - The current counter value or null if not found
+*/
+async function getCounterValue(
+config,
+tableName,
+key,
+counterName
+) {
+// Initialize the DynamoDB client
+const client = new DynamoDBClient(config);
+const docClient = DynamoDBDocumentClient.from(client);
+
+// Define the get parameters
+const params = {
+TableName: tableName,
+Key: key
+};
+
+// Perform the get operation
+const response = await docClient.send(new GetCommand(params));
+
+// Return the counter value if it exists, otherwise null
+return response.Item && counterName in response.Item
+? response.Item[counterName]
+: null;
+}
+
+Example usage of atomic counter operations with AWS SDK for JavaScript.
+
+/**
+* Example of how to use the atomic counter operations.
+*/
+async function exampleUsage() {
+// Example parameters
+const config = { region: "us-west-2" };
+const tableName = "Products";
+const key = { ProductId: "P12345" };
+const counterName = "ViewCount";
+const incrementValue = 1;
+
+console.log("Demonstrating different approaches to increment counters in DynamoDB");
+
+try {
+// Example 1: Using ADD operation (recommended for simple increments)
+console.log("\nExample 1: Incrementing counter with ADD operation");
+const response1 = await incrementCounterWithAdd(
+config,
+tableName,
+key,
+counterName,
+incrementValue
+);
+
+console.log(`Counter incremented to: ${response1.Attributes[counterName]}`);
+
+// Example 2: Using SET operation with an expression
+console.log("\nExample 2: Incrementing counter with SET operation");
+const response2 = await incrementCounterWithSet(
+config,
+tableName,
+key,
+counterName,
+incrementValue
+);
+
+console.log(`Counter incremented to: ${response2.Attributes[counterName]}`);
+
+// Example 3: Safely incrementing a counter that might not exist
+console.log("\nExample 3: Safely incrementing counter that might not exist");
+const newKey = { ProductId: "P67890" };
+const response3 = await incrementCounterSafely(
+config,
+tableName,
+newKey,
+counterName,
+incrementValue,
+0
+);
+
+console.log(`Counter initialized and incremented to: ${response3.Attributes[counterName]}`);
+
+// Example 4: Incrementing with optimistic locking
+console.log("\nExample 4: Incrementing with optimistic locking");
+
+// First, get the current counter value
+const currentValue = await getCounterValue(config, tableName, key, counterName);
+console.log(`Current counter value: ${currentValue}`);
+
+// Then, try to increment with optimistic locking
+const response4 = await incrementCounterWithLocking(
+config,
+tableName,
+key,
+counterName,
+incrementValue,
+currentValue
+);
+
+if (response4.success) {
+console.log(`Counter successfully incremented to: ${response4.data.Attributes[counterName]}`);
+} else {
+console.log(response4.error);
+}
+
+// Explain the differences between ADD and SET
+console.log("\nKey differences between ADD and SET for counter operations:");
+console.log("1. ADD is more concise and idiomatic for simple increments");
+console.log("2. SET with expressions is more flexible for complex operations");
+console.log("3. Both operations are atomic and safe for concurrent updates");
+console.log("4. SET with if_not_exists is required when the attribute might not exist");
+console.log("5. Optimistic locking can be added to either approach for additional safety");
+
+} catch (error) {
+console.error("Error:", error);
+}
+}
+
+- For API details, see
+UpdateItem
+in AWS SDK for JavaScript API Reference.
+
+Python
+
+SDK for Python (Boto3)
+
+Demonstrate atomic counter operations using AWS SDK for Python (Boto3).
+
+import boto3
+from botocore.exceptions import ClientError
+from typing import Any, Dict, Union
+
+def increment_counter_with_add(
+table_name: str, key: Dict[str, Any], counter_name: str, increment_value: int = 1
+) -> Dict[str, Any]:
+"""
+Increment a counter attribute using the ADD operation.
+
+This function demonstrates the atomic ADD operation, which is ideal for
+incrementing counters without the risk of race conditions.
+
+Args:
+table_name (str): The name of the DynamoDB table.
+key (Dict[str, Any]): The primary key of the item to update.
+counter_name (str): The name of the counter attribute.
+increment_value (int, optional): The value to increment by. Defaults to 1.
+
+Returns:
+Dict[str, Any]: The response from DynamoDB containing the updated attribute values.
+"""
+# Initialize the DynamoDB resource
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(table_name)
+
+# Use the ADD operation to atomically increment the counter
+response = table.update_item(
+Key=key,
+UpdateExpression="ADD #counter :increment",
+ExpressionAttributeNames={"#counter": counter_name},
+ExpressionAttributeValues={":increment": increment_value},
+ReturnValues="UPDATED_NEW",
+)
+
+return response
+
+def increment_counter_with_set(
+table_name: str, key: Dict[str, Any], counter_name: str, increment_value: int = 1
+) -> Dict[str, Any]:
+"""
+Increment a counter attribute using the SET operation with an expression.
+
+This function demonstrates using SET with an expression to increment a counter.
+While this works, it's generally recommended to use ADD for simple increments.
+
+Args:
+table_name (str): The name of the DynamoDB table.
+key (Dict[str, Any]): The primary key of the item to update.
+counter_name (str): The name of the counter attribute.
+increment_value (int, optional): The value to increment by. Defaults to 1.
+
+Returns:
+Dict[str, Any]: The response from DynamoDB containing the updated attribute values.
+"""
+# Initialize the DynamoDB resource
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(table_name)
+
+# Use the SET operation with an expression to increment the counter
+response = table.update_item(
+Key=key,
+UpdateExpression="SET #counter = #counter + :increment",
+ExpressionAttributeNames={"#counter": counter_name},
+ExpressionAttributeValues={":increment": increment_value},
+ReturnValues="UPDATED_NEW",
+)
+
+return response
+
+def increment_counter_safely(
+table_name: str,
+key: Dict[str, Any],
+counter_name: str,
+increment_value: int = 1,
+initial_value: int = 0,
+) -> Dict[str, Any]:
+"""
+Increment a counter attribute safely, handling the case where it might not exist.
+
+This function demonstrates a best practice for incrementing counters by using
+the if_not_exists function to handle the case where the counter doesn't exist yet.
+
+Args:
+table_name (str): The name of the DynamoDB table.
+key (Dict[str, Any]): The primary key of the item to update.
+counter_name (str): The name of the counter attribute.
+increment_value (int, optional): The value to increment by. Defaults to 1.
+initial_value (int, optional): The initial value if the counter doesn't exist. Defaults to 0.
+
+Returns:
+Dict[str, Any]: The response from DynamoDB containing the updated attribute values.
+"""
+# Initialize the DynamoDB resource
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(table_name)
+
+# Use SET with if_not_exists to safely increment the counter
+response = table.update_item(
+Key=key,
+UpdateExpression="SET #counter = if_not_exists(#counter, :initial) + :increment",
+ExpressionAttributeNames={"#counter": counter_name},
+ExpressionAttributeValues={":increment": increment_value, ":initial": initial_value},
+ReturnValues="UPDATED_NEW",
+)
+
+return response
+
+def atomic_conditional_increment(
+table_name: str,
+key: Dict[str, Any],
+counter_name: str,
+condition_attribute: str,
+condition_value: Any,
+increment_value: int = 1,
+) -> Union[Dict[str, Any], None]:
+"""
+Atomically increment a counter only if a condition is met.
+
+This function demonstrates combining atomic counter operations with
+conditional expressions for more complex update scenarios.
+
+Args:
+table_name (str): The name of the DynamoDB table.
+key (Dict[str, Any]): The primary key of the item to update.
+counter_name (str): The name of the counter attribute.
+condition_attribute (str): The attribute to check in the condition.
+condition_value (Any): The value to compare against.
+increment_value (int, optional): The value to increment by. Defaults to 1.
+
+Returns:
+Optional[Dict[str, Any]]: The response from DynamoDB if successful, None if condition failed.
+"""
+# Initialize the DynamoDB resource
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table(table_name)
+
+try:
+# Use ADD with a condition expression
+response = table.update_item(
+Key=key,
+UpdateExpression="ADD #counter :increment",
+ConditionExpression="#condition = :value",
+ExpressionAttributeNames={"#counter": counter_name, "#condition": condition_attribute},
+ExpressionAttributeValues={":increment": increment_value, ":value": condition_value},
+ReturnValues="UPDATED_NEW",
+)
+return response
+except ClientError as e:
+if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+# Condition was not met
+return None
+else:
+# Other error occurred
+raise
+
+Example usage of atomic counter operations with AWS SDK for Python (Boto3).
+
+def example_usage():
+"""Example of how to use the atomic counter operations functions."""
+# Example parameters
+table_name = "GameScores"
+key = {"UserId": "user123", "GameId": "game456"}
+counter_name = "Score"
+
+print("Example 1: Incrementing a counter with ADD operation")
+try:
+response = increment_counter_with_add(
+table_name=table_name, key=key, counter_name=counter_name, increment_value=10
+)
+print(
+f"Counter incremented successfully. New value: {response.get('Attributes', {}).get(counter_name)}"
+)
+except Exception as e:
+print(f"Error incrementing counter with ADD: {e}")
+
+print("\nExample 2: Incrementing a counter with SET operation")
+try:
+response = increment_counter_with_set(
+table_name=table_name, key=key, counter_name=counter_name, increment_value=5
+)
+print(
+f"Counter incremented successfully. New value: {response.get('Attributes', {}).get(counter_name)}"
+)
+except Exception as e:
+print(f"Error incrementing counter with SET: {e}")
+
+print("\nExample 3: Safely incrementing a counter that might not exist")
+try:
+new_key = {"UserId": "newuser789", "GameId": "game456"}
+response = increment_counter_safely(
+table_name=table_name,
+key=new_key,
+counter_name=counter_name,
+increment_value=15,
+initial_value=100,
+)
+print(
+f"Counter safely incremented. New value: {response.get('Attributes', {}).get(counter_name)}"
+)
+except Exception as e:
+print(f"Error safely incrementing counter: {e}")
+
+print("\nExample 4: Conditional counter increment")
+try:
+# Fix for mypy: Handle the case where response might be None
+result = atomic_conditional_increment(
+table_name=table_name,
+key=key,
+counter_name="Achievements",
+condition_attribute="Level",
+condition_value=5,
+increment_value=1,
+)
+
+if result is not None:
+print(
+f"Conditional increment succeeded. New value: {result.get('Attributes', {}).get('Achievements')}"
+)
+else:
+print("Conditional increment failed because condition was not met.")
+if response:
+print(
+f"Conditional increment succeeded. New value: {response.get('Attributes', {}).get('Achievements')}"
+)
+else:
+print("Conditional increment failed because condition was not met.")
+except Exception as e:
+print(f"Error with conditional increment: {e}")
+
+print("\nComparison of ADD vs SET for counter operations:")
+print("1. ADD is specifically designed for atomic numeric increments and set operations")
+print("2. SET with an expression can be used for more complex calculations")
+print("3. Both operations are atomic, preventing race conditions")
+print("4. ADD is more concise for simple increments")
+print("5. SET with if_not_exists() is recommended when the attribute might not exist")
+print("6. For counters, ADD is generally preferred for clarity and simplicity")
+
+- For API details, see
+UpdateItem
+in AWS SDK for Python (Boto3) API Reference.
+
+For a complete list of AWS SDK developer guides and code examples, see
+Using DynamoDB with an AWS SDK.
+This topic also includes information about getting started and details about previous SDK versions.

@@ -2,9 +2,9 @@
   "question_id": "Q135",
   "question_content_hash": "b3d2ecd944f1240ee8071d7583c08dd38eed035259646a425f2b1d693f9174cb",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:22:55+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -44,49 +44,48 @@
       "unit_id": "Q135:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "CloudHSM key store yêu cầu cluster có ít nhất hai HSM active ở các AZ khác nhau; cluster chỉ một HSM không đáp ứng yêu cầu kết nối custom key store và không highly available.",
+      "reason_vi": "A một HSM không đáp ứng yêu cầu custom key store lúc tạo và HA.",
       "requirement_ids": [
         "R5"
       ],
       "reference_ids": [
         "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q135:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Custom key store không hỗ trợ imported key material nên không thể 'upload' key material vào đó; ngoài ra key manager tự dựng trên một EC2 instance không bảo đảm HA.",
+      "reason_vi": "B EC2/open-source material upload không tạo CloudHSM-backed KMS custom key store theo mô tả.",
       "requirement_ids": [
         "R1",
         "R5"
       ],
       "reference_ids": [
-        "ref2"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q135:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Key trong standard key store (kể cả key import) nằm trên fleet HSM tenant-agnostic của KMS (môi trường dùng chung); hơn nữa HMAC key chỉ dùng cho GenerateMac/VerifyMac, không mã hóa dữ liệu được.",
+      "reason_vi": "C HMAC dùng MAC, không thay symmetric encryption key cho integration này.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q135:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CloudHSM key store dùng HSM single-tenant do khách hàng sở hữu, có hai HSM để đạt HA và thỏa yêu cầu kết nối; KMS key vẫn dùng key policy/IAM, KMS API và tích hợp dịch vụ, còn security team quản lý HSM và key material qua CloudHSM.",
+      "reason_vi": "D hai HSM phù hợp khi đặt ở các AZ khác nhau và cấu hình KMS crypto user/key store.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -95,11 +94,9 @@
         "R5"
       ],
       "reference_ids": [
-        "ref1",
-        "ref5",
-        "ref6"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -135,18 +132,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. Tài liệu KMS nêu trực tiếp cluster của CloudHSM key store phải có ít nhất hai HSM active ở AZ khác nhau, HSM là single-tenant, và KMS key vẫn dùng key policy/IAM, KMS API như bình thường; custom key store không hỗ trợ imported key material, HMAC key không mã hóa dữ liệu.",
-    "open_issues": [
-      "D không ghi rõ hai HSM ở hai AZ khác nhau; giả định triển khai đúng yêu cầu của CloudHSM key store."
-    ]
+    "reason_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại A (đối thủ mạnh nhất, khác D duy nhất ở số HSM): trang CloudHSM key stores ghi rõ cluster phải có ít nhất hai HSM active ở các AZ khác nhau (ref1) – A một HSM vừa không kết nối được custom key store vừa không highly available. B: custom key store không hỗ trợ imported key material (ref2) và key manager trên một EC2 không HA. C: standard key store là fleet HSM tenant-agnostic (ref3) và HMAC key chỉ GenerateMac/VerifyMac (ref4). Giữ D, verified, high.",
+  "reconciliation_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
   "explanation_vi": {
-    "why_correct": "D dùng AWS KMS CloudHSM key store: key material nằm trên HSM single-tenant do công ty sở hữu và quản lý, cluster hai HSM đáp ứng yêu cầu tối thiểu và high availability, còn ứng dụng vẫn gọi KMS API/CLI/Encryption SDK với key policy và tích hợp dịch vụ như cũ.",
+    "why_correct": "KMS custom key store trên CloudHSM giữ tích hợp KMS và key material riêng; cluster cần ít nhất hai active HSM ở hai AZ.",
     "others": {
-      "Q135:A": "Cluster chỉ một HSM không đạt yêu cầu tối thiểu hai HSM active ở hai AZ của CloudHSM key store và không highly available.",
-      "Q135:B": "Custom key store không hỗ trợ import key material, và key manager tự dựng trên một EC2 instance không bảo đảm HA.",
-      "Q135:C": "Key trong standard key store vẫn nằm trên fleet HSM dùng chung của KMS, và HMAC key chỉ tạo/kiểm tra MAC chứ không mã hóa dữ liệu."
+      "Q135:A": "A một HSM không đáp ứng yêu cầu custom key store lúc tạo và HA.",
+      "Q135:B": "B EC2/open-source material upload không tạo CloudHSM-backed KMS custom key store theo mô tả.",
+      "Q135:C": "C HMAC dùng MAC, không thay symmetric encryption key cho integration này."
     }
   },
   "keywords": [
@@ -163,7 +158,7 @@
       "meaning_vi": "Cluster CloudHSM cần ít nhất hai HSM ở hai AZ khác nhau."
     }
   ],
-  "memory_tip_vi": "Nếu cần key material trên HSM single-tenant mà vẫn dùng KMS API/tích hợp dịch vụ -> nghĩ đến CloudHSM key store; kiểm tra cluster có ít nhất hai HSM ở hai AZ và custom key store không hỗ trợ import key/HMAC/asymmetric.",
+  "memory_tip_vi": "Nếu KMS APIs + HSM riêng + HA, CloudHSM custom key store với >=2 active HSM khác AZ.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -254,8 +249,14 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Tài liệu cũng nêu người dùng có toàn quyền với cluster CloudHSM (tạo/xóa HSM, backup) và có thể dùng CloudHSM client để xem, audit, quản lý key material.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q135",
+      "detail_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA."
+    }
+  ],
+  "notes_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
   "history": [
     {
       "version": "r1",
@@ -270,6 +271,39 @@
       "previous_answer": [
         "Q135:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q135:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q135:D"
+      ],
+      "note_vi": "D nói hai HSM nhưng không chỉ rõ khác AZ; triển khai phải thêm điều kiện này, không khẳng định hai HSM cùng AZ là HA.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -2,9 +2,9 @@
   "question_id": "Q033",
   "question_content_hash": "52d5294ae0621579fa6789298b1eb371e9432a9e5c7249f66756260e3e54d93b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,57 +34,59 @@
       "unit_id": "Q033:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "CloudWatch alarm + SNS chỉ gửi thông báo, không chặn request nên không giảm thiểu được tấn công.",
+      "reason_vi": "Sai: thông báo số lần login không trực tiếp block attack.",
       "requirement_ids": [
         "R1"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "ref3",
+        "Q033-r2-2"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q033:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Security group chỉ hỗ trợ rule allow, không có rule deny; ngoài ra tấn công đến từ rất nhiều IP nên chặn theo IP không hiệu quả.",
+      "reason_vi": "Sai: security group không có deny hoặc kiểm tra User-Agent.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1"
+        "ref3",
+        "Q033-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q033:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS WAF gắn được với ALB; string match rule có thể so khớp header User-Agent và hành động Block chặn các request dùng user agent của trình giả lập, còn người dùng hợp lệ vẫn đi qua (default Allow).",
+      "reason_vi": "Đúng: WAF header string match với Block chặn marker được nêu.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref2",
         "ref3",
-        "ref4",
-        "ref5"
+        "Q033-r2-2"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q033:D",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Rule Allow cho user agent hợp lệ chỉ chặn được tấn công nếu default action là Block, khi đó phải liệt kê đầy đủ mọi user agent hợp lệ, dễ chặn nhầm người dùng thật; nếu default là Allow thì tấn công vẫn lọt.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Sai: allow các User-Agent đã biết không tự block marker này và dễ chặn login hợp lệ.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "ref3",
+        "Q033-r2-2"
       ],
       "evidence_kind": "inference"
     }
@@ -121,35 +123,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Đặc điểm chung duy nhất của tấn công (nhiều IP) là user agent của trình giả lập; WAF trên ALB với string match trên User-Agent + Block chặn đúng nhóm này, default Allow giữ người dùng hợp lệ. B bị loại trực tiếp (security group không có deny), A chỉ cảnh báo.",
-    "open_issues": [
-      "User agent có thể bị kẻ tấn công đổi; AWS WAF Fraud Control ATP (account takeover prevention) mạnh hơn nhưng không có trong lựa chọn."
-    ]
+    "reason_vi": "Giữ C; User-Agent có thể giả mạo, block marker không bảo đảm chặn mọi credential stuffing.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất D (allowlist user agent hợp lệ): rule Allow chỉ có tác dụng chặn nếu default action là Block, khi đó phải liệt kê đủ mọi user agent hợp lệ (rất nhiều trình duyệt/phiên bản) nên dễ chặn nhầm người dùng thật – trái yêu cầu 'still allow legitimate logins'; nếu default Allow thì tấn công vẫn lọt. Tài liệu default action của WAF khuyến nghị default Allow + rule Block cho request cụ thể khi phần lớn người dùng hợp lệ. Không có bằng chứng mới nào bác bỏ C. Giữ C, verified, high.",
+  "reconciliation_vi": "Giữ C; User-Agent có thể giả mạo, block marker không bảo đảm chặn mọi credential stuffing.",
   "explanation_vi": {
-    "why_correct": "Tấn công đến từ nhiều IP nhưng dùng chung user agent của trình giả lập; AWS WAF gắn vào ALB với rule string match trên header User-Agent và action Block chặn đúng các request này, còn web ACL default Allow vẫn cho người dùng hợp lệ đăng nhập.",
+    "why_correct": "WAF rule match User-Agent của emulator và block request tới ALB, với default allow cho request khác. Dấu hiệu này xử lý nguồn IP phân tán nhưng attacker có thể đổi User-Agent nên đây là giảm thiểu theo marker đã cho.",
     "others": {
-      "Q033:A": "CloudWatch alarm + SNS chỉ gửi cảnh báo, không chặn request nên không giảm thiểu được tấn công.",
-      "Q033:B": "Security group không có rule deny, và tấn công đến từ rất nhiều IP nên chặn theo IP không hiệu quả.",
-      "Q033:D": "Allowlist user agent chỉ chặn được khi default Block và phải liệt kê mọi user agent hợp lệ, dễ chặn nhầm người dùng thật."
+      "Q033:A": "Sai: thông báo số lần login không trực tiếp block attack.",
+      "Q033:B": "Sai: security group không có deny hoặc kiểm tra User-Agent.",
+      "Q033:D": "Sai: allow các User-Agent đã biết không tự block marker này và dễ chặn login hợp lệ."
     }
   },
   "keywords": [
     {
-      "phrase": "coming from many IP addresses",
-      "meaning_vi": "Chặn theo IP (security group/IP set) không hiệu quả."
+      "phrase": "many IP addresses",
+      "meaning_vi": "Distributed IP không có một source-IP marker đơn lẻ."
     },
     {
-      "phrase": "user agent string of a known mobile device emulator",
-      "meaning_vi": "Dấu hiệu chung để viết rule WAF match header User-Agent và Block."
+      "phrase": "user agent string",
+      "meaning_vi": "WAF match User-Agent của emulator."
     },
     {
-      "phrase": "must still allow legitimate logins",
-      "meaning_vi": "Chặn có chọn lọc (blocklist), không allowlist hẹp."
+      "phrase": "legitimate logins",
+      "meaning_vi": "Default allow giữ request không match hoạt động."
     }
   ],
-  "memory_tip_vi": "Nếu tấn công web từ nhiều IP nhưng có dấu hiệu chung trong request (User-Agent, header) -> nghĩ đến AWS WAF rule match + Block trên ALB/CloudFront; kiểm tra: security group không có deny, CloudWatch alarm chỉ cảnh báo.",
+  "memory_tip_vi": "Nếu attack có marker HTTP header ổn định, dùng WAF block marker và kiểm tra false positives.",
   "tags": {
     "domains": [
       "3 Infrastructure Security"
@@ -225,6 +225,18 @@
       "quote": "Block – AWS WAF blocks the request. This is a terminating action.",
       "supports": "Rule Block chặn request khớp điều kiện.",
       "kind": "direct"
+    },
+    {
+      "id": "Q033-r2-2",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+      "title": "Control traffic to your AWS resources using security groups - Amazon Virtual Private Cloud",
+      "accessed_at": "2026-09-30",
+      "quote": "is the traffic allowed by the security group rules. For",
+      "supports": "Security group rules allow traffic and cannot express deny rules or inspect HTTP headers.",
+      "kind": "direct",
+      "snapshot_id": "6761ddae28b8",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -237,6 +249,11 @@
       "type": "typo",
       "location": "Q033:C",
       "detail_vi": "Thiếu dấu chấm giữa hai câu ('for the ALB Create')."
+    },
+    {
+      "type": "data",
+      "location": "Q033",
+      "detail_vi": "User-Agent spoofable; không nên diễn giải đây là biện pháp chặn mọi credential stuffing."
     }
   ],
   "history": [
@@ -261,6 +278,23 @@
       "previous_answer": [
         "Q033:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; User-Agent có thể giả mạo, block marker không bảo đảm chặn mọi credential stuffing.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q033:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q033:C"
+      ],
+      "note_vi": "Giữ C; User-Agent có thể giả mạo, block marker không bảo đảm chặn mọi credential stuffing.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -272,5 +306,20 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "notes_vi": "Giữ C; User-Agent có thể giả mạo, block marker không bảo đảm chặn mọi credential stuffing.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q033:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

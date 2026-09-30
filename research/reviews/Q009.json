@@ -2,9 +2,9 @@
   "question_id": "Q009",
   "question_content_hash": "dbd03b77334afeab17880b4562415b7e162590082d89aa4863b19ee3d2e90c70",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:33:20Z",
-  "last_reviewed_at": "2026-09-30T19:41:20Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -34,20 +34,22 @@
       "unit_id": "Q009:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Vault Lock governance mode có thể bị gỡ/quản lý bởi người có đủ quyền IAM, nên admin vẫn xóa được recovery point; không đạt R2 (cần compliance mode).",
+      "reason_vi": "Sai: admin có quyền có thể gỡ governance vault lock rồi xóa recovery point; active lock vẫn chặn xóa trước retention.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
+        "ref1",
+        "ref3",
         "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q009:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Object Lock compliance mode: không user nào kể cả root xóa/ghi đè được trong thời hạn giữ; S3 Replication sao chép cả thông tin retention sang replica (bucket đích buộc phải bật Object Lock), nên dữ liệu ở Region phụ cũng bất biến.",
+      "reason_vi": "Đúng khi bucket đích bật Object Lock và replication retention.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -55,22 +57,23 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
-        "ref3"
+        "ref3",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q009:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "s3:ReplicateDelete chỉ là quyền để S3 sao chép delete marker sang bucket đích; từ chối nó không ngăn admin xóa trực tiếp object version ở bucket phụ (và admin có thể sửa bucket policy).",
+      "reason_vi": "Sai: ReplicateDelete không chặn admin trực tiếp xóa version.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "ref1",
+        "ref3",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
@@ -78,14 +81,16 @@
       "unit_id": "Q009:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Versioning chỉ chặn DELETE không kèm version ID; người có quyền vẫn xóa vĩnh viễn bằng DELETE kèm versionId. (Replication vốn đã bắt buộc versioning.)",
+      "reason_vi": "Sai: versioning vẫn cho phép người có quyền xóa version.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1",
+        "ref3",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -119,36 +124,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu S3 nêu compliance mode chặn cả root user và replication áp cùng retention cho replica; A (governance) bị tài liệu AWS Backup loại trực tiếp; C, D để lại đường xóa bằng versionId.",
-    "open_issues": [
-      "B không nói bật Object Lock ở bucket đích, nhưng tài liệu nói đây là điều bắt buộc khi replicate từ bucket có Object Lock.",
-      "Thời hạn retention không được nêu trong đề."
-    ]
+    "reason_vi": "Giữ B; compliance retention và Object Lock đích là điều kiện cần đã nêu.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Đã kiểm tra lại phương án cạnh tranh mạnh nhất A: AWS Backup Vault Lock chỉ ngăn admin khi ở compliance mode ('cannot be altered or deleted by any user or by AWS'), còn governance mode thì người có quyền IAM phù hợp vẫn quản lý/xóa được (ref4) — A chỉ đúng nếu đổi sang compliance mode. Xác nhận thêm trang Object Lock considerations: replication hỗ trợ Object Lock, bucket đích phải bật Object Lock, replica nhận cùng retention (ref2, ref3). Giữ B.",
+  "reconciliation_vi": "Giữ B; compliance retention và Object Lock đích là điều kiện cần đã nêu.",
   "explanation_vi": {
-    "why_correct": "S3 Object Lock compliance mode ngăn mọi user, kể cả root, xóa hoặc ghi đè object version trong thời hạn giữ; S3 Replication áp cùng retention cho replica ở Region phụ (bucket đích cũng bật Object Lock), nên admin ở Region phụ không thể xóa vĩnh viễn dữ liệu.",
+    "why_correct": "Dùng Object Lock compliance và replication sang bucket đích đã bật Object Lock để sao chép retention. Trong thời hạn retention, ngay cả administrator/root cũng không xóa vĩnh viễn version được bảo vệ.",
     "others": {
-      "Q009:A": "Backup Vault Lock ở governance mode vẫn cho người có quyền IAM phù hợp quản lý hoặc xóa, nên admin vẫn xóa được recovery point; cần compliance mode.",
-      "Q009:C": "Deny s3:ReplicateDelete chỉ chặn việc replicate delete marker, không ngăn admin xóa trực tiếp object version ở bucket phụ hay sửa bucket policy.",
-      "Q009:D": "Versioning chỉ giữ version cũ khi DELETE không kèm versionId; admin vẫn xóa vĩnh viễn bằng DELETE kèm versionId."
+      "Q009:A": "Sai: admin có quyền có thể gỡ governance vault lock rồi xóa recovery point; active lock vẫn chặn xóa trước retention.",
+      "Q009:C": "Sai: ReplicateDelete không chặn admin trực tiếp xóa version.",
+      "Q009:D": "Sai: versioning vẫn cho phép người có quyền xóa version."
     }
   },
   "keywords": [
     {
-      "phrase": "permanently deleted",
-      "meaning_vi": "Cần tính bất biến (WORM), không chỉ versioning."
-    },
-    {
-      "phrase": "administrator access cannot permanently delete",
-      "meaning_vi": "Kể cả admin/root cũng không xóa được -> compliance mode, không phải governance mode."
+      "phrase": "administrator access",
+      "meaning_vi": "Giữ retention bất biến kể cả admin/root."
     },
     {
       "phrase": "secondary Region",
-      "meaning_vi": "Dữ liệu DR ở Region phụ phải được bảo vệ như nhau — replication mang theo retention."
+      "meaning_vi": "Replica ở Region DR cũng phải có Object Lock."
+    },
+    {
+      "phrase": "permanently delete",
+      "meaning_vi": "Versioning đơn lẻ không chặn xóa version."
     }
   ],
-  "memory_tip_vi": "Nếu đề nói kể cả admin/root cũng không được xóa -> nghĩ đến S3 Object Lock (hoặc Backup Vault Lock) ở compliance mode; kiểm tra governance mode vẫn cho người có quyền đặc biệt bỏ qua.",
+  "memory_tip_vi": "Nếu phải chống cả administrator trong thời hạn lưu giữ, dùng compliance retention và bảo đảm bucket replica cũng bật Object Lock.",
   "tags": {
     "domains": [
       "5 Data Protection"
@@ -240,7 +242,7 @@
     }
   ],
   "source_issues": [],
-  "notes_vi": "Thời hạn retention không được nêu trong đề; giả định đủ dài cho yêu cầu DR.",
+  "notes_vi": "Giữ B; compliance retention và Object Lock đích là điều kiện cần đã nêu.",
   "history": [
     {
       "version": "r1",
@@ -261,6 +263,23 @@
       "previous_answer": [
         "Q009:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; compliance retention và Object Lock đích là điều kiện cần đã nêu.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q009:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q009:B"
+      ],
+      "note_vi": "Giữ B; compliance retention và Object Lock đích là điều kiện cần đã nêu.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -272,5 +291,19 @@
         "corrected": "2026-09-30T19:41:20Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q009:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

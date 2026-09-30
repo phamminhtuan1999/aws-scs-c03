@@ -1,0 +1,95 @@
+URL: https://docs.aws.amazon.com/audit-manager/latest/userguide/how-evidence-is-collected.html
+TITLE: Understanding how AWS Audit Manager collects evidence - AWS Audit Manager
+
+AWS Audit Manager is no longer open to new customers. Existing customers
+can continue to use the service as normal. For more information, see
+AWS Audit Manager availability change.
+
+# Understanding how AWS Audit Manager collects evidence
+
+Each active assessment in AWS Audit Manager automatically collects evidence from a range of data
+sources. In each assessment, you define which AWS accounts Audit Manager will collect evidence for,
+and Audit Manager manages which AWS services are in scope. Each of these services and accounts
+contain multiple resources that you own and use. Evidence collection in Audit Manager involves the
+assessment of each in-scope resource. This is referred to as a resource assessment.
+
+The following steps describe how Audit Manager collects evidence for each resource
+assessment:
+
+1. Assessing a resource from the data source
+
+To start evidence collection, Audit Manager assesses an in-scope resource from a data source. It
+does this by capturing a configuration snapshot, a related compliance check result, or user
+activity. It then runs an analysis to determine which control this data supports. The result
+of the resource assessment is then saved and converted into evidence. For more information
+about different evidence types, see evidence in
+the AWS Audit Manager concepts and terminology section of this
+guide.
+
+2. Converting assessment results to evidence
+
+The result of the resource assessment contains both the original data that's captured
+from that resource, and the metadata that indicates which control the data supports. Audit Manager
+converts the original data into an auditor-friendly format. The converted data and metadata
+are then saved as Audit Manager evidence before being attached to a control.
+
+3. Attaching evidence to the related control
+
+Audit Manager reads the evidence metadata. Then, it attaches the saved evidence to a related
+control within the assessment. The attached evidence becomes visible in Audit Manager. This completes
+the cycle of a resource assessment.
+
+Note
+
+Depending on the control configurations, the same evidence can, in some cases, be
+attached to multiple controls from multiple Audit Manager assessments. When the same evidence is
+attached to multiple controls, Audit Manager meters the resource assessment exactly once. This is
+because the same evidence is collected exactly only once. However, one control in an Audit Manager
+assessment can have multiple pieces of evidence from multiple data sources.
+
+## Evidence collection frequency
+
+Evidence collection is an ongoing process that starts when you create your assessment.
+Audit Manager collects evidence from multiple data sources at varying frequencies. As a result,
+there’s no one-size-fits-all answer for how often evidence is collected. The frequency of
+evidence collection is based on the evidence type and its data source, as described
+below.
+
+- Compliance checks — Audit Manager collects this
+evidence type from AWS Security Hub CSPM and AWS Config.
+
+- For Security Hub CSPM, evidence collection follows the schedule of your Security Hub CSPM checks. For
+more information about the schedule of Security Hub CSPM checks, see Schedule
+for running security checks in the AWS Security Hub CSPM User
+Guide. For more information about the Security Hub CSPM checks supported by Audit Manager,
+see AWS Security Hub CSPM controls supported by AWS Audit Manager.
+
+- For AWS Config, evidence collection follows the
+triggers
+that are defined in your AWS Config rules. For more information about the triggers for
+AWS Config rules, see Trigger types in the AWS Config User Guide. For more
+information about the AWS Config Rules that are supported by Audit Manager, see AWS Config Rules supported by AWS Audit Manager.
+
+- AWS Audit Manager marks evidence as inconclusive when automated compliance evaluation
+isn't possible. This occurs when you haven't enabled AWS Config or AWS Security Hub CSPM, which are
+key data sources. It also happens when evidence is collected directly from AWS
+services via API calls, AWS CloudTrail logs, or manual uploads. When there's no mechanism
+for automatic evaluation of this evidence, AWS Audit Manager can't provide evaluation
+details. As a result, it marks the evidence as inconclusive. Inconclusive evidence
+doesn't indicate failure. Instead, it signals that you need to manually evaluate the
+evidence for compliance.
+
+- User activity — Audit Manager collects this evidence
+type from AWS CloudTrail in a continual manner. This frequency is continual because user
+activity can happen at any time of the day. For more information, see AWS CloudTrail event names supported by AWS Audit Manager.
+
+- Configuration data — Audit Manager collects this
+evidence type using a describe API call to another AWS service such as Amazon EC2, Amazon S3, or
+IAM. You can choose which API actions to call. You also set the frequency as daily,
+weekly, or monthly in Audit Manager. You can specify this frequency when you create or edit a
+control in the control library. For instructions on how to edit or create a control, see
+Using the control library to manage controls in AWS Audit Manager. For more
+information about the API calls that are supported by Audit Manager, see AWS API calls supported by AWS Audit Manager.
+
+Regardless of the evidence collection frequency for the data source, new evidence is
+collected automatically for as long as the control and the assessment are active.

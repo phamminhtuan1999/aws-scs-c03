@@ -1,0 +1,329 @@
+{
+  "question_id": "Q063",
+  "question_content_hash": "8b144d5bc782b49ad3a3d601648cb8cae5074f2a99a4616438e248a200eb29aa",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:36Z",
+  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "ccf9afa03a1f2bd97e801aca20662e6c8171e253f027293f61a47faba0b2d476",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Client không có AWS credentials vẫn tải được invoice (dùng presigned URL).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Mỗi client chỉ tải được invoice của chính mình.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Client phải tải được trong vòng 1 giờ sau khi invoice được tạo (URL phải còn hiệu lực đủ 1 giờ).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chỉ dùng temporary credentials để truy cập tài nguyên AWS của công ty (không dùng long-term key).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Chọn MỘT bước bổ sung cho script tạo presigned URL.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q063:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Request qua presigned URL được xác thực bằng quyền của người tạo URL, client không phải principal nên bucket policy cho 'client' vô nghĩa; thêm S3:List* còn vượt least privilege và không giải quyết thời hạn URL.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q063:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Mọi URL đều ký bằng cùng một role nên điều kiện tag trên role policy không phân biệt được client; hơn nữa key điều kiện cho tag object của S3 là s3:ExistingObjectTag, không phải s3:ResourceTag.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q063:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "AssumeRole mỗi lần chạy cho session mới (mặc định 1 giờ; role chaining từ instance profile tối đa 1 giờ) chỉ có quyền GetObject; presigned URL ký bằng credentials này là temporary và còn hiệu lực đủ 1 giờ, không bị chết sớm vì credentials instance profile xoay vòng định kỳ.",
+      "requirement_ids": [
+        "R1",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref4",
+        "ref6",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q063:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Access key của IAM user là long-term credentials và bị nhúng vào script, vi phạm yêu cầu chỉ dùng temporary credentials và là thực hành bảo mật kém.",
+      "requirement_ids": [
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q063:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu S3 xác nhận presigned URL hết hạn khi temporary credentials hết hạn, và EC2 chỉ đảm bảo credentials mới có sẵn ít nhất 5 phút trước khi cũ hết hạn; C là phương án duy nhất dùng temporary credentials và bảo đảm thời hạn 1 giờ. Các phương án khác sai rõ ràng.",
+      "open_issues": [
+        "Credentials instance profile vốn đã là temporary và thường có hiệu lực khoảng 6 giờ, nên lý do cần C dựa vào trường hợp URL ký gần lúc credentials hết hạn.",
+        "EC2 role assume role khác là role chaining (tối đa 1 giờ) - vừa khớp yêu cầu 1 giờ."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:49:36Z"
+  },
+  "source_answer": [
+    "Q063:C"
+  ],
+  "researched_answer": [
+    "Q063:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Mục FAQ của trang presigned URL nói trực tiếp URL hết hạn ở thời điểm sớm hơn giữa expiration đã đặt và lúc credential ký hết hạn, credential instance profile xoay vòng định kỳ (tối đa ~6 giờ), còn AssumeRole cho session mặc định 1 giờ; IAM giới hạn role chaining đúng 1 giờ. A, B, D sai vì lý do có tài liệu trực tiếp.",
+    "open_issues": [
+      "Việc 'cần' bước C dựa vào trường hợp URL được ký khi credential instance profile sắp xoay vòng; đề không nói rõ, nhưng đây là khoảng trống duy nhất trong thiết kế hiện tại.",
+      "Session AssumeRole bắt đầu trước khi ký vài giây nên URL hiệu lực gần đúng 1 giờ — sai số không đáng kể."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind (blind medium). Đã tìm thêm bằng chứng cho cả hai phía. Chống C: credential instance profile vốn đã là temporary và thường sống ~6 giờ, nên có thể cho rằng thiết kế ban đầu đã đủ. Ủng hộ C: trang S3 presigned URL (FAQ 'Why do my presigned URLs expire earlier...') nêu URL hết hạn tại thời điểm sớm hơn giữa expiration và lúc credential hết hạn, credential instance profile xoay vòng định kỳ; EC2 chỉ đảm bảo credential mới có sẵn ít nhất 5 phút trước khi bộ cũ hết hạn -> URL ký bằng credential sắp hết hạn có thể chết trước 1 giờ. AssumeRole mỗi lần chạy cho session mới 1 giờ (FAQ + role chaining tối đa 1 giờ, trang IAM roles), quyền chỉ GetObject, vẫn là temporary credentials. Các phương án khác: A cấp quyền cho 'client' vô nghĩa vì quyền của URL là quyền của người ký; B dùng cùng một role cho mọi URL nên tag condition không phân biệt client, và key điều kiện tag object là s3:ExistingObjectTag; D dùng long-term key vi phạm yêu cầu. Bằng chứng mới là trực tiếp nên nâng confidence lên high; trạng thái verified không đổi.",
+  "explanation_vi": {
+    "why_correct": "Presigned URL chỉ sống tới khi credential dùng để ký hết hạn; credential của instance profile xoay vòng định kỳ nên URL có thể chết trước 1 giờ. Assume một role chỉ có GetObject mỗi lần chạy script cho session mới 1 giờ, nên URL ký bằng nó vẫn là temporary credential và còn hiệu lực đủ 1 giờ.",
+    "others": {
+      "Q063:A": "Request qua presigned URL dùng quyền của người ký, client không phải principal nên sửa bucket policy cho client không có tác dụng; thêm List* còn vượt least privilege.",
+      "Q063:B": "Mọi URL đều ký bằng cùng một role nên điều kiện tag không phân biệt được client; mỗi presigned URL vốn đã chỉ cho một object, và key tag object đúng là s3:ExistingObjectTag.",
+      "Q063:D": "Access key của IAM user là long-term credential nhúng trong script, vi phạm yêu cầu chỉ dùng temporary credentials."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "within 1 hour of invoice creation",
+      "meaning_vi": "URL phải sống đủ 1 giờ -> credential ký phải còn hạn ít nhất 1 giờ."
+    },
+    {
+      "phrase": "use only temporary credentials",
+      "meaning_vi": "Loại long-term access key; dùng STS/role."
+    },
+    {
+      "phrase": "Each presigned URL expires after 1 hour",
+      "meaning_vi": "Thời hạn đặt 1 giờ nhưng URL chết sớm hơn nếu credential ký hết hạn trước."
+    }
+  ],
+  "memory_tip_vi": "Nếu presigned URL phải sống đủ N giờ mà được ký bằng temporary credential -> nghĩ đến thời hạn session ký (AssumeRole mới, role chaining tối đa 1 giờ); kiểm tra URL hết hạn khi credential ký hết hạn, không dùng long-term key.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "Amazon S3",
+      "AWS STS",
+      "Amazon EC2",
+      "AWS IAM"
+    ],
+    "reason_vi": "Chia sẻ object S3 an toàn bằng presigned URL với temporary credentials có thời hạn phù hợp."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+      "title": "Download and upload objects with presigned URLs - Amazon Simple Storage Service",
+      "section": "Who can create a presigned URL",
+      "snapshot_id": "3a070b6e701f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you created a presigned URL using a temporary credential, the URL expires when the credential expires.",
+      "supports": "Thời hạn thực tế của URL phụ thuộc thời hạn credentials dùng để ký.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-metadata-security-credentials.html",
+      "title": "Retrieve security credentials from instance metadata - Amazon EC2",
+      "section": "Overview",
+      "snapshot_id": "f263a1bbfe04",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "We make new credentials available at least five minutes before the expiration of the old credentials.",
+      "supports": "Credentials instance profile có thể chỉ còn vài phút khi script ký URL, khiến URL hết hạn trước 1 giờ.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+      "title": "Download and upload objects with presigned URLs - Amazon Simple Storage Service",
+      "section": "Limiting presigned URL capabilities",
+      "snapshot_id": "3a070b6e701f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The capabilities of a presigned URL are limited by the permissions of the user who created it.",
+      "supports": "Quyền truy cập qua presigned URL là quyền của người ký, không phải của client.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html",
+      "title": "AssumeRole - AWS Security Token Service",
+      "section": "DurationSeconds",
+      "snapshot_id": "f4520419abc3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, the value is set to 3600 seconds.",
+      "supports": "Session mới từ AssumeRole mặc định kéo dài 1 giờ, khớp thời hạn URL.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/tagging-and-policies.html",
+      "title": "Tagging and access control policies - Amazon S3",
+      "section": "Condition keys for object tags",
+      "snapshot_id": "3f628af38c71",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use this condition key to verify that an existing object tag has the specific tag key and value.",
+      "supports": "Điều kiện theo tag của object dùng s3:ExistingObjectTag/<tag-key>, không phải s3:ResourceTag.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+      "title": "Download and upload objects with presigned URLs - Amazon Simple Storage Service",
+      "section": "Frequently asked questions for presigned URLs",
+      "snapshot_id": "3a070b6e701f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A presigned URL expires at either its configured expiration time or when its associated credentials expire, whichever occurs first.",
+      "supports": "URL ký bằng credential sắp hết hạn sẽ chết trước thời hạn 1 giờ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+      "title": "Download and upload objects with presigned URLs - Amazon Simple Storage Service",
+      "section": "Frequently asked questions for presigned URLs",
+      "snapshot_id": "3a070b6e701f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the presigned URL expires when the role session ends, which by default is 1 hour.",
+      "supports": "AssumeRole mới cho URL sống theo session mặc định 1 giờ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+      "title": "IAM roles - AWS Identity and Access Management",
+      "section": "Role chaining",
+      "snapshot_id": "b483f70a1ede",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Role chaining limits your AWS Management Console, AWS CLI or AWS API role session to a maximum of one hour.",
+      "supports": "Assume role từ credential instance profile là role chaining, session tối đa 1 giờ — vừa đủ cho yêu cầu.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+      "title": "Download and upload objects with presigned URLs - Amazon Simple Storage Service",
+      "section": "Frequently asked questions for presigned URLs",
+      "snapshot_id": "3a070b6e701f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For Amazon EC2 instance profiles, metadata credentials rotate periodically with a maximum validity period of approximately 6 hours.",
+      "supports": "Credential instance profile xoay vòng định kỳ nên thời gian còn lại lúc ký không cố định.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q063:A",
+      "detail_vi": "Viết 'S3:Get*', 'S3:List*' thay vì tiền tố action chuẩn 's3:'."
+    }
+  ],
+  "notes_vi": "Presigned URL là bearer token cho đúng một object, nên yêu cầu 'mỗi client chỉ tải invoice của mình' đã được đáp ứng bằng việc tạo URL riêng cho từng object.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q063:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reason cho Q063:C được cập nhật (thêm tài liệu reconciliation); blind reason: AssumeRole mỗi lần chạy cho session mới (mặc định 3600 giây) với quyền chỉ GetObject; presigned URL ký bằng credentials này là temporary và còn hiệu lực đủ 1 giờ, không bị hết hạn sớm do credentials instance profile sắp rotate.",
+      "previous_answer": [
+        "Q063:C"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reconciliation: khớp source key C; thêm ref6/ref7/ref9 (FAQ presigned URL: hết hạn theo credential, instance profile xoay vòng, AssumeRole 1 giờ) và ref8 (role chaining tối đa 1 giờ). Giữ C, verified; confidence medium -> high do có bằng chứng trực tiếp mới.",
+      "previous_answer": [
+        "Q063:C"
+      ]
+    }
+  ]
+}

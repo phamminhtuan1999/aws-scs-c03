@@ -41,7 +41,8 @@ def main():
     for qid in BANK:
         st = finals[qid]['status'] if qid in finals else 'pending'
         counts[st] = counts.get(st, 0) + 1
-    L = [f'# Discrepancies & source issues (research_version r1)', '',
+    version = next(iter(finals.values())).get('research_version', 'unknown') if finals else 'unknown'
+    L = [f'# Discrepancies & source issues (research_version {version})', '',
          f'Generated {datetime.now(timezone.utc).isoformat(timespec="seconds")} by `tools/make_discrepancies.py` from `research/reviews/`, `research/blind/` and `data/keys/source_keys.json`.',
          'Source keys are never modified; this file only reports differences.', '',
          '## Status counts', '', '| status | questions |', '|---|---|']
@@ -56,8 +57,8 @@ def main():
         reason = (f.get('reconciliation_vi') or '').replace('\n', ' ').replace('|', '/')[:260]
         L.append(f'| {qid} | {BANK[qid]["type"]} | {fmt(qid, src(qid))}{" (ungradable)" if not KEYS[qid].get("gradable", True) else ""} | '
                  f'{fmt(qid, blinds.get(qid, {}).get("independent_verdict", {}).get("answer"))} | {fmt(qid, f["researched_answer"])} | {f["status"]} | {conf} | {graded} | {reason} |')
-    L += ['', '## Blind → final changes (bias check)', '',
-          'Questions where the final answer or status differs from the blind (pre-key) verdict. `AUDIT` = moved toward the source key after seeing it.', '',
+    L += ['', '## Initial r1 blind → current final changes (historical bias check)', '',
+          'These preserved blind records are from r1. For the new independently persisted r2 passes and explicit root adjudications see independent_verify/REPORT.md and comparison_all.json. `AUDIT` below is the earlier r1 flag, not proof of an independent r2 consensus.', '',
           '| Q | blind answer / status | final answer / status | source key | AUDIT flag |', '|---|---|---|---|---|']
     for qid, f in finals.items():
         iv = f['independent_verdict']

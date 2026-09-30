@@ -2,9 +2,9 @@
   "question_id": "Q089",
   "question_content_hash": "f5c640efddcfb62073e04a26b358ffb24212f8133853339d060288b3aa81e407",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:57:33Z",
-  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -39,44 +39,41 @@
       "unit_id": "Q089:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SCP chỉ có trong organization bật all features; account standalone không có Organizations nên không gắn SCP được. Ngay cả khi có, SCP giới hạn cả account chứ không giới hạn riêng quyền của role do developers tạo.",
+      "reason_vi": "Standalone account không dùng SCP trong Organizations.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref4"
+        "Q089-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q089:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Permissions boundary đặt quyền tối đa cho IAM entity; điều kiện iam:PermissionsBoundary trên iam:CreateRole buộc developers chỉ tạo role khi gắn boundary này, ngăn leo thang quyền qua role mới - đúng mẫu ủy quyền của tài liệu IAM.",
+      "reason_vi": "iam:PermissionsBoundary condition ép role dùng permission ceiling.",
       "requirement_ids": [
         "R2",
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref6"
+        "Q089-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q089:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM Access Analyzer là công cụ phân tích/validate (external/internal/unused access, custom policy checks), không tự động remediation giảm quyền; cách này chỉ phát hiện sau khi role đã tạo, không ngăn leo thang quyền.",
+      "reason_vi": "Access Analyzer và remediation diễn ra sau tạo, không chặn privilege escalation.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "Q089-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -84,13 +81,13 @@
       "unit_id": "Q089:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lambda so sánh và sửa sau khi role được tạo là kiểm soát phản ứng (detective/reactive), có khoảng thời gian role có quyền vượt mức, và không định nghĩa giới hạn tối đa ở tầng IAM; không ngăn được leo thang quyền.",
+      "reason_vi": "So sánh bằng Lambda sau tạo để lại cửa sổ quyền quá rộng.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "Q089-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -127,18 +124,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu IAM mô tả trực tiếp mẫu ủy quyền: cho phép tạo IAM entity chỉ khi gắn đúng permissions boundary (điều kiện iam:PermissionsBoundary), boundary đặt quyền tối đa; SCP chỉ có trong organization bật all features, không áp dụng cho account standalone.",
-    "open_issues": [
-      "Để chặn hoàn toàn leo thang, policy của developers thường cũng cần chặn sửa/xóa boundary (PutRolePermissionsBoundary/DeleteRolePermissionsBoundary) và chặn sửa chính policy boundary; phương án B không nêu chi tiết này nhưng vẫn là cơ chế đúng."
-    ]
+    "reason_vi": "Boundary phải được bắt buộc khi CreateRole, ngăn detach/edit và kiểm soát PassRole.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Kiểm tra lại đối thủ A: trang SCP nêu SCP chỉ có trong organization bật all features, trong khi đề nói standalone account, nên A không áp dụng được; hơn nữa SCP giới hạn cả account chứ không phải riêng role do developers tạo. C và D là kiểm soát phản ứng sau khi role đã tạo (và Access Analyzer không tự remediation), không ngăn leo thang quyền. Giữ B, verified.",
+  "reconciliation_vi": "Boundary phải được bắt buộc khi CreateRole, ngăn detach/edit và kiểm soát PassRole.",
   "explanation_vi": {
-    "why_correct": "Permissions boundary đặt quyền tối đa mà identity-based policy có thể cấp cho role; thêm điều kiện iam:PermissionsBoundary vào quyền iam:CreateRole của developers buộc mọi role mới phải gắn boundary này, nên developers không thể tạo role vượt quyền (ngăn leo thang).",
+    "why_correct": "Bắt buộc boundary đã định nghĩa khi CreateRole để giới hạn quyền tối đa các role do developer tạo; bảo vệ boundary khỏi sửa/gỡ để tránh leo thang.",
     "others": {
-      "Q089:A": "SCP chỉ dùng được trong AWS Organizations (all features), account standalone không gắn SCP được, và SCP không giới hạn riêng các role do developers tạo.",
-      "Q089:C": "IAM Access Analyzer chỉ phân tích/validate policy, không tự remediation, và chỉ phát hiện sau khi role đã tạo nên không ngăn leo thang quyền.",
-      "Q089:D": "Lambda so sánh rồi sửa là kiểm soát phản ứng, có khoảng thời gian role mang quyền vượt mức và cần tự viết/bảo trì code."
+      "Q089:A": "Standalone account không dùng SCP trong Organizations.",
+      "Q089:C": "Access Analyzer và remediation diễn ra sau tạo, không chặn privilege escalation.",
+      "Q089:D": "So sánh bằng Lambda sau tạo để lại cửa sổ quyền quá rộng."
     }
   },
   "keywords": [
@@ -155,7 +150,7 @@
       "meaning_vi": "Cần kiểm soát phòng ngừa (preventive), không chỉ phát hiện sau."
     }
   ],
-  "memory_tip_vi": "Nếu cần cho developers tự tạo role nhưng giới hạn quyền tối đa -> nghĩ đến permissions boundary + điều kiện iam:PermissionsBoundary trên CreateRole; kiểm tra account có thuộc Organizations không trước khi chọn SCP.",
+  "memory_tip_vi": "Nếu developer được tạo role, bắt buộc permissions boundary khi CreateRole và bảo vệ boundary khỏi sửa/gỡ.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -246,6 +241,18 @@
       "quote": "Filters access if the specified policy is set as the permissions boundary on the IAM entity (user or role)",
       "supports": "Khóa iam:PermissionsBoundary (hỗ trợ trên CreateRole) cho phép điều kiện hóa việc tạo role theo boundary.",
       "kind": "direct"
+    },
+    {
+      "id": "Q089-r2-1",
+      "url": "https://aws.amazon.com/blogs/security/when-and-where-to-use-iam-permissions-boundaries/",
+      "title": "When and where to use IAM permissions boundaries | AWS Security Blog",
+      "accessed_at": "2026-09-30",
+      "quote": "This blog post covered how you can use IAM permissions",
+      "supports": "Delegated role creation can require named permissions boundary and deny changing/detaching boundary.",
+      "kind": "direct",
+      "snapshot_id": "faaea186ae56",
+      "page_last_updated": "2022-10-21T10:34:51-07:00",
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -253,6 +260,11 @@
       "type": "typo",
       "location": "Q089:stem:1",
       "detail_vi": "Cụm 'increasing their permissions to creation of these new resources' có vẻ thiếu/sai từ (ý là 'through creation of'); ý nghĩa vẫn hiểu được."
+    },
+    {
+      "type": "data",
+      "location": "Q089",
+      "detail_vi": "Chỉ CreateRole condition là chưa đủ nếu developer có quyền gỡ/sửa boundary; cần deny boundary tampering/pass-role escalation."
     }
   ],
   "history": [
@@ -267,6 +279,46 @@
       "date": "2026-09-30T20:06:17Z",
       "change": "reconciliation: source key B khớp blind; kiểm tra lại A (SCP không áp dụng standalone account); giữ B, verified (high)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Boundary phải được bắt buộc khi CreateRole, ngăn detach/edit và kiểm soát PassRole.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q089:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q089:B"
+      ],
+      "note_vi": "Boundary phải được bắt buộc khi CreateRole, ngăn detach/edit và kiểm soát PassRole.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Boundary phải được bắt buộc khi CreateRole, ngăn detach/edit và kiểm soát PassRole.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q089:B"
+    ],
+    "candidate_answers": [
+      [
+        "Q089:B"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

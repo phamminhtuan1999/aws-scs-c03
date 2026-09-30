@@ -2,9 +2,9 @@
   "question_id": "Q075",
   "question_content_hash": "f41523494bc8a4944a45005b44e5e14297b039c812159eb6eceedac52bb2196b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,31 +39,32 @@
       "unit_id": "Q075:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "GuardDuty là dịch vụ threat detection; delegated administrator (audit account) bật và quản lý GuardDuty cho mọi member account; rule EventBridge ở administrator account nhận finding của cả member account, gửi tới SNS email; finding mới được gửi EventBridge gần real-time.",
+      "reason_vi": "Kiến trúc đúng; deadline email năm phút chưa có bảo đảm hiện hành.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
         "ref3",
-        "ref4"
+        "Q075-r2-2",
+        "Q075-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q075:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Bật GuardDuty riêng lẻ từng account và cấp IAM role cross-account không tập trung finding vào audit account; CloudWatch alarm dựa trên metric chứ không trực tiếp theo dõi GuardDuty finding, lại phải cấu hình ở từng account.",
+      "reason_vi": "CloudWatch alarm không tự theo dõi GuardDuty findings, và IAM cross-account không thay delegated administration.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref2"
+        "ref3",
+        "Q075-r2-2",
+        "Q075-r2-3"
       ],
       "evidence_kind": "inference"
     },
@@ -71,13 +72,14 @@
       "unit_id": "Q075:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Config đánh giá cấu hình tài nguyên, không phát hiện hoạt động độc hại (threat detection); Systems Manager không phải cơ chế thu thập security findings; Lambda giám sát S3 là giải pháp tự chế, không đảm bảo yêu cầu.",
+      "reason_vi": "Config đánh giá cấu hình, không thay GuardDuty để phát hiện hành vi độc hại.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5",
-        "ref1"
+        "ref3",
+        "Q075-r2-2",
+        "Q075-r2-3"
       ],
       "evidence_kind": "inference"
     },
@@ -85,14 +87,16 @@
       "unit_id": "Q075:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector là dịch vụ quản lý lỗ hổng (vulnerability management), quét lỗ hổng phần mềm/phơi nhiễm mạng, không phát hiện hoạt động đáng ngờ/độc hại trên account; lại chỉ bao phủ workload EC2 và cần rule EventBridge ở từng account.",
+      "reason_vi": "Inspector tìm lỗ hổng; mô hình agents báo về central console không phải giải pháp threat detection này.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6"
+        "ref3",
+        "Q075-r2-2",
+        "Q075-r2-3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -126,18 +130,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. GuardDuty là dịch vụ threat detection; delegated admin quản lý GuardDuty cho mọi member account; rule EventBridge ở admin account nhận finding của cả member, GuardDuty gửi finding mới gần real-time; Prescriptive Guidance xác nhận Audit account của Control Tower có thể làm delegated admin cho dịch vụ bảo mật.",
-    "open_issues": [
-      "GuardDuty là dịch vụ Regional: delegated admin, auto-enable và rule EventBridge phải cấu hình ở từng Region cần giám sát (option không nêu Region)."
-    ]
+    "reason_vi": "Giữ A theo mục tiêu kiến trúc; blog AWS2018 hỗ trợ publication event trong năm phút, nhưng không nói SNS email có contractual/end-to-end SLA.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã tìm bằng chứng phản bác: B dùng GuardDuty nhưng bật riêng lẻ, CloudWatch alarm không theo dõi trực tiếp finding và không tập trung finding vào audit account; C dùng AWS Config (đánh giá cấu hình, không phải threat detection) và tự chế thu thập qua Systems Manager; D dùng Inspector (quản lý lỗ hổng) — không phát hiện hoạt động độc hại. Bổ sung ref7 (Prescriptive Guidance: Audit account của Control Tower làm delegated admin cho dịch vụ giám sát threat). Giữ A, verified (high).",
+  "reconciliation_vi": "Giữ A theo mục tiêu kiến trúc; blog AWS2018 hỗ trợ publication event trong năm phút, nhưng không nói SNS email có contractual/end-to-end SLA.",
   "explanation_vi": {
-    "why_correct": "GuardDuty phát hiện hoạt động đáng ngờ/độc hại; đặt audit account làm delegated administrator để bật GuardDuty cho mọi member và gom finding về đó, rồi một rule EventBridge ở audit account chuyển finding (gửi gần real-time) tới SNS topic gửi email cho security team trong vòng vài phút.",
+    "why_correct": "A dùng GuardDuty delegated administrator để tập trung threat findings và EventBridge → SNS để gửi email gần thời gian thực. Đây là kiến trúc phù hợp mục tiêu năm phút, không phải bảo đảm SLA email.",
     "others": {
-      "Q075:B": "Bật GuardDuty từng account và dùng IAM role cross-account không gom finding về audit account; CloudWatch alarm dựa trên metric, không theo dõi trực tiếp finding, lại phải cấu hình ở 50 account.",
-      "Q075:C": "AWS Config đánh giá cấu hình tài nguyên chứ không phát hiện hoạt động độc hại; thu thập finding qua Systems Manager + Lambda quét S3 là giải pháp tự chế, không đảm bảo 5 phút.",
-      "Q075:D": "Amazon Inspector quét lỗ hổng phần mềm/phơi nhiễm mạng, không phát hiện hoạt động đáng ngờ trên account, và cần rule EventBridge ở từng member account."
+      "Q075:B": "CloudWatch alarm không tự theo dõi GuardDuty findings, và IAM cross-account không thay delegated administration.",
+      "Q075:C": "Config đánh giá cấu hình, không thay GuardDuty để phát hiện hành vi độc hại.",
+      "Q075:D": "Inspector tìm lỗ hổng; mô hình agents báo về central console không phải giải pháp threat detection này."
     }
   },
   "keywords": [
@@ -151,10 +153,10 @@
     },
     {
       "phrase": "within 5 minutes",
-      "meaning_vi": "Cần luồng sự kiện gần real-time: EventBridge -> SNS."
+      "meaning_vi": "Cần near-real-time delivery; AWS không công bố bảo đảm SLA email năm phút."
     }
   ],
-  "memory_tip_vi": "Nếu cần phát hiện hoạt động độc hại trên toàn organization và gom về audit account -> nghĩ đến GuardDuty delegated admin + rule EventBridge -> SNS ở admin account; kiểm tra: Inspector = lỗ hổng, Config = cấu hình, và GuardDuty cấu hình theo từng Region.",
+  "memory_tip_vi": "Nếu cần gom threat findings toàn organization, dùng GuardDuty delegated admin → EventBridge → SNS; triển khai từng Region và đừng coi email là SLA năm phút.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -260,10 +262,45 @@
       "quote": "the Audit account can be the delegated administrator for several security services that monitor the accounts in the organization for threats and compliance.",
       "supports": "Audit account của Control Tower là nơi phù hợp làm delegated administrator cho GuardDuty.",
       "kind": "direct"
+    },
+    {
+      "id": "Q075-r2-2",
+      "url": "https://aws.amazon.com/blogs/security/visualizing-amazon-guardduty-findings/",
+      "title": "Visualizing Amazon GuardDuty findings | AWS Security Blog",
+      "accessed_at": "2026-09-30",
+      "quote": "Amazon GuardDuty is enabled in an account and begins monitoring",
+      "supports": "2018 blog says new finding event notification within 5 minutes and demonstrates SNS email target; it does not define end-to-end email receipt SLA.",
+      "kind": "direct",
+      "snapshot_id": "3c7d0e5d3c8e",
+      "page_last_updated": "2024-07-22T14:23:59-07:00",
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
+    },
+    {
+      "id": "Q075-r2-3",
+      "url": "https://docs.aws.amazon.com/sns/latest/dg/sns-message-delivery-retries.html",
+      "title": "Amazon SNS message delivery retries - Amazon Simple Notification Service",
+      "accessed_at": "2026-09-30",
+      "quote": "Amazon SNS considers all 5XX errors and 429 (too many",
+      "supports": "SNS SMTP customer-managed endpoint retry schedule can span six hours during failures; near-real-time event publication does not ensure five-minute receipt.",
+      "kind": "direct",
+      "snapshot_id": "74a7e9eef56f",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Tài liệu Control Tower hiện hành gọi audit account là 'Config aggregator account' (tên cũ: audit account) và khuyến nghị giới hạn cho đội security/compliance; không ảnh hưởng kết luận.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q075",
+      "detail_vi": "AWS docs nói near real-time, không cam kết SLA email ≤5 phút; không nhầm với cập nhật lặp lại 15 phút/1 giờ/6 giờ."
+    },
+    {
+      "type": "data",
+      "location": "Q075",
+      "detail_vi": "2018 primary blog hỗ trợ timing event trong năm phút; không tương đương bảo đảm email đã nhận. Nếu hiểu câu hỏi là architectural target, giữ A với caveat là hợp lý; nếu deadline cứng, ambiguous."
+    }
+  ],
+  "notes_vi": "Giữ A theo mục tiêu kiến trúc; blog AWS2018 hỗ trợ publication event trong năm phút, nhưng không nói SNS email có contractual/end-to-end SLA.",
   "history": [
     {
       "version": "r1",
@@ -278,6 +315,45 @@
       "previous_answer": [
         "Q075:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ A theo mục tiêu kiến trúc; blog AWS2018 hỗ trợ publication event trong năm phút, nhưng không nói SNS email có contractual/end-to-end SLA.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q075:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q075:A"
+      ],
+      "note_vi": "Giữ A theo mục tiêu kiến trúc; blog AWS2018 hỗ trợ publication event trong năm phút, nhưng không nói SNS email có contractual/end-to-end SLA.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q075:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q075:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

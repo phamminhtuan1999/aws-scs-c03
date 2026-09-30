@@ -2,9 +2,9 @@
   "question_id": "Q098",
   "question_content_hash": "4eaf290c9dac82125036c33a72f9db1f5108b647750cc070ca7e5c9b1516f6d0",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:55:14Z",
-  "last_reviewed_at": "2026-09-30T20:14:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,65 +33,59 @@
     {
       "unit_id": "Q098:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Retry chỉ chờ grant đạt eventual consistency (thường vài giây, có khi vài phút); lần gọi đầu vẫn có thể bị access denied nên không 'eliminate' lỗi và không đáp ứng 'immediately'.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Retry có thể thành công sau propagation nhưng không đáp ứng dùng ngay.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q098-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q098:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Grant token do KMS sinh ra và trả về trong response CreateGrant; tham số GrantTokens của CreateGrant chỉ dùng cho quyền của chính người gọi, không để 'đặt' token ngẫu nhiên. Token ngẫu nhiên không hợp lệ sẽ bị InvalidGrantTokenException.",
+      "reason_vi": "Token không do người dùng tự tạo rồi đưa vào CreateGrant.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref2",
-        "ref4"
+        "Q098-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q098:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Name của grant chỉ là friendly name để tránh tạo grant trùng khi retry, không phải grant token; truyền name làm grant token sẽ không hợp lệ.",
+      "reason_vi": "Grant name không phải grant token; tên phục vụ chống tạo trùng.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "Q098-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q098:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CreateGrant trả về GrantToken; user truyền token này vào GrantTokens của Encrypt để dùng quyền của grant ngay lập tức, tránh lỗi do eventual consistency.",
+      "reason_vi": "dùng token thật trả từ CreateGrant.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref5",
-        "ref6"
+        "Q098-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -124,16 +118,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn D. KMS Developer Guide và API Reference (CreateGrant, Encrypt) nêu trực tiếp: grant eventual consistency gây access denied; dùng GrantToken do CreateGrant trả về để dùng quyền ngay.",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = D, trùng blind. Đã xét lại A (retry): grant thường lan truyền trong vài giây đến vài phút nên retry chỉ giảm chứ không 'eliminate' lỗi và trái yêu cầu 'immediately'. B/C: grant token do KMS sinh ra trong response CreateGrant, không có tham số để client đặt token, và Name chỉ dùng cho idempotency. Kiểm tra thêm giới hạn Encrypt (4,096 byte) để loại khả năng lỗi do payload 512 byte. Giữ D, verified, high.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Grant trong KMS có eventual consistency nên dùng ngay có thể bị AccessDeniedException; CreateGrant trả về GrantToken, đưa token này cho user truyền vào tham số GrantTokens của Encrypt thì quyền của grant có hiệu lực ngay.",
+    "why_correct": "Truyền GrantToken do CreateGrant trả về trong Encrypt request để dùng quyền grant ngay trước khi eventual consistency hoàn tất.",
     "others": {
-      "Q098:A": "Retry mỗi 2 phút chỉ chờ grant lan truyền, vẫn có lỗi ở lần gọi đầu và không đáp ứng 'ngay lập tức'.",
-      "Q098:B": "Client không thể tự tạo grant token rồi truyền vào CreateGrant; token do KMS sinh và trả về, token tự đặt sẽ không hợp lệ.",
-      "Q098:C": "Grant name chỉ là friendly name để tránh tạo grant trùng khi retry, không dùng thay grant token được."
+      "Q098:A": "Retry có thể thành công sau propagation nhưng không đáp ứng dùng ngay.",
+      "Q098:B": "Token không do người dùng tự tạo rồi đưa vào CreateGrant.",
+      "Q098:C": "Grant name không phải grant token; tên phục vụ chống tạo trùng."
     }
   },
   "keywords": [
@@ -146,7 +140,7 @@
       "meaning_vi": "Lỗi lẻ tẻ do grant chưa lan truyền hết hệ thống KMS."
     }
   ],
-  "memory_tip_vi": "Nếu vừa CreateGrant mà dùng ngay bị AccessDenied lúc có lúc không -> nghĩ đến GrantToken trả về từ CreateGrant truyền vào GrantTokens; kiểm tra grant name không phải token và retry không loại bỏ hẳn lỗi.",
+  "memory_tip_vi": "Nếu phải dùng grant ngay sau CreateGrant, truyền GrantToken thực vào Encrypt.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -235,10 +229,22 @@
       "quote": "Encrypts plaintext of up to 4,096 bytes using a KMS key.",
       "supports": "Payload 512 byte nằm trong giới hạn của Encrypt, nên lỗi không liên quan kích thước dữ liệu mà do grant chưa lan truyền.",
       "kind": "direct"
+    },
+    {
+      "id": "Q098-r2-1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/using-grant-token.html",
+      "title": "Using a grant token - AWS Key Management Service",
+      "accessed_at": "2026-09-30",
+      "quote": "To use the permissions in a new grant immediately, use",
+      "supports": "Grant token from CreateGrant response permits immediate operations on new grant.",
+      "kind": "direct",
+      "snapshot_id": "d9693c94a8ee",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [],
-  "notes_vi": "Encrypt hỗ trợ plaintext tới 4,096 byte với khóa đối xứng, nên 512 byte không phải vấn đề.",
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "history": [
     {
       "version": "r1",
@@ -253,6 +259,45 @@
       "previous_answer": [
         "Q098:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q098:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q098:D"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q098:D"
+    ],
+    "candidate_answers": [
+      [
+        "Q098:D"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

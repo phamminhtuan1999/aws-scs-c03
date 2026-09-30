@@ -2,9 +2,9 @@
   "question_id": "Q036",
   "question_content_hash": "9154ab2337faab147de458f36921887abf30f672285847034e5aa17f9982aa64",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,57 +34,57 @@
       "unit_id": "Q036:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Config theo dõi cấu hình tài nguyên AWS, không quét nội dung object trong S3 để tìm dữ liệu nhạy cảm.",
+      "reason_vi": "Sai: Config đánh giá cấu hình resource, không phân loại nội dung S3.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4"
+        "Q036-r2-1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q036:B",
       "unit_type": "choice",
-      "verdict": "meets_but_suboptimal",
-      "reason_vi": "Lambda tự viết có thể quét theo pattern và gửi SNS, nhưng phải tự phát triển và bảo trì logic phát hiện, tốn công hơn dịch vụ managed.",
+      "verdict": "does_not_meet",
+      "reason_vi": "Sai: custom Lambda scanner cần tự xây logic và vận hành.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "Q036-r2-1"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q036:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Macie dùng managed data identifiers để phát hiện dữ liệu nhạy cảm trong S3 và tự động publish finding sang EventBridge; một rule EventBridge có thể gửi tới SNS topic.",
+      "reason_vi": "Đúng: Macie findings → EventBridge → SNS.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref5"
+        "Q036-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q036:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "GuardDuty S3 Protection phát hiện mối đe dọa (exfiltration, phá hủy dữ liệu) từ CloudTrail data events, không phân loại nội dung nhạy cảm; CloudWatch alarm cũng không phải cách trực tiếp để phản ứng với từng finding.",
+      "reason_vi": "Sai: GuardDuty phát hiện threat, không discovery nội dung sensitive data.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref3"
+        "Q036-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -118,35 +118,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Macie dùng managed data identifiers phát hiện dữ liệu nhạy cảm trong S3, tự publish sensitive data findings sang EventBridge, và tài liệu Macie nêu ví dụ rule EventBridge gửi finding tới SNS topic. A, D không phát hiện dữ liệu nhạy cảm; B phải tự viết logic.",
-    "open_issues": [
-      "Cần chạy sensitive data discovery job hoặc bật automated sensitive data discovery trong Macie; phương án C ngầm hiểu điều này."
-    ]
+    "reason_vi": "Giữ C; Macie/EventBridge/SNS là tích hợp native phù hợp.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ mạnh nhất B (Lambda quét theo pattern + SNS): B khả thi nhưng phải tự viết, kiểm thử và bảo trì logic nhận diện dữ liệu nhạy cảm, nhiều công hơn dịch vụ có sẵn managed data identifiers. Bổ sung bằng chứng trực tiếp cho phần SNS của C: trang Macie EventBridge nêu ví dụ rule tự động gửi finding tới SNS topic. Giữ C, verified, high.",
+  "reconciliation_vi": "Giữ C; Macie/EventBridge/SNS là tích hợp native phù hợp.",
   "explanation_vi": {
-    "why_correct": "Amazon Macie dùng managed data identifiers để phát hiện và phân loại dữ liệu nhạy cảm trong S3 mà không cần viết code, và tự publish finding sang EventBridge; chỉ cần một rule EventBridge để gửi tới SNS topic có sẵn.",
+    "why_correct": "Dùng Macie managed data identifiers để phát hiện dữ liệu nhạy cảm trong S3 và EventBridge chuyển findings tới SNS topic hiện có. Đây là tích hợp native ít triển khai hơn tự viết scanner.",
     "others": {
-      "Q036:A": "AWS Config theo dõi cấu hình tài nguyên, không quét nội dung object để tìm dữ liệu nhạy cảm.",
-      "Q036:B": "Lambda tự viết có thể làm được nhưng phải tự xây và bảo trì logic phát hiện, tốn công hơn Macie.",
-      "Q036:D": "GuardDuty phát hiện mối đe dọa (exfiltration, truy cập bất thường) chứ không phân loại dữ liệu nhạy cảm trong object."
+      "Q036:A": "Sai: Config đánh giá cấu hình resource, không phân loại nội dung S3.",
+      "Q036:B": "Sai: custom Lambda scanner cần tự xây logic và vận hành.",
+      "Q036:D": "Sai: GuardDuty phát hiện threat, không discovery nội dung sensitive data."
     }
   },
   "keywords": [
     {
-      "phrase": "identify any sensitive data that is stored in an Amazon S3 bucket",
-      "meaning_vi": "Phát hiện dữ liệu nhạy cảm trong S3 -> Amazon Macie."
+      "phrase": "sensitive data",
+      "meaning_vi": "Macie phân loại nội dung S3."
     },
     {
-      "phrase": "existing Amazon Simple Notification Service (Amazon SNS) topic",
-      "meaning_vi": "Macie finding -> EventBridge rule -> SNS."
+      "phrase": "existing",
+      "meaning_vi": "Dùng topic có sẵn làm EventBridge target."
     },
     {
-      "phrase": "LEAST implementation effort",
-      "meaning_vi": "Ưu tiên tính năng có sẵn (managed data identifiers) hơn code tự viết."
+      "phrase": "SNS",
+      "meaning_vi": "SNS gửi notification theo subscriptions."
     }
   ],
-  "memory_tip_vi": "Nếu cần tìm dữ liệu nhạy cảm (PII, thẻ tín dụng) trong S3 với ít công triển khai -> nghĩ đến Amazon Macie + EventBridge; kiểm tra: GuardDuty phát hiện mối đe dọa, Config theo dõi cấu hình, không quét nội dung.",
+  "memory_tip_vi": "Nếu đã có SNS topic, route Macie sensitive-data findings bằng EventBridge và kiểm tra topic policy/subscription.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -225,6 +223,18 @@
       "quote": "you can create a rule that automatically sends new high-severity findings to an Amazon SNS topic",
       "supports": "EventBridge rule có thể gửi finding của Macie tới SNS topic có sẵn (phần SNS của C).",
       "kind": "direct"
+    },
+    {
+      "id": "Q036-r2-1",
+      "url": "https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html",
+      "title": "What is Amazon Macie? - Amazon Macie",
+      "accessed_at": "2026-09-30",
+      "quote": "Amazon Macie is a data security service that discovers sensitive",
+      "supports": "Macie discovers sensitive S3 data with managed identifiers; findings integrate with EventBridge for SNS notification.",
+      "kind": "direct",
+      "snapshot_id": "abdcfe897682",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [],
@@ -250,6 +260,23 @@
       "previous_answer": [
         "Q036:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ C; Macie/EventBridge/SNS là tích hợp native phù hợp.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q036:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q036:C"
+      ],
+      "note_vi": "Giữ C; Macie/EventBridge/SNS là tích hợp native phù hợp.",
+      "technical_change": false
     }
   ],
   "timestamp_correction": {
@@ -261,5 +288,20 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "notes_vi": "Giữ C; Macie/EventBridge/SNS là tích hợp native phù hợp.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q036:C",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

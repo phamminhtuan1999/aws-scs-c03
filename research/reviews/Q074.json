@@ -2,9 +2,9 @@
   "question_id": "Q074",
   "question_content_hash": "88ac688061ea40c43bf345cb45d8d28c317a2b7273817947865873d0c37c12aa",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,28 +34,26 @@
       "unit_id": "Q074:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS WAF không gửi web ACL traffic log tới CloudTrail trail; đích log được hỗ trợ chỉ là CloudWatch Logs, S3, Firehose. CloudTrail chỉ ghi API call quản trị WAF, nên toàn bộ chuỗi phía sau không có dữ liệu traffic.",
+      "reason_vi": "CloudTrail ghi API quản trị WAF, không nhận web request logs theo cách này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q074:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Gửi log WAF tới S3 là hợp lệ, nhưng 'OpenSearch table với partition projection' không phải tính năng được tài liệu hóa: partition projection là tính năng của Athena (table properties trong AWS Glue). OpenSearch direct query S3 dùng Spark table tạo từ Query Workbench, không phải cơ chế nêu trong option.",
+      "reason_vi": "Partition projection cho bảng S3 trong lựa chọn này thuộc Athena, không phải OpenSearch table.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref6"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -63,32 +61,29 @@
       "unit_id": "Q074:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "WAF gửi log trực tiếp tới S3; Athena có hướng dẫn chính thức tạo table cho WAF S3 logs dùng partition projection và các query mẫu để phân tích traffic/tấn công.",
+      "reason_vi": "đường WAF logs → S3 → Athena được AWS hướng dẫn.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref3",
-        "ref4"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q074:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Giống A, bước đầu 'gửi log WAF tới CloudTrail trail' không tồn tại; CloudTrail chỉ ghi API call, không ghi web request mà web ACL kiểm tra, nên Firehose/S3/Athena phía sau không có dữ liệu traffic.",
+      "reason_vi": "CloudTrail trail không phải đích của WAF traffic logs.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -120,16 +115,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu WAF liệt kê đích log chỉ gồm CloudWatch Logs, S3, Firehose (A/D hỏng từ bước CloudTrail); Athena có trang riêng tạo table WAF S3 logs bằng partition projection, còn partition projection là tính năng Athena/Glue chứ không phải OpenSearch (B).",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đối thủ mạnh nhất là B (S3 + OpenSearch): OpenSearch Service có direct query S3, nhưng tài liệu giới hạn chỉ hỗ trợ Spark table tạo từ Query Workbench, và partition projection được định nghĩa là tính năng của Athena dùng table properties trong AWS Glue — không có 'OpenSearch table with partition projection'. A và D đều bắt đầu bằng gửi log WAF tới CloudTrail trail, trong khi CloudTrail chỉ ghi API call của WAF. Giữ C, verified (high).",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "AWS WAF gửi web ACL traffic log trực tiếp vào S3; Athena có mẫu CREATE TABLE cho WAF S3 logs dùng partition projection để truy vấn nhanh (vd theo IP, URI, rule bị match), đủ để xác định có tấn công tầng ứng dụng hay không.",
+    "why_correct": "WAF gửi access logs trực tiếp đến S3; Athena đọc bảng có partition projection để phân tích request và dấu hiệu tấn công.",
     "others": {
-      "Q074:A": "WAF không gửi traffic log tới CloudTrail trail (CloudTrail chỉ ghi API call quản trị WAF), nên Firehose/OpenSearch phía sau không có dữ liệu request.",
-      "Q074:B": "Partition projection là tính năng của Athena (table properties trong Glue); OpenSearch direct query S3 chỉ dùng Spark table từ Query Workbench, không có 'OpenSearch table with partition projection'.",
-      "Q074:D": "Bước đầu 'gửi log WAF tới CloudTrail trail' không tồn tại; CloudTrail không ghi web request mà web ACL kiểm tra."
+      "Q074:A": "CloudTrail ghi API quản trị WAF, không nhận web request logs theo cách này.",
+      "Q074:B": "Partition projection cho bảng S3 trong lựa chọn này thuộc Athena, không phải OpenSearch table.",
+      "Q074:D": "CloudTrail trail không phải đích của WAF traffic logs."
     }
   },
   "keywords": [
@@ -142,7 +137,7 @@
       "meaning_vi": "Tấn công tầng 7 -> phân tích nội dung request trong WAF log."
     }
   ],
-  "memory_tip_vi": "Nếu cần phân tích log AWS WAF theo kiểu truy vấn ad hoc -> nghĩ đến WAF logging tới S3 + Athena (partition projection); kiểm tra: đích log WAF chỉ là CloudWatch Logs/S3/Firehose, CloudTrail chỉ ghi API call.",
+  "memory_tip_vi": "Nếu cần truy vấn traffic WAF, dùng log S3 với Athena; partition projection là tính năng Athena.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -242,7 +237,7 @@
       "detail_vi": "Thiếu dấu chấm: 'Amazon S3 bucket Configure...' và cuối câu thiếu dấu chấm."
     }
   ],
-  "notes_vi": "Firehose cũng là đích log hợp lệ của WAF (có thể đẩy tới OpenSearch), nhưng A/D đều bắt đầu bằng CloudTrail trail nên hỏng từ bước đầu.",
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "history": [
     {
       "version": "r1",
@@ -257,6 +252,45 @@
       "previous_answer": [
         "Q074:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q074:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q074:C"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q074:C"
+    ],
+    "candidate_answers": [
+      [
+        "Q074:C"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

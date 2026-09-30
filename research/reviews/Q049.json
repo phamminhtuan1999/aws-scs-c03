@@ -2,9 +2,9 @@
   "question_id": "Q049",
   "question_content_hash": "6b15dec8883eb54b8e26e1a9bd5173eb0b5f97c1daf48edb9313dc6277dba2c6",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:46:24Z",
-  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
     "model": "claude-opus-5-5"
@@ -38,65 +38,58 @@
     {
       "unit_id": "Q049:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Audit Manager chỉ tự động thu thập bằng chứng tuân thủ theo framework (kể cả AWS operational best practices) và không tự đánh giá hay cải thiện gì; không có bước khắc phục nên không tăng resilience của workload.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Audit Manager thu thập bằng chứng compliance, không tự cải tiến kiến trúc resilience.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6"
+        "Q049-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q049:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "WA Tool đánh giá workload theo Well-Architected Framework (Reliability pillar nhắm tới kiến trúc resilient và khả năng phục hồi), tạo improvement plan cho HRI/MRI; triển khai mitigation giúp cải thiện workload và workload report/tài liệu dùng làm bằng chứng cho auditor.",
+      "reason_vi": "Well-Architected review gắn rủi ro với hành động cải tiến workload.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4"
+        "Q049-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q049:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Inspector CIS scan chỉ benchmark cấu hình bảo mật hệ điều hành EC2 theo CIS; không đo hay cải thiện khả năng chịu gián đoạn, và scan một lần không có bước khắc phục.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Inspector CIS đánh giá cấu hình/vulnerability, không đánh giá đầy đủ resilience.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref7"
+        "Q049-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q049:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "FIS và experiment report (PDF) đúng là công cụ kiểm thử và làm bằng chứng resilience, nhưng D chạy thí nghiệm và điều chỉnh workload trong development account (không cấu hình production làm target); báo cáo chứng minh workload dev chứ không chứng minh workload production resilient, và không nêu thay đổi được áp dụng cho production.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "FIS thử ở development có ích nhưng chưa thể hiện cải tiến production theo yêu cầu.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref8",
-        "ref9",
-        "ref10",
-        "ref11"
+        "Q049-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -135,20 +128,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Source key và blind cùng chọn B. A và C rõ ràng không cải thiện resilience. D là đối thủ mạnh (FIS report được AWS mô tả là 'evidence of resilience testing'), nhưng D giới hạn thí nghiệm và điều chỉnh ở development account nên không cải thiện/chứng minh workload production; B review và triển khai mitigation cho workload theo Reliability pillar.",
-    "open_issues": [
-      "Nếu hiểu 'Adjust the configuration and architecture of the workloads' là áp dụng cả cho production thì D có thể tranh luận; văn bản chỉ nói thí nghiệm và report ở development account.",
-      "Bằng chứng của B là tài liệu review/mitigation, không phải kiểm thử thực nghiệm; B cũng không nói rõ review workload production (chỉ 'the architecture')."
-    ]
+    "level": "high",
+    "reason_vi": "Đúng; thử FIS ở dev có giá trị nếu representative, nhưng phương án chưa thực hiện production mitigation.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind và source key cùng chọn B. Đã tìm cách đọc để D đúng: FIS tạo PDF report 'evidence of resilience testing', và REL12-BP04 khuyên dùng FIS cho chaos engineering. Tuy nhiên REL12-BP04 yêu cầu chạy ở môi trường production hoặc gần production nhất, và FIS hỗ trợ multi-account experiment nhắm tới account khác — D không dùng cơ chế đó mà chỉ chạy ở development account, nên report không phải bằng chứng cho workload production và không có bước áp dụng thay đổi cho production. B vừa xác định rủi ro (HRI/MRI) theo Reliability pillar vừa triển khai mitigation và có report chia sẻ cho auditor. Giữ B, verified, confidence medium vì D vẫn là distractor hấp dẫn.",
+  "reconciliation_vi": "Đúng; thử FIS ở dev có giá trị nếu representative, nhưng phương án chưa thực hiện production mitigation.",
   "explanation_vi": {
-    "why_correct": "AWS Well-Architected Tool review workload theo Reliability (và Operational Excellence, Security) pillar, xác định high/medium risk và đưa improvement plan; triển khai mitigation thực sự cải thiện resilience của workload, còn workload report/tài liệu là bằng chứng cho auditor.",
+    "why_correct": "AWS Well-Architected Tool giúp rà soát Operational Excellence, Security và Reliability, ghi nhận rủi ro và thực hiện cải tiến trên workload production để có bằng chứng cho độ tin cậy.",
     "others": {
-      "Q049:A": "Audit Manager chỉ thu thập bằng chứng tuân thủ theo framework, không đánh giá hay cải thiện resilience của workload.",
-      "Q049:C": "Inspector CIS scan chỉ kiểm tra cấu hình bảo mật OS của EC2 theo CIS Benchmark, không liên quan tới khả năng chịu gián đoạn và không có bước khắc phục.",
-      "Q049:D": "FIS report là bằng chứng kiểm thử, nhưng thí nghiệm và điều chỉnh chỉ ở development account nên không cải thiện hay chứng minh resilience của workload production."
+      "Q049:A": "Audit Manager thu thập bằng chứng compliance, không tự cải tiến kiến trúc resilience.",
+      "Q049:C": "Inspector CIS đánh giá cấu hình/vulnerability, không đánh giá đầy đủ resilience.",
+      "Q049:D": "FIS thử ở development có ích nhưng chưa thể hiện cải tiến production theo yêu cầu."
     }
   },
   "keywords": [
@@ -165,7 +155,7 @@
       "meaning_vi": "Bẫy phạm vi: kết quả ở dev account không chứng minh cho production."
     }
   ],
-  "memory_tip_vi": "Nếu đề đòi vừa cải thiện resilience vừa có bằng chứng cho workload production -> nghĩ đến Well-Architected Tool review (Reliability pillar) + triển khai mitigation; kiểm tra phương án FIS/kiểm thử có chạy đúng production (hoặc target production) hay chỉ ở development account.",
+  "memory_tip_vi": "Nếu cần vừa cải tiến workload vừa ghi bằng chứng kiến trúc, hoàn thành Well-Architected review và xử lý rủi ro.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -322,9 +312,27 @@
       "quote": "You run multi-account experiments from an orchestrator account that impacts resources in multiple target accounts.",
       "supports": "FIS có thể nhắm tới account khác qua multi-account experiment, nhưng D không cấu hình production làm target account; thí nghiệm chỉ ở development account.",
       "kind": "inference"
+    },
+    {
+      "id": "Q049-r2-1",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/identify-and-understand-risks.html",
+      "title": "Identify and understand risks - AWS Well-Architected Tool",
+      "accessed_at": "2026-09-30",
+      "quote": "report that shows the risks for each workload you reviewed.",
+      "supports": "Well-Architected review ghi nhận high/medium risks và hỗ trợ improvement plan theo workload.",
+      "kind": "direct",
+      "snapshot_id": "179a9c5c0a0a",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q049",
+      "detail_vi": "Không nên khẳng định FIS không xuất báo cáo hoặc thử nghiệm development vô giá trị."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -337,6 +345,42 @@
       "date": "2026-09-30",
       "change": "reconciliation: source key B khớp blind; bổ sung REL12-BP04 và FIS multi-account để kiểm tra D; giữ B, status verified (confidence medium)",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; thử FIS ở dev có giá trị nếu representative, nhưng phương án chưa thực hiện production mitigation.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q049:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q049:B"
+      ],
+      "note_vi": "Đúng; thử FIS ở dev có giá trị nếu representative, nhưng phương án chưa thực hiện production mitigation.",
+      "technical_change": false
     }
-  ]
+  ],
+  "notes_vi": "Đúng; thử FIS ở dev có giá trị nếu representative, nhưng phương án chưa thực hiện production mitigation.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q049:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q049:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

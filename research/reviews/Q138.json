@@ -2,9 +2,9 @@
   "question_id": "Q138",
   "question_content_hash": "7f459e8340f52b63ebcbe330f07d390c9fd73005adb4df36ad0e7b12379faecb",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:24:46+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -38,8 +38,8 @@
     {
       "unit_id": "Q138:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "EventBridge + Lambda có thể tự đóng port và ghi log, SNS có thể là target của rule; nhưng SNS chỉ gửi thông báo khi rule khớp sự kiện, không có cơ chế theo dõi sự cố và gửi cập nhật khi sự cố tiến triển. Cách nói 'subscribe SNS topic to the EventBridge rule' cũng không chính xác (SNS là target).",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "A Lambda có thể đóng port/log và SNS gửi alert đầu tiên, nhưng mô tả chưa có incident-progress updates/work item.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,7 +47,7 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "Q138-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -55,19 +55,21 @@
       "unit_id": "Q138:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Đóng port bằng cách sửa security group thủ công, không đáp ứng yêu cầu tự động hóa cho sự cố tương tự và không ghi nhận/cập nhật tiến trình sự cố.",
+      "reason_vi": "B remediation thủ công không đạt automated future response.",
       "requirement_ids": [
         "R4",
         "R3"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "Q138-r2-1"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q138:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "EventBridge rule tạo OpsItem trong OpsCenter (ghi nhận sự cố kèm dữ liệu port); trường Notifications của OpsItem gửi SNS mỗi khi OpsItem được sửa/đổi trạng thái (cập nhật tiến trình); Automation runbook tùy chỉnh gắn với OpsItem để đóng port và dùng lại cho sự cố sau.",
+      "reason_vi": "C OpsCenter + notifications + runbook quản lý vòng đời incident và đóng port.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -75,27 +77,23 @@
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5",
-        "ref7"
+        "Q138-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q138:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector chỉ quét lỗ hổng/phơi nhiễm mạng và tạo finding, không tự động đóng port; CloudWatch alarm + SNS cũng không cho cập nhật theo tiến trình sự cố.",
+      "reason_vi": "D Inspector tạo findings, không tự đóng port bằng cấu hình alarm như mô tả.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref6"
+        "Q138-r2-1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -132,19 +130,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu nêu trực tiếp: EventBridge rule tạo OpsItem (ghi nhận sự cố, input transformer chuyển dữ liệu như port), trường Notifications của OpsItem gửi SNS cho mọi stakeholder mỗi khi OpsItem được sửa kể cả đổi trạng thái (cập nhật theo tiến trình), và Automation runbook khắc phục vấn đề trong OpsItem. Mức medium vì phân biệt với A dựa hoàn toàn vào yêu cầu 'updates as the incident progresses'.",
-    "open_issues": [
-      "Nếu bỏ qua yêu cầu 'updates as the incident progresses', A (EventBridge + Lambda + SNS) cũng đóng port, ghi log và thông báo một lần.",
-      "C không nói rõ runbook được kích hoạt tự động hay chạy từ OpsItem."
-    ]
+    "reason_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại A (đối thủ mạnh nhất): EventBridge + Lambda đóng port và ghi log được, SNS là target của rule (ref1) nên thông báo một lần khi sự kiện khớp; A không có đối tượng theo dõi sự cố nên không có 'updates as the incident progresses'. Bằng chứng mới cho C: trang Editing an OpsItem nêu khi chỉ định SNS topic ở trường Notifications thì mọi stakeholder nhận thông báo mỗi khi OpsItem được sửa, kể cả đổi trạng thái (ref7) – đúng yêu cầu cập nhật theo tiến trình. B thủ công, D dùng Inspector (không tự đóng port). Giữ C, verified, medium.",
+  "reconciliation_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
   "explanation_vi": {
-    "why_correct": "C: EventBridge rule tạo OpsItem trong OpsCenter kèm port bị ảnh hưởng (ghi nhận sự cố); SNS topic trong trường Notifications của OpsItem báo cho stakeholder mỗi lần OpsItem được cập nhật hoặc đổi trạng thái; custom Automation runbook đóng port và dùng lại được cho sự cố tương tự.",
+    "why_correct": "OpsItem lưu incident và thông báo khi tạo/cập nhật; Automation runbook có thể đóng port và tái dùng cho incident sau.",
     "others": {
-      "Q138:A": "Lambda đóng port và SNS thông báo một lần khi rule khớp, nhưng không có nơi theo dõi sự cố để gửi cập nhật khi sự cố tiến triển.",
-      "Q138:B": "Đóng port bằng cách sửa security group thủ công, không phải giải pháp tự động cho sự cố tương tự và không theo dõi tiến trình sự cố.",
-      "Q138:D": "Amazon Inspector chỉ quét lỗ hổng/phơi nhiễm mạng và tạo finding, không tự đóng port; CloudWatch alarm + SNS cũng không cập nhật theo tiến trình."
+      "Q138:A": "A Lambda có thể đóng port/log và SNS gửi alert đầu tiên, nhưng mô tả chưa có incident-progress updates/work item.",
+      "Q138:B": "B remediation thủ công không đạt automated future response.",
+      "Q138:D": "D Inspector tạo findings, không tự đóng port bằng cấu hình alarm như mô tả."
     }
   },
   "keywords": [
@@ -161,7 +156,7 @@
       "meaning_vi": "Runbook Systems Manager Automation dùng lại được."
     }
   ],
-  "memory_tip_vi": "Nếu đề cần ghi nhận sự cố, báo stakeholder theo tiến trình và runbook khắc phục -> nghĩ đến EventBridge -> OpsCenter OpsItem (Notifications SNS) + Automation runbook; kiểm tra nếu chỉ cần tự động đóng port và báo một lần thì EventBridge + Lambda + SNS cũng đủ.",
+  "memory_tip_vi": "Nếu cần cập nhật tiến độ incident, dùng OpsItem lifecycle notifications và Automation.",
   "tags": {
     "domains": [
       "2 Incident Response"
@@ -265,10 +260,28 @@
       "quote": "make sure that all stakeholders receive a notification when the OpsItem is edited, including a status change.",
       "supports": "OpsItem Notifications gửi cập nhật cho stakeholder mỗi khi sự cố được sửa/đổi trạng thái (R3).",
       "kind": "direct"
+    },
+    {
+      "id": "Q138-r2-1",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started-sns.html",
+      "title": "(Optional) Set up Amazon SNS to receive notifications about OpsItems - AWS Systems Manager",
+      "accessed_at": "2026-09-30T21:30:50.226201+00:00",
+      "quote": "when the system creates an OpsItem or updates an existing",
+      "supports": "OpsItem lưu incident và thông báo khi tạo/cập nhật; Automation runbook có thể đóng port và tái dùng cho incident sau.",
+      "kind": "direct",
+      "snapshot_id": "d13e7dbe6fb1",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Đề không nói nguồn cảnh báo (ví dụ GuardDuty finding); giả định cảnh báo đi qua EventBridge.",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q138",
+      "detail_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates."
+    }
+  ],
+  "notes_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
   "history": [
     {
       "version": "r1",
@@ -283,6 +296,39 @@
       "previous_answer": [
         "Q138:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q138:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q138:C"
+      ],
+      "note_vi": "C cần cấu hình thực thi runbook tự động; association runbook vào OpsItem đơn thuần chưa tự execute. A có thể được mở rộng để đáp ứng nhưng không mô tả progress updates.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

@@ -1,0 +1,158 @@
+URL: https://docs.aws.amazon.com/lambda/latest/dg/permissions-source-function-arn.html
+TITLE: Using source function ARN to control function access behavior - AWS Lambda
+
+# Using source function ARN to control function access behavior
+
+It's common for your Lambda function code to make API requests to other AWS services. To make these
+requests, Lambda generates an ephemeral set of credentials by assuming your function's execution role. These
+credentials are available as environment variables during your function's invocation. When working with AWS
+SDKs, you don't need to provide credentials for the SDK directly in code. By default, the credential provider
+chain sequentially checks each place where you can set credentials and selects the first one available—usually
+the environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+and AWS_SESSION_TOKEN).
+
+Lambda injects the source function ARN into the credentials context if the request is an AWS API request
+that comes from within your execution environment. Lambda also injects the source function ARN for the following
+AWS API requests that Lambda makes on your behalf outside of your execution environment:
+
+Service
+
+Action
+
+Reason
+
+CloudWatch Logs
+
+CreateLogGroup, CreateLogStream, PutLogEvents
+
+To store logs into a CloudWatch Logs log group
+
+X-Ray
+
+PutTraceSegments
+
+To send trace data to X-Ray
+
+Amazon EFS
+
+ClientMount
+
+To connect your function to an Amazon Elastic File System (Amazon EFS) file system
+
+Other AWS API calls that Lambda makes outside of your execution environment on your behalf using the same
+execution role don't contain the source function ARN. Examples of such API calls outside the execution environment
+include:
+
+- Calls to AWS Key Management Service (AWS KMS) to automatically encrypt and decrypt your environment variables.
+
+- Calls to Amazon Elastic Compute Cloud (Amazon EC2) to create elastic network interfaces (ENIs) for a VPC-enabled function.
+
+- Calls to AWS services, such as Amazon Simple Queue Service (Amazon SQS), to read from an event source that's set up as an
+event source mapping.
+
+With the source function ARN in the credentials context, you can verify whether a call to your resource came
+from a specific Lambda function's code. To verify this, use the lambda:SourceFunctionArn condition key
+in an IAM identity-based policy or service control policy (SCP).
+
+Note
+
+You cannot use the lambda:SourceFunctionArn condition key in resource-based policies.
+
+With this condition key in your identity-based policies or SCPs, you can implement
+security controls for the API actions that your function code makes to other AWS services. This has a few key
+security applications, such as helping you identify the source of a credential leak.
+
+Note
+
+The lambda:SourceFunctionArn condition key is different from the lambda:FunctionArn
+and aws:SourceArn condition keys. The lambda:FunctionArn condition key applies only to event source mappings and helps define which functions your
+event source can invoke. The aws:SourceArn condition key applies only to policies where your Lambda
+function is the target resource, and helps define which other AWS services and resources can invoke that function. The
+lambda:SourceFunctionArn condition key can apply to any identity-based policy or SCP to define the
+specific Lambda functions that have permissions to make specific AWS API calls to other resources.
+
+To use lambda:SourceFunctionArn in your policy, include it as a
+condition with any of the ARN
+condition operators. The value of the key must be a valid ARN.
+
+For example, suppose your Lambda function code makes an s3:PutObject call that targets a specific
+Amazon S3 bucket. You might want to allow only one specific Lambda function to have s3:PutObject access
+that bucket. In this case, your function's execution role should have a policy attached that looks like this:
+
+Example policy granting a specific Lambda function access to an Amazon S3 resource
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "ExampleSourceFunctionArn",
+"Effect": "Allow",
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::lambda_bucket/*",
+"Condition": {
+"ArnEquals": {
+"lambda:SourceFunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:source_lambda"
+}
+}
+}
+]
+}
+
+This policy allows only s3:PutObject access if the source is the Lambda function with ARN
+arn:aws:lambda:us-east-1:123456789012:function:source_lambda. This policy doesn't allow
+s3:PutObject access to any other calling identity. This is true even if a different function or
+entity makes an s3:PutObject call with the same execution role.
+
+Note
+
+The lambda:SourceFunctionARN condition key doesn't support Lambda function versions or function aliases.
+If you use the ARN for a particular function version or alias, your function won't have permission to take the action you specify.
+Be sure to use the unqualified ARN for your function without a version or alias suffix.
+
+You can also use lambda:SourceFunctionArn in SCPs. For example,
+suppose you want to restrict access to your bucket to either a single Lambda function's code or to calls from a
+specific Amazon Virtual Private Cloud (VPC). The following SCP illustrates this.
+
+Example policy denying access to Amazon S3 under specific conditions
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Action": [
+"s3:*"
+],
+"Resource": "arn:aws:s3:::lambda_bucket/*",
+"Effect": "Deny",
+"Condition": {
+"StringNotEqualsIfExists": {
+"aws:SourceVpc": [
+"vpc-12345678"
+]
+}
+}
+},
+{
+"Action": [
+"s3:*"
+],
+"Resource": "arn:aws:s3:::lambda_bucket/*",
+"Effect": "Deny",
+"Condition": {
+"ArnNotEqualsIfExists": {
+"lambda:SourceFunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:source_lambda"
+}
+}
+}
+]
+}
+
+This policy denies all S3 actions unless they come from a specific Lambda function with ARN
+arn:aws:lambda:*:123456789012:function:source_lambda, or unless they come from the specified VPC.
+The StringNotEqualsIfExists operator tells IAM to process this condition only if the
+aws:SourceVpc key is present in the request. Similarly, IAM considers the
+ArnNotEqualsIfExists operator only if the lambda:SourceFunctionArn exists.

@@ -2,9 +2,9 @@
   "question_id": "Q066",
   "question_content_hash": "7b8a071a8a253dfddeed988c61de668fe9b1c4fa7841abe3ca9408715985a86b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:36Z",
-  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,72 +39,73 @@
       "unit_id": "Q066:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Pre sign-up Lambda trigger chạy ngay trước khi Cognito tạo user (kể cả self-service SignUp qua Hosted UI), cho phép logic tùy chỉnh và trả lỗi để từ chối đăng ký.",
+      "reason_vi": "Pre sign-up trigger có thể validate và return error để deny.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "ref3",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q066:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Web ACL AWS WAF gắn trực tiếp với user pool để lọc request tới Hosted UI/managed login; Cognito chuyển IP/header cho WAF nên geo match statement chặn được request theo quốc gia nguồn, giảm đăng ký từ ngoài Pháp.",
+      "reason_vi": "WAF geo match bảo vệ user pool/Hosted UI theo nguồn IP.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
         "ref3",
-        "ref4",
-        "ref9"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q066:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "App client ID chỉ để ứng dụng tự định danh khi gọi Cognito, không kiểm tra vị trí hay thực hiện validation chấp nhận/từ chối đăng ký.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "App client ID nhận diện application, không kiểm tra quốc gia hay fraud.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q066:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "User pool không có thiết lập geographic restriction; threat protection chỉ có danh sách IP always-allow/always-block (CIDR) và dùng vị trí làm yếu tố tính rủi ro khi đăng nhập.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "User pool không có geographic restriction setting như phương án.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref7"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q066:E",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Social IdP (Facebook, Google...) chỉ là nguồn đăng nhập liên kết, không kiểm tra quốc gia hay validation tùy chỉnh; kẻ gian vẫn có thể dùng tài khoản social.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Social IdP không thay custom validation và geo filtering.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref8"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -142,18 +143,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A+B. Tài liệu Cognito nêu trực tiếp pre sign-up trigger chạy trước khi tạo user và có thể từ chối user mới; user pool hỗ trợ gắn AWS WAF web ACL áp dụng cho classic hosted UI/managed login, và rule có thể match theo IP (geo match dựa trên IP nguồn).",
-    "open_issues": [
-      "Event gửi tới pre sign-up trigger không mặc định chứa quốc gia; phần lọc địa lý do WAF đảm nhiệm, Lambda đảm nhiệm validation tùy chỉnh (email, số điện thoại, validationData...)."
-    ]
+    "reason_vi": "Đúng; WAF xử lý geo, Lambda business validation.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A+B, trùng blind. Đã kiểm tra lại đối thủ D (geographic restriction trong user pool): API cấu hình rủi ro của user pool chỉ có ngoại lệ theo dải IP (always-allow/always-block), vị trí chỉ là yếu tố rủi ro của adaptive authentication khi sign-in; không có thiết lập chặn theo quốc gia. Kiểm tra thêm trang WAF–Cognito: với hosted UI/managed login Cognito chuyển header và thành phần không phải body cho WAF, tài liệu khuyến nghị match theo IP address — geo match (dựa trên IP nguồn) dùng được; chỉ ATP managed rule group bị cấm. C (app client ID) và E (social IdP) không có cơ chế validate/từ chối theo địa lý. Giữ A+B, verified, high.",
+  "reconciliation_vi": "Đúng; WAF xử lý geo, Lambda business validation.",
   "explanation_vi": {
-    "why_correct": "A: pre sign-up Lambda trigger chạy ngay trước khi Cognito tạo user, thực hiện validation tùy chỉnh và trả lỗi để từ chối đăng ký. B: AWS WAF web ACL gắn với user pool lọc request tới Hosted UI; geo match statement chặn request không đến từ Pháp trước khi chúng tới bước đăng ký.",
+    "why_correct": "Pre sign-up Lambda thực hiện validation tùy chỉnh và có thể từ chối sign-up; WAF geo match gắn user pool lọc request từ ngoài France tại Hosted UI.",
     "others": {
-      "Q066:C": "App client ID chỉ để ứng dụng tự định danh khi gọi Cognito, không kiểm tra hay từ chối đăng ký.",
-      "Q066:D": "User pool không có thiết lập geographic restriction; threat protection chỉ có danh sách IP allow/block và dùng vị trí làm yếu tố rủi ro khi sign-in.",
-      "Q066:E": "Social IdP chỉ là nguồn đăng nhập liên kết, không validate theo quốc gia; kẻ gian vẫn đăng ký được bằng tài khoản social."
+      "Q066:C": "App client ID nhận diện application, không kiểm tra quốc gia hay fraud.",
+      "Q066:D": "User pool không có geographic restriction setting như phương án.",
+      "Q066:E": "Social IdP không thay custom validation và geo filtering."
     }
   },
   "keywords": [
@@ -170,7 +169,7 @@
       "meaning_vi": "Lọc theo quốc gia nguồn -> AWS WAF geo match gắn với user pool."
     }
   ],
-  "memory_tip_vi": "Nếu cần validate/từ chối đăng ký trong Cognito user pool -> nghĩ đến pre sign-up Lambda trigger; nếu lọc theo quốc gia -> AWS WAF geo match gắn với user pool; kiểm tra user pool không có geo restriction, WAF gắn user pool không dùng được ATP rule group.",
+  "memory_tip_vi": "Nếu cần validation nghiệp vụ cộng giới hạn quốc gia, kết hợp pre sign-up Lambda và WAF geo match.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -307,9 +306,14 @@
       "type": "typo",
       "location": "Q066:A",
       "detail_vi": "'Associate the Amazon Cognito function' nên là 'Associate the Lambda function'."
+    },
+    {
+      "type": "data",
+      "location": "Q066",
+      "detail_vi": "Lambda pre-sign-up không tự nhận IP caller đầy đủ; giao nhiệm vụ geo cho WAF."
     }
   ],
-  "notes_vi": "Không dùng được managed rule group ATP (AWS-AWSManagedRulesATPRuleSet) trong web ACL gắn với user pool; geo match thì dùng được.",
+  "notes_vi": "Đúng; WAF xử lý geo, Lambda business validation.",
   "history": [
     {
       "version": "r1",
@@ -334,6 +338,45 @@
         "Q066:A",
         "Q066:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Đúng; WAF xử lý geo, Lambda business validation.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q066:A",
+        "Q066:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q066:A",
+        "Q066:B"
+      ],
+      "note_vi": "Đúng; WAF xử lý geo, Lambda business validation.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q066:A",
+      "Q066:B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q066:A",
+      "Q066:B"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

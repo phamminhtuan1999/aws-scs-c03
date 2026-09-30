@@ -2,9 +2,9 @@
   "question_id": "Q137",
   "question_content_hash": "666212af5343ed9bb4ffbfb67b3b270ea899c0b4bd293de3882846a3e744e241",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:24:04+00:00",
-  "last_reviewed_at": "2026-09-30T20:32:56+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,16 +39,15 @@
       "unit_id": "Q137:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Object Lock compliance mode 2 năm ngăn mọi người (kể cả root) sửa/xóa log; organization trail thuộc sở hữu management account và bucket policy cho org trail cấp quyền ghi theo trail ARN của management account, nên cho phép phía management account ghi là khớp với D.",
+      "reason_vi": "A đặt retention compliance và cho trail management account context ghi vào bucket security là hướng phù hợp.",
       "requirement_ids": [
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref4",
+        "ref8",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -56,15 +55,15 @@
       "unit_id": "Q137:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Phần Object Lock giống A, nhưng với organization trail thì member account không phải bên ghi log: CloudTrail ghi theo trail ARN của management account (aws:SourceArn); cấp quyền cho member account chỉ phù hợp với trail riêng từng account, không khớp với bước D.",
+      "reason_vi": "B chỉ cho member-account principals write không thay service-principal policy của organization trail.",
       "requirement_ids": [
         "R1",
         "R4"
       ],
       "reference_ids": [
-        "ref2",
-        "ref3",
-        "ref8"
+        "ref4",
+        "ref8",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -72,42 +71,45 @@
       "unit_id": "Q137:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Lifecycle expiration chỉ xóa object sau 2 năm, không ngăn sửa hoặc xóa log trong thời gian lưu giữ.",
+      "reason_vi": "C lifecycle expiration không ngăn xóa/chỉnh log trước hai năm.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref6",
+        "ref4",
+        "ref8",
         "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q137:D",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Organization trail tự ghi log cho management account và mọi member account, giao về một S3 bucket (có thể ở security account) chỉ với một cấu hình.",
+      "reason_vi": "D organization trail tập trung member activity vào security bucket.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
         "ref4",
-        "ref3"
+        "ref8",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q137:E",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Bật trail từng account, gom về management account rồi chuyển tiếp bằng Lambda và Data Firehose có thể chạy được nhưng nhiều thành phần và công vận hành hơn hẳn organization trail, lại có bản sao log trung gian ngoài security account.",
+      "reason_vi": "E per-account trails và Lambda/Firehose tăng vận hành, không tự cấu hình WORM retention.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
         "ref4",
-        "ref5"
+        "ref8",
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -148,18 +150,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn A+D. D (organization trail) và Object Lock compliance mode 2 năm có bằng chứng trực tiếp; A khớp tài liệu bucket policy của organization trail (aws:SourceArn phải là trail của management account). Mức medium vì A và B đều mô tả bucket policy không chính xác (thực tế principal là cloudtrail.amazonaws.com), việc phân A/B dựa vào chi tiết 'management account' so với 'member accounts'.",
-    "open_issues": [
-      "A và B chỉ khác ở bên được phép ghi; cách diễn đạt 'allow account to write' không trùng với policy thực tế dùng service principal CloudTrail."
-    ]
+    "reason_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A+D, trùng blind. Đã xét lại B (đối thủ mạnh nhất, giống A trừ bên được phép ghi): trang tạo organization trail nói aws:SourceArn phải là trail ARN thuộc management account (ref2), và trang bucket policy cho CloudTrail nêu policy mẫu không cho user của member account truy cập log (ref8) – member account không phải bên ghi log của organization trail, nên B không khớp với D. Bằng chứng mới: AWS SRA nêu S3 Object Lock là một trong hai cách bảo vệ tính toàn vẹn log CloudTrail trên S3 (ref7), củng cố phần Object Lock compliance mode. E chạy được nhưng nhiều thành phần (trail từng account, Lambda, Firehose) – trái 'least operational overhead'; C lifecycle không ngăn sửa/xóa. Giữ A+D, verified, medium.",
+  "reconciliation_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
   "explanation_vi": {
-    "why_correct": "D: một organization trail tự ghi hoạt động của management account và mọi member account, giao về bucket trong security account chỉ với một cấu hình. A: bucket trong security account bật S3 Object Lock compliance mode 2 năm nên không ai (kể cả root) sửa/xóa được log, và bucket policy cho phép phía management account (trail của management account, qua aws:SourceArn) ghi – đúng cách organization trail giao log.",
+    "why_correct": "Organization trail tập trung log ít vận hành; Object Lock compliance giữ từng log version trong hai năm.",
     "others": {
-      "Q137:B": "Organization trail thuộc management account nên member account không phải bên ghi; cho member account ghi chỉ hợp với trail riêng từng account, không khớp với D.",
-      "Q137:C": "Lifecycle expiration chỉ xóa object sau 2 năm, không ngăn ai sửa hoặc xóa log trong thời gian lưu giữ.",
-      "Q137:E": "Bật trail từng account rồi chuyển tiếp bằng Lambda và Data Firehose chạy được nhưng nhiều thành phần và công vận hành hơn hẳn organization trail."
+      "Q137:B": "B chỉ cho member-account principals write không thay service-principal policy của organization trail.",
+      "Q137:C": "C lifecycle expiration không ngăn xóa/chỉnh log trước hai năm.",
+      "Q137:E": "E per-account trails và Lambda/Firehose tăng vận hành, không tự cấu hình WORM retention."
     }
   },
   "keywords": [
@@ -169,14 +169,14 @@
     },
     {
       "phrase": "No changes or deletions of the logs are allowed",
-      "meaning_vi": "S3 Object Lock compliance mode (không ai, kể cả root, xóa/ghi đè được)."
+      "meaning_vi": "Object Lock compliance bảo vệ version đang retention; vẫn có thể tạo version mới hoặc delete marker."
     },
     {
       "phrase": "LEAST operational overhead",
       "meaning_vi": "Tránh bật trail từng account và pipeline Lambda/Firehose tự dựng."
     }
   ],
-  "memory_tip_vi": "Nếu cần gom log hoạt động mọi account về log archive và cấm sửa/xóa -> nghĩ đến organization trail + bucket có S3 Object Lock compliance mode; kiểm tra bucket policy cho CloudTrail với aws:SourceArn là trail của management account, và governance mode vẫn cho người có quyền đặc biệt xóa.",
+  "memory_tip_vi": "Nếu log bất biến hai năm, organization trail + Object Lock compliance; bucket policy cho CloudTrail service.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -298,12 +298,12 @@
   ],
   "source_issues": [
     {
-      "type": "ambiguous",
-      "location": "Q137:A",
-      "detail_vi": "A và B mô tả bucket policy là 'cho account X ghi', trong khi tài liệu dùng service principal cloudtrail.amazonaws.com với aws:SourceArn là trail của management account; phân biệt A/B dựa vào chi tiết này."
+      "type": "data",
+      "location": "Q137",
+      "detail_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu."
     }
   ],
-  "notes_vi": "Có thể dùng delegated administrator để tạo org trail, nhưng trail vẫn thuộc management account. Object Lock nên bật kèm default retention 2 năm ở compliance mode.",
+  "notes_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
   "history": [
     {
       "version": "r1",
@@ -319,6 +319,42 @@
         "Q137:A",
         "Q137:D"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q137:A",
+        "Q137:D"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q137:A",
+        "Q137:D"
+      ],
+      "note_vi": "Bucket policy thực tế phải cho cloudtrail.amazonaws.com với SourceArn management/delegated trail, không chỉ cho IAM principal management account. CloudTrail không log mọi data event mặc định; cần chọn event coverage theo yêu cầu.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "A",
+      "D"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

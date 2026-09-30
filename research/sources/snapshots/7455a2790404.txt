@@ -1,0 +1,159 @@
+URL: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/troubleshooting-access-denied.html
+TITLE: Troubleshoot an access denied error in Amazon SQS - Amazon Simple Queue Service
+
+# Troubleshoot an access denied error in Amazon SQS
+
+The following topics cover the most common causes of AccessDenied or
+AccessDeniedException errors on Amazon SQS API calls. For more information on how to
+troubleshoot these errors, see How do I troubleshoot
+"AccessDenied" or "AccessDeniedException" errors on Amazon SQS API calls? in the AWS Knowledge Center Guide.
+
+Error message examples:
+
+An error occurred (AccessDenied) when calling the SendMessage operation: Access to
+the resource https://sqs.us-east-1.amazonaws.com/ is denied.
+
+- or -
+
+An error occurred (KMS.AccessDeniedException) when calling the SendMessage
+operation: User: arn:aws:iam::xxxxx:user/xxxx is not authorized to perform:
+kms:GenerateDataKey on resource: arn:aws:kms:us-east-1:xxxx:key/xxxx with an explicit
+deny.
+
+## Amazon SQS queue policy and IAM policy
+
+To verify if the requester has proper permissions to perform an Amazon SQS operation, do the
+following:
+
+- Identify the IAM principal that’s making the Amazon SQS API call. If the IAM principal
+is from the same account, then either the Amazon SQS queue policy or the AWS
+Identity and Access Management (IAM) policy must include permissions to explicitly allow
+access for the action.
+
+- If the principal is an IAM entity:
+
+- You can identify your IAM user or role by checking the upper-right corner of the
+AWS Management Console, or by using the aws sts get-caller-identity command.
+
+- Check the IAM policies that are related to the IAM user or role. You can use
+one of the following methods:
+
+- Test IAM policies with the IAM Policy Simulator.
+
+- Review the different IAM policy
+types.
+
+- If needed, edit your IAM user
+policy.
+
+- Check the queue policy and edit if required.
+
+- If the principal is an AWS service, then the Amazon SQS queue policy must
+explicitly allow access.
+
+- If the principal is a cross-account principal, then both the Amazon SQS queue policy and
+the IAM policy must explicitly allow access.
+
+- If the policy uses a condition element, then check that the condition restricts
+access.
+
+Important
+
+An explicit deny in either policy overrides an explicit allow. Here are some basic
+examples of Amazon SQS policies.
+
+## AWS Key Management Service permissions
+
+If your Amazon SQS queue has server-side encryption
+(SSE) turned on with a customer managed AWS KMS key, then permissions must be
+granted to both producers and consumers. To confirm if a queue is encrypted, you can use the
+GetQueueAttributes API KmsMasterKeyId attribute, or
+from the queue console under Encryption.
+
+- Required permissions for
+producers:
+
+{
+"Effect": "Allow",
+"Action": [
+"kms:Decrypt",
+"kms:GenerateDataKey"
+],
+"Resource": "<Key ARN>"
+}
+
+- Required permissions for
+consumers:
+
+{
+"Effect": "Allow",
+"Action": [
+"kms:Decrypt"
+],
+"Resource": "<Key ARN>"
+}
+
+- Required permissions for cross-account
+access:
+
+{
+"Effect": "Allow",
+"Action": [
+"kms:DescribeKey",
+"kms:Decrypt",
+"kms:ReEncrypt",
+"kms:GenerateDataKey"
+],
+"Resource": "<Key ARN>"
+}
+
+Choose one of the following options to enable encryption for an Amazon SQS queue:
+
+- SSE-Amazon SQS (Encryption key created
+and managed by the Amazon SQS service.)
+
+- AWS managed
+default key
+(alias/aws/sqs)
+
+- Customer managed key
+
+However, if you are using an AWS-managed KMS key, you can't modify the default key policy. Therefore, to provide access to
+other services and cross-accounts, use customer managed key. Doing this allows you to edit the key
+policy.
+
+## VPC endpoint policy
+
+If you access Amazon SQS through an Amazon Virtual Private Cloud (Amazon VPC)
+endpoint, the Amazon SQS VPC endpoint policy must allow access. You can create a policy
+for Amazon VPC endpoints for Amazon SQS, where you can specify the following:
+
+- The principal that can perform actions.
+
+- The actions that can be performed.
+
+- The resources on which actions can be performed.
+
+In the following example, the VPC endpoint policy specifies that the IAM user
+MyUser is allowed to send messages to the Amazon SQS queue
+MyQueue. Other actions, IAM users, and Amazon SQS resources are
+denied access through the VPC endpoint.
+
+{
+"Statement": [{
+"Action": ["sqs:SendMessage"],
+"Effect": "Allow",
+"Resource": "arn:aws:sqs:us-east-2:123456789012:MyQueue",
+"Principal": {
+"AWS": "arn:aws:iam:123456789012:user/MyUser"
+}
+}]
+}
+
+## Organization service control policy
+
+If your AWS account belongs to an organization, AWS Organizations policies can block you from
+accessing your Amazon SQS queues. By default, AWS Organizations policies do not block any requests to Amazon SQS.
+However, make sure that your AWS Organizations policies haven’t been configured to block access to
+Amazon SQS queues. For instructions on how to check your AWS Organizations policies, see Listing all policies in the AWS Organizations User
+Guide.

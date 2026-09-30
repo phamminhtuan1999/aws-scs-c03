@@ -1,3 +1,11 @@
+# Current research: r2-independent-verify
+
+Completed 2026-09-30T21:54:12.499271+00:00:143 questions,628 units;114 verified,25 ambiguous,4 unresolved. Full independent review: [REPORT](independent_verify/REPORT.md).125 unit tests and21 browser tests passed; original inputs unchanged.
+
+---
+
+The following r1 progress is historical:
+
 # Research & build progress (checkpoints)
 
 research_version: r1

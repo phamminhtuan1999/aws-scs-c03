@@ -2,9 +2,9 @@
   "question_id": "Q116",
   "question_content_hash": "ef0381f8df1e85e9c62fa9271499d443baf50d04db67e91821d4a2672c67d539",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:17:53+00:00",
-  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,14 +39,13 @@
       "unit_id": "Q116:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "ec2:DescribeImages chỉ dùng để liệt kê/xem AMI; instance đã được RunInstances tạo ra nên vấn đề không nằm ở quyền xem AMI mà ở quyền KMS để giải mã volume.",
+      "reason_vi": "A DescribeImages chỉ xem metadata, không cho giải mã EBS.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6",
-        "ref1"
+        "ref3"
       ],
       "evidence_kind": "inference"
     },
@@ -54,45 +53,40 @@
       "unit_id": "Q116:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "ec2:StartInstances dùng để khởi động lại instance EBS-backed đã stop, không liên quan tới việc launch instance mới bị terminate do volume mã hóa.",
+      "reason_vi": "B StartInstances không sửa quyền KMS của encrypted root volume.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref1"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q116:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Tài liệu troubleshooting nêu instance terminate ngay khi không có quyền KMS key để giải mã volume và hướng dẫn cấp quyền decrypt/encrypt qua key policy; C cấp đúng quyền đó cho federated role.",
+      "reason_vi": "C là hướng xử lý KMS phù hợp; vẫn kiểm tra CreateGrant và quyền EBS cần thiết.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q116:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "kms:DescribeKey chỉ đọc metadata của key; không cho phép giải mã volume nên nguyên nhân terminate (thiếu quyền decrypt) vẫn còn.",
+      "reason_vi": "D DescribeKey chỉ xem key metadata, không cấp Decrypt/CreateGrant.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref3"
       ],
       "evidence_kind": "inference"
@@ -128,19 +122,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn C. Tài liệu EC2 nêu trực tiếp triệu chứng 'instance terminates immediately' do không có quyền KMS key để giải mã volume gốc hoặc để mã hóa volume được khôi phục, và cách sửa là cấp quyền decrypt/encrypt qua key policy – đúng hướng của C. Chỉ ở mức medium vì danh sách quyền trong C chưa đầy đủ theo trang EBS encryption.",
-    "open_issues": [
-      "Trang EBS encryption liệt kê quyền cho user: kms:CreateGrant, kms:Decrypt, kms:DescribeKey, kms:GenerateDataKeyWithoutPlaintext, kms:ReEncrypt; option C chỉ nêu kms:Encrypt và kms:Decrypt nên thực tế có thể phải thêm quyền (đặc biệt CreateGrant).",
-      "Nếu key policy là default (cho phép IAM policy trong account) thì sửa IAM policy của role cũng được; nhưng D chỉ cấp kms:DescribeKey nên vẫn không đủ."
-    ]
+    "reason_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind. Đọc lại mục 'Instance terminates immediately' (snapshot e46ac131b286) và bổ sung ref7: nguyên nhân gồm cả trường hợp snapshot trong block device mapping của AMI bị mã hóa mà người launch không có quyền KMS để giải mã hoặc để mã hóa volume khôi phục – khớp chính xác cặp kms:Encrypt/kms:Decrypt của C, và phần Solution dẫn tới 'Using key policies in AWS KMS'. Xét lại đối thủ D: kms:DescribeKey chỉ đọc metadata, không giải mã được; A (DescribeImages) và B (StartInstances – chỉ khởi động instance đã stop) không liên quan vì RunInstances đã thành công. Giữ C, verified, medium do danh sách quyền trong C chưa đầy đủ.",
+  "reconciliation_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
   "explanation_vi": {
-    "why_correct": "Instance launch rồi terminate ngay là dấu hiệu người launch không dùng được KMS key của volume mã hóa (không giải mã được snapshot/không mã hóa được volume mới); thêm federated role vào key policy với quyền kms:Decrypt/kms:Encrypt xử lý đúng nguyên nhân này.",
+    "why_correct": "C sửa quyền dùng KMS key, phù hợp lỗi khởi chạy encrypted AMI; Encrypt/Decrypt không phải danh sách quyền đầy đủ cho mọi trường hợp.",
     "others": {
-      "Q116:A": "ec2:DescribeImages chỉ để xem AMI; instance đã được tạo nên thiếu quyền xem AMI không phải nguyên nhân.",
-      "Q116:B": "ec2:StartInstances chỉ khởi động lại instance EBS-backed đã stop, không liên quan tới việc launch instance mới bị terminate.",
-      "Q116:D": "kms:DescribeKey chỉ đọc metadata của key, không cho phép giải mã volume nên instance vẫn bị terminate."
+      "Q116:A": "A DescribeImages chỉ xem metadata, không cho giải mã EBS.",
+      "Q116:B": "B StartInstances không sửa quyền KMS của encrypted root volume.",
+      "Q116:D": "D DescribeKey chỉ xem key metadata, không cấp Decrypt/CreateGrant."
     }
   },
   "keywords": [
@@ -157,7 +148,7 @@
       "meaning_vi": "Principal cần được cấp quyền trên KMS key (key policy)."
     }
   ],
-  "memory_tip_vi": "Nếu instance từ AMI mã hóa launch rồi terminate ngay -> nghĩ đến thiếu quyền KMS (Decrypt/Encrypt, CreateGrant) cho principal launch, sửa ở key policy; kiểm tra: DescribeKey/DescribeImages/StartInstances không giải quyết.",
+  "memory_tip_vi": "Nếu encrypted AMI khởi chạy rồi terminate, kiểm tra KMS key policy, grants và SCP.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -266,7 +257,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q116",
+      "detail_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -281,7 +278,40 @@
       "previous_answer": [
         "Q116:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q116:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q116:C"
+      ],
+      "note_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Dấu hiệu 'launch rồi terminate ngay' + AMI mã hóa KMS => thiếu quyền KMS (decrypt) cho principal launch instance."
+  "notes_vi": "Không khẳng định chỉ kms:Encrypt/kms:Decrypt luôn đủ. EBS còn cần CreateGrant, DescribeKey, GenerateDataKeyWithoutPlaintext, ReEncrypt theo ngữ cảnh; đề không nêu quyền sẵn có.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

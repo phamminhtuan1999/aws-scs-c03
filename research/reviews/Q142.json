@@ -2,7 +2,7 @@
   "question_id": "Q142",
   "question_content_hash": "81fdb96ee334b54d894f5d132d5c865ce9e2993604369e2efe9452fc916c3263",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:24:08+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
@@ -31,63 +31,66 @@
     {
       "unit_id": "Q142:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "CloudFront standard logging (v2) ghi c-ip/x-forwarded-for (IP client gốc) và một số header (Host, Referer, User-Agent, Cookie, x-host-header) rồi gửi tới S3; đây là option duy nhất lấy được IP client. Tuy nhiên v2 không có field cs-headers (toàn bộ header chỉ có ở real-time logs), nên 'full header information' là nói quá.",
+      "verdict": "undetermined",
+      "reason_vi": "A lấy viewer IP và một số header fields nhưng không full arbitrary headers chỉ bằng bật standard logging v2.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
         "ref2",
-        "ref3",
-        "ref7",
-        "ref8",
-        "ref9"
+        "ref1",
+        "ref8"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q142:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "$context.identity.sourceIp là IP của kết nối TCP trực tiếp tới API Gateway, tức vẫn là IP edge của CloudFront; cũng không thêm header vào log.",
+      "verdict": "undetermined",
+      "reason_vi": "B sourceIp không bổ sung header information và có thể là IP hop trung gian theo luồng đề.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "ref2",
+        "ref1",
+        "ref8"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q142:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "API Gateway đã ghi được access log (quyền đã có); thêm logs:PutLogEvents cho 'CloudFront log group' không làm thay đổi nội dung log hay lộ IP client.",
+      "verdict": "undetermined",
+      "reason_vi": "C PutLogEvents không thay đổi nội dung log fields.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "ref2",
+        "ref1",
+        "ref8"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q142:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Cache policy chỉ cho None hoặc 'Include the following headers' (không có tuỳ chọn all headers); đưa header vào cache key chỉ ảnh hưởng cache/forward, không khiến API Gateway access log ghi header hay IP client, và còn làm giảm cache hit.",
+      "verdict": "undetermined",
+      "reason_vi": "D thêm headers vào cache key không bật logging và gây cache fragmentation.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref2",
+        "ref1",
+        "ref8"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -235,37 +238,36 @@
       "detail_vi": "'as the source, address' có dấu phẩy thừa (ý là 'source address')."
     },
     {
-      "type": "data",
-      "location": "Q142:A",
-      "detail_vi": "'full header information' không chính xác: standard logging v2 chỉ có một số header cụ thể (Host, Referer, User-Agent, Cookie, x-host-header); field cs-headers (toàn bộ header) chỉ có ở real-time logs. Không làm đổi đáp án vì các option khác không đáp ứng."
+      "type": "ambiguous",
+      "location": "Q142",
+      "detail_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán."
     }
   ],
-  "notes_vi": "Khi API Gateway đứng sau CloudFront, IP client gốc nằm ở CloudFront log (c-ip) hoặc header X-Forwarded-For, không ở $context.identity.sourceIp.",
-  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "notes_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "blind_record_sha256": "0afd90cad6c6d61c9bdcd76f68e518d2a53e3e5538b60a5d6cbed7710589d20c",
   "source_answer": [
     "Q142:A"
   ],
-  "researched_answer": [
-    "Q142:A"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Doc xác nhận CloudFront standard log có c-ip/x-forwarded-for và một số header, còn $context.identity.sourceIp của API Gateway chỉ là IP kết nối TCP trực tiếp (edge CloudFront); B, C, D không giải quyết được. Doc cũng xác nhận standard logging v2 KHÔNG có cs-headers, nên cụm 'full header information' của A không chính xác, nhưng A vẫn là option duy nhất đáp ứng yêu cầu 'original client IP address and header information'.",
+    "level": "high",
+    "reason_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
     "open_issues": [
-      "'full header information' trong A vượt quá khả năng thực tế của standard logging v2 (chỉ có một số header cụ thể; toàn bộ header cs-headers chỉ có ở real-time logs)."
+      "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán."
     ]
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã giải quyết open issue của blind về cs-headers: trang Configure standard logging (v2) liệt kê rõ các field real-time có thể chọn thêm (timestamp(ms), origin-fbl, origin-lbl, asn, c-country, cache-behavior-path-pattern, viewer-request-log-data, viewer-response-log-data) và không có cs-headers (ref7); cs-headers chỉ được mô tả trong real-time logs (ref8). Như vậy phần 'full header information' của A là nói quá. Tìm bằng chứng cho phía khác: B dùng $context.identity.sourceIp - doc nói là IP của kết nối TCP trực tiếp (ref4), sau CloudFront đó là IP edge, và không thêm header; C chỉ là quyền ghi log; D cache policy không có tuỳ chọn all headers và không ảnh hưởng nội dung access log. Không option nào khác đáp ứng, còn A đáp ứng yêu cầu của stem (IP gốc qua c-ip/x-forwarded-for + header Host/Referer/User-Agent/Cookie). Giữ A, verified, medium; ghi source issue về 'full header'.",
+  "reconciliation_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
   "explanation_vi": {
-    "why_correct": "CloudFront là nơi nhận kết nối trực tiếp từ client, nên standard logging (v2) của CloudFront ghi được IP client gốc (c-ip, x-forwarded-for) và các header như Host, Referer, User-Agent, Cookie; lưu vào S3 để phân tích. Lưu ý: v2 không ghi toàn bộ header (cs-headers chỉ có ở real-time logs), nên 'full header information' là nói quá, nhưng A vẫn là phương án duy nhất đáp ứng.",
+    "why_correct": "Chưa có đáp án chắc chắn: Không có option đầy đủ: standard logging v2 ghi IP và các fields được hỗ trợ, không tự ghi full headers; cs-headers thuộc real-time logs.",
     "others": {
-      "Q142:B": "$context.identity.sourceIp là IP của kết nối TCP trực tiếp tới API Gateway, tức vẫn là IP edge CloudFront, và không thêm header vào log.",
-      "Q142:C": "API Gateway đã ghi access log được; thêm logs:PutLogEvents cho log group khác không làm lộ IP client hay header.",
-      "Q142:D": "Cache policy không có tuỳ chọn đưa tất cả header vào cache key, và cache key chỉ ảnh hưởng cache/forward chứ không làm API Gateway log IP client hay header."
+      "Q142:A": "A lấy viewer IP và một số header fields nhưng không full arbitrary headers chỉ bằng bật standard logging v2.",
+      "Q142:B": "B sourceIp không bổ sung header information và có thể là IP hop trung gian theo luồng đề.",
+      "Q142:C": "C PutLogEvents không thay đổi nội dung log fields.",
+      "Q142:D": "D thêm headers vào cache key không bật logging và gây cache fragmentation."
     }
   },
   "keywords": [
@@ -275,10 +277,10 @@
     },
     {
       "phrase": "original client IP address and header information",
-      "meaning_vi": "CloudFront log: c-ip / x-forwarded-for + các field header."
+      "meaning_vi": "c-ip cho IP viewer; standard logs chỉ có các header/field được hỗ trợ, không mặc nhiên đầy đủ mọi header."
     }
   ],
-  "memory_tip_vi": "Nếu origin sau CloudFront chỉ thấy IP edge -> nghĩ đến CloudFront access logs (c-ip, x-forwarded-for) hoặc header X-Forwarded-For; kiểm tra standard log v2 chỉ có một số header, toàn bộ header (cs-headers) chỉ có ở real-time logs.",
+  "memory_tip_vi": "Nếu cần full headers, phân biệt standard với real-time logging; chọn fields và pipeline phù hợp.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -306,6 +308,39 @@
       "previous_answer": [
         "Q142:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q142:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Standard v2 có viewer-request/response-log-data bổ sung từ CloudFront Functions, nhưng cần code thêm và giới hạn 800 bytes; option A không nêu giải pháp này. Không chuyển cs-headers từ real-time sang standard bằng suy đoán.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": null,
+    "independent_status": "ambiguous",
+    "intended_answer": null,
+    "candidate_answers": [
+      [
+        "A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

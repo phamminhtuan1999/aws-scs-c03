@@ -1,0 +1,2809 @@
+URL: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html
+TITLE: Manually create or edit the CloudWatch agent configuration file - Amazon CloudWatch
+
+# Manually create or edit the CloudWatch agent configuration file
+
+The CloudWatch agent configuration file is a JSON file with five sections:
+agent, metrics, logs, traces, and
+opentelemetry.
+
+- The agent section includes fields for the overall configuration of the
+agent.
+
+- The metrics section specifies the custom metrics for collection and
+publishing to CloudWatch. If you're using the agent only to collect logs, you can omit the
+metrics section from the file.
+
+- The logs section specifies what log files are published to CloudWatch Logs. This
+can include events from the Windows Event Log if the server runs Windows Server.
+
+- The traces section specifies the sources for traces that are collected
+and sent to AWS X-Ray.
+
+- The opentelemetry section specifies the sources of metrics, logs, and
+traces for the agent to collect and send to the CloudWatch OpenTelemetry Protocol (OTLP)
+endpoints. For more information, see OTLP Endpoints.
+
+This section explains the structure and fields of the CloudWatch agent configuration file.
+You can view the schema definition for this configuration file. The schema definition is
+located at
+installation-directory/doc/amazon-cloudwatch-agent-schema.json
+on Linux servers and at
+installation-directory/amazon-cloudwatch-agent-schema.json
+on servers running Windows Server.
+
+If you create or edit the agent configuration file manually, you can give it any name.
+For simplicity in troubleshooting, we recommend that you name it
+/opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-agent.json on a Linux server
+and $Env:ProgramData\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent.json
+on servers running Windows Server. After you have created the file, you can copy it to other
+servers where you want to install the agent.
+
+When the agent is started, it creates a copy of each configuration file in
+/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d directory, with the
+filename prefixed with either file_ (for local file sources) or
+ssm_ (for Systems Manager parameter store sources) to indicate the configuration
+origin.
+
+Note
+
+Metrics, logs, and traces collected by the CloudWatch agent incur charges. For more
+information about pricing, see Amazon CloudWatch
+Pricing.
+
+The agent section can include the following fields. The wizard doesn't
+create an agent section. Instead, the wizard omits it and uses the default
+values for all fields in this section.
+
+- metrics_collection_interval – Optional. Specifies how often
+all metrics specified in this configuration file are to be collected. You can
+override this value for specific types of metrics.
+
+This value is specified in seconds. For example, specifying 10 causes metrics to
+be collected every 10 seconds, and setting it to 300 specifies metrics to be
+collected every 5 minutes.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics, see
+High-resolution metrics.
+
+The default value is 60.
+
+- region – Specifies the Region to use for the CloudWatch endpoint
+when an Amazon EC2 instance is being monitored. The metrics collected are sent to this
+Region, such as us-west-1. If you omit this field, the agent sends
+metrics to the Region where the Amazon EC2 instance is located.
+
+If you are monitoring an on-premises server, this field isn't used, and the
+agent reads the Region from the AmazonCloudWatchAgent profile of the
+AWS configuration file.
+
+- credentials – Specifies an IAM role to use when sending
+metrics, logs, and traces to a different AWS account. If specified, this field
+contains one parameter, role_arn.
+
+- role_arn – Specifies the Amazon Resource Name (ARN) of
+an IAM role to use for authentication when sending metrics, logs, and traces
+to a different AWS account. For more information, see Sending metrics, logs, and traces to a different account.
+
+- debug – Optional. Specifies running the CloudWatch agent with
+debug log messages. The default value is false.
+
+- aws_sdk_log_level – Optional. Supported only in versions
+1.247350.0 and later of the CloudWatch agent.
+
+You can specify this field to have the agent perform logging for AWS SDK
+endpoints. The value for this field can include one or more of the following
+options. Separate multiple options with the | character.
+
+- LogDebug
+
+- LogDebugWithSigning
+
+- LogDebugWithHTTPBody
+
+- LogDebugRequestRetries
+
+- LogDebugWithEventStreamBody
+
+For more information about these options, see LogLevelType.
+
+- logfile – Specifies the location where the CloudWatch agent writes
+log messages. If you specify an empty string, the log goes to stderr. If you don't
+specify this option, the default locations are the following:
+
+- Linux:
+/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
+
+- Windows Server:
+c:\\ProgramData\\Amazon\\CloudWatchAgent\\Logs\\amazon-cloudwatch-agent.log
+
+The CloudWatch agent automatically rotates the log file that it creates. A log file is
+rotated out when it reaches 100 MB in size. The agent keeps the rotated log files
+for up to seven days, and it keeps as many as five backup log files that have been
+rotated out. Backup log files have a timestamp appended to their filename. The
+timestamp shows the date and time that the file was rotated out: for example,
+amazon-cloudwatch-agent-2018-06-08T21-01-50.247.log.gz.
+
+- omit_hostname – Optional. By default, the hostname is
+published as a dimension of metrics that are collected by the agent, unless you are
+using the append_dimensions field in the metrics section.
+Set omit_hostname to true to prevent the hostname from
+being published as a dimension even if you are not using
+append_dimensions. The default value is false.
+
+- run_as_user – Optional. Specifies a user to use to run the
+CloudWatch agent. If you don't specify this parameter, the root user is used. This option
+is valid only on Linux servers.
+
+If you specify this option, the user must exist before you start the CloudWatch agent.
+For more information, see Running the CloudWatch agent as a different user.
+
+- user_agent – Optional. Specifies the user-agent
+string that is used by the CloudWatch agent when it makes API calls to the CloudWatch backend.
+The default value is a string consisting of the agent version, the version of the Go
+programming language that was used to compile the agent, the runtime operating
+system and architecture, the build time, and the plugins enabled.
+
+- usage_data – Optional. By default, the CloudWatch agent sends
+health and performance data about itself to CloudWatch whenever it publishes metrics or
+logs to CloudWatch. This data incurs no costs to you. You can prevent the agent from
+sending this data by specifying false for usage_data. If
+you omit this parameter, the default of true is used and the agent
+sends the health and performance data.
+
+If you set this value to false, you must stop and restart the agent
+for it to take effect.
+
+- service.name – Optional. Specifies the service name to be
+used to populate the entity for finding related
+telemetry.
+
+- deployment.environment – Optional. Specifies the environment
+name to be used to populate the entity for finding
+related telemetry.
+
+- use_dualstack_endpoint – Optional. If this is true,
+the CloudWatch agent will use dual stack endpoints
+for all API calls.
+
+The following is an example of an agent section.
+
+"agent": {
+"metrics_collection_interval": 60,
+"region": "us-west-1",
+"logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+"debug": false,
+"run_as_user": "cwagent"
+}
+
+### Fields common to Linux and Windows
+
+On servers running either Linux or Windows Server, the metrics
+section includes the following fields:
+
+- namespace – Optional. The namespace to use for the metrics
+collected by the agent. The default value is CWAgent. The maximum
+length is 255 characters. The following is an example:
+
+{
+"metrics": {
+"namespace": "Development/Product1Metrics",
+......
+},
+}
+
+- append_dimensions – Optional. Adds Amazon EC2 metric dimensions
+to all metrics collected by the agent. This also causes the agent to not publish
+the hostname as a dimension.
+
+The only supported key-value pairs for append_dimensions are
+shown in the following list. Any other key-value pairs are ignored. The agent
+supports these key-value pairs exactly as they are shown in the following list.
+You can't change the key values to publish different dimension names for
+them.
+
+- "ImageId":"${aws:ImageId}" sets the instance's AMI ID as the
+value of the ImageId dimension.
+
+- "InstanceId":"${aws:InstanceId}" sets the instance's instance
+ID as the value of the InstanceId dimension.
+
+- "InstanceType":"${aws:InstanceType}" sets the instance's
+instance type as the value of the InstanceType dimension.
+
+- "AutoScalingGroupName":"${aws:AutoScalingGroupName}" sets the
+instance's Auto Scaling group name as the value of the
+AutoScalingGroupName dimension.
+
+If you want to append dimensions to metrics with arbitrary key-value pairs,
+use the append_dimensions parameter in the field for that particular
+type of metric.
+
+If you specify a value that depends on Amazon EC2 metadata and you use proxies, you
+must make sure that the server can access the endpoint for Amazon EC2. For more
+information about these endpoints, see Amazon Elastic Compute Cloud (Amazon EC2) in the
+Amazon Web Services General Reference.
+
+- aggregation_dimensions – Optional. Specifies the
+dimensions that collected metrics are to be aggregated on. For example, if you
+roll up metrics on the AutoScalingGroupName dimension, the metrics
+from all instances in each Auto Scaling group are aggregated and can be viewed as a
+whole.
+
+You can roll up metrics along single or multiple dimensions. For example,
+specifying [["InstanceId"], ["InstanceType"],
+["InstanceId","InstanceType"]] aggregates metrics for instance ID singly,
+instance type singly, and for the combination of the two dimensions.
+
+You can also specify [] to roll up all metrics into one
+collection, disregarding all dimensions.
+
+- endpoint_override – Specifies a FIPS endpoint or private
+link to use as the endpoint where the agent sends metrics. Specifying this and
+setting a private link enables you to send the metrics to an Amazon VPC endpoint. For
+more information, see What Is
+Amazon VPC?.
+
+The value of endpoint_override must be a string that is a
+URL.
+
+For example, the following part of the metrics section of the configuration
+file sets the agent to use a VPC Endpoint when sending metrics.
+
+{
+"metrics": {
+"endpoint_override": "vpce-XXXXXXXXXXXXXXXXXXXXXXXXX.monitoring.us-east-1.vpce.amazonaws.com",
+......
+},
+}
+
+- metrics_collected – Required. Specifies which metrics are
+to be collected, including custom metrics collected through StatsD or
+collectd. This section includes several subsections.
+
+The contents of the metrics_collected section depend on whether
+this configuration file is for a server running Linux or Windows Server.
+
+- metrics_destinations – Optional. Specifies one or more
+destinations for all metrics defined in metrics_collected. If
+specified here, it overrides the default destination of cloudwatch.
+
+- cloudwatch – Amazon CloudWatch.
+
+- amp – Amazon Managed Service for Prometheus.
+
+- workspace_id – The ID corresponding to the Amazon Managed Service for Prometheus
+workspace.
+
+{
+"metrics": {
+"metrics_destinations": {
+"cloudwatch": {},
+"amp": {
+"workspace_id": "ws-abcd1234-ef56-7890-ab12-example"
+}
+}
+}
+}
+
+- force_flush_interval – Specifies in seconds the maximum
+amount of time that metrics remain in the memory buffer before being sent to the
+server. No matter the setting for this, if the size of the metrics in the buffer
+reaches 1 MB or 1000 different metrics, the metrics are immediately sent to the
+server.
+
+The default value is 60.
+
+- credentials – Specifies an IAM role to use when sending
+metrics to a different account. If specified, this field contains one parameter,
+role_arn.
+
+- role_arn – Specifies the ARN of an IAM role to use
+for authentication when sending metrics to a different account. For more
+information, see Sending metrics, logs, and traces to a different account. If
+specified here, this value overrides the role_arn specified in
+the agent section of the configuration file, if any.
+
+- service.name – Optional. Specifies the service name to
+be used to populate the entity for finding
+related telemetry.
+
+- deployment.environment – Optional. Specifies the
+environment name to be used to populate the entity for finding related telemetry.
+
+### Linux section
+
+On servers running Linux, the metrics_collected section of the
+configuration file can also contain the following fields.
+
+Many of these fields can include a measurement sections that lists
+the metrics you want to collect for that resource. These measurement
+sections can either specify the complete metric name such as swap_used,
+or just the part of the metric name that will be appended to the type of resource. For
+example, specifying reads in the measurement section of the
+diskio section causes the diskio_reads metric to be
+collected.
+
+- collectd – Optional. Specifies that you want to retrieve
+custom metrics using the collectd protocol. You use
+collectd software to send the metrics to the CloudWatch agent. For more
+information about the configuration options available for collectd, see Retrieve custom metrics with collectd.
+
+- cpu – Optional. Specifies that CPU metrics are to be
+collected. This section is valid only for Linux instances. You must include at
+least one of the resources and totalcpu fields for any
+CPU metrics to be collected. This section can include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- resources – Optional. Specify this field with a value
+of * to cause per-cpu metrics to be collected. The only allowed
+value is *.
+
+- totalcpu – Optional. Specifies whether to report cpu
+metrics aggregated across all cpu cores. The default is true.
+
+- measurement – Specifies the array of cpu metrics to be
+collected. Possible values are time_active,
+time_guest, time_guest_nice,
+time_idle, time_iowait, time_irq,
+time_nice, time_softirq, time_steal,
+time_system, time_user, usage_active,
+usage_guest, usage_guest_nice,
+usage_idle, usage_iowait, usage_irq,
+usage_nice, usage_softirq,
+usage_steal, usage_system, and
+usage_user. This field is required if you include
+cpu.
+
+By default, the unit for cpu_usage_* metrics is
+Percent, and cpu_time_* metrics don't have a
+unit.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the cpu metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds. For example, specifying 10 causes
+metrics to be collected every 10 seconds, and setting it to 300 specifies
+metrics to be collected every 5 minutes.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the cpu metrics. If you specify this field, it's used in addition
+to dimensions specified in the global append_dimensions field
+that is used for all types of metrics that the agent collects.
+
+- disk – Optional. Specifies that disk metrics are to be
+collected. Collects metrics only for mounted volumes. This section is valid only
+for Linux instances. This section can include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- resources – Optional. Specifies an array of disk mount
+points. This field limits CloudWatch to collect metrics from only the listed mount
+points. You can specify * as the value to collect metrics from
+all mount points. The default value is to collect metrics from all mount
+points.
+
+- measurement – Specifies the array of disk metrics to
+be collected. Possible values are free, total,
+used, used_percent, inodes_free,
+inodes_used, and inodes_total. This field is
+required if you include disk.
+
+Note
+
+The disk metrics have a dimension for
+Partition, which means that the number of custom metrics
+generated is dependent on the number of partitions associated with your
+instance. The number of disk partitions you have depends on which AMI you
+are using and the number of Amazon EBS volumes you attach to the server.
+
+To see the default units for each disk metric, see Metrics collected by the CloudWatch agent on Linux and macOS instances.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for
+the metric. The unit that you specify must be a valid CloudWatch metric unit, as
+listed in the Unit description in MetricDatum.
+
+- ignore_file_system_types – Specifies file system types
+to exclude when collecting disk metrics. Valid values include
+sysfs, devtmpfs, and so on.
+
+- drop_device – Setting this to true causes
+Device to not be included as a dimension for disk
+metrics.
+
+Preventing Device from being used as a dimension can be
+useful on instances that use the Nitro system because on those instances the
+device names change for each disk mount when the instance is rebooted. This
+can cause inconsistent data in your metrics and cause alarms based on these
+metrics to go to INSUFFICIENT DATA state.
+
+The default is false.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the disk metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information, see High-resolution metrics.
+
+- append_dimensions – Optional. Specify key-value pairs
+to use as additional dimensions for only the disk metrics. If you specify this
+field, it is used in addition to dimensions specified in the
+append_dimensions field that is used for all types of metrics
+collected by the agent.
+
+One key-value pair that you can use is the following. You can also specify
+other custom key-value pairs.
+
+- "VolumeId":"${aws:VolumeId}" adds a VolumeId
+dimension to your block device disk metrics. For Amazon EBS volumes, this will
+be the Amazon EBS Volume ID. For EC2 instance store, this will be the device
+serial. Using this requires the drop_device parameter to be
+set to false.
+
+- diskio – Optional. Specifies that disk i/o metrics are to
+be collected. This section is valid only for Linux instances. This section can
+include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- resources – Optional. If you specify an array of
+devices, CloudWatch collects metrics from only those devices. Otherwise, metrics for
+all devices are collected. You can also specify * as the value to collect
+metrics from all devices.
+
+- measurement – Specifies the array of diskio and AWS NVMe driver metrics to
+be collected for Amazon EBS volumes and instance store volumes attached to Amazon EC2 instances. Possible diskio
+values are reads, writes, read_bytes, write_bytes,
+read_time, write_time, io_time, and iops_in_progress.
+For a list of the NVMe driver metrics for Amazon EBS volumes and Amazon EC2 instance store volumes, see Collect Amazon EBS NVMe driver metrics and
+Collect Amazon EC2 instance store volume NVMe driver metrics.
+This field is required if you include diskio.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for
+the metric. The unit that you specify must be a valid CloudWatch metric unit, as
+listed in the Unit description in MetricDatum.
+
+For information on default units and description of the metrics, see Collect Amazon EBS NVMe driver metrics.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the diskio metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the diskio metrics. If you specify this field, it is used in
+addition to dimensions specified in the append_dimensions field
+that is used for all types of metrics collected by the agent.
+
+- swap – Optional. Specifies that swap memory metrics are to
+be collected. This section is valid only for Linux instances. This section can
+include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- measurement – Specifies the array of swap metrics to
+be collected. Possible values are free, used, and
+used_percent. This field is required if you include
+swap.
+
+To see the default units for each swap metric, see Metrics collected by the CloudWatch agent on Linux and macOS instances.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for
+the metric. The unit that you specify must be a valid CloudWatch metric unit, as
+listed in the Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the swap metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the swap metrics. If you specify this field, it is used in
+addition to dimensions specified in the global append_dimensions
+field that is used for all types of metrics collected by the agent. It's
+collected as a high-resolution metric.
+
+- mem – Optional. Specifies that memory metrics are to be
+collected. This section is valid only for Linux instances. This section can
+include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- measurement – Specifies the array of memory metrics to
+be collected. Possible values are active, available,
+available_percent, buffered, cached,
+free, inactive, shared, total,
+used, and used_percent. This field is required if
+you include mem.
+
+To see the default units for each mem metric, see Metrics collected by the CloudWatch agent on Linux and macOS instances.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the mem metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the mem metrics. If you specify this field, it's used in addition
+to dimensions specified in the append_dimensions field that is
+used for all types of metrics that the agent collects.
+
+- net – Optional. Specifies that networking metrics are to
+be collected. This section is valid only for Linux instances. This section can
+include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- resources – Optional. If you specify an array of
+network interfaces, CloudWatch collects metrics from only those interfaces.
+Otherwise, metrics for all devices are collected. You can also specify
+* as the value to collect metrics from all interfaces.
+
+- measurement – Specifies the array of networking
+metrics to be collected. Possible values are bytes_sent,
+bytes_recv, drop_in, drop_out,
+err_in, err_out, packets_sent, and
+packets_recv. This field is required if you include
+net.
+
+To see the default units for each net metric, see Metrics collected by the CloudWatch agent on Linux and macOS instances.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the net metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds. For example, specifying 10 causes
+metrics to be collected every 10 seconds, and setting it to 300 specifies
+metrics to be collected every 5 minutes.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the net metrics. If you specify this field, it's used in addition
+to dimensions specified in the append_dimensions field that is
+used for all types of metrics collected by the agent.
+
+- netstat – Optional. Specifies that TCP connection state
+and UDP connection metrics are to be collected. This section is valid only for
+Linux instances. This section can include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- measurement – Specifies the array of netstat metrics
+to be collected. Possible values are tcp_close,
+tcp_close_wait, tcp_closing,
+tcp_established, tcp_fin_wait1,
+tcp_fin_wait2, tcp_last_ack,
+tcp_listen, tcp_none, tcp_syn_sent,
+tcp_syn_recv, tcp_time_wait, and
+udp_socket. This field is required if you include
+netstat.
+
+To see the default units for each netstat metric, see Metrics collected by the CloudWatch agent on Linux and macOS instances.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the netstat metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information about high-resolution metrics,
+see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the netstat metrics. If you specify this field, it's used in
+addition to dimensions specified in the append_dimensions field
+that is used for all types of metrics collected by the agent.
+
+- processes – Optional. Specifies that process metrics are
+to be collected. This section is valid only for Linux instances. This section can
+include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- measurement – Specifies the array of processes metrics
+to be collected. Possible values are blocked, dead,
+idle, paging, running,
+sleeping, stopped, total,
+total_threads, wait, and zombies.
+This field is required if you include processes.
+
+For all processes metrics, the default unit is
+None.
+
+Within the entry for each individual metric, you might optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the processes metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds. For example, specifying 10 causes
+metrics to be collected every 10 seconds, and setting it to 300 specifies
+metrics to be collected every 5 minutes.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information, see High-resolution metrics.
+
+- append_dimensions – Optional. Additional dimensions to
+use for only the process metrics. If you specify this field, it's used in
+addition to dimensions specified in the append_dimensions field
+that is used for all types of metrics collected by the agent.
+
+- nvidia_gpu – Optional. Specifies that NVIDIA GPU metrics
+are to be collected. This section is valid only for Linux instances on hosts that
+are configured with a NVIDIA GPU accelerator and have the NVIDIA System Management
+Interface (nvidia-smi) installed.
+
+The NVIDIA GPU metrics that are collected are prefixed with the string
+nvidia_smi_ to distinguish them from the metrics collected for
+other accelerator types. This section can include the following fields:
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics
+section to roll up metrics into aggregated results, then by default the agent
+sends both the aggregated metrics and the original metrics that are separated
+for each value of the dimension. If you don't want the original metrics to be
+sent to CloudWatch, you can specify this parameter with a list of metrics. The
+metrics specified along with this parameter don't have their metrics by
+dimension reported to CloudWatch. Instead, only the aggregated metrics are reported.
+This reduces the number of metrics that the agent collects, reducing your
+costs.
+
+- measurement – Specifies the array of NVIDIA GPU
+metrics to be collected. For a list of the possible values to use here, see
+the Metric column in the table in Collect NVIDIA GPU metrics.
+
+Within the entry for each individual metric, you can optionally specify
+one or both of the following:
+
+- rename – Specifies a different name for this
+metric.
+
+- unit – Specifies the unit to use for this metric,
+overriding the default unit of None for the metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the NVIDIA GPU metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+- jmx – Optional. Specifies that you want to retrieve Java
+Management Extensions (JMX) metrics from the instance. For more information about
+the parameters that you can use in this section and the metrics that you can
+collect, see Collect Java Management Extensions (JMX) metrics.
+
+- otlp – Optional. Specifies that you want to collect metrics
+from the OpenTelemetry SDK. For more information about the fields that you can use
+in this section, see Collect metrics and traces with OpenTelemetry.
+
+- procstat – Optional. Specifies that you want to retrieve
+metrics from individual processes. For more information about the configuration
+options available for procstat, see Collect process metrics with the procstat plugin.
+
+- statsd – Optional. Specifies that you want to retrieve
+custom metrics using the StatsD protocol. The CloudWatch agent acts as a
+daemon for the protocol. You use any standard StatsD client to send
+the metrics to the CloudWatch agent. For more information about the configuration
+options available for StatsD, see Retrieve custom metrics with StatsD.
+
+- ethtool – Optional. Specifies that you want to retrieve
+network metrics using the ethtool plugin. This plugin can import both
+the metrics collected by the standard ethtool utility, as well as network
+performance metrics from Amazon EC2 instances. For more information about the
+configuration options available for ethtool, see Collect network performance metrics.
+
+- efa – Optional. Specifies that Elastic Fabric Adapter (EFA)
+metrics are to be collected. This section is valid only for Linux instances that have
+EFA devices attached. The agent collects EFA metrics from the
+/sys/class/infiniband/ sysfs interface.
+
+This section can include the following fields:
+
+- drop_original_metrics – Optional. If you are using
+the aggregation_dimensions field in the metrics section to roll
+up metrics into aggregated results, then by default the agent sends both the aggregated metrics
+and the original metrics that are separated for each value of the dimension. If you don't
+want the original metrics to be sent to CloudWatch, you can specify this parameter with a list of
+metrics. The metrics specified along with this
+parameter don't have their metrics by dimension reported to CloudWatch. Instead, only the aggregated metrics
+are reported. This reduces the number of metrics that the agent collects, reducing your costs.
+
+- measurement – Specifies the array of EFA metrics to
+be collected. This field is required. If you don't specify this field, the agent
+returns an error. You can specify metric names with or without the
+efa_ prefix. For example, both efa_tx_bytes and
+tx_bytes are valid.
+
+For a list of the possible values to use here, see the
+Metric column in the table in Collect EFA metrics.
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the EFA metrics, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file. The default value is 60 seconds.
+
+Each EFA metric is emitted with device, port,
+and eniId dimensions. To append the InstanceId dimension,
+use the append_dimensions field in the metrics section.
+
+The following is an example of a metrics section for a Linux server.
+In this example, three CPU metrics, three netstat metrics, three process metrics, and
+one disk metric are collected, and the agent is set up to receive additional metrics
+from a collectd client.
+
+"metrics": {
+"aggregation_dimensions" : [["AutoScalingGroupName"], ["InstanceId", "InstanceType"],[]],
+"metrics_collected": {
+"collectd": {},
+"cpu": {
+"resources": [
+"*"
+],
+"measurement": [
+{"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+{"name": "cpu_usage_nice", "unit": "Percent"},
+"cpu_usage_guest"
+],
+"totalcpu": false,
+"drop_original_metrics": [ "cpu_usage_guest" ],
+"metrics_collection_interval": 10,
+"append_dimensions": {
+"test": "test1",
+"date": "2017-10-01"
+}
+},
+"netstat": {
+"measurement": [
+"tcp_established",
+"tcp_syn_sent",
+"tcp_close"
+],
+"metrics_collection_interval": 60
+},
+"disk": {
+"measurement": [
+"used_percent"
+],
+"resources": [
+"*"
+],
+"drop_device": true
+},
+"processes": {
+"measurement": [
+"running",
+"sleeping",
+"dead"
+]
+}
+},
+"append_dimensions": {
+"ImageId": "${aws:ImageId}",
+"InstanceId": "${aws:InstanceId}",
+"InstanceType": "${aws:InstanceType}",
+"AutoScalingGroupName": "${aws:AutoScalingGroupName}"
+}
+}
+
+### Windows Server
+
+In the metrics_collected section for Windows Server, you can have
+subsections for each Windows performance object, such as Memory,
+Processor, and LogicalDisk. For information about what
+objects and counters are available, see Performance Counters in the Microsoft Windows documentation.
+
+Within the subsection for each object, you specify a measurement
+array of the counters to collect. The measurement array is required for
+each object that you specify in the configuration file. You can also specify a
+resources field to name the instances to collect metrics from. You can
+also specify * for resources to collect separate metrics for
+every instance. If you omit resources for counters that have instances,
+the data for all instances is aggregated into one set. If you omit
+resources for counters that don't have instances, the counters are not
+collected by the CloudWatch agent. To determine whether counters have instances, you can use
+one of the following commands.
+
+Powershell:
+
+Get-Counter -ListSet *
+
+Command line (not Powershell):
+
+TypePerf.exe –q
+
+Within each object section, you can also specify the following optional
+fields:
+
+- metrics_collection_interval – Optional. Specifies how
+often to collect the metrics for this object, overriding the global
+metrics_collection_interval specified in the agent
+section of the configuration file.
+
+This value is specified in seconds. For example, specifying 10 causes metrics
+to be collected every 10 seconds, and setting it to 300 specifies metrics to be
+collected every 5 minutes.
+
+If you set this value below 60 seconds, each metric is collected as a
+high-resolution metric. For more information, see High-resolution metrics.
+
+- append_dimensions – Optional. Specifies additional
+dimensions to use for only the metrics for this object. If you specify this field,
+it's used in addition to dimensions specified in the global
+append_dimensions field that is used for all types of metrics
+collected by the agent.
+
+- drop_original_metrics – Optional. If you are using the
+aggregation_dimensions field in the metrics section to
+roll up metrics into aggregated results, then by default the agent sends both the
+aggregated metrics and the original metrics that are separated for each value of
+the dimension. If you don't want the original metrics to be sent to CloudWatch, you can
+specify this parameter with a list of metrics. The metrics specified along with
+this parameter don't have their metrics by dimension reported to CloudWatch. Instead,
+only the aggregated metrics are reported. This reduces the number of metrics that
+the agent collects, reducing your costs.
+
+Within each counter section, you can also specify the following optional
+fields:
+
+- rename – Specifies a different name to be used in CloudWatch for
+this metric.
+
+- unit – Specifies the unit to use for this metric. The unit
+that you specify must be a valid CloudWatch metric unit, as listed in the
+Unit description in MetricDatum.
+
+There are other optional sections that you can include in
+metrics_collected:
+
+- statsd – Enables you to retrieve custom metrics using the
+StatsD protocol. The CloudWatch agent acts as a daemon for the protocol.
+You use any standard StatsD client to send the metrics to the CloudWatch
+agent. For more information, see Retrieve custom metrics with StatsD.
+
+- procstat – Enables you to retrieve metrics from individual
+processes. For more information, see Collect process metrics with the procstat plugin.
+
+- jmx – Optional. Specifies that you want to retrieve Java
+Management Extensions (JMX) metrics from the instance. For more information about
+the fields that you can use in this section and the metrics that you can collect,
+see Collect Java Management Extensions (JMX) metrics.
+
+- otlp – Optional. Specifies that you want to collect metrics
+from the OpenTelemetry SDK. For more information about the fields that you can use
+in this section, see Collect metrics and traces with OpenTelemetry.
+
+The following is an example metrics section for use on Windows
+Server. In this example, many Windows metrics are collected, and the computer is also
+set to receive additional metrics from a StatsD client.
+
+"metrics": {
+"metrics_collected": {
+"statsd": {},
+"Processor": {
+"measurement": [
+{"name": "% Idle Time", "rename": "CPU_IDLE", "unit": "Percent"},
+"% Interrupt Time",
+"% User Time",
+"% Processor Time"
+],
+"resources": [
+"*"
+],
+"append_dimensions": {
+"d1": "win_foo",
+"d2": "win_bar"
+}
+},
+"LogicalDisk": {
+"measurement": [
+{"name": "% Idle Time", "unit": "Percent"},
+{"name": "% Disk Read Time", "rename": "DISK_READ"},
+"% Disk Write Time"
+],
+"resources": [
+"*"
+]
+},
+"Memory": {
+"metrics_collection_interval": 5,
+"measurement": [
+"Available Bytes",
+"Cache Faults/sec",
+"Page Faults/sec",
+"Pages/sec"
+],
+"append_dimensions": {
+"d3": "win_bo"
+}
+},
+"Network Interface": {
+"metrics_collection_interval": 5,
+"measurement": [
+"Bytes Received/sec",
+"Bytes Sent/sec",
+"Packets Received/sec",
+"Packets Sent/sec"
+],
+"resources": [
+"*"
+],
+"append_dimensions": {
+"d3": "win_bo"
+}
+},
+"System": {
+"measurement": [
+"Context Switches/sec",
+"System Calls/sec",
+"Processor Queue Length"
+],
+"append_dimensions": {
+"d1": "win_foo",
+"d2": "win_bar"
+}
+}
+},
+"append_dimensions": {
+"ImageId": "${aws:ImageId}",
+"InstanceId": "${aws:InstanceId}",
+"InstanceType": "${aws:InstanceType}",
+"AutoScalingGroupName": "${aws:AutoScalingGroupName}"
+},
+"aggregation_dimensions" : [["ImageId"], ["InstanceId", "InstanceType"], ["d1"],[]]
+}
+}
+
+The logs section includes the following fields:
+
+- service.name – Optional. Specifies the service name to be
+used to populate the entity for finding related
+telemetry.
+
+- deployment.environment – Optional. Specifies the environment
+name to be used to populate the entity for finding
+related telemetry.
+
+- backpressure_mode – Optional. Specifies the behavior when
+the CloudWatch agent is ingesting logs faster than it can send to CloudWatch Logs, resulting in backpressure.
+Backpressure can happen from network issues, API throttling, or high log volume.
+
+The agent supports the following values:
+
+- fd_release – Releases file descriptors for deleted files during
+backpressure conditions. This option can help prevent disk space exhaustion when external
+log rotation or cleanup processes remove files while the agent maintains open file descriptors.
+The auto_removal option takes precedence over the
+backpressure_mode option being set to fd_release. When auto_removal is enabled,
+the CloudWatch agent processes the file to completion without releasing the file
+descriptor.
+
+Important
+
+Using fd_release can result in the CloudWatch agent being unable
+to read log files to completion, causing log loss.
+
+- concurrency – Optional. Specifies the number of shared log publishers
+used to concurrently publish log files to CloudWatch Logs.
+
+If you omit this field, each log file destination (log group, stream combination)
+has a single shared log publisher, which can lead to bottlenecks for large files
+or when writing multiple files to the same destination. Enabling
+concurrency can help with throughput.
+
+- logs_collected – Required if the logs section
+is included. Specifies which log files, Windows event logs, and journald logs the
+agent collects from the server. It can include the following fields:
+files, windows_events (Windows only), and
+journald (Linux only).
+
+- files – Specifies which regular log files the CloudWatch agent
+is to collect. It contains one field, collect_list, which further
+defines these files.
+
+- collect_list – Required if files is
+included. Contains an array of entries, each of which specifies one log file
+to collect. Each of these entries can include the following fields:
+
+- file_path – Specifies the path of the log file
+to upload to CloudWatch Logs. Standard Unix glob matching rules are accepted, with
+the addition of ** as a super
+asterisk. For example, specifying
+/var/log/**.log causes all .log files in the
+/var/log directory tree to be collected. For more
+examples, see Glob
+Library.
+
+You can also use the standard asterisk as a standard wildcard. For
+example, /var/log/system.log* matches files such as
+system.log_1111, system.log_2222, and so on
+in /var/log.
+
+Only the latest file is pushed to CloudWatch Logs based on file modification
+time. We recommend that you use wildcards to specify a series of files
+of the same type, such as access_log.2018-06-01-01 and
+access_log.2018-06-01-02, but not multiple kinds of
+files, such as access_log_80 and
+access_log_443. To specify multiple kinds of files, add
+another log stream entry to the agent configuration file so that each
+kind of log file goes to a different log stream.
+
+- auto_removal – Optional. If this is
+true, the CloudWatch agent automatically deletes this log file
+after reading it and it has been rotated. Usually the log files are
+deleted after their entire contents are uploaded to CloudWatch Logs. However, if the
+agent reaches the EOF (end of file) and also detects another newer log
+file that matches the same file_path, the agent deletes the
+OLD file, so you must make sure that you are done writing to the OLD
+file before creating the NEW file. The RUST tracing
+library has a known incompatibility because it will
+potentially create a NEW log file and then still attempt to write to the
+OLD log file.
+
+The agent only removes complete files from logs that create multiple
+files, such as logs that create separate files for each date. If a log
+continuously writes to a single file, it is not removed.
+
+If you already have a log file rotation or removal method in place,
+we recommend that you omit this field or set it to
+false.
+
+If you omit this field, the default value of false is
+used.
+
+- log_group_name – Optional. Specifies what to use
+as the log group name in CloudWatch Logs.
+
+We recommend that you use this field to specify a log group name to
+prevent confusion. If you omit log_group_name, the value of
+file_path up to the final dot is used as the log group
+name. For example, if the file path is
+/tmp/TestLogFile.log.2017-07-11-14, the log group name is
+/tmp/TestLogFile.log.
+
+If you specify a log group name, you can use
+{instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. {hostname} retrieves the
+hostname from the EC2 metadata, and {local_hostname} uses
+the hostname from the network configuration file.
+
+If you use these variables to create many different log groups, keep
+in mind the limit of 1,000,000 log groups per Region per account.
+
+Allowed characters include a–z, A–Z, 0–9, '_'
+(underscore), '-' (hyphen), '/' (forward slash), and '.'
+(period).
+
+- log_group_class – Optional. Specifies which log
+group class to use for the new log group. For more information about log
+group classes, see
+Log classes.
+
+Valid values are STANDARD and
+INFREQUENT_ACCESS. If you omit this field, the default of
+STANDARD is used.
+
+Important
+
+After a log group is created, its class can't be changed.
+
+- log_stream_name – Optional. Specifies what to
+use as the log stream name in CloudWatch Logs. As part of the name, you can use
+{instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. {hostname} retrieves the
+hostname from the EC2 metadata, and {local_hostname} uses
+the hostname from the network configuration file.
+
+If you omit this field, the value of the
+log_stream_name parameter in the global logs
+section is used. If that is also omitted, the default value of
+{instance_id} is used.
+
+If a log stream doesn't already exist, it's created
+automatically.
+
+- retention_in_days – Optional. Specifies the
+number of days to retain the log events in the specified log
+group.
+
+- If the agent is creating this log group now, and you omit this
+field, the retention of this new log group is set to never
+expire.
+
+- If this log group already exists and you specify this field, the
+new retention that you specify is used. If you omit this field for a
+log group that already exists, the log group's retention is not
+changed.
+
+The CloudWatch agent wizard uses -1 as the default value
+for this field when it is used to create the agent configuration
+file and you don't specify a value for log retention. This
+-1 value set by the wizard specifies that the events
+in the log group will never expire. However, manually editing this
+value to -1 has no effect.
+
+Valid values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365,
+400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653.
+
+If you configure the agent to write multiple log streams to the same
+log group, specifying the retention_in_days in one place
+will set the log retention for the entire log group. If you specify
+retention_in_days for the same log group in multiple
+places, the retention is set if all of those values are equal. However,
+if different retention_in_days values are specified for the
+same log group in multiple places, the log retention will not be set and
+the agent will stop, returning an error.
+
+Note
+
+The agent's IAM role or IAM user must have the
+logs:PutRetentionPolicy for it to be able to set
+retention policies.
+
+Warning
+
+If you set retention_in_days for a log group that
+already exists, all logs in that log group that were published before
+the number of days that you specify are deleted. For example, setting
+it to 3 would cause all logs from 3 days ago and before to be deleted.
+
+- filters – Optional. Can contain an array of
+entries, each of which specifies a regular expression and a filter type
+to specify whether to publish or drop log entries that match the filter.
+If you omit this field, all logs in the log file are published to CloudWatch Logs.
+If you include this field, the agent processes each log message with all
+of the filters that you specify, and only the log events that pass all
+of the filters are published to CloudWatch Logs. The log entries that don't pass
+all of the filters will still remain in the host's log file, but will
+not be sent to CloudWatch Logs.
+
+Each entry in the filters array can include the following
+fields:
+
+- type– Denotes the type of filter. Valid
+values are include and exclude. With
+include, the log entry must match the expression to
+be published to CloudWatch Logs. With exclude, each log entry
+that matches the filter is not sent to CloudWatch Logs.
+
+- expression– A regular expression string that
+follows the RE2 Syntax.
+
+Note
+
+The CloudWatch agent doesn't check the performance of any regular
+expression that you supply, or restrict the run time of the
+evaluation of the regular expressions. We recommend that you are
+careful not to write an expression that is expensive to evaluate.
+For more information about possible issues, see Regular expression Denial of Service - ReDoS
+
+For example, the following excerpt of the CloudWatch agent configuration
+file publishes logs that are PUT and POST requests to CloudWatch Logs, but
+excluding logs that come from Firefox.
+
+"collect_list": [
+{
+"file_path": "/opt/aws/amazon-cloudwatch-agent/logs/test.log",
+"log_group_name": "test.log",
+"log_stream_name": "test.log",
+"filters": [
+{
+"type": "exclude",
+"expression": "Firefox"
+},
+{
+"type": "include",
+"expression": "P(UT|OST)"
+}
+]
+},
+.....
+]
+
+Note
+
+The order of the filters in the configuration file matters for
+performance. In the preceding example, the agent drops all the logs
+that match Firefox before it starts evaluating the second
+filter. To cause fewer log entries to be evaluated by more than one
+filter, put the filter that you expect to rule out more logs first in
+the configuration file.
+
+- timezone – Optional. Specifies the time zone to
+use when putting timestamps on log events. The valid values are
+UTC and Local. The default value is
+Local.
+
+This parameter is ignored if you don't specify a value for
+timestamp_format.
+
+- timestamp_format – Optional. Specifies the
+timestamp format, using plaintext and special symbols that start with %.
+If you omit this field, the current time is used. If you use this field,
+you can use the symbols in the following list as part of the
+format.
+
+Note
+
+This parameter is not considered when the file_path
+is set to amazon-cloudwatch-agent.log
+
+If a single log entry contains two time stamps that match the
+format, the first time stamp is used.
+
+This list of symbols is different than the list used by the older
+CloudWatch Logs agent. For a summary of these differences, see Timestamp differences between the CloudWatch agent and the earlier CloudWatch Logs agent
+
+%y
+
+Year without century as a zero-padded decimal number. For
+example, 19 to represent 2019.
+
+%Y
+
+Year with century as a decimal number. For example,
+2019.
+
+%b
+
+Month as the locale's abbreviated name
+
+%B
+
+Month as the locale's full name
+
+%m
+
+Month as a zero-padded decimal number
+
+%-m
+
+Month as a decimal number (not zero-padded)
+
+%d
+
+Day of the month as a zero-padded decimal number
+
+%-d
+
+Day of the month as a decimal number (not zero-padded)
+
+%A
+
+Full name of weekday, such as Monday
+
+%a
+
+Abbreviation of weekday, such as Mon
+
+%H
+
+Hour (in a 24-hour clock) as a zero-padded decimal
+number
+
+%I
+
+Hour (in a 12-hour clock) as a zero-padded decimal
+number
+
+%-I
+
+Hour (in a 12-hour clock) as a decimal number (not
+zero-padded)
+
+%p
+
+AM or PM
+
+%M
+
+Minutes as a zero-padded decimal number
+
+%-M
+
+Minutes as a decimal number (not zero-padded)
+
+%S
+
+Seconds as a zero-padded decimal number
+
+%-S
+
+Seconds as a decimal number (not zero padded)
+
+%f
+
+Fractional seconds as a decimal number (1-9 digits),
+zero-padded on the left.
+
+%Z
+
+Time zone, for example PST
+
+%z
+
+Time zone, expressed as the offset between the local time zone
+and UTC. For example, -0700. Only this format is
+supported. For example, -07:00 isn't a valid
+format.
+
+- multi_line_start_pattern – Specifies the pattern
+for identifying the start of a log message. A log message is made of a
+line that matches the pattern and any subsequent lines that don't match
+the pattern.
+
+If you omit this field, multi-line mode is disabled, and any line
+that begins with a non-whitespace character closes the previous log
+message and starts a new log message.
+
+If you include this field, you can specify
+{timestamp_format} to use the same regular expression as
+your timestamp format. Otherwise, you can specify a different regular
+expression for CloudWatch Logs to use to determine the start lines of multi-line
+entries.
+
+- encoding – Specified the encoding of the log
+file so that it can be read correctly. If you specify an incorrect
+coding, there might be data loss because characters that can't be
+decoded are replaced with other characters.
+
+The default value is utf-8. The following are all
+possible values:
+
+ascii, big5, euc-jp, euc-kr, gbk, gb18030, ibm866, iso2022-jp,
+iso8859-2, iso8859-3, iso8859-4, iso8859-5, iso8859-6, iso8859-7,
+iso8859-8, iso8859-8-i, iso8859-10, iso8859-13, iso8859-14,
+iso8859-15, iso8859-16, koi8-r, koi8-u, macintosh, shift_jis, utf-8,
+utf-16, utf-16le, UTF-16, UTF-16LE, windows-874, windows-1250,
+windows-1251, windows-1252, windows-1253, windows-1254, windows-1255,
+windows-1256, windows-1257, windows-1258, x-mac-cyrillic
+
+- service.name – Optional. Specifies the service
+name to be used to populate the entity for finding related telemetry.
+
+- deployment.environment – Optional. Specifies the
+environment name to be used to populate the entity for finding related telemetry.
+
+- trim_timestamp – Optional. If this is true, the CloudWatch agent
+will remove the timestamp matched by timestamp_format from the line
+before sending it to CloudWatch Logs. The LogEvent will still contain the timestamp field.
+
+If you omit this field, the default value of false is used.
+
+- The windows_events section specifies the type of Windows events
+to collect from servers running Windows Server. It includes the following
+fields:
+
+- collect_list – Required if
+windows_events is included. Specifies the types and levels of
+Windows events to be collected. Each log to be collected has an entry in
+this section, which can include the following fields:
+
+- event_name – Specifies the type of Windows
+events to log. This is equivalent to the Windows event log channel name:
+for example, System, Security,
+Application, and so on. This field is required for each
+type of Windows event to log.
+
+Note
+
+When CloudWatch retrieves messages from a Windows log channel, it looks
+up the log channel based on its Full Name property.
+Meanwhile, the Windows Event Viewer navigation pane displays the
+Log Name property of log channels. The Full
+Name and Log Name do not always match. To
+confirm the Full Name of a channel, right-click on it in
+the Windows Event viewer and open
+Properties.
+
+- event_levels – Optional. Specifies the
+levels of event to log. You must specify each level to log. Possible
+values include INFORMATION, WARNING,
+ERROR, CRITICAL, and VERBOSE.
+This field is optional for each type of Windows event to log.
+and can be used with other filtering option like event_ids and filters.
+
+- event_ids – Optional. Contains an array of Windows Event IDs to specify which events to collect from the Windows Event Log.
+When this field is excluded, all events from the specified event log are collected. When this field is included, the agent only collects events that match the specified Event IDs.
+
+Each entry in the event_ids array should be a numeric Event ID value and can be used with other filtering options. See the third entry in the config sample below.
+
+Note
+
+Using event_ids for filtering is recommended over regex expressions when you need to filter by Event ID, as it provides better performance.
+
+- filters – Optional. Contains an array of entries. Each entry specifies a regular expression and a filter type to specify whether to publish or drop
+the log entries that match the filter. When the field is included, the agent processes each log message with all of the filters that you specify, and only the log events that pass all filters are
+published to CloudWatch Logs. The windows event logs that doesn't pass all of the filters will be dropped and not sent to CloudWatch Logs. The filters section can also be used with other filtering
+mechanisms like event ids [4624, 4625] and system levels (Information, Error, or Critical) to effectively filter logs and push to CloudWatch.
+
+Each entry in the filters array can include the following fields:
+
+- type – Specifies the type of filter. Valid values are include and exclude. With include, the windows events entry must match the expression to be published to CloudWatch Logs.
+With exclude, each windows event log entry that matches the filter is not sent to CloudWatch Logs.
+
+- expression – A regular expression string that follows the RE2 Syntax.
+
+Note
+
+The CloudWatch agent does not validate regular expressions that you provide. It also does not limit their evaluation time. Write your expressions carefully to avoid performance issues.
+For more information about security risks, see Regular expression Denial of Service - ReDoS
+.
+
+In the example agent configuration below:
+
+For the first entry, the agent pushes logs that contain database failure messages, any authentication related activities, and all login events (both successful and failed attempts) to CloudWatch.
+Any log that doesn't match this pattern is dropped.
+
+In the second entry, initial filtering is done based on event ids for windows event subscription. The agent collects all logs that contain the string user, discarding logs that don't match these patterns.
+The agent then drops logs containing successful before sending the remaining logs to CloudWatch Logs. Every filter type is applied to each windows event log before sending
+to CloudWatch.
+
+"collect_list": [
+{
+"event_name": "Application",
+"log_group_name": "ApplicationEvents",
+"log_stream_name": "ApplicationEvents",
+"filters": [
+{
+"type": "include",
+"expression": "Database.*failed|Authentication.*|login.*"
+}
+]
+},
+{
+"event_name": "System",
+"log_group_name": "SystemEvents",
+"log_stream_name": "Logon-events",
+"event_ids": [
+4624,
+4625
+],
+"filters": [
+{
+"type": "include",
+"expression": ".*user.*"
+},
+{
+"type": "exclude",
+"expression": ".*successful.*"
+}
+]
+}
+.....
+]
+
+Note
+
+The order of the filters in the configuration will impact the performance. In the second entry, the agent drops all the logs that does not match the user before it
+starts evaluating the second filter expression. For optimal performance, order filters from highest to lowest exclusion rate.
+
+While you can filter out logs on event ids and system levels in the filter expression, it is recommended to use the event_ids and log_level as shown
+in the second entry for improved performance.
+
+Warning
+
+Even though all filtering mechanisms (event_levels, event_ids, filters) are optional, at least one is required during agent configuration to filter logs.
+
+- log_group_name – Required. Specifies what to use
+as the log group name in CloudWatch Logs.
+
+- log_stream_name – Optional. Specifies what to
+use as the log stream name in CloudWatch Logs. As part of the name, you can use
+{instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. {hostname} retrieves the
+hostname from the EC2 metadata, and {local_hostname} uses
+the hostname from the network configuration file.
+
+If you omit this field, the value of the
+log_stream_name parameter in the global logs
+section is used. If that is also omitted, the default value of
+{instance_id} is used.
+
+If a log stream doesn't already exist, it's created
+automatically.
+
+- event_format – Optional. Specifies the format to
+use when storing Windows events in CloudWatch Logs. xml uses the XML
+format as in Windows Event Viewer. text uses the legacy
+CloudWatch Logs agent format.
+
+- retention_in_days – Optional. Specifies the
+number of days to retain the Windows events in the specified log
+group.
+
+- If the agent is creating this log group now, and you omit this
+field, the retention of this new log group is set to never
+expire.
+
+- If this log group already exists and you specify this field, the
+new retention that you specify is used. If you omit this field for a
+log group that already exists, the log group's retention is not
+changed.
+
+The CloudWatch agent wizard uses -1 as the default value
+for this field when it is used to create the agent configuration
+file and you don't specify a value for log retention. This
+-1 value set by the wizard specifies that
+the events in the log group don't expire. However, manually editing
+this value to -1 has no effect.
+
+Valid values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365,
+400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653.
+
+If you configure the agent to write multiple log streams to the same
+log group, specifying the retention_in_days in one place
+will set the log retention for the entire log group. If you specify
+retention_in_days for the same log group in multiple
+places, the retention is set if all of those values are equal. However,
+if different retention_in_days values are specified for the
+same log group in multiple places, the log retention will not be set and
+the agent will stop, returning an error.
+
+Note
+
+The agent's IAM role or IAM user must have the
+logs:PutRetentionPolicy for it to be able to set
+retention policies.
+
+Warning
+
+If you set retention_in_days for a log group that
+already exists, all logs in that log group that were published before
+the number of days that you specify are deleted. For example, setting
+it to 3 would cause all logs from 3 days ago and before to be deleted.
+
+- Use the journald section to specify which systemd journal logs
+to collect from Linux servers. Use this section only for Linux
+instances. It includes the following fields:
+
+- collect_list – Required if journald is
+included. Specifies which journal log entries the agent collects. Each entry in
+this section defines a set of journal logs to collect and can include the
+following fields:
+
+- units – Optional. Specifies an array of systemd
+unit names to filter journal entries. If you include this field, the
+agent collects only journal entries from the specified systemd
+units. If you omit this field, the agent collects journal entries from all units. The agent accepts wildcards for pattern matching. For example, ["sshd*"] matches
+sshd.service, sshd@1.service, and any other unit starting with sshd. You can specify multiple units such as
+["sshd", "nginx", "cloudwatch-agent"] to collect logs
+from several services.
+
+- priority – Optional. Specifies the minimum
+journal priority level to collect. If you include this field, the
+agent collects journal entries at the specified priority level and all
+levels more severe. If you omit this field, the default is info,
+collecting info and above and excluding
+debug. Set "priority": "debug" to
+collect all levels. Valid values are emerg,
+alert, crit, err,
+warning, notice, info, and
+debug. For example, setting
+"priority": "err" collects entries at
+emerg (0), alert (1), crit
+(2), and err (3) levels, excluding warning,
+notice, info, and
+debug.
+
+The following table shows the journal priority levels and their
+numeric values.
+
+Priority
+
+Numeric Value
+
+Description
+
+emerg
+
+0
+
+System is unusable
+
+alert
+
+1
+
+Action must be taken immediately
+
+crit
+
+2
+
+Critical conditions
+
+err
+
+3
+
+Error conditions
+
+warning
+
+4
+
+Warning conditions
+
+notice
+
+5
+
+Normal but significant conditions
+
+info
+
+6
+
+Informational messages
+
+debug
+
+7
+
+Debug-level messages
+
+- matches – Optional. Specifies an array of
+journal field match objects to filter journal entries by metadata fields.
+Each object in the array represents a set of conditions. Fields within
+a single object are AND'd together, while separate objects in the array
+are OR'd against each other. If you include
+this field, the agent collects journal entries that match any one of
+the specified objects. If you omit this field, the agent applies no
+field-level filtering.
+
+For example, specifying
+[{"_UID": "0"}] collects only journal entries from the
+root user. Specifying [{"_SYSTEMD_UNIT": "sshd.service"}, {"_SYSTEMD_UNIT": "kubelet.service", "_UID": "1000"}] collects entries from the SSH daemon OR entries from kubelet that are also from UID 1000. You can combine matches with
+units and priority for compound
+filtering.
+
+Note
+
+Journal field names are case-sensitive and typically use uppercase
+with an underscore prefix for trusted fields set by the journal (for
+example, _UID, _PID,
+_SYSTEMD_UNIT). User-defined fields do not have the
+underscore prefix.
+
+- filters – Optional. Contains an array of
+entries. Each entry specifies a regular expression and a filter type to
+specify whether to publish or drop the log entries that match the
+filter. If you include this field, the agent processes each log message
+with all filters you specify, and only the log events that
+pass all filters are published to CloudWatch Logs. The journald logs that don't
+pass all of the filters are dropped and not sent to CloudWatch Logs. The filters
+section can also be used with other filtering mechanisms like
+units and priority to effectively filter
+logs and push to CloudWatch.
+
+Each entry in the filters array can include the following
+fields:
+
+- type – Specifies the type of filter. Valid
+values are include and exclude. With
+include, the journald entry must match the expression
+to be published to CloudWatch Logs. With exclude, each journald
+log entry that matches the filter is not sent to CloudWatch Logs.
+
+- expression – A regular expression string
+that follows the RE2 Syntax.
+
+Note
+
+The CloudWatch agent does not validate regular expressions that you
+provide. It also does not limit their evaluation time. Write your
+expressions carefully to avoid performance issues. For more
+information about security risks, see Regular expression Denial of Service - ReDoS.
+
+Note
+
+The order of the filters in the configuration will impact the
+performance. For optimal performance, order filters from highest
+to lowest exclusion rate.
+
+- retention_in_days – Optional. Specifies the
+number of days to retain the log events in the specified log group. If
+the agent is creating this log group now, and you omit this field, the
+retention of this new log group is set to never expire. If this log
+group already exists and you specify this field, the new retention that
+you specify is used. If you omit this field for a log group that
+already exists, the log group's retention is not changed.
+
+Valid values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365,
+400, 545, 731, 1827, 2192, 2557, 2922, 3288, and 3653.
+
+Note
+
+The agent's IAM role or IAM user must have the
+logs:PutRetentionPolicy for it to be able to set
+retention policies.
+
+Warning
+
+If you set retention_in_days for a log group that
+already exists, all logs in that log group that were published before
+the number of days that you specify are deleted. For example, setting
+it to 3 would cause all logs from 3 days ago and before to be
+deleted.
+
+- log_group_name – Required. Specifies what to use
+as the log group name in CloudWatch Logs. You can use
+{instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. {hostname} retrieves the
+hostname from the EC2 metadata, and {local_hostname} uses
+the hostname from the network configuration file.
+
+- log_stream_name – Optional. Specifies what to
+use as the log stream name in CloudWatch Logs. As part of the name, you can use
+{instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. If you omit this field, the value of the
+log_stream_name parameter in the global logs
+section is used. If that is also omitted, the default value of
+{instance_id} is used.
+
+Note
+
+SELinux support requires the amazon-cloudwatch-agent-selinux policy version
+1.1.0 or newer.
+
+Note
+
+Running the agent as any user other than root requires the user to be
+added to the systemd-journal group to read the journal.
+On restart, the agent resumes from the last collected journal entry and
+does not collect historical data.
+
+In the following example agent configuration:
+
+- For the first entry, the agent collects all journal logs without any
+filtering and sends them to the journald-all-logs log
+group.
+
+- In the second entry, the agent collects only logs from the
+sshd systemd unit.
+
+- In the third entry, the agent collects journal entries at
+err priority and above.
+
+- In the fourth entry, the agent uses compound filtering to collect logs
+from the systemd-logind unit that are also from the root user
+(_UID of 0).
+
+- For the last entry, the agent collects journald logs from the
+sshd service and applies layered regex filtering.
+
+"journald": {
+"collect_list": [
+{
+"log_group_name": "journald-all-logs",
+"log_stream_name": "{instance_id}",
+"retention_in_days": 7
+},
+{
+"log_group_name": "journald-sshd",
+"log_stream_name": "{instance_id}",
+"units": ["sshd"],
+"retention_in_days": 7
+},
+{
+"log_group_name": "journald-errors",
+"log_stream_name": "{instance_id}",
+"priority": "err",
+"retention_in_days": 7
+},
+{
+"log_group_name": "journald-root-logind",
+"log_stream_name": "{instance_id}",
+"units": ["systemd-logind"],
+"matches": [{"_UID": "0"}],
+"retention_in_days": 7
+},
+{
+"log_group_name": "journald-filters",
+"log_stream_name": "{instance_id}",
+"units": ["sshd"],
+"filters": [
+{
+"type": "include",
+"expression": ".*user.*"
+},
+{
+"type": "exclude",
+"expression": ".*successful.*"
+}
+],
+"retention_in_days": 7
+}
+]
+}
+
+Note
+
+When you combine units, priority, and
+matches filters in a single entry, all filters are applied
+together. A journal entry must satisfy all specified filters to be collected
+and sent to CloudWatch Logs.
+
+- log_stream_name – Optional. Specifies the default log stream
+name to be used for any logs or Windows events that don't have individual log stream
+names defined in the log_stream_name parameter within their entry in
+collect_list.
+
+- endpoint_override – Specifies a FIPS endpoint or private
+link to use as the endpoint where the agent sends logs. Specifying this field and
+setting a private link enables you to send the logs to an Amazon VPC endpoint. For more
+information, see What Is
+Amazon VPC?.
+
+The value of endpoint_override must be a string that is a
+URL.
+
+For example, the following part of the logs section of the configuration file
+sets the agent to use a VPC Endpoint when sending logs.
+
+{
+"logs": {
+"endpoint_override": "vpce-XXXXXXXXXXXXXXXXXXXXXXXXX.logs.us-east-1.vpce.amazonaws.com",
+......
+},
+}
+
+- force_flush_interval – Specifies in seconds the maximum
+amount of time that logs remain in the memory buffer before being sent to the
+server. No matter the setting for this field, if the size of the logs in the buffer
+reaches 1 MB, the logs are immediately sent to the server. The default value is
+5.
+
+If you are using the agent to report high-resolution metrics in embedded metric
+format, and you are setting alarms on those metrics, keep this parameter set to the
+default value of 5. Otherwise, the metrics are reported with a delay that can cause
+alarming on partial or incomplete data.
+
+- credentials – Specifies an IAM role to use when sending
+logs to a different AWS account. If specified, this field contains one parameter,
+role_arn.
+
+- role_arn – Specifies the ARN of an IAM role to use for
+authentication when sending logs to a different AWS account. For more
+information, see Sending metrics, logs, and traces to a different account. If specified
+here, this overrides the role_arn specified in the
+agent section of the configuration file, if any.
+
+- metrics_collected – This field can contain sections to
+specify that the agent is to collect logs to enable use cases such as CloudWatch
+Application Signals and Container Insights with enhanced observability for
+Amazon EKS.
+
+- application_signals (Optional) Specifies that you want to
+enable CloudWatch
+Application Signals For more information about this configuration, see
+Enable CloudWatch Application Signals.
+
+- kubernetes – This field can contain an
+enhanced_container_insights parameter, which you can use to
+enable Container Insights with enhanced observability for Amazon EKS.
+
+- enhanced_container_insights – Set this to
+true to enable Container Insights with enhanced observability
+for Amazon EKS. For more information, see Amazon EKS.
+
+- accelerated_compute_metrics – Set this to
+false to opt out of collecting Nvidia GPU metrics on Amazon EKS
+clusters. For more information, see NVIDIA GPU metrics.
+
+- emf – To collect metrics embedded in logs, it is no
+longer necessary to add this emf field. This is a legacy field that
+specified that the agent is to collect logs that are in embedded metric format.
+You can generate metric data from these logs. For more information, see Embedding metrics within logs.
+
+- otlp – Optional. Specifies that you want to collect
+metrics from the OpenTelemetry SDK. For more information about the fields that
+you can use in this section, see Collect metrics and traces with OpenTelemetry.
+
+The following is an example of a logs section.
+
+"logs":{
+"logs_collected": {
+"files": {
+"collect_list": [
+{
+"file_path": "c:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\amazon-cloudwatch-agent.log",
+"log_group_name": "amazon-cloudwatch-agent.log",
+"log_stream_name": "my_log_stream_name_1"
+},
+{
+"file_path": "c:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\test.log",
+"log_group_name": "test.log",
+"log_stream_name": "my_log_stream_name_2"
+}
+]
+},
+"windows_events": {
+"collect_list": [
+{
+"event_name": "System",
+"event_ids": [
+1001,
+1008
+],
+"log_group_name": "System",
+"log_stream_name": "System"
+},
+{
+"event_name": "CustomizedName",
+"event_levels": [
+"INFORMATION",
+"ERROR"
+],
+"log_group_name": "CustomizedLogGroup",
+"log_stream_name": "CustomizedLogStream"
+},
+{
+"event_name": "Application",
+"event_levels": [
+"INFORMATION",
+"ERROR"
+],
+"event_ids":[
+7369,
+5624
+],
+"log_group_name": "CustomizedLogGroup",
+"log_stream_name": "CustomizedLogStream"
+}
+]
+}
+},
+"log_stream_name": "my_log_stream_name",
+"metrics_collected": {
+"kubernetes": {
+"enhanced_container_insights": true
+}
+}
+}
+
+By adding a traces section to the CloudWatch agent configuration file, you
+can enable CloudWatch Application Signals or collect traces from X-Ray and from the
+OpenTelemetry instrumentation SDK and send them to X-Ray.
+
+Important
+
+The agent's IAM role or IAM user must have the
+AWSXrayWriteOnlyAccess policy to send trace data to X-Ray.
+
+For a quick start for collecting traces, you can add just the following to the CloudWatch
+agent configuration file.
+
+"traces_collected": {
+"xray": {
+},
+"otlp": {
+}
+}
+
+If you add the previous section to the CloudWatch agent configuration file and restart the
+agent, this causes the agent to start collecting traces using the following default
+options and values. For more information about these parameters, see the parameter
+definitions later in this section.
+
+"traces_collected": {
+"xray": {
+"bind_address": "127.0.0.1:2000",
+"tcp_proxy": {
+"bind_address": "127.0.0.1:2000"
+}
+},
+"otlp": {
+"grpc_endpoint": "127.0.0.1:4317",
+"http_endpoint": "127.0.0.1:4318"
+}
+}
+
+The traces section can include the following fields:
+
+- traces_collected – Required if the traces
+section is included. Specifies which SDKs to collect traces from. It can include the
+following fields:
+
+- application_signals – Optional. Specifies that you want
+to enable CloudWatch
+Application Signals For more information about this configuration, see
+Enable CloudWatch Application Signals.
+
+- xray – Optional. Specifies that you want to collect
+traces from the X-Ray SDK. This section can include the following
+fields:
+
+- bind_address – Optional. Specifies the UDP address
+for the CloudWatch agent to use to listen for X-Ray traces. The format is
+ip:port. This address must match the address set in the
+X-Ray SDK.
+
+If you omit this field, the default of 127.0.0.1:2000 is
+used.
+
+- tcp_proxy – Optional. Configures the address for a
+proxy used to support X-Ray remote sampling. For more information, see
+Configuring
+sampling rules in the X-Ray documentation.
+
+This section can contain the following field.
+
+- bind_address – Optional. Specifies the TCP
+address to which the CloudWatch agent should set up the proxy. The format is
+ip:port. This address must match the address set in the
+X-Ray SDK.
+
+If you omit this field, the default of 127.0.0.1:2000
+is used.
+
+- otlp – Optional. Specifies that you want to collect
+traces from the OpenTelemetry SDK. For more information about the fields that
+you can use in this section, see Collect metrics and traces with OpenTelemetry). For more
+information about the AWS Distro for OpenTelemetry, see AWS Distro for OpenTelemetry. For
+more information about the AWS Distro for OpenTelemetry SDKs, see Introduction.
+
+This section can include the following fields:
+
+- grpc_endpoint – Optional. Specifies the address for
+the CloudWatch agent to use to listen for OpenTelemetry traces sent using gRPC
+Remote Procedure Calls. The format is ip:port. This address
+must match the address set for the gRPC exporter in the OpenTelemetry
+SDK.
+
+If you omit this field, the default of 127.0.0.1:4317 is
+used.
+
+- http_endpoint – Optional. Specifies the address for
+the CloudWatch agent to use to listen for OTLP traces sent over HTTP. The format
+is ip:port. This address must match the address set for the
+HTTP exporter in the OpenTelemetry SDK.
+
+If you omit this field, the default of 127.0.0.1:4318 is
+used.
+
+- concurrency – Optional. Specifies the maximum number of
+concurrent calls to X-Ray that can be used to upload traces. The default value is
+8
+
+- local_mode – Optional. If true, the agent
+doesn't collect Amazon EC2 instance metadata. The default is false
+
+- endpoint_override – Optional. Specifies a FIPS endpoint or
+private link to use as the endpoint where the CloudWatch agent sends traces. Specifying
+this field and setting a private link enables you to send the traces to an Amazon VPC
+endpoint. For more information, see What is Amazon VPC
+
+The value of endpoint_override must be a string that is a
+URL.
+
+- region_override – Optional. Specifies the Region to use for
+the X-Ray endpoint. The CloudWatch agent sends the traces to X-Ray in the specified
+Region. If you omit this field, the agent sends the traces to the Region where the
+Amazon EC2 instance is located.
+
+If you specify a Region here, it takes precedence over the setting of the
+region parameter in the agent section of the
+configuration file.
+
+- proxy_override – Optional. Specifies the proxy server
+address for the CloudWatch agent to use when sending requests to X-Ray. The proxy
+server's protocol must be specified as part of this address.
+
+- credentials – Specifies an IAM role to use when sending
+traces to a different AWS account. If specified, this field contains one
+parameter, role_arn.
+
+- role_arn – Specifies the ARN of an IAM role to use for
+authentication when sending traces to a different AWS account. For more
+information, see Sending metrics, logs, and traces to a different account. If specified
+here, this overrides the role_arn specified in the
+agent section of the configuration file, if any.
+
+- transit_spans_in_otlp_format – Optional. If
+true, sends traces to X-Ray in the OpenTelemetry Protocol format,
+which supports span events in Transaction Search. For more information, see Adding custom attributes. The default
+is false.
+
+The opentelemetry section can include the following fields:
+
+- cluster_name – Optional. Specifies the name of the
+Kubernetes cluster. The agent applies this value to all telemetry collected under the
+opentelemetry section.
+
+- resource_attributes – Optional. Specifies additional
+resource attributes to add to every metric, log, and trace collected under the
+opentelemetry section. This field is an object of string key-value
+pairs. You can specify up to 30 attributes. The maximum length of each value is 1024
+characters. For attributes that the agent detects automatically, such as
+cloud.region, host.id, and cloud.provider,
+the detected value takes precedence. Use this field for attributes that the agent
+does not detect on its own.
+
+- collect – Required. Specifies which telemetry sources the
+agent collects. You must include at least one of the following fields:
+
+- otlp – Optional. Specifies that the agent receives
+metrics, traces, and logs sent to it over the OpenTelemetry Protocol (OTLP).
+This section can include the following fields:
+
+- grpc_endpoint – Optional. Specifies the address the
+agent uses to listen for OTLP data sent using gRPC. The format is
+ip:port. This address must match the address set for the gRPC
+exporter in the OpenTelemetry SDK. If you omit this field, the agent uses the default
+127.0.0.1:4317. In a containerized deployment, set
+this to 0.0.0.0:4317 so the agent accepts traffic from other
+pods.
+
+- http_endpoint – Optional. Specifies the address the
+agent uses to listen for OTLP data sent over HTTP. The format is
+ip:port. This address must match the address set for the HTTP
+exporter in the OpenTelemetry SDK. If you omit this field, the agent uses the default
+127.0.0.1:4318. In a containerized deployment, set
+this to 0.0.0.0:4318 so the agent accepts traffic from other
+pods.
+
+- span_metrics_enabled – Optional. If
+true, the agent derives request, error, and duration metrics
+from received traces. The default value is false.
+
+- files – Optional. Specifies that the agent collects log
+files from the host. It contains one field, collect_list.
+
+- collect_list – Required if files is
+included. Contains an array of entries, each of which specifies one set of
+log files to collect. The array must contain at least one entry. Each entry
+can include the following fields:
+
+- file_path – Required. Specifies the path or glob
+pattern of the log files to collect. The maximum length is 4096
+characters.
+
+- log_group_name – Optional. Specifies the log
+group name to use in CloudWatch Logs. The maximum length is 512 characters. You
+can use {instance_id}, {hostname},
+{local_hostname}, and {ip_address} as
+variables within the name. If you omit this field, the agent uses
+/aws/cwagent/files. On Kubernetes, the agent includes the cluster name, as in /aws/cwagent/{cluster_name}/files.
+
+- log_stream_name – Optional. Specifies the log
+stream name to use in CloudWatch Logs. The maximum length is 512 characters. This
+field supports the same variables as log_group_name. If you
+omit this field, the agent uses the host identifier and the log file
+name, separated by a slash (for example,
+i-0123456789abcdef0/app.log).
+
+- multi_line_start_pattern – Optional. Specifies a
+regular expression that marks the start of a new log entry. The agent appends lines that
+don't match the pattern to the previous entry. Specify the
+value {timestamp_format} to derive the pattern from
+timestamp_format.
+
+- timestamp_format – Optional. Specifies the
+format used to parse timestamps from log lines. For example,
+%Y-%m-%d %H:%M:%S.
+
+- timezone – Optional. Specifies the time zone to
+use when parsing timestamps. Valid values are UTC and
+Local. The default value is Local.
+
+- encoding – Optional. Specifies the encoding of
+the log files. If you omit this field, the agent uses the default
+utf-8.
+
+- windows_events – Optional. Specifies that the agent
+collects events from the Windows Event Log. This source is available only on
+servers running Windows Server. It contains one field,
+collect_list.
+
+- collect_list – Required if
+windows_events is included. Contains an array of entries,
+each of which specifies one Windows Event Log channel to collect. The array
+must contain at least one entry. Each entry can include the following
+fields:
+
+- event_name – Required. Specifies the Windows
+Event Log channel to collect from, such as System or
+Application. The maximum length is 255 characters.
+
+- event_levels – Optional. Specifies the event
+severity levels to collect. Valid values are CRITICAL,
+ERROR, WARNING, INFORMATION, and
+VERBOSE. If you omit this field, the agent collects events of all levels.
+
+- event_ids – Optional. Specifies a list of
+specific event IDs to collect. Each ID must be between 0 and
+65535.
+
+- event_format – Optional. Specifies the output
+format. Valid values are xml, which sends the raw XML of the
+event, and text, which sends a structured representation. If
+you omit this field, the agent uses text.
+
+- log_group_name – Optional. Specifies the log
+group name to use in CloudWatch Logs. The maximum length is 512 characters. If you
+omit this field, the agent uses
+/aws/cwagent/windows_events.
+
+- log_stream_name – Optional. Specifies the log
+stream name to use in CloudWatch Logs. The maximum length is 512 characters. If you
+omit this field, the agent uses the host identifier and the event channel
+name, separated by a slash.
+
+- host_metrics – Optional. Specifies that the agent
+collects host-level system metrics. This section can include the following
+field:
+
+- collection_interval – Optional. Specifies how often
+the agent collects the metrics, in seconds. If you omit this field, the agent uses
+the metrics_collection_interval value from the
+agent section, or 30 seconds if that is also omitted.
+
+- prometheus – Optional. Specifies that the agent scrapes
+metrics from Prometheus targets. This section can include the following
+field:
+
+- config_path – Required. Specifies the path to the
+Prometheus scrape configuration file.
+
+Note
+
+Make sure Transaction Search is enabled before you send traces to the OTLP traces
+endpoint.
+
+The following is an example of an opentelemetry section that collects
+OTLP telemetry and a log file.
+
+"opentelemetry": {
+"collect": {
+"otlp": {
+"grpc_endpoint": "0.0.0.0:4317",
+"http_endpoint": "0.0.0.0:4318",
+"span_metrics_enabled": true
+},
+"files": {
+"collect_list": [
+{
+"file_path": "/var/log/app/*.log",
+"log_group_name": "/app/{instance_id}",
+"log_stream_name": "{hostname}",
+"timestamp_format": "%Y-%m-%d %H:%M:%S",
+"timezone": "UTC"
+}
+]
+}
+}
+}
+
+The following is an example of a complete CloudWatch agent configuration file for a Linux
+server.
+
+The items listed in the measurement sections for the metrics you want
+to collect can either specify the complete metric name such or just the part of the
+metric name that will be appended to the type of resource. For example, specifying
+either reads or diskio_reads in the measurement
+section of the diskio section will cause the diskio_reads
+metric to be collected.
+
+This example includes both ways of specifying metrics in the
+measurement section.
+
+{
+"agent": {
+"metrics_collection_interval": 10,
+"logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
+},
+"metrics": {
+"namespace": "MyCustomNamespace",
+"metrics_collected": {
+"cpu": {
+"resources": [
+"*"
+],
+"measurement": [
+{"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+{"name": "cpu_usage_nice", "unit": "Percent"},
+"cpu_usage_guest"
+],
+"totalcpu": false,
+"metrics_collection_interval": 10,
+"append_dimensions": {
+"customized_dimension_key_1": "customized_dimension_value_1",
+"customized_dimension_key_2": "customized_dimension_value_2"
+}
+},
+"disk": {
+"resources": [
+"/",
+"/tmp"
+],
+"measurement": [
+{"name": "free", "rename": "DISK_FREE", "unit": "Gigabytes"},
+"total",
+"used"
+],
+"ignore_file_system_types": [
+"sysfs", "devtmpfs"
+],
+"metrics_collection_interval": 60,
+"append_dimensions": {
+"customized_dimension_key_3": "customized_dimension_value_3",
+"customized_dimension_key_4": "customized_dimension_value_4"
+}
+},
+"diskio": {
+"resources": [
+"*"
+],
+"measurement": [
+"reads",
+"writes",
+"read_time",
+"write_time",
+"io_time"
+],
+"metrics_collection_interval": 60
+},
+"swap": {
+"measurement": [
+"swap_used",
+"swap_free",
+"swap_used_percent"
+]
+},
+"mem": {
+"measurement": [
+"mem_used",
+"mem_cached",
+"mem_total"
+],
+"metrics_collection_interval": 1
+},
+"net": {
+"resources": [
+"eth0"
+],
+"measurement": [
+"bytes_sent",
+"bytes_recv",
+"drop_in",
+"drop_out"
+]
+},
+"netstat": {
+"measurement": [
+"tcp_established",
+"tcp_syn_sent",
+"tcp_close"
+],
+"metrics_collection_interval": 60
+},
+"processes": {
+"measurement": [
+"running",
+"sleeping",
+"dead"
+]
+}
+},
+"append_dimensions": {
+"ImageId": "${aws:ImageId}",
+"InstanceId": "${aws:InstanceId}",
+"InstanceType": "${aws:InstanceType}",
+"AutoScalingGroupName": "${aws:AutoScalingGroupName}"
+},
+"aggregation_dimensions" : [["ImageId"], ["InstanceId", "InstanceType"], ["d1"],[]],
+"force_flush_interval" : 30
+},
+"logs": {
+"logs_collected": {
+"files": {
+"collect_list": [
+{
+"file_path": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+"log_group_name": "amazon-cloudwatch-agent.log",
+"log_stream_name": "amazon-cloudwatch-agent.log",
+"timezone": "UTC"
+},
+{
+"file_path": "/opt/aws/amazon-cloudwatch-agent/logs/test.log",
+"log_group_name": "test.log",
+"log_stream_name": "test.log",
+"timezone": "Local"
+}
+]
+}
+},
+"log_stream_name": "my_log_stream_name",
+"force_flush_interval" : 15,
+"metrics_collected": {
+"kubernetes": {
+"enhanced_container_insights": true
+}
+}
+}
+}
+
+The following is an example of a complete CloudWatch agent configuration file for a server
+running Windows Server.
+
+{
+"agent": {
+"metrics_collection_interval": 60,
+"logfile": "c:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\amazon-cloudwatch-agent.log"
+},
+"metrics": {
+"namespace": "MyCustomNamespace",
+"metrics_collected": {
+"Processor": {
+"measurement": [
+{"name": "% Idle Time", "rename": "CPU_IDLE", "unit": "Percent"},
+"% Interrupt Time",
+"% User Time",
+"% Processor Time"
+],
+"resources": [
+"*"
+],
+"append_dimensions": {
+"customized_dimension_key_1": "customized_dimension_value_1",
+"customized_dimension_key_2": "customized_dimension_value_2"
+}
+},
+"LogicalDisk": {
+"measurement": [
+{"name": "% Idle Time", "unit": "Percent"},
+{"name": "% Disk Read Time", "rename": "DISK_READ"},
+"% Disk Write Time"
+],
+"resources": [
+"*"
+]
+},
+"customizedObjectName": {
+"metrics_collection_interval": 60,
+"customizedCounterName": [
+"metric1",
+"metric2"
+],
+"resources": [
+"customizedInstances"
+]
+},
+"Memory": {
+"metrics_collection_interval": 5,
+"measurement": [
+"Available Bytes",
+"Cache Faults/sec",
+"Page Faults/sec",
+"Pages/sec"
+]
+},
+"Network Interface": {
+"metrics_collection_interval": 5,
+"measurement": [
+"Bytes Received/sec",
+"Bytes Sent/sec",
+"Packets Received/sec",
+"Packets Sent/sec"
+],
+"resources": [
+"*"
+],
+"append_dimensions": {
+"customized_dimension_key_3": "customized_dimension_value_3"
+}
+},
+"System": {
+"measurement": [
+"Context Switches/sec",
+"System Calls/sec",
+"Processor Queue Length"
+]
+}
+},
+"append_dimensions": {
+"ImageId": "${aws:ImageId}",
+"InstanceId": "${aws:InstanceId}",
+"InstanceType": "${aws:InstanceType}",
+"AutoScalingGroupName": "${aws:AutoScalingGroupName}"
+},
+"aggregation_dimensions" : [["ImageId"], ["InstanceId", "InstanceType"], ["d1"],[]]
+},
+"logs": {
+"logs_collected": {
+"files": {
+"collect_list": [
+{
+"file_path": "c:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\amazon-cloudwatch-agent.log",
+"log_group_name": "amazon-cloudwatch-agent.log",
+"timezone": "UTC"
+},
+{
+"file_path": "c:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\Logs\\test.log",
+"log_group_name": "test.log",
+"timezone": "Local"
+}
+]
+},
+"windows_events": {
+"collect_list": [
+{
+"event_name": "System",
+"event_levels": [
+"INFORMATION",
+"ERROR"
+],
+"log_group_name": "System",
+"log_stream_name": "System",
+"event_format": "xml"
+},
+{
+"event_name": "CustomizedName",
+"event_levels": [
+"WARNING",
+"ERROR"
+],
+"log_group_name": "CustomizedLogGroup",
+"log_stream_name": "CustomizedLogStream",
+"event_format": "xml"
+}
+]
+}
+},
+"log_stream_name": "example_log_stream_name"
+}
+}
+
+## Save the CloudWatch agent configuration file manually
+
+If you create or edit the CloudWatch agent configuration file manually, you can give it any
+name. After you have created the file, you can copy it to other servers where you want to
+run the agent.
+
+## Update the CloudWatch agent configuration file manually
+
+Creating or naming a configuration file does not apply it to the agent. When you apply
+a configuration, the agent stores it and generates the files that it uses at runtime. On a
+Linux server, these files are in the /opt/aws/amazon-cloudwatch-agent/etc
+directory, as shown in the following structure.
+
+/opt/aws/amazon-cloudwatch-agent/etc/
+cloudwatch-agent.json (your source configuration file; you can give it any name)
+amazon-cloudwatch-agent.d/ (agent-managed directory of active configuration fragments)
+file_name (a fragment copied from a local file source)
+ssm_name (a fragment copied from a Systems Manager Parameter Store source)
+amazon-cloudwatch-agent.toml (generated file that the systemd or upstart service uses to run the agent)
+
+The amazon-cloudwatch-agent.d directory holds the active configuration
+that the agent manages. Keep your source configuration file in a location that you choose,
+and do not use the amazon-cloudwatch-agent.d directory to store source
+files.
+
+To apply or update the configuration, use the following commands. For the full command
+syntax and the behavior when configuration file names match, see Creating multiple CloudWatch agent configuration files.
+
+- To apply a source configuration file, run amazon-cloudwatch-agent-ctl -a
+fetch-config -c file:configuration-file-path. This
+command applies the initial configuration or replaces the active configuration
+set.
+
+- To add another configuration to a running agent without replacing the current one,
+use the append-config option. The append-config option
+preserves the existing configuration fragments, unless a configuration file name
+matches one that the agent is already using.
+
+Note
+
+The systemd and upstart services use the generated
+amazon-cloudwatch-agent.toml file to run the agent. If this file is
+absent, starting the agent can apply the default configuration. The default
+configuration can replace the active configuration in the
+amazon-cloudwatch-agent.d directory. Apply your configuration with
+fetch-config or append-config before you start the
+agent.
+
+## Uploading the CloudWatch agent configuration file to Systems Manager Parameter Store
+
+If you plan to use the SSM Agent to install the CloudWatch agent on servers, after you
+manually edit the CloudWatch agent configuration file, you can upload it to Systems Manager Parameter Store. To
+do so, use the Systems Manager put-parameter command.
+
+To be able to store the file in Parameter Store, you must use an IAM role with sufficient
+permissions.
+
+Use the following command, where parameter name is the name
+to be used for this file in Parameter Store and
+configuration_file_pathname is the path and file name of the
+configuration file that you edited.
+
+aws ssm put-parameter --name "parameter name" --type "String" --value file://configuration_file_pathname

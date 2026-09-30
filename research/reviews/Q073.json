@@ -2,9 +2,9 @@
   "question_id": "Q073",
   "question_content_hash": "8dff6113c07a19f559e4f208dbae55799085f773993a6ee90d56d5d6cd6f7604",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -45,29 +45,29 @@
       "unit_id": "Q073:S1",
       "unit_type": "step",
       "verdict": "meets",
-      "position": 1,
-      "reason_vi": "Bước đầu tiên là tạo custom action trong Security Hub (CreateActionTarget) để lấy custom action ARN; ARN này bắt buộc khi tạo rule EventBridge. Cách diễn đạt 'uses the Lambda function' hơi lỏng vì Lambda thực ra là target của rule EventBridge.",
+      "reason_vi": "Chọn bước 1: đăng ký custom action trước để có ARN.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
         "ref1",
-        "ref2"
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference",
+      "position": 1
     },
     {
       "unit_id": "Q073:S2",
       "unit_type": "step",
       "verdict": "does_not_meet",
-      "position": null,
-      "reason_vi": "Không có bước 'filter set cho EventBridge rule trong Security Hub' trong quy trình custom action; rule EventBridge chỉ cần event type Custom Action và custom action ARN, được tạo trong console EventBridge chứ không phải trong Security Hub.",
+      "reason_vi": "Không chọn: filter set trong Security Hub không thay thế event pattern của EventBridge.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
+        "ref1",
         "ref3"
       ],
       "evidence_kind": "inference"
@@ -76,44 +76,45 @@
       "unit_id": "Q073:S3",
       "unit_type": "step",
       "verdict": "meets",
-      "position": 2,
-      "reason_vi": "Sau khi có custom action ARN, tạo rule trong EventBridge với event type 'Security Hub Findings - Custom Action', chỉ định ARN của custom action và chọn target là Lambda function.",
+      "reason_vi": "Chọn bước 2: rule nối custom action với Lambda.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref3",
-        "ref4"
+        "ref1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference",
+      "position": 2
     },
     {
       "unit_id": "Q073:S4",
       "unit_type": "step",
       "verdict": "meets",
-      "position": 3,
-      "reason_vi": "Khi đã có custom action và rule, analyst chọn finding (tối đa 20) rồi chọn custom action trong menu Actions; ở đây là finding về EC2 host nghi nhiễm malware, đúng đối tượng mà Lambda cần xử lý.",
+      "reason_vi": "Chọn bước 3: finding EC2 xác định host cần cô lập.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "ref3"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference",
+      "position": 3
     },
     {
       "unit_id": "Q073:S5",
       "unit_type": "step",
       "verdict": "does_not_meet",
-      "position": null,
-      "reason_vi": "Kịch bản là cách ly EC2 host nghi nhiễm malware; finding về security group (vd cấu hình mở cổng) không xác định instance bị nhiễm, nên chọn custom action cho loại finding này không đúng mục đích.",
+      "reason_vi": "Không chọn: finding security group không xác định trực tiếp host bị nhiễm.",
       "requirement_ids": [
         "R3"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1",
+        "ref3"
       ],
       "evidence_kind": "inference"
     }
@@ -156,18 +157,15 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key (đọc từ ảnh đáp án, viền xanh ở Step 1-3) trùng nhau. Tài liệu Security Hub CSPM nêu trực tiếp thứ tự: tạo custom action -> định nghĩa rule EventBridge chứa ARN custom action (target Lambda) -> chọn finding và chọn custom action.",
-    "open_issues": [
-      "S1 diễn đạt lỏng ('custom action that uses the Lambda function'): Lambda gắn vào rule EventBridge, không gắn trực tiếp vào custom action; không làm thay đổi thứ tự.",
-      "Với cross-Region aggregation, custom action được dùng ở aggregation Region và Lambda cần quyền cross-account để sửa security group trong member account; đề không yêu cầu mô tả chi tiết này."
-    ]
+    "reason_vi": "Custom action ARN đi vào EventBridge; Lambda là rule target; cross-account Lambda cần assume role.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = S1 > S3 > S4 (viền xanh trong ảnh đáp án), trùng blind. Đã kiểm tra lại đối thủ mạnh nhất: S5 (chọn custom action cho finding về security group) — kịch bản là cách ly EC2 host nghi nhiễm malware, nên finding cần chọn là finding về EC2 instance (vd GuardDuty malware finding), không phải finding cấu hình security group; S2 (filter set cho rule EventBridge trong Security Hub) không có trong quy trình custom action theo tài liệu securityhub-cwe-custom-actions/-configure/-define-rule/-send. Thứ tự create action -> define rule -> select action được tài liệu nêu nguyên văn. Giữ nguyên, verified (high).",
+  "reconciliation_vi": "Custom action ARN đi vào EventBridge; Lambda là rule target; cross-account Lambda cần assume role.",
   "explanation_vi": {
-    "why_correct": "Trước tiên tạo custom action trong Security Hub để có custom action ARN (S1); sau đó định nghĩa rule EventBridge có event type Custom Action chứa ARN đó và target là Lambda function (S3); cuối cùng analyst chọn finding về EC2 host nghi nhiễm rồi chọn custom action để gửi finding tới EventBridge, kích hoạt Lambda gỡ rule security group (S4).",
+    "why_correct": "Tạo custom action để có ARN, tạo EventBridge rule khớp ARN và đặt Lambda làm target, rồi chạy action trên finding của EC2 bị nhiễm.",
     "others": {
-      "Q073:S2": "Quy trình custom action không có bước tạo 'filter set' cho rule EventBridge trong Security Hub; rule chỉ cần ARN custom action và được tạo trong EventBridge.",
-      "Q073:S5": "Lambda cách ly EC2 host bị nhiễm malware, nên phải chọn custom action trên finding về EC2 host; finding về security group không chỉ ra instance bị nhiễm."
+      "Q073:S2": "Không chọn: filter set trong Security Hub không thay thế event pattern của EventBridge.",
+      "Q073:S5": "Không chọn: finding security group không xác định trực tiếp host bị nhiễm."
     }
   },
   "keywords": [
@@ -184,7 +182,7 @@
       "meaning_vi": "Rule chứa ARN custom action, target là Lambda; phải có ARN nên đi sau bước tạo action."
     }
   ],
-  "memory_tip_vi": "Nếu cần analyst chọn finding Security Hub rồi chạy Lambda xử lý -> nghĩ đến custom action: tạo action (lấy ARN) -> rule EventBridge chứa ARN, target Lambda -> chọn finding + action; kiểm tra: muốn tự động cho mọi finding thì dùng rule 'Findings - Imported' thay vì custom action.",
+  "memory_tip_vi": "Nếu analyst cần chạy Lambda trên finding, tạo custom action → EventBridge rule có ARN action và target Lambda → chọn finding EC2 rồi chạy action.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -267,12 +265,17 @@
   ],
   "source_issues": [
     {
-      "type": "ambiguous",
-      "location": "Q073:S1",
-      "detail_vi": "'Create a custom action that uses the Lambda function' — custom action không tham chiếu Lambda; Lambda là target của rule EventBridge. Cách diễn đạt lỏng nhưng vẫn chỉ đúng bước tạo custom action."
+      "type": "data",
+      "location": "Q073",
+      "detail_vi": "Custom action không trực tiếp chứa Lambda; Lambda là EventBridge target."
+    },
+    {
+      "type": "data",
+      "location": "Q073",
+      "detail_vi": "Xóa quy tắc của security group dùng chung có thể tác động nhiều instance; câu hỏi cố định thiết kế này."
     }
   ],
-  "notes_vi": "Security Hub hiện được tài liệu gọi là Security Hub CSPM cho tính năng custom action; cơ chế không đổi.",
+  "notes_vi": "Custom action ARN đi vào EventBridge; Lambda là rule target; cross-account Lambda cần assume role.",
   "history": [
     {
       "version": "r1",
@@ -289,6 +292,55 @@
         "Q073:S3",
         "Q073:S4"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Custom action ARN đi vào EventBridge; Lambda là rule target; cross-account Lambda cần assume role.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q073:S1",
+        "Q073:S3",
+        "Q073:S4"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q073:S1",
+        "Q073:S3",
+        "Q073:S4"
+      ],
+      "note_vi": "Custom action ARN đi vào EventBridge; Lambda là rule target; cross-account Lambda cần assume role.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "Create a custom action that uses the Lambda function in Security Hub.",
+      "Define a rule in Amazon EventBridge.",
+      "Select the custom action in Security Hub for EC2 host findings."
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q073:S1",
+      "Q073:S3",
+      "Q073:S4"
+    ],
+    "candidate_answers": [
+      [
+        "Q073:S1",
+        "Q073:S3",
+        "Q073:S4"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

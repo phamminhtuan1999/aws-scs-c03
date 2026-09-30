@@ -2,7 +2,7 @@
   "question_id": "Q141",
   "question_content_hash": "358c359ed558e3df6d43e68491b7f3c4424d39da3f3347b5cd2c88ca4b4c05e0",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:23:33+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
@@ -32,13 +32,13 @@
       "unit_id": "Q141:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Tự viết Lambda tắt tài nguyên + Step Functions Express (tối đa 5 phút) là giải pháp tự chế, không có cơ chế dừng tự động theo điều kiện nêu ra và tắt máy không mô phỏng đầy đủ sự cố thực tế.",
+      "reason_vi": "A Express Step Functions không có cơ chế StopExecution như Standard, và không nêu stop guardrail thích hợp.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref6"
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -46,44 +46,42 @@
       "unit_id": "Q141:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS FIS có scenario AZ Availability: Power Interruption mô phỏng mất điện AZ thực tế, chọn target theo tag, lên lịch chạy định kỳ, và có stop condition (CloudWatch alarm) để dừng experiment khi có sự cố.",
+      "reason_vi": "B FIS phù hợp; phải thêm CloudWatch stop condition vào experiment template.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref4",
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q141:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Runbook thủ công tắt máy theo thứ tự 'sạch' không phải mô phỏng sự cố thực tế, không lặp lại được nhất quán và không có cơ chế dừng tự động.",
+      "reason_vi": "C shutdown tuần tự thủ công kém realistic/automation và không định nghĩa stop condition.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
-      "reference_ids": [],
+      "reference_ids": [
+        "ref1"
+      ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q141:D",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "SSM Automation có thể tự động tắt máy và (theo doc) có thể gắn CloudWatch alarm để huỷ automation, nhưng option không nêu cơ chế dừng và chỉ tắt máy nên kém thực tế hơn fault injection chuyên dụng của FIS.",
+      "reason_vi": "D Automation runbook có thể dừng nhưng option không đưa fault experiment và stop conditions theo yêu cầu như FIS.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref7"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -201,9 +199,15 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
-  "notes_vi": "Từ khoá: realistic DR test trong live environment + cần dừng khi có sự cố -> AWS FIS + stop conditions.",
-  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q141",
+      "detail_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment."
+    }
+  ],
+  "notes_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "blind_record_sha256": "cc8c10f0971485604f916d8d380b9be41d4e702fe04d6f84873b54445aa51bfb",
   "source_answer": [
     "Q141:B"
@@ -215,19 +219,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Doc FIS xác nhận: scenario AZ Availability: Power Interruption chứng minh ứng dụng multi-AZ hoạt động đúng, target theo tag, lập lịch định kỳ, và stop condition (CloudWatch alarm) để dừng experiment trong production.",
-    "open_issues": [
-      "Option B không nhắc stop condition, nhưng stop condition là thành phần sẵn có của experiment template FIS."
-    ]
+    "level": "medium",
+    "reason_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại D (đối thủ mạnh nhất): SSM Automation có thể huỷ automation khi CloudWatch alarm vào trạng thái ALARM (ref7), nhưng option D không cấu hình cơ chế dừng và chỉ 'shut down machines', không mô phỏng sự cố thực tế như fault injection; FIS được thiết kế riêng để chạy experiment trong production với guardrail stop condition. A (Lambda + Step Functions Express tối đa 5 phút) và C (runbook thủ công, tắt máy 'sạch') không realistic và không có cơ chế dừng. Giữ B, verified, high.",
+  "reconciliation_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
   "explanation_vi": {
-    "why_correct": "AWS Fault Injection Service có sẵn scenario Power Interruption để mô phỏng sự cố thực tế trên tài nguyên được chọn theo tag, có thể lên lịch chạy định kỳ, và stop condition (CloudWatch alarm) cho phép dừng experiment khi phát hiện sự cố nghiêm trọng.",
+    "why_correct": "FIS tạo fault experiments có targeting và stop conditions dựa trên CloudWatch alarms để dừng khi vượt ngưỡng.",
     "others": {
-      "Q141:A": "Lambda + Step Functions Express là giải pháp tự chế (Express chỉ chạy tối đa 5 phút), không có cơ chế dừng theo điều kiện và tắt máy không mô phỏng sự cố thực tế.",
-      "Q141:C": "Runbook thủ công tắt máy theo thứ tự 'sạch' không phải test realistic, khó lặp lại nhất quán và không có cơ chế dừng tự động.",
-      "Q141:D": "SSM Automation chỉ tắt máy như mô tả, không cấu hình cơ chế dừng khi có sự cố và kém thực tế hơn fault injection chuyên dụng của FIS."
+      "Q141:A": "A Express Step Functions không có cơ chế StopExecution như Standard, và không nêu stop guardrail thích hợp.",
+      "Q141:C": "C shutdown tuần tự thủ công kém realistic/automation và không định nghĩa stop condition.",
+      "Q141:D": "D Automation runbook có thể dừng nhưng option không đưa fault experiment và stop conditions theo yêu cầu như FIS."
     }
   },
   "keywords": [
@@ -244,7 +246,7 @@
       "meaning_vi": "Chạy trong production -> cần cơ chế dừng an toàn."
     }
   ],
-  "memory_tip_vi": "Nếu cần test DR/chaos thực tế trong production và dừng được khi có sự cố -> nghĩ đến AWS FIS + stop conditions; kiểm tra phương án tự viết Lambda/SSM thường thiếu guardrail dừng.",
+  "memory_tip_vi": "Nếu thử lỗi production, FIS + CloudWatch stop conditions; dừng thử không tự hoàn tác mọi tác động.",
   "tags": {
     "domains": [
       "2 Incident Response",
@@ -270,6 +272,39 @@
       "previous_answer": [
         "Q141:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q141:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q141:B"
+      ],
+      "note_vi": "Option B không viết stop condition; đây là cấu hình cần thêm khi triển khai, không tự có vì chỉ schedule experiment.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

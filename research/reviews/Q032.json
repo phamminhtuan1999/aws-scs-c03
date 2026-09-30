@@ -2,9 +2,9 @@
   "question_id": "Q032",
   "question_content_hash": "5dbddce946b6efd5c7d7ab8ee5b29f023bfdf7ba8901be4d7bdf932b5fcb7a9b",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:41:23Z",
-  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -34,15 +34,14 @@
       "unit_id": "Q032:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM password policy chỉ áp dụng cho mật khẩu IAM user; người dùng federated xác thực tại IdP (AD) nên không chịu policy này, và nó không ảnh hưởng Cognito.",
+      "reason_vi": "Sai: IAM policy chỉ áp mật khẩu IAM users, không AD-federated users.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref9"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -50,26 +49,27 @@
       "unit_id": "Q032:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Cognito user pool có password policy với thiết lập Password minimum length, áp dụng cho người dùng của user pool.",
+      "reason_vi": "Đúng: Cognito password policy cho local user database.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "ref3",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q032:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Với SAML federation, IdP xác thực người dùng dựa trên kho định danh của tổ chức (AD), nên độ dài mật khẩu phải được cấu hình trong AD on-premises.",
+      "reason_vi": "Đúng: AD kiểm soát password của người dùng được AD xác thực.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref2",
-        "ref9"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -77,34 +77,31 @@
       "unit_id": "Q032:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "SCP không cấp quyền mà chỉ đặt giới hạn quyền tối đa cho IAM user/role; nó dùng cùng condition key như IAM policy, và không key nào của IAM hay Cognito liên quan độ dài mật khẩu, nên SCP không thể 'enforce' độ dài mật khẩu.",
+      "reason_vi": "Sai: SCP giới hạn AWS permissions, không validate password login của AD/Cognito.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref4",
-        "ref8",
-        "ref6",
-        "ref7"
+        "ref3",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q032:E",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "IAM policy chỉ cho phép/từ chối API call; danh sách condition key chính thức của IAM và Cognito User Pools (Service Authorization Reference) không có key nào về độ dài mật khẩu, nên không thể 'enforce' độ dài mật khẩu bằng IAM policy.",
+      "reason_vi": "Sai: IAM condition không cung cấp minimum-password-length login chung này.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6",
-        "ref7"
+        "ref3",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -140,33 +137,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn B, C. Mật khẩu thực sự nằm ở AD on-premises (IdP của federation) và Cognito user pool; Cognito có thiết lập Password minimum length. Service Authorization Reference xác nhận IAM và Cognito không có condition key về độ dài mật khẩu, nên D/E không khả thi.",
+    "reason_vi": "Giữ BC; Cognito đã có minimum length nên premise không có bất kỳ minimum là sai literal.",
     "open_issues": []
   },
-  "reconciliation_vi": "Source key = B, C, trùng blind. Đã xét lại đối thủ mạnh nhất A: IAM account password policy chỉ áp dụng cho mật khẩu IAM user, trong khi người dùng federated xác thực tại IdP (AD) và đề không nhắc tới IAM user nào. Blind pass không mở được trang Service Authorization Reference (sai tên trang); lần này đã đọc list_iam.html và list_cognito-idp.html: condition key của IAM chỉ gồm tag, iam:PassedToService, iam:PolicyARN, FIDO..., của Cognito User Pools chỉ gồm tag – không có key độ dài mật khẩu. Vì vậy E (và D, vốn dùng cùng ngôn ngữ policy và 'never grants permissions') được chuyển từ inference sang direct. Giữ B, C, verified, high.",
+  "reconciliation_vi": "Giữ BC; Cognito đã có minimum length nên premise không có bất kỳ minimum là sai literal.",
   "explanation_vi": {
-    "why_correct": "B: Cognito user pool có password policy với 'Password minimum length', áp dụng cho người dùng của ứng dụng. C: người dùng federated xác thực bằng mật khẩu tại Active Directory on-premises, nên độ dài tối thiểu phải đặt trong chính sách mật khẩu của AD.",
+    "why_correct": "Đặt độ dài mật khẩu ở Cognito user pool cho người dùng local và ở Active Directory cho danh tính federation. IAM password policy không áp lên password của external IdP.",
     "others": {
-      "Q032:A": "IAM password policy chỉ áp dụng cho IAM user; người dùng federated dùng mật khẩu AD nên không chịu policy này, và nó không ảnh hưởng Cognito.",
-      "Q032:D": "SCP chỉ giới hạn quyền của IAM principal, không có condition key nào về độ dài mật khẩu để 'enforce' cho IAM hay Cognito.",
-      "Q032:E": "IAM policy kiểm soát API call; IAM và Cognito không có condition key về độ dài mật khẩu nên không thể áp độ dài mật khẩu bằng IAM policy."
+      "Q032:A": "Sai: IAM policy chỉ áp mật khẩu IAM users, không AD-federated users.",
+      "Q032:D": "Sai: SCP giới hạn AWS permissions, không validate password login của AD/Cognito.",
+      "Q032:E": "Sai: IAM condition không cung cấp minimum-password-length login chung này."
     }
   },
   "keywords": [
     {
-      "phrase": "federated with on-premises Active Directory",
-      "meaning_vi": "Mật khẩu nằm ở AD, IAM chỉ nhận assertion -> đặt policy ở AD."
+      "phrase": "Active Directory",
+      "meaning_vi": "Password policy đặt tại IdP xác thực."
     },
     {
-      "phrase": "Amazon Cognito user pools",
-      "meaning_vi": "Cognito tự lưu mật khẩu người dùng -> đặt password policy trong user pool."
+      "phrase": "user database",
+      "meaning_vi": "Cognito local users chịu user-pool policy."
     },
     {
       "phrase": "required minimum length",
-      "meaning_vi": "Thiết lập password policy tại nơi lưu mật khẩu, không phải bằng quyền (SCP/IAM policy)."
+      "meaning_vi": "Minimum không được enforce bằng SCP permissions."
     }
   ],
-  "memory_tip_vi": "Nếu cần áp chính sách mật khẩu -> đặt ở nơi thực sự lưu/xác thực mật khẩu (AD cho federation, Cognito user pool, IAM chỉ cho IAM user); kiểm tra: SCP/IAM policy không có condition key về độ dài mật khẩu.",
+  "memory_tip_vi": "Nếu danh tính federation, sửa password policy tại IdP thực sự xác thực người dùng.",
   "tags": {
     "domains": [
       "4 Identity and Access Management"
@@ -298,7 +295,13 @@
       "kind": "direct"
     }
   ],
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q032",
+      "detail_vi": "Cognito vốn có minimum length >=6; no required minimum là premise không chính xác nếu hiểu theo nghĩa không có bất kỳ minimum nào."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -323,9 +326,28 @@
         "Q032:B",
         "Q032:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ BC; Cognito đã có minimum length nên premise không có bất kỳ minimum là sai literal.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q032:B",
+        "Q032:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q032:B",
+        "Q032:C"
+      ],
+      "note_vi": "Giữ BC; Cognito đã có minimum length nên premise không có bất kỳ minimum là sai literal.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Nguyên tắc: đặt chính sách mật khẩu ở nơi thực sự lưu và xác thực mật khẩu.",
+  "notes_vi": "Giữ BC; Cognito đã có minimum length nên premise không có bất kỳ minimum là sai literal.",
   "timestamp_correction": {
     "corrected_at": "2026-09-30T19:53:14+00:00",
     "by": "main agent (tools/fix_timestamps.py)",
@@ -335,5 +357,22 @@
         "corrected": "2026-09-30T19:49:24Z"
       }
     }
+  },
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": [
+      "Q032:B",
+      "Q032:C"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
   }
 }

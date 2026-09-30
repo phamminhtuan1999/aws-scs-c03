@@ -2,9 +2,9 @@
   "question_id": "Q080",
   "question_content_hash": "13f713187e2e7b136aa3c2a2d197b8b0e5d1a0241cce63fbc4f144c6beaaa6a7",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:53:59Z",
-  "last_reviewed_at": "2026-09-30T20:09:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,7 +39,7 @@
       "unit_id": "Q080:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "CloudTrail ghi các API call thất bại kèm errorCode/errorMessage; thông báo access denied cho biết loại policy gây deny (ví dụ 'explicit deny in a service control policy'). Runbook AWSSupport-TroubleshootIAMAccessDeniedEvents của AWS cũng bắt đầu bằng truy vấn CloudTrail. Đây là bước chẩn đoán không xâm lấn, xác định đúng API bị chặn và nguyên nhân (SCP hay IAM policy).",
+      "reason_vi": "bằng chứng lỗi API hướng dẫn kiểm tra quyền cụ thể.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,10 +47,7 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref7"
+        "Q080-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -58,13 +55,13 @@
       "unit_id": "Q080:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Gỡ toàn bộ SCP khỏi OU Production loại bỏ guardrail tối đa quyền cho mọi account production; đây là thay đổi rủi ro, không phải bước chẩn đoán đầu tiên.",
+      "reason_vi": "Gỡ toàn bộ SCP làm mất guardrails trước khi biết nguyên nhân.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref4"
+        "Q080-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -72,16 +69,14 @@
       "unit_id": "Q080:C",
       "unit_type": "choice",
       "verdict": "meets_but_suboptimal",
-      "reason_vi": "Kiểm tra quyền của role mà CloudFormation dùng là bước hợp lệ theo tài liệu troubleshoot CloudFormation, nhưng không phát hiện được giới hạn do SCP (SCP giới hạn quyền tối đa bất kể identity policy); với dữ kiện template chạy được ở OU khác và SCP khác nhau, bước này kém trực tiếp hơn việc xem lỗi cụ thể trong CloudTrail.",
+      "reason_vi": "Cần kiểm tra sau khi xác định API/principal; chỉ IAM role không giải thích SCP deny.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref5",
-        "ref6",
-        "ref4"
+        "Q080-r2-1"
       ],
       "evidence_kind": "inference"
     },
@@ -89,13 +84,13 @@
       "unit_id": "Q080:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Sao chép SCP của Testing sang Production là thay đổi guardrail production dựa trên phỏng đoán, có thể nới lỏng kiểm soát; không phải bước troubleshoot đầu tiên.",
+      "reason_vi": "Đồng nhất SCP với Testing làm đổi chính sách Production mà chưa chẩn đoán.",
       "requirement_ids": [
         "R3",
         "R4"
       ],
       "reference_ids": [
-        "ref4"
+        "Q080-r2-1"
       ],
       "evidence_kind": "inference"
     }
@@ -131,19 +126,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Blind và source key cùng chọn A. B và D thay đổi guardrail production trước khi biết nguyên nhân. Giữa A và C: dữ kiện đề (cùng template chạy được ở Dev/Test, SCP khác nhau theo OU) chỉ về SCP; chỉ CloudTrail/errorMessage cho thấy API nào bị deny và do loại policy nào, còn kiểm tra quyền role (C) không phát hiện SCP deny. Runbook troubleshoot access denied của AWS cũng bắt đầu từ CloudTrail.",
-    "open_issues": [
-      "C là bước troubleshoot hợp lệ theo trang 'Troubleshooting CloudFormation' (Insufficient IAM permissions: review IAM policy); không có tài liệu AWS nêu thứ tự bắt buộc giữa A và C, nên việc chọn A dựa trên chữ FIRST và dữ kiện SCP khác nhau theo OU."
-    ]
+    "level": "high",
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đã xét kỹ đối thủ mạnh nhất C: trang Troubleshooting CloudFormation đúng là khuyên 'Review your IAM policy' cho lỗi Insufficient IAM permissions, nên C không sai về bản chất. Tuy nhiên đề cho biết cùng template thành công ở hai OU khác và mỗi OU gắn SCP khác nhau; SCP giới hạn quyền tối đa bất kể identity policy, nên kiểm tra role không phát hiện được nguyên nhân SCP. Bằng chứng mới: runbook AWSSupport-TroubleshootIAMAccessDeniedEvents của AWS bắt đầu bằng việc truy vấn CloudTrail tìm access denied events rồi mới phân tích policy, và thông báo lỗi phân biệt explicit/implicit deny do SCP. B/D sửa SCP production dựa trên phỏng đoán. Giữ A, verified, medium.",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Bước đầu tiên nên là thu thập bằng chứng: CloudTrail trong account Production ghi các API call CloudFormation thực hiện bị lỗi, kèm errorCode/errorMessage cho biết hành động nào bị từ chối và bị chặn bởi SCP hay IAM policy. Vì cùng template chạy được ở Dev/Test và SCP khác nhau theo OU, thông tin này chỉ thẳng tới nguyên nhân mà không thay đổi gì ở production.",
+    "why_correct": "Xem failed API trong CloudTrail của Production trước để xác định action, principal và loại deny, rồi đối chiếu IAM role/SCP.",
     "others": {
-      "Q080:B": "Gỡ toàn bộ SCP khỏi OU Production xóa guardrail của mọi account production chỉ để thử; đây là thay đổi rủi ro, không phải bước chẩn đoán đầu tiên.",
-      "Q080:C": "Kiểm tra quyền role của CloudFormation là bước hợp lệ nhưng không phát hiện được SCP deny (SCP giới hạn quyền tối đa bất kể role có quyền gì), trong khi dữ kiện đề chỉ về SCP khác nhau theo OU.",
-      "Q080:D": "Sao chép SCP của Testing sang Production là sửa guardrail dựa trên phỏng đoán và có thể nới lỏng kiểm soát production."
+      "Q080:B": "Gỡ toàn bộ SCP làm mất guardrails trước khi biết nguyên nhân.",
+      "Q080:C": "Cần kiểm tra sau khi xác định API/principal; chỉ IAM role không giải thích SCP deny.",
+      "Q080:D": "Đồng nhất SCP với Testing làm đổi chính sách Production mà chưa chẩn đoán."
     }
   },
   "keywords": [
@@ -160,7 +153,7 @@
       "meaning_vi": "Ưu tiên bước chẩn đoán không xâm lấn trước khi thay đổi cấu hình."
     }
   ],
-  "memory_tip_vi": "Nếu cùng template/cùng thao tác chạy được ở OU này mà lỗi quyền ở OU khác -> nghĩ đến SCP, bước đầu xem CloudTrail errorMessage ('explicit deny in a service control policy'); kiểm tra: không gỡ/sửa SCP production khi chưa có bằng chứng.",
+  "memory_tip_vi": "Nếu CloudFormation thất bại vì quyền, xem API bị từ chối trong CloudTrail trước khi sửa role hoặc SCP.",
   "tags": {
     "domains": [
       "4 Identity and Access Management",
@@ -265,6 +258,18 @@
       "quote": "queries CloudTrail for recent access denied events related to the specified IAM entity and AWS service event source.",
       "supports": "Quy trình troubleshoot access denied chính thức của AWS bắt đầu bằng việc truy vấn CloudTrail tìm các sự kiện bị từ chối, rồi mới phân tích policy.",
       "kind": "direct"
+    },
+    {
+      "id": "Q080-r2-1",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/determine-root-cause-for-stack-failures.html",
+      "title": "Determine the cause of a stack failure - AWS CloudFormation",
+      "accessed_at": "2026-09-30",
+      "quote": "CloudTrail events related to this issue are available and may",
+      "supports": "Stack failure investigation exposes related CloudTrail events for failed resources.",
+      "kind": "direct",
+      "snapshot_id": "5aaf8563b8a6",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -272,6 +277,11 @@
       "type": "typo",
       "location": "Q080:stem:0",
       "detail_vi": "\"Production. Development, and Testing\" dùng dấu chấm thay vì dấu phẩy sau Production; không ảnh hưởng nghĩa."
+    },
+    {
+      "type": "data",
+      "location": "Q080",
+      "detail_vi": "FIRST là trình tự troubleshooting hợp lý, không phải mọi lỗi đều do SCP."
     }
   ],
   "history": [
@@ -288,7 +298,46 @@
       "previous_answer": [
         "Q080:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q080:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q080:A"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Đề nhấn mạnh SCP khác nhau theo OU và cùng template chạy được ở Dev/Test -> nghi SCP; bước đầu là xem CloudTrail/error message để xác định API bị deny và loại policy gây deny, trước khi thay đổi bất kỳ SCP nào."
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q080:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q080:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

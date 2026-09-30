@@ -2,9 +2,9 @@
   "question_id": "Q078",
   "question_content_hash": "77259286480a26cc11ff63d42b1ad8dc9e293fc4e65c1e65a8c5449cf7910490",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:51Z",
-  "last_reviewed_at": "2026-09-30T20:07:59Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -39,28 +39,29 @@
       "unit_id": "Q078:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Rate-based rule đếm request theo nhóm (mặc định theo IP) và chỉ giới hạn khi tốc độ vượt ngưỡng; người dùng hợp lệ dưới ngưỡng không bị ảnh hưởng, triển khai nhanh trên web ACL sẵn có.",
+      "reason_vi": "áp dụng rate-based rule cho incoming requests để chỉ xử lý nhóm vượt rate limit.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2"
+        "Q078-r2-1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q078:B",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Geo match rule block toàn bộ traffic từ hai quốc gia sẽ chặn cả người dùng hợp lệ ở hai quốc gia đó, trong khi ứng dụng phục vụ người dùng toàn cầu.",
+      "reason_vi": "Chặn cả traffic hợp lệ từ hai nước.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
-        "ref3"
+        "Q078-r2-1",
+        "ref4"
       ],
       "evidence_kind": "inference"
     },
@@ -68,28 +69,29 @@
       "unit_id": "Q078:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Security group không có khái niệm geographical match: nguồn chỉ là IP/CIDR, prefix list hoặc security group; và security group chỉ có allow rule, không có deny/block.",
+      "reason_vi": "Security group không có geographic match rule.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5"
+        "Q078-r2-1",
+        "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q078:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Security group chỉ hỗ trợ allow rule, không thể thêm deny rule cho các IP; ngoài ra quản lý hàng trăm IP thủ công cũng không nhanh.",
+      "reason_vi": "Security group không hỗ trợ deny rules.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
+        "Q078-r2-1",
         "ref4"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -122,18 +124,16 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Blind và source key cùng chọn A. Security group không có deny rule và không có geo match (C, D bất khả thi theo tài liệu VPC); geo block toàn bộ hai quốc gia (B) chặn cả người dùng hợp lệ của ứng dụng toàn cầu; rate-based rule chỉ giới hạn nguồn vượt ngưỡng.",
-    "open_issues": [
-      "Cấu hình tốt hơn là rate-based rule có scope-down geo match cho hai quốc gia, nhưng option A (rate-based cho mọi request) vẫn đáp ứng yêu cầu."
-    ]
+    "reason_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = A, trùng blind. Đối thủ mạnh nhất là B (geo match block): chặn nhanh nhưng chặn toàn bộ traffic từ hai quốc gia, vi phạm yêu cầu không ngăn người dùng hợp lệ của ứng dụng phục vụ toàn cầu. C/D bất khả thi vì tài liệu VPC nói security group chỉ có allow rule và nguồn chỉ là CIDR/prefix list/security group. Rate-based rule đếm request theo IP và chỉ chặn IP vượt ngưỡng. Giữ A, verified (high).",
+  "reconciliation_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "explanation_vi": {
-    "why_correct": "Rate-based rule trong web ACL gắn với ALB đếm request theo từng IP và chỉ chặn IP vượt ngưỡng trong khoảng thời gian đánh giá, nên nhanh chóng hạn chế hàng trăm IP gửi dồn dập mà người dùng bình thường (dưới ngưỡng) vẫn truy cập được.",
+    "why_correct": "Rate-based rule giới hạn nguồn/nhóm request vượt ngưỡng thay vì cấm toàn bộ người dùng của hai quốc gia; cần chọn ngưỡng và aggregation phù hợp.",
     "others": {
-      "Q078:B": "Geo match block chặn toàn bộ request từ hai quốc gia, kể cả người dùng hợp lệ ở đó, trái yêu cầu không chặn người dùng hợp lệ.",
-      "Q078:C": "Security group không hỗ trợ geo match và cũng không có rule block/deny; nguồn chỉ là CIDR, prefix list hoặc security group.",
-      "Q078:D": "Security group chỉ có allow rule, không thể thêm deny rule cho hàng trăm IP."
+      "Q078:B": "Chặn cả traffic hợp lệ từ hai nước.",
+      "Q078:C": "Security group không có geographic match rule.",
+      "Q078:D": "Security group không hỗ trợ deny rules."
     }
   },
   "keywords": [
@@ -150,7 +150,7 @@
       "meaning_vi": "Quá nhiều IP để chặn tay; rate-based rule tự theo dõi từng IP."
     }
   ],
-  "memory_tip_vi": "Nếu cần hạn chế nhanh request độc hại từ nhiều IP mà không chặn người dùng hợp lệ -> nghĩ đến WAF rate-based rule (có thể scope-down theo geo); kiểm tra: security group không có deny/geo, geo block chặn cả người dùng thật.",
+  "memory_tip_vi": "Nếu cần giảm request quá mức mà giữ người dùng trong quốc gia đó, dùng rate-based rule với ngưỡng phù hợp.",
   "tags": {
     "domains": [
       "3 Infrastructure Security",
@@ -228,6 +228,18 @@
       "quote": "The source (inbound rules) or destination (outbound rules) for the traffic to allow.",
       "supports": "Nguồn của rule security group là IP/CIDR, prefix list hoặc security group; không có geo match.",
       "kind": "direct"
+    },
+    {
+      "id": "Q078-r2-1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-request-limiting.html",
+      "title": "Applying rate limiting to requests in AWS WAF - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director",
+      "accessed_at": "2026-09-30",
+      "quote": "applies its action settings to matching web requests. A rate-based",
+      "supports": "Rate-based action applies only to aggregation instances exceeding threshold.",
+      "kind": "direct",
+      "snapshot_id": "72c200799dac",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_issues": [
@@ -235,9 +247,14 @@
       "type": "typo",
       "location": "Q078:C",
       "detail_vi": "Thiếu dấu chấm cuối câu."
+    },
+    {
+      "type": "data",
+      "location": "Q078",
+      "detail_vi": "Rate limiting không bảo đảm zero false positives; all incoming requests không đồng nghĩa aggregate CountAll."
     }
   ],
-  "notes_vi": "",
+  "notes_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
   "history": [
     {
       "version": "r1",
@@ -252,6 +269,45 @@
       "previous_answer": [
         "Q078:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "performed_by": "independent pass q073_q108 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q078:A"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q078:A"
+      ],
+      "note_vi": "Key và status khớp; thay văn bản bằng giải thích ngắn, giữ nghĩa.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q073_q108",
+    "independent_record": "independent_verify/q073_q108/independent.json",
+    "independent_sha256": "eb3c5679d7425cbee0efc50e88ff828f8e50a4ea7752e87faa133c31268069e0",
+    "comparison_record": "independent_verify/q073_q108/comparison.json",
+    "comparison_sha256": "196c224b2ae1a6cbe5f154074e95a83d37166f406ac03ec94d661e1ddfc4d581",
+    "independent_answer": [
+      "A"
+    ],
+    "independent_status": "verified",
+    "intended_answer": [
+      "Q078:A"
+    ],
+    "candidate_answers": [
+      [
+        "Q078:A"
+      ]
+    ],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

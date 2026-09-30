@@ -2,9 +2,9 @@
   "question_id": "Q014",
   "question_content_hash": "6abecb49d3a786d573db7ef023c9e7403cd57a4bf767dee79ca8144ccd5a6f14",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:36:00Z",
-  "last_reviewed_at": "2026-09-30T19:41:10Z",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -33,14 +33,15 @@
       "unit_id": "Q014:A",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "CloudTrail ghi từng API call (hành động), không ghi trạng thái cấu hình; API call gần nhất thường chỉ thay đổi một thuộc tính nên không thể hiện tác động tích lũy của nhiều thay đổi, lại phải tự lọc và suy luận.",
+      "reason_vi": "Sai: CloudTrail ghi API activity, không snapshot cấu hình tích lũy.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref4"
+        "Q014-r2-1",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -48,32 +49,31 @@
       "unit_id": "Q014:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AWS Config ghi configuration item của tài nguyên và đánh giá rule tuân thủ; chế độ Daily (periodic) recording chỉ ghi một CI thể hiện trạng thái mới nhất trong 24 giờ nếu khác CI trước — đúng yêu cầu ghi cấu hình cuối cùng.",
+      "reason_vi": "Đúng: xem CI mới nhất của AWS Config, chọn recording frequency phù hợp.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref6"
+        "Q014-r2-1",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q014:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "CloudWatch không tự ghi API call mà cần CloudTrail đẩy log sang CloudWatch Logs; kết quả vẫn là API call riêng lẻ, không phải cấu hình tài nguyên, nên API call cuối không thể hiện tác động tích lũy và vận hành phức tạp hơn.",
+      "reason_vi": "Sai: CloudWatch không thay resource configuration item.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref7"
+        "Q014-r2-1",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
@@ -81,15 +81,16 @@
       "unit_id": "Q014:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "AWS Cloud Map là dịch vụ service discovery (ánh xạ tên logic tới tài nguyên), không phát hiện hay ghi lại thay đổi cấu hình tài nguyên.",
+      "reason_vi": "Sai: Cloud Map phục vụ service discovery, không ghi trạng thái compliance.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref5"
+        "Q014-r2-1",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -203,6 +204,18 @@
       "quote": "You can use Amazon CloudWatch Logs to monitor, store, and access your log files from CloudTrail.",
       "supports": "Lọc API call bằng CloudWatch thực chất dựa vào log CloudTrail gửi sang CloudWatch Logs (C phức tạp hơn).",
       "kind": "inference"
+    },
+    {
+      "id": "Q014-r2-1",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/how-does-config-work.html",
+      "title": "How AWS Config Works - AWS Config",
+      "accessed_at": "2026-09-30",
+      "quote": "AWS Config also generates configuration items when the configuration of",
+      "supports": "AWS Config configuration items describe resource configuration state and change history.",
+      "kind": "direct",
+      "snapshot_id": "3a7d0d0e8489",
+      "page_last_updated": null,
+      "evidence_note": "Document read in independent pass. Short literal excerpt identifies archive; option-specific inference remains in option_reviews."
     }
   ],
   "source_answer": [
@@ -216,35 +229,33 @@
   "differs_from_source": false,
   "confidence": {
     "level": "high",
-    "reason_vi": "Tài liệu AWS Config (RecordingMode, Recording frequency) và What's New 11/2023 nêu rõ periodic/daily recording chỉ tạo một configuration item thể hiện trạng thái mới nhất khi có nhiều thay đổi; các lựa chọn khác không ghi trạng thái cấu hình.",
-    "open_issues": [
-      "Đề không gọi tên periodic (daily) recording; tính năng này có từ 26/11/2023. Trước đó AWS Config chỉ ghi liên tục mọi thay đổi, nhưng B vẫn là lựa chọn duy nhất ghi trạng thái cấu hình tài nguyên."
-    ]
+    "reason_vi": "Giữ B; giải thích Daily recording rõ thay vì coi mọi thay đổi nhanh tự gộp.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind (B) trùng khóa nguồn (B). Đã kiểm tra lại đối thủ mạnh nhất là A (CloudTrail): CloudTrail ghi sự kiện API, không ghi configuration item; API call cuối chỉ phản ánh một thay đổi, không phải trạng thái tích lũy. Vì vậy hạ A và C từ meets_but_suboptimal xuống does_not_meet (lý do: không đáp ứng yêu cầu thể hiện cumulative impact). What's New 11/2023 mô tả đúng ví dụ nhiều thay đổi trong 24 giờ chỉ tạo một CI trạng thái mới nhất. Giữ B.",
+  "reconciliation_vi": "Giữ B; giải thích Daily recording rõ thay vì coi mọi thay đổi nhanh tự gộp.",
   "explanation_vi": {
-    "why_correct": "AWS Config ghi cấu hình tài nguyên dưới dạng configuration item và đánh giá tuân thủ bằng Config rules; chế độ periodic (daily) recording chỉ ghi một CI thể hiện trạng thái mới nhất khi tài nguyên đổi nhiều lần, đúng yêu cầu ghi tác động tích lũy với ít công vận hành.",
+    "why_correct": "AWS Config configuration item là bản ghi trạng thái cấu hình phù hợp để đánh giá tác động tích lũy. Nếu chỉ muốn trạng thái cuối theo khoảng thời gian, cấu hình Daily recording; Continuous mặc định không bảo đảm chỉ một bản ghi cuối.",
     "others": {
-      "Q014:A": "CloudTrail chỉ ghi API call, API call cuối không cho biết cấu hình tổng thể sau nhiều thay đổi và phải tự lọc, suy luận.",
-      "Q014:C": "CloudWatch phải dựa vào log CloudTrail để lọc API call, vẫn không có trạng thái cấu hình tích lũy và tốn công xây dựng.",
-      "Q014:D": "AWS Cloud Map là dịch vụ service discovery, không phát hiện hay ghi lại thay đổi cấu hình tài nguyên."
+      "Q014:A": "Sai: CloudTrail ghi API activity, không snapshot cấu hình tích lũy.",
+      "Q014:C": "Sai: CloudWatch không thay resource configuration item.",
+      "Q014:D": "Sai: Cloud Map phục vụ service discovery, không ghi trạng thái compliance."
     }
   },
   "keywords": [
     {
-      "phrase": "record only the latest configuration",
-      "meaning_vi": "Chỉ ghi cấu hình mới nhất: gợi ý AWS Config periodic (daily) recording."
+      "phrase": "configuration changes",
+      "meaning_vi": "AWS Config lưu configuration items."
     },
     {
-      "phrase": "in quick succession",
-      "meaning_vi": "Nhiều thay đổi liên tiếp; không cần một bản ghi cho mỗi thay đổi."
+      "phrase": "latest configuration",
+      "meaning_vi": "Daily mode lưu latest change trong khoảng 24 giờ."
     },
     {
-      "phrase": "compliance standards",
-      "meaning_vi": "Đánh giá tuân thủ cấu hình: AWS Config rules."
+      "phrase": "cumulative impact",
+      "meaning_vi": "CI phản ánh state, CloudTrail chỉ ghi API activity."
     }
   ],
-  "memory_tip_vi": "Nếu cần trạng thái cấu hình tài nguyên và đánh giá compliance -> nghĩ đến AWS Config (periodic recording khi chỉ cần trạng thái mới nhất); kiểm tra: CloudTrail trả lời \"ai gọi API gì\", không phải \"cấu hình hiện tại là gì\".",
+  "memory_tip_vi": "Nếu muốn chỉ trạng thái cấu hình mới nhất trong 24 giờ, đặt AWS Config Daily recording.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -258,7 +269,13 @@
     ],
     "reason_vi": "Theo dõi và đánh giá tuân thủ cấu hình tài nguyên bằng AWS Config (governance) và phát hiện thay đổi cấu hình."
   },
-  "source_issues": [],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q014",
+      "detail_vi": "Không có cơ sở hiện hành cho khẳng định mọi thay đổi nhanh tự động bị gộp bởi Continuous recorder."
+    }
+  ],
   "history": [
     {
       "version": "r1",
@@ -281,7 +298,38 @@
       "previous_answer": [
         "Q014:B"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Giữ B; giải thích Daily recording rõ thay vì coi mọi thay đổi nhanh tự gộp.",
+      "performed_by": "independent pass q001_q036 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q014:B"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q014:B"
+      ],
+      "note_vi": "Giữ B; giải thích Daily recording rõ thay vì coi mọi thay đổi nhanh tự gộp.",
+      "technical_change": false
     }
   ],
-  "notes_vi": "Từ khóa 'record only the latest configuration' tương ứng AWS Config daily/periodic recording."
+  "notes_vi": "Giữ B; giải thích Daily recording rõ thay vì coi mọi thay đổi nhanh tự gộp.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q001_q036",
+    "independent_record": "independent_verify/q001_q036/independent.json",
+    "independent_sha256": "cd29321ce10df06615cf877f902f5eb07c1b46377e0554de2cd6bd700205af99",
+    "comparison_record": "independent_verify/q001_q036/comparison.json",
+    "comparison_sha256": "2433267a66db3afcf837b65dc68706780b9fa68dde0de9a0a4989abfe74b3e82",
+    "independent_answer": "Q014:B",
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

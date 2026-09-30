@@ -2,9 +2,9 @@
   "question_id": "Q133",
   "question_content_hash": "e3d34252ae580f182c71f183cdf2eba26e2f7e156be2d73e7d0840d29cdeb3ce",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T20:21:36+00:00",
-  "last_reviewed_at": "2026-09-30T20:40:58+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -29,8 +29,8 @@
     },
     {
       "id": "R4",
-      "text_vi": "Đề không nêu tiêu chí tối ưu rõ ràng; theo quy ước đề thi, giải pháp managed sẵn có được ưu tiên hơn code tùy biến.",
-      "kind": "optimization"
+      "text_vi": "Đề không nêu tiêu chí ưu tiên managed service hoặc ít vận hành; không tự thêm tiêu chí để loại custom Lambda rule.",
+      "kind": "condition"
     }
   ],
   "image_transcriptions": [],
@@ -39,7 +39,7 @@
       "unit_id": "Q133:A",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Managed rule s3-default-encryption-kms đánh dấu NON_COMPLIANT khi bucket không mã hóa bằng KMS key và nhận tham số kmsKeyArns để giới hạn đúng customer managed key; việc chỉ đánh giá bucket có tag được làm bằng scope của rule (TagKey/TagValue), không phải bằng 'parameter' như A viết, và A chỉ nêu tên tag chứ không nêu giá trị True.",
+      "reason_vi": "A tag không phải parameter của s3-default-encryption-kms; thiết kế này khả thi nếu sửa tag sang Config scope, nhưng không đúng nguyên văn.",
       "requirement_ids": [
         "R1",
         "R2",
@@ -47,54 +47,49 @@
         "R4"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
-        "ref3",
-        "ref8"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q133:B",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "Custom Lambda rule nhận configuration item của bucket (có danh sách tag key–value) nên kiểm tra được đúng ContainsSensitiveData=True và key KMS đang dùng; đáp ứng đủ yêu cầu, chỉ tốn công viết/duy trì code hơn managed rule – nhưng đề không nêu tiêu chí ít vận hành.",
+      "reason_vi": "B custom rule có thể đọc tag/encryption và xác nhận KMS customer managed key.",
       "requirement_ids": [
         "R1",
         "R2",
         "R4"
       ],
       "reference_ids": [
-        "ref4",
-        "ref7"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q133:C",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Amazon Inspector là dịch vụ quét lỗ hổng cho EC2, image ECR và Lambda; không đánh giá cấu hình mã hóa của S3 bucket và không có tham số tag/KMS key như mô tả.",
+      "reason_vi": "C Inspector không scan S3 bucket default encryption như một Config rule.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref5"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q133:D",
       "unit_type": "choice",
       "verdict": "does_not_meet",
-      "reason_vi": "Trusted Advisor cung cấp các check best-practice định sẵn; 'custom policy rule' là khái niệm của AWS Config (Guard), không phải của Trusted Advisor.",
+      "reason_vi": "D Trusted Advisor không có custom-policy-rule facility như mô tả.",
       "requirement_ids": [
         "R1",
         "R2"
       ],
       "reference_ids": [
-        "ref6",
-        "ref4"
+        "ref1"
       ],
       "evidence_kind": "inference"
     }
@@ -125,32 +120,30 @@
   "source_answer": [
     "Q133:B"
   ],
-  "researched_answer": null,
-  "comparison": "not_comparable",
-  "status": "ambiguous",
+  "researched_answer": [
+    "Q133:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "medium",
-    "reason_vi": "Cả A và B đều làm được việc 'identify' bucket không tuân thủ: A bằng managed rule s3-default-encryption-kms (tham số kmsKeyArns) + scope theo tag, B bằng custom Lambda rule đọc tag trong configuration item. Đề chỉ hỏi 'Which solution will meet this requirement?' không có tiêu chí least operational overhead để phân định, và A lại mô tả sai cơ chế (tag là 'parameter', chỉ nêu tên tag). Hai đáp án bảo vệ được cho Choose 1.",
-    "open_issues": [
-      "Nếu áp quy ước đề thi 'managed rule hơn code tự viết' và hiểu 'parameters' của A là cấu hình rule nói chung -> A (kết luận blind).",
-      "Nếu đọc A theo nguyên văn (rule chỉ có tham số kmsKeyArns, không có tham số tag; A không nêu giá trị True) -> A không thực hiện được như mô tả, B là đáp án duy nhất (source key)."
-    ]
+    "level": "high",
+    "reason_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Blind = A (verified, medium), source key = B. Đã kiểm tra cả hai phía: (1) trang rule s3-default-encryption-kms chỉ có một tham số tùy chọn kmsKeyArns (ref1) và trang Adding Config Rules định nghĩa parameter là thuộc tính tài nguyên phải tuân theo (ref8), còn lọc theo tag là 'scope of changes' (ref2, ref3) – nên câu 'Specify the tag name ... as parameters' của A sai nguyên văn, dù ý đồ (managed rule + scope theo tag) làm được; A cũng chỉ nêu tên tag, không nêu giá trị True. (2) Bằng chứng MỚI cho B: configuration item của AWS Config chứa danh sách tag key–value (ref7), nên custom Lambda rule kiểm tra đúng giá trị tag và key KMS – B đáp ứng đầy đủ yêu cầu, không chỉ 'chạy được'. Blind xếp B là meets_but_suboptimal dựa trên tiêu chí ít vận hành mà đề KHÔNG nêu, nên mối lo đó không còn làm căn cứ loại B. Không có tài liệu nào phân định A với B khi đề không có tiêu chí tối ưu: chọn A cần nới lỏng cách đọc A, chọn B cần bỏ qua quy ước ưu tiên managed rule. C (Inspector không quét S3) và D (Trusted Advisor không có custom policy rule) sai rõ. Kết luận: ambiguous, researched_answer = null, không chấm điểm.",
+  "reconciliation_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
   "explanation_vi": {
-    "why_correct": "CHƯA KẾT LUẬN (ambiguous): cả A và B đều phát hiện được bucket có tag ContainsSensitiveData=True mà không dùng customer managed key. B (source key) dùng custom Lambda rule đọc tag trong configuration item và kiểm tra key KMS – đúng nguyên văn; A dùng managed rule s3-default-encryption-kms với kmsKeyArns và scope theo tag – ít công hơn nhưng mô tả sai (tag không phải parameter). Đề không có 'least operational overhead' nên không phân định được.",
+    "why_correct": "Custom Config Lambda rule kiểm tra tag và xác nhận customer managed KMS key. A ghi tag như rule parameter, trong khi managed rule chỉ có kmsKeyArns; tag phải đặt ở scope.",
     "others": {
-      "Q133:A": "Managed rule s3-default-encryption-kms + kmsKeyArns làm được nếu lọc bucket bằng scope theo tag; nhưng rule chỉ có tham số kmsKeyArns, tag không khai báo 'as parameters' như A viết.",
-      "Q133:B": "Custom Lambda rule đọc được tag key–value trong configuration item và kiểm tra key KMS, đáp ứng đúng yêu cầu nhưng phải tự viết và duy trì code.",
-      "Q133:C": "Amazon Inspector chỉ quét EC2, image ECR và Lambda, không đánh giá cấu hình mã hóa của S3 bucket và không có tham số tag/KMS key.",
-      "Q133:D": "Trusted Advisor chỉ có các check định sẵn; 'custom policy rule' là khái niệm của AWS Config (Guard), không có trong Trusted Advisor."
+      "Q133:A": "A tag không phải parameter của s3-default-encryption-kms; thiết kế này khả thi nếu sửa tag sang Config scope, nhưng không đúng nguyên văn.",
+      "Q133:C": "C Inspector không scan S3 bucket default encryption như một Config rule.",
+      "Q133:D": "D Trusted Advisor không có custom-policy-rule facility như mô tả."
     }
   },
   "keywords": [
     {
       "phrase": "encrypted by an AWS KMS customer managed key",
-      "meaning_vi": "Phải kiểm tra đúng key do khách hàng quản lý (kmsKeyArns), không chỉ 'có dùng KMS'."
+      "meaning_vi": "Kiểm tra đúng customer managed key; Lambda rule cần kiểm tra key identity, không chỉ SSE-KMS bật."
     },
     {
       "phrase": "tag named ContainsSensitiveData that is set to True",
@@ -161,7 +154,7 @@
       "meaning_vi": "Bài toán phát hiện tuân thủ liên tục -> AWS Config rule."
     }
   ],
-  "memory_tip_vi": "Nếu cần phát hiện tài nguyên không tuân thủ cấu hình -> nghĩ đến AWS Config rule (managed rule trước, custom Lambda/Guard khi logic riêng); kiểm tra lọc theo tag là 'scope' chứ không phải parameter, và đề có nêu least operational overhead hay không.",
+  "memory_tip_vi": "Nếu Config managed rule thiếu tag parameter, đặt tag ở scope; custom rule khi cần logic khác.",
   "tags": {
     "domains": [
       "6 Security Foundations and Governance",
@@ -288,12 +281,12 @@
       "detail_vi": "Tên tag viết sai 'ContainsSensltiveData' (chữ l thay cho i) so với 'ContainsSensitiveData' trong đề."
     },
     {
-      "type": "ambiguous",
-      "location": "Q133:A",
-      "detail_vi": "A ghi 'Specify the tag name ... as parameters' trong khi rule s3-default-encryption-kms chỉ có tham số kmsKeyArns (lọc tag nằm ở scope) và không nêu giá trị True; đề lại không có tiêu chí least operational overhead nên A và B đều bảo vệ được."
+      "type": "data",
+      "location": "Q133",
+      "detail_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật."
     }
   ],
-  "notes_vi": "Nếu không chỉ định kmsKeyArns, bucket dùng aws/s3 (AWS managed key) cũng được coi là compliant, nên phải khai báo key được phép. Scope theo tag dùng TagKey và tùy chọn TagValue.",
+  "notes_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
   "history": [
     {
       "version": "r1",
@@ -314,6 +307,37 @@
       "date": "2026-09-30T20:40:58+00:00",
       "change": "AUDIT (scs-auditor, độc lập): đã giải quyết cờ key-direction change – giữ status ambiguous, researched_answer=null, confidence medium. Việc nâng B lên 'meets' là hợp lệ, không phụ thuộc key: configuration item có tag key-value (ref7) nên custom Lambda rule kiểm tra đúng tag + KMS key; lý do 'suboptimal' của blind dựa trên tiêu chí least operational overhead mà đề không nêu. A vẫn bảo vệ được theo cách đọc nới lỏng (managed rule s3-default-encryption-kms có kmsKeyArns; trigger Configuration changes nên scope theo tag hợp lệ – ref1, ref2, ref3), nhưng câu 'Specify the tag name ... as parameters' trái với danh sách tham số của rule (chỉ kmsKeyArns). Không có tài liệu phân định A/B mà không phải thêm điều kiện đề không nêu -> không nâng lên verified B (tránh thiên lệch theo key), không quay về A. Đã đọc lại snapshot 251ae49566ed, e7de823e81e2, 17a9fc903c1e, 2e56bf992cbf, 3986009fb779, 6ead4370c770.",
       "previous_answer": null
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
+      "performed_by": "independent pass q109_q143 + root reconciliation",
+      "previous_status": "ambiguous",
+      "previous_answer": null,
+      "status": "verified",
+      "answer": [
+        "Q133:B"
+      ],
+      "note_vi": "Không nói managed rule không hỗ trợ tag filtering nói chung: Config scope hỗ trợ tag. B phải kiểm tra customer managed/key ARN, không chỉ SSE-KMS bật.",
+      "technical_change": true
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q109_q143",
+    "independent_record": "independent_verify/q109_q143/independent.json",
+    "independent_sha256": "a7ea08fd81b71ecd54a858dc6008b43bc9b65dfd7aac644db303d7a0e5e1d449",
+    "comparison_record": "independent_verify/q109_q143/comparison.json",
+    "comparison_sha256": "9385112bfb9be20899e682ae21102626bcd4c72578b631b9c6c0bd5aa8c800ac",
+    "independent_answer": [
+      "B"
+    ],
+    "independent_status": "verified",
+    "intended_answer": null,
+    "candidate_answers": [],
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

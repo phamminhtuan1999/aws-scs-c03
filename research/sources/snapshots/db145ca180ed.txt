@@ -1,0 +1,208 @@
+URL: https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/monitor-and-remediate-scheduled-deletion-of-aws-kms-keys.html
+TITLE: Monitor and remediate scheduled deletion of AWS KMS keys - AWS Prescriptive Guidance
+
+# Monitor and remediate scheduled deletion of AWS KMS keys
+
+Mikesh Khanal and Ramya Pulipaka, Amazon Web Services
+
+## Summary
+
+On the Amazon Web Services (AWS) Cloud, deleting an AWS Key Management Services (AWS KMS) key can result in data loss. Deletion removes the key material and all metadata associated with the AWS KMS key, and it is irreversible. After an AWS KMS key is deleted, you can no longer decrypt the data that were encrypted under that AWS KMS key, so that data cannot be recovered.
+
+This pattern sets up monitoring, with notifications when an application or a user schedules an AWS KMS key for deletion. If you receive a notification, you might want to cancel deletion of the AWS KMS key and reconsider your decision to delete it. The pattern uses the AWS Systems Manager automation runbook AWSConfigRemediation-CancelKeyDeletion to facilitate canceling the deletion of an AWS KMS key.
+
+Note
+
+The pattern's CloudFormation template must be deployed in all AWS Regions where you want to monitor deletion of AWS KMS keys.
+
+## Prerequisites and limitations
+
+Prerequisites
+
+- An active AWS account
+
+- Understanding of the following AWS services:
+
+- Amazon EventBridge
+
+- AWS KMS
+
+- Amazon Simple Notification Service (Amazon SNS)
+
+- AWS Systems Manager
+
+Limitations
+
+- Any customization of the solution requires knowledge of AWS CloudFormation templates and the AWS services used in this pattern.
+
+- Currently, this solution uses the default event bus, and it can be customized according to the requirements. For more information about the custom event bus, see the AWS documentation.
+
+## Architecture
+
+Target technology stack
+
+- Amazon EventBridge
+
+- AWS KMS
+
+- Amazon SNS
+
+- AWS Systems Manager
+
+- Automation using the following:
+
+- AWS Command Line Interface (AWS CLI) or AWS SDK
+
+- AWS CloudFormation stack
+
+Target architecture
+
+- Deletion of an AWS KMS key is scheduled.
+
+- The scheduled-deletion event is evaluated by an EventBridge rule.
+
+- The EventBridge rule engages the Amazon SNS topic.
+
+- The EventBridge rule initiates the Systems Manager automation and runbooks.
+
+- The runbooks cancel the deletion.
+
+Automation and scale
+
+The CloudFormation stack deploys all the necessary resources and services for this solution to work. The pattern can be run independently in a single account or run using AWS CloudFormation StackSets for multiple independent accounts or an organization.
+
+aws cloudformation create-stack --stack-name <stack-name>\
+--template-body file://<Full-Path-of-file> \
+--parameters ParameterKey=,ParameterValue= \
+--capabilities CAPABILITY_NAMED_IAM
+
+## Tools
+
+Tools
+
+- AWS CloudFormation – AWS CloudFormation is a service that helps you model and set up your Amazon Web Services resources so that you can spend less time managing those resources and more time focusing on your applications that run on AWS. You can use a CloudFormation template to create stacks in an AWS account in an AWS Region. The template describes all the AWS resources that you want, and CloudFormation provisions and configures those resources for you.
+
+- AWS CLI – The AWS Command Line Interface (AWS CLI) is an open source tool that you can use to interact with AWS services using commands in your command line shell.
+
+- Amazon EventBridge – Amazon EventBridge is a serverless event bus service connecting your applications with data from a variety of sources. EventBridge delivers a stream of real-time data from your own applications and AWS services, and it routes that data to targets such as AWS Lambda. EventBridge simplifies the process of building event-driven architectures.
+
+- AWS KMS – AWS Key Management Service (AWS KMS) is a managed service for creating and controlling AWS KMS keys, the encryption keys used to encrypt your data.
+
+- AWS SDKs – AWS tools include SDKs so that you can develop and manage applications on AWS in the programming language of your choice.
+
+- Amazon SNS – Amazon Simple Notification Service (Amazon SNS) is a managed service that provides message delivery from publishers to subscribers (also known as producers and consumers). Publishers communicate asynchronously with subscribers by sending messages to a topic, which is a logical access point and communication channel.
+
+- AWS Systems Manager – AWS Systems Manager is an AWS service that you can use to view and control your infrastructure on AWS. Using the Systems Manager console, you can automate operational tasks across your AWS resources. Systems Manager helps you maintain security and compliance by scanning your managed instances and reporting on (or taking corrective action on) any policy violations it detects.
+
+Code
+
+- The alerting_ct_logs.yaml CloudFormation template for the project is attached.
+
+## Epics
+
+Task
+
+Description
+
+Skills required
+
+Install and configure AWS CLI.
+
+Install AWS CLI version 2. Then configure the security credentials settings for an identity, the default output format, and the default AWS Region that AWS CLI uses to interact with AWS.
+
+The identity must have the required permissions to perform the tasks.
+
+Developer, Security engineer
+
+Task
+
+Description
+
+Skills required
+
+Download the CloudFormation template.
+
+Download the attachment to a local path on your computer and extract the alerting_ct_logs.yaml template file.
+
+Developer, Security engineer
+
+Deploy the template.
+
+In the terminal window where the AWS account profile has been configured, run the following command.
+
+aws cloudformation create-stack --stack-name <stack_name> \
+--capabilities <Value> \
+--template-body file://<Full_Path> \
+--parameters ParameterKey=DestinationEmailAddress,ParameterValue=<Value> \
+ParameterKey=SNSTopicName,ParameterValue=<Value> \
+ParameterKey=EnableRemediation ,ParameterValue=<Value> \
+ParameterKey=AutomationAssumeRole,ParameterValue=<Value>
+
+In the next step, enter values for the template parameters.
+
+Developer, Security engineer
+
+Complete the template parameters.
+
+Enter the required values for the parameters.
+
+- DestinationEmailAddress – The email address to receive an alert when an AWS KMS key is scheduled for deletion.
+
+- SNSTopicName – The name of the Amazon SNS topic.
+
+- EnableRemediation – Cancellation of the scheduled key deletion using a Systems Manager runbook. Allowed values are true and false.
+
+- AutomationAssumeRole – The Amazon Resource Name (ARN) of the role that allows Systems Manager automation to perform the actions on your behalf. For more information, see the Required IAM Permissions section in the AWSConfigRemediation-CancelKeyDeletion documentation.
+
+- Capabilities – For AWS CloudFormation to create the stack, you must explicitly acknowledge that your stack template contains certain capabilities.
+
+Developer, Security engineer
+
+Task
+
+Description
+
+Skills required
+
+Confirm the subscription.
+
+Check your email inbox and choose Confirm subscription in the email message that you receive from Amazon SNS. A web browser window will open and display a subscription confirmation and your subscription ID.
+
+Developer, Security engineer
+
+## Related resources
+
+References
+
+- Creating a rule for an AWS service
+
+- Creating an Amazon CloudWatch alarm to detect usage of an AWS KMS key that is pending deletion
+
+Tutorials and videos
+
+- How to get started with Amazon EventBridge
+
+- Deep dive on Amazon EventBridge (AWS Online Tech Talks)
+
+AWS workshop
+
+- Working with EventBridge rules
+
+## Additional information
+
+The following code provides examples for extending the solution to monitor and notify you of any changes in any AWS service. The examples include predefined patterns and custom patterns. For more information, see Events and event patterns in EventBridge.
+
+EventPattern:
+source:
+- aws.kms
+detail-type:
+- AWS API Call via CloudTrail
+detail:
+eventSource:
+- kms.amazonaws.com
+eventName:
+- ScheduleKeyDeletion
+
+## Attachments
+
+To access additional content that is associated with this document, download and unzip the following file: attachment.zip

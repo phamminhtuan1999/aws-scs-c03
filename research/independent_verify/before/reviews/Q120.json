@@ -1,0 +1,308 @@
+{
+  "question_id": "Q120",
+  "question_content_hash": "d29f1a58eeb8af645517f12609ca34d62ca462e5d3d7286206ddc8421ebcbba7",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:20:47+00:00",
+  "last_reviewed_at": "2026-09-30T20:28:44+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "1a39586b44f123485f02e97a14c785d1e5c354a963411862ee91cf308bcd1be2",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "EC2 instances (dùng IAM role) không còn nhận message từ SQS sau khi thay đổi IAM – cần troubleshoot.",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Duy trì least privilege (không cấp quyền rộng hơn cần thiết).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn đúng HAI hành động.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q120:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "MFA được bật cho root user và IAM user, không gán cho role dùng bởi EC2; role cung cấp credential tạm thời tự động nên MFA không liên quan tới lỗi truy cập SQS.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q120:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Explicit deny trong bất kỳ policy nào (kể cả resource-based policy của queue SQS) sẽ ghi đè allow; kiểm tra queue policy là bước troubleshoot hợp lý và không mở rộng quyền.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q120:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM role không có long-term access key; instance dùng credential tạm thời do role cung cấp, nên không có 'access key gắn vào role' để kiểm tra.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q120:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AmazonSQSFullAccess cấp sqs:* trên mọi resource – vi phạm least privilege; đồng thời không giải quyết được nếu có explicit deny.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q120:E",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Nếu identity-based policy của role không còn statement allow hành động SQS cần thiết thì request bị implicit deny; kiểm tra policy của role là bước troubleshoot đúng, giữ least privilege.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q120:B",
+      "Q120:E"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Logic đánh giá policy IAM nêu trực tiếp: explicit deny (kể cả trong resource-based policy) ghi đè allow và thiếu allow trong identity-based policy dẫn tới implicit deny; role không có access key, MFA không áp dụng cho role, SQSFullAccess vi phạm least privilege.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref7"
+    ],
+    "recorded_at": "2026-09-30T20:20:47+00:00"
+  },
+  "source_answer": [
+    "Q120:B",
+    "Q120:E"
+  ],
+  "researched_answer": [
+    "Q120:B",
+    "Q120:E"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B, E. Logic đánh giá policy IAM nêu trực tiếp: explicit deny (kể cả trong resource-based policy của queue) ghi đè allow, và thiếu allow trong identity-based policy của role dẫn tới implicit deny; role không có access key, MFA không gán cho role, AmazonSQSFullAccess vi phạm least privilege.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = B, E, trùng blind. Xét lại đối thủ C (kiểm tra access key của role): trang IAM roles nêu trực tiếp role không có long-term credential như access key; instance dùng credential tạm thời do role cấp, nên C không phải bước troubleshoot có nghĩa. D sửa được triệu chứng thiếu allow nhưng cấp sqs:* – trái least privilege và vẫn thua explicit deny. A: MFA dành cho root user/IAM user, không gán cho role của EC2. Giữ B, E, verified, high.",
+  "explanation_vi": {
+    "why_correct": "B: explicit deny trong SQS queue policy (resource-based) ghi đè mọi allow, nên phải kiểm tra queue policy không deny role. E: nếu policy của role không còn allow hành động SQS cần thiết thì request bị implicit deny. Cả hai là bước kiểm tra, không mở rộng quyền.",
+    "others": {
+      "Q120:A": "Thiết bị MFA gán cho root user/IAM user, không gán cho role của EC2; role cấp credential tạm thời tự động nên MFA không liên quan.",
+      "Q120:C": "IAM role không có long-term access key; instance dùng credential tạm thời của role nên không có 'access key gắn vào role' để kiểm tra.",
+      "Q120:D": "AmazonSQSFullAccess cấp toàn quyền SQS – vi phạm least privilege và không vượt qua được explicit deny nếu có."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "maintaining least privilege",
+      "meaning_vi": "Chỉ kiểm tra/khôi phục đúng quyền cần, không gắn policy full access."
+    },
+    {
+      "phrase": "can no longer retrieve messages",
+      "meaning_vi": "Lỗi truy cập SQS: kiểm tra explicit deny ở queue policy và allow ở policy của role."
+    },
+    {
+      "phrase": "IAM changes were made",
+      "meaning_vi": "Nguyên nhân nằm ở policy (identity-based hoặc resource-based)."
+    }
+  ],
+  "memory_tip_vi": "Nếu EC2 dùng role mất quyền truy cập SQS sau thay đổi IAM -> kiểm tra explicit deny trong queue policy và allow trong policy của role; kiểm tra: role không có access key/MFA, không vá bằng policy FullAccess.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "Amazon SQS",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Troubleshoot đánh giá policy IAM và resource policy SQS theo least privilege."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic_policy-eval-denyallow.html",
+      "title": "How AWS enforcement code logic evaluates requests to allow or deny access",
+      "section": "Deny evaluation",
+      "snapshot_id": "d9b46a184b6c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If the enforcement code finds even one explicit deny that applies, the enforcement code returns a final decision of Deny.",
+      "supports": "Explicit deny trong resource-based policy của queue sẽ chặn truy cập – cần kiểm tra (option B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic_policy-eval-denyallow.html",
+      "title": "How AWS enforcement code logic evaluates requests to allow or deny access",
+      "section": "Identity-based policies",
+      "snapshot_id": "d9b46a184b6c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If there are no identity-based policies or no statements in identity-based policies that allow the requested action, then the request is implicitly denied",
+      "supports": "Thiếu allow trong policy của role dẫn tới implicit deny – cần kiểm tra (option E).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html",
+      "title": "IAM roles",
+      "section": "IAM roles",
+      "snapshot_id": "b483f70a1ede",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "a role does not have standard long-term credentials such as a password or access keys associated with it.",
+      "supports": "Role không có access key nên option C không có ý nghĩa.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html",
+      "title": "Use an IAM role to grant permissions to applications running on Amazon EC2 instances",
+      "section": "Introduction",
+      "snapshot_id": "6b2b86b393b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the role supplies temporary permissions that applications can use when they make calls to other AWS resources.",
+      "supports": "EC2 dùng credential tạm thời từ role, không dùng access key dài hạn hay MFA.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html",
+      "title": "AWS Multi-factor authentication in IAM",
+      "section": "AWS Multi-factor authentication in IAM",
+      "snapshot_id": "80f8a5487a85",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can enable MFA for the AWS account root user of all AWS accounts, including standalone accounts, management accounts, and member accounts, as well as for your IAM users.",
+      "supports": "MFA gán cho root user và IAM user, không gán thiết bị MFA cho role (option A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSQSFullAccess.html",
+      "title": "AmazonSQSFullAccess - AWS Managed Policy",
+      "section": "AmazonSQSFullAccess",
+      "snapshot_id": "5dc61e6f1309",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Provides full access to Amazon SQS via the AWS Management Console.",
+      "supports": "Policy cấp toàn quyền SQS (sqs:* trên Resource *) – rộng hơn nhu cầu nhận message.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html",
+      "title": "Security best practices in IAM",
+      "section": "Apply least-privilege permissions",
+      "snapshot_id": "081fe26e1732",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you set permissions with IAM policies, grant only the permissions required to perform a task.",
+      "supports": "Gắn full access (option D) trái với least privilege.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-overview-of-managing-access.html",
+      "title": "Overview of managing access in Amazon SQS",
+      "section": "Identity-based policies",
+      "snapshot_id": "b265de6572dc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "There are two ways to give your users permissions to your Amazon SQS queues: using the Amazon SQS policy system and using the IAM policy system.",
+      "supports": "Quyền truy cập SQS đến từ cả queue policy và IAM policy – hai nơi cần kiểm tra (B, E).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q120:B",
+      "detail_vi": "'Verity' thay vì 'Verify' (cũng xuất hiện ở C và E)."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:20:47+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q120:B\", \"Q120:E\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:28:44+00:00",
+      "change": "Reconciliation: khớp source key B, E. Xét lại C, D với snapshot hiện có; không đổi đánh giá. Giữ verified (high).",
+      "previous_answer": [
+        "Q120:B",
+        "Q120:E"
+      ]
+    }
+  ],
+  "notes_vi": "Troubleshoot quyền: kiểm tra explicit deny (resource policy/SCP/boundary) và allow trong identity policy; không vá bằng policy full access."
+}

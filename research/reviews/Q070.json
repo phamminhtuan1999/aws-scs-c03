@@ -2,9 +2,9 @@
   "question_id": "Q070",
   "question_content_hash": "ea8246c16f60a88ecd44aaccc50ccd330a8ec85576c36693804de27be8ea4970",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:48:50Z",
-  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5",
@@ -36,63 +36,61 @@
     {
       "unit_id": "Q070:A",
       "unit_type": "choice",
-      "verdict": "meets",
-      "reason_vi": "Managed rule cloudtrail-enabled (có ở mọi Region hỗ trợ, trigger Periodic) báo NON_COMPLIANT khi không có trail đang bật; AWS Config auto-remediation chạy runbook AWS-EnableCloudTrail do Amazon sở hữu để tạo trail và bật logging, không cần viết code. Hạn chế: khôi phục không tức thời (periodic) và runbook tạo trail mới theo TrailName, cần triển khai rule ở từng Region.",
+      "verdict": "undetermined",
+      "reason_vi": "Hướng Config remediation phù hợp nhưng runbook documented tạo trail mới, có khoảng trống với trail bị stop.",
       "requirement_ids": [
         "R1",
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref1",
-        "ref2",
         "ref3",
-        "ref9"
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q070:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Rule EventBridge khớp event StartLogging chỉ kích hoạt khi logging đã được bật lại, không phát hiện việc tắt (StopLogging); vì vậy Lambda không chạy đúng lúc CloudTrail bị tắt. Ngoài ra còn cần viết/duy trì Lambda.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "StartLogging không phải event phát hiện logging bị tắt; cần StopLogging.",
       "requirement_ids": [
         "R1",
         "R3"
       ],
       "reference_ids": [
-        "ref4",
-        "ref5",
-        "ref8"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q070:C",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "CloudWatch alarm theo dõi metric theo ngưỡng, không có khái niệm event source/event name như cloudtrail.amazonaws.com/StopLogging; mô tả này là của EventBridge (trước đây là CloudWatch Events) rule. Nếu hiểu là EventBridge rule thì cách này chạy được (AWS blog mô tả), nhưng vẫn phải tự viết/duy trì Lambda nên kém 'efficient' hơn A.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CloudWatch alarm không trực tiếp nhận eventSource/eventName như EventBridge rule; cần metric filter trung gian.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref6",
-        "ref8"
+        "ref3",
+        "ref1"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q070:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Trusted Advisor check CloudTrail chỉ báo cáo trạng thái (refresh vài lần mỗi ngày) và khuyến nghị người dùng tự bật lại; không tự động bật lại CloudTrail.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Trusted Advisor cảnh báo không tự bật logging lại.",
       "requirement_ids": [
         "R1"
       ],
       "reference_ids": [
-        "ref7"
+        "ref3",
+        "ref1"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -265,41 +263,39 @@
   ],
   "source_issues": [
     {
-      "type": "data",
-      "location": "Q070:C",
-      "detail_vi": "Mô tả 'CloudWatch alarm với event source và event name' là cấu hình của EventBridge rule (tên cũ CloudWatch Events), không phải CloudWatch alarm."
+      "type": "ambiguous",
+      "location": "Q070",
+      "detail_vi": "API/scope mismatch: AWS-EnableCloudTrail description 'Creates a new AWS CloudTrail trail'."
     },
     {
       "type": "ambiguous",
-      "location": "Q070:A",
-      "detail_vi": "Runbook AWS-EnableCloudTrail tạo trail mới theo TrailName và bật logging cho nó, không gọi StartLogging trên trail đã bị tắt; rule cloudtrail-enabled là periodic và phải triển khai ở từng Region. Đề nói 'turn CloudTrail back on' nên cách hiểu 'khôi phục việc ghi log' vẫn khớp A."
+      "location": "Q070",
+      "detail_vi": "Config cloudtrail-enabled periodic không phải immediate event-driven detection."
     }
   ],
   "source_answer": [
     "Q070:A"
   ],
-  "researched_answer": [
-    "Q070:A"
-  ],
-  "comparison": "match",
-  "status": "verified",
+  "researched_answer": null,
+  "comparison": "not_comparable",
+  "status": "ambiguous",
   "differs_from_source": false,
   "confidence": {
     "level": "medium",
-    "reason_vi": "A là phương án duy nhất vừa chạy được như viết vừa không cần code (managed rule + runbook do Amazon sở hữu + auto-remediation). B dùng sai event (StartLogging), C dùng sai dịch vụ (alarm), D chỉ giám sát. Giữ medium vì runbook tạo trail mới thay vì bật lại trail cũ và rule periodic nên không tức thời.",
+    "reason_vi": "Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector.",
     "open_issues": [
-      "Runbook AWS-EnableCloudTrail chỉ có tham số TrailName 'của trail mới'; tài liệu không nêu hành vi khi trail cùng tên đã tồn tại (có thể CreateTrail lỗi ở lần khắc phục thứ hai nếu dùng lại cùng tên).",
-      "Rule cloudtrail-enabled là periodic nên khôi phục có độ trễ; Config rule/remediation phải triển khai ở từng Region (hoặc qua conformance pack/organization rule).",
-      "Trang Prescriptive Guidance 'Automatically re-enable AWS CloudTrail by using a custom remediation rule in AWS Config' hiện redirect về trang mục lục, không dùng làm bằng chứng."
+      "API/scope mismatch: AWS-EnableCloudTrail description 'Creates a new AWS CloudTrail trail'.",
+      "Config cloudtrail-enabled periodic không phải immediate event-driven detection."
     ]
   },
-  "reconciliation_vi": "Blind và source key đều là A (blind: verified, medium). Đã xem xét kỹ cả hai phía: (1) Ủng hộ A — rule cloudtrail-enabled có ở mọi Region, NON_COMPLIANT khi không có trail bật; AWS Config hỗ trợ automatic remediation bằng runbook SSM có retry; AWS-EnableCloudTrail do Amazon sở hữu nên không phải viết code. (2) Phản bác A — runbook tạo trail mới (tham số 'The name of the new trail') chứ không gọi StartLogging trên trail cũ, và rule là periodic nên không tức thời. (3) Phương án event-driven: blog AWS Cloud Operations xác nhận cách đúng là bắt StopLogging bằng CloudWatch Events/EventBridge rồi Lambda gọi StartLogging; nhưng B lại lọc StartLogging (chỉ xảy ra sau khi đã bật) và C dùng 'CloudWatch alarm' (không lọc theo event source/event name). Ngay cả khi hiểu C là EventBridge rule, C vẫn cần viết/duy trì Lambda nên kém 'MOST efficient' so với A. Các hạn chế của A không tạo ra đáp án thay thế tốt hơn; giữ A, verified, medium.",
+  "reconciliation_vi": "Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector.",
   "explanation_vi": {
-    "why_correct": "Managed rule cloudtrail-enabled phát hiện khi không còn trail đang ghi log, và AWS Config automatic remediation gọi runbook AWS-EnableCloudTrail (do Amazon cung cấp) để tạo trail và bật logging lại — không phải viết hay vận hành code, triển khai lặp lại được ở từng Region. Lưu ý: rule chạy periodic nên khôi phục không tức thời.",
+    "why_correct": "Config managed rule cùng remediation là hướng ít tự xây nhất, nhưng tài liệu AWS-EnableCloudTrail hiện mô tả tạo trail mới, không chắc khôi phục trail đã StopLogging. Cần kiểm chứng runbook hoặc dùng remediation gọi StartLogging cho trail hiện có trước khi khẳng định A đáp ứng nguyên văn.",
     "others": {
-      "Q070:B": "Lọc event StartLogging chỉ kích hoạt khi logging đã được bật lại, nên không phản ứng lúc CloudTrail bị tắt (StopLogging); lại còn phải tự viết Lambda.",
-      "Q070:C": "CloudWatch alarm dựa trên metric/ngưỡng, không có event source/event name; cấu hình này thuộc EventBridge rule, và dù sửa thành EventBridge vẫn phải tự viết Lambda.",
-      "Q070:D": "Trusted Advisor chỉ báo trạng thái CloudTrail và khuyến nghị bật thủ công, không tự bật lại."
+      "Q070:A": "Hướng Config remediation phù hợp nhưng runbook documented tạo trail mới, có khoảng trống với trail bị stop.",
+      "Q070:B": "StartLogging không phải event phát hiện logging bị tắt; cần StopLogging.",
+      "Q070:C": "CloudWatch alarm không trực tiếp nhận eventSource/eventName như EventBridge rule; cần metric filter trung gian.",
+      "Q070:D": "Trusted Advisor cảnh báo không tự bật logging lại."
     }
   },
   "keywords": [
@@ -316,7 +312,7 @@
       "meaning_vi": "Giải pháp phải triển khai được ở nhiều Region (Config rule/remediation theo từng Region)."
     }
   ],
-  "memory_tip_vi": "Nếu cần tự bật lại cấu hình bảo mật khi bị tắt với ít công sức nhất -> nghĩ đến AWS Config managed rule + automatic remediation (SSM runbook có sẵn); kiểm tra nếu đề đòi phản ứng tức thời thì EventBridge rule bắt đúng event StopLogging + Lambda mới phù hợp.",
+  "memory_tip_vi": "Nếu sửa trail hiện có sau StopLogging, xác minh automation thật sự gọi StartLogging chứ không chỉ CreateTrail.",
   "tags": {
     "domains": [
       "1 Detection",
@@ -346,7 +342,40 @@
       "previous_answer": [
         "Q070:A"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q070:A"
+      ],
+      "status": "ambiguous",
+      "answer": null,
+      "note_vi": "Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector.",
+      "technical_change": true
     }
   ],
-  "notes_vi": "Nếu B dùng StopLogging (hoặc C là EventBridge rule) thì cũng hoạt động và phản ứng nhanh hơn, nhưng cần Lambda tự viết; theo tiêu chí 'MOST efficient' A vẫn tốt hơn."
+  "notes_vi": "Current tự ghi runbook Creates new trail nhưng vẫn verified bật lại existing; cần kiểm chứng API/scope và periodic detector.",
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q070:A"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q070:A"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

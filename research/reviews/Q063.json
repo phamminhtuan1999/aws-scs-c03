@@ -2,9 +2,9 @@
   "question_id": "Q063",
   "question_content_hash": "8b144d5bc782b49ad3a3d601648cb8cae5074f2a99a4616438e248a200eb29aa",
   "stage": "final",
-  "research_version": "r1",
+  "research_version": "r2-independent-verify",
   "researched_at": "2026-09-30T19:49:36Z",
-  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "last_reviewed_at": "2026-09-30T21:52:59.220583+00:00",
   "performed_by": {
     "agent": "scs-reconciler",
     "model": "claude-opus-5-5"
@@ -43,26 +43,30 @@
     {
       "unit_id": "Q063:A",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Request qua presigned URL được xác thực bằng quyền của người tạo URL, client không phải principal nên bucket policy cho 'client' vô nghĩa; thêm S3:List* còn vượt least privilege và không giải quyết thời hạn URL.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Client dùng bearer URL không cần IAM Get/List riêng.",
       "requirement_ids": [
         "R2",
         "R3"
       ],
       "reference_ids": [
-        "ref3"
+        "ref1",
+        "ref4",
+        "ref5"
       ],
       "evidence_kind": "inference"
     },
     {
       "unit_id": "Q063:B",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Mọi URL đều ký bằng cùng một role nên điều kiện tag trên role policy không phân biệt được client; hơn nữa key điều kiện cho tag object của S3 là s3:ExistingObjectTag, không phải s3:ResourceTag.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "s3:ResourceTag/ClientId không phải key kiểm tra object tag; dùng s3:ExistingObjectTag nhưng vẫn cần ràng buộc client.",
       "requirement_ids": [
         "R2"
       ],
       "reference_ids": [
+        "ref1",
+        "ref4",
         "ref5"
       ],
       "evidence_kind": "inference"
@@ -71,7 +75,7 @@
       "unit_id": "Q063:C",
       "unit_type": "choice",
       "verdict": "meets",
-      "reason_vi": "AssumeRole mỗi lần chạy cho session mới (mặc định 1 giờ; role chaining từ instance profile tối đa 1 giờ) chỉ có quyền GetObject; presigned URL ký bằng credentials này là temporary và còn hiệu lực đủ 1 giờ, không bị chết sớm vì credentials instance profile xoay vòng định kỳ.",
+      "reason_vi": "AssumeRole cấp session mới để ký URL và GetObject tối thiểu, nhưng không phải cách duy nhất dùng temporary credentials.",
       "requirement_ids": [
         "R1",
         "R3",
@@ -79,26 +83,25 @@
       ],
       "reference_ids": [
         "ref1",
-        "ref2",
         "ref4",
-        "ref6",
-        "ref7",
-        "ref8"
+        "ref5"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     },
     {
       "unit_id": "Q063:D",
       "unit_type": "choice",
-      "verdict": "does_not_meet",
-      "reason_vi": "Access key của IAM user là long-term credentials và bị nhúng vào script, vi phạm yêu cầu chỉ dùng temporary credentials và là thực hành bảo mật kém.",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "IAM access key dài hạn trái yêu cầu temporary và không nên nhúng script.",
       "requirement_ids": [
         "R4"
       ],
       "reference_ids": [
-        "ref1"
+        "ref1",
+        "ref4",
+        "ref5"
       ],
-      "evidence_kind": "direct"
+      "evidence_kind": "inference"
     }
   ],
   "independent_verdict": {
@@ -131,20 +134,17 @@
   "status": "verified",
   "differs_from_source": false,
   "confidence": {
-    "level": "high",
-    "reason_vi": "Blind và source key cùng chọn C. Mục FAQ của trang presigned URL nói trực tiếp URL hết hạn ở thời điểm sớm hơn giữa expiration đã đặt và lúc credential ký hết hạn, credential instance profile xoay vòng định kỳ (tối đa ~6 giờ), còn AssumeRole cho session mặc định 1 giờ; IAM giới hạn role chaining đúng 1 giờ. A, B, D sai vì lý do có tài liệu trực tiếp.",
-    "open_issues": [
-      "Việc 'cần' bước C dựa vào trường hợp URL được ký khi credential instance profile sắp xoay vòng; đề không nói rõ, nhưng đây là khoảng trống duy nhất trong thiết kế hiện tại.",
-      "Session AssumeRole bắt đầu trước khi ký vài giây nên URL hiệu lực gần đúng 1 giờ — sai số không đáng kể."
-    ]
+    "level": "medium",
+    "reason_vi": "Instance profile đã temporary; 1-hour expiry là maximum deadline không nhất thiết minimum availability guarantee; C mới role session hữu ích nhưng không identity-bind từng client.",
+    "open_issues": []
   },
-  "reconciliation_vi": "Source key = C, trùng blind (blind medium). Đã tìm thêm bằng chứng cho cả hai phía. Chống C: credential instance profile vốn đã là temporary và thường sống ~6 giờ, nên có thể cho rằng thiết kế ban đầu đã đủ. Ủng hộ C: trang S3 presigned URL (FAQ 'Why do my presigned URLs expire earlier...') nêu URL hết hạn tại thời điểm sớm hơn giữa expiration và lúc credential hết hạn, credential instance profile xoay vòng định kỳ; EC2 chỉ đảm bảo credential mới có sẵn ít nhất 5 phút trước khi bộ cũ hết hạn -> URL ký bằng credential sắp hết hạn có thể chết trước 1 giờ. AssumeRole mỗi lần chạy cho session mới 1 giờ (FAQ + role chaining tối đa 1 giờ, trang IAM roles), quyền chỉ GetObject, vẫn là temporary credentials. Các phương án khác: A cấp quyền cho 'client' vô nghĩa vì quyền của URL là quyền của người ký; B dùng cùng một role cho mọi URL nên tag condition không phân biệt client, và key điều kiện tag object là s3:ExistingObjectTag; D dùng long-term key vi phạm yêu cầu. Bằng chứng mới là trực tiếp nên nâng confidence lên high; trạng thái verified không đổi.",
+  "reconciliation_vi": "Instance profile đã temporary; 1-hour expiry là maximum deadline không nhất thiết minimum availability guarantee; C mới role session hữu ích nhưng không identity-bind từng client.",
   "explanation_vi": {
-    "why_correct": "Presigned URL chỉ sống tới khi credential dùng để ký hết hạn; credential của instance profile xoay vòng định kỳ nên URL có thể chết trước 1 giờ. Assume một role chỉ có GetObject mỗi lần chạy script cho session mới 1 giờ, nên URL ký bằng nó vẫn là temporary credential và còn hiệu lực đủ 1 giờ.",
+    "why_correct": "C lấy fresh AssumeRole credentials với GetObject để ký URL, tránh session sắp hết hạn làm URL hết hạn sớm. Instance profile vốn đã temporary; quyền từng invoice còn dựa chọn đúng object và phát bearer URL cho đúng client.",
     "others": {
-      "Q063:A": "Request qua presigned URL dùng quyền của người ký, client không phải principal nên sửa bucket policy cho client không có tác dụng; thêm List* còn vượt least privilege.",
-      "Q063:B": "Mọi URL đều ký bằng cùng một role nên điều kiện tag không phân biệt được client; mỗi presigned URL vốn đã chỉ cho một object, và key tag object đúng là s3:ExistingObjectTag.",
-      "Q063:D": "Access key của IAM user là long-term credential nhúng trong script, vi phạm yêu cầu chỉ dùng temporary credentials."
+      "Q063:A": "Client dùng bearer URL không cần IAM Get/List riêng.",
+      "Q063:B": "s3:ResourceTag/ClientId không phải key kiểm tra object tag; dùng s3:ExistingObjectTag nhưng vẫn cần ràng buộc client.",
+      "Q063:D": "IAM access key dài hạn trái yêu cầu temporary và không nên nhúng script."
     }
   },
   "keywords": [
@@ -161,7 +161,7 @@
       "meaning_vi": "Thời hạn đặt 1 giờ nhưng URL chết sớm hơn nếu credential ký hết hạn trước."
     }
   ],
-  "memory_tip_vi": "Nếu presigned URL phải sống đủ N giờ mà được ký bằng temporary credential -> nghĩ đến thời hạn session ký (AssumeRole mới, role chaining tối đa 1 giờ); kiểm tra URL hết hạn khi credential ký hết hạn, không dùng long-term key.",
+  "memory_tip_vi": "Nếu credentials ký URL sắp hết hạn, lấy role session mới; URL hết hạn theo thời điểm sớm hơn giữa URL và credentials.",
   "tags": {
     "domains": [
       "5 Data Protection",
@@ -299,9 +299,19 @@
       "type": "typo",
       "location": "Q063:A",
       "detail_vi": "Viết 'S3:Get*', 'S3:List*' thay vì tiền tố action chuẩn 's3:'."
+    },
+    {
+      "type": "data",
+      "location": "Q063",
+      "detail_vi": "Stem đã dùng temporary instance-role credentials nên 'additional step' không bắt buộc chỉ để temporary."
+    },
+    {
+      "type": "data",
+      "location": "Q063",
+      "detail_vi": "Client-only object access dựa phân phối URL, không phải identity validation bởi presigning."
     }
   ],
-  "notes_vi": "Presigned URL là bearer token cho đúng một object, nên yêu cầu 'mỗi client chỉ tải invoice của mình' đã được đáp ứng bằng việc tạo URL riêng cho từng object.",
+  "notes_vi": "Instance profile đã temporary; 1-hour expiry là maximum deadline không nhất thiết minimum availability guarantee; C mới role session hữu ích nhưng không identity-bind từng client.",
   "history": [
     {
       "version": "r1",
@@ -324,6 +334,41 @@
       "previous_answer": [
         "Q063:C"
       ]
+    },
+    {
+      "version": "r2-independent-verify",
+      "at": "2026-09-30T21:52:59.220583+00:00",
+      "date": "2026-09-30T21:52:59.220583+00:00",
+      "change": "Independent re-verification of every option; concise explanations. Instance profile đã temporary; 1-hour expiry là maximum deadline không nhất thiết minimum availability guarantee; C mới role session hữu ích nhưng không identity-bind từng client.",
+      "performed_by": "independent pass q037_q072 + root reconciliation",
+      "previous_status": "verified",
+      "previous_answer": [
+        "Q063:C"
+      ],
+      "status": "verified",
+      "answer": [
+        "Q063:C"
+      ],
+      "note_vi": "Instance profile đã temporary; 1-hour expiry là maximum deadline không nhất thiết minimum availability guarantee; C mới role session hữu ích nhưng không identity-bind từng client.",
+      "technical_change": false
     }
-  ]
+  ],
+  "independent_reverification": {
+    "version": "r2-independent-verify",
+    "group": "q037_q072",
+    "independent_record": "independent_verify/q037_q072/independent.json",
+    "independent_sha256": "74c819666c3836746974db05f3a3b4663062b3738b9f2750b013613b3a306dfc",
+    "comparison_record": "independent_verify/q037_q072/comparison.json",
+    "comparison_sha256": "bb1d2d33b71a98e2babbb72160953cedb20ca0a2001287ffbe17f211320c484d",
+    "independent_answer": [
+      "Q063:C"
+    ],
+    "independent_status": "ambiguous",
+    "intended_answer": [
+      "Q063:C"
+    ],
+    "candidate_answers": null,
+    "root_adjudication": null,
+    "method_note": "Three agents used answer-free inputs and persisted before reading r1. Root Q109-Q143 had prior aggregate exposure to Q118/Q122/Q133/Q143; not a fully blinded group."
+  }
 }

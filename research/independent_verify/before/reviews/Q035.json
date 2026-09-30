@@ -1,0 +1,258 @@
+{
+  "question_id": "Q035",
+  "question_content_hash": "08c4e4488a6fe834cfcbafe64245578bdbb274b3c6080ec1aaad89570b0e67ec",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:41:23Z",
+  "last_reviewed_at": "2026-09-30T19:49:24Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "5bb22fa3eeec88aca970afb10937b45b285012e65a9f6bc94e17e7682ae639a6",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Khắc phục lỗi 'failed host key validation' khi dùng EC2 Instance Connect sau khi xoay vòng (rotate) host key của instance.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Trước khi rotate host key, EC2 Instance Connect hoạt động bình thường (quyền IAM, mạng đã đúng).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q035:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Import key material vào AWS KMS là tính năng BYOK cho KMS key, không liên quan tới SSH host key mà EC2 Instance Connect dùng để xác thực máy chủ.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q035:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Host key mới không tự động được tải lên AWS trusted host keys database; cần chạy script eic_harvest_hostkeys trên instance để tải host key mới lên, đúng với việc upload thủ công host key mới.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q035:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AmazonSSMManagedInstanceCore cấp quyền cho Systems Manager quản lý instance; EC2 Instance Connect không dựa vào quyền này, và kết nối đã hoạt động trước khi rotate nên đây không phải nguyên nhân.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q035:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "EC2 Instance Connect tự đẩy SSH public key tạm thời (60 giây) cho người dùng; lỗi nằm ở host key của máy chủ chứ không phải key pair của người dùng, nên tạo key pair mới không sửa được.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q035:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Trang troubleshooting của EC2 mô tả đúng lỗi này và cách khắc phục là tải host key mới lên AWS trusted host keys database (qua eic_harvest_hostkeys).",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:41:23Z"
+  },
+  "source_answer": [
+    "Q035:B"
+  ],
+  "researched_answer": [
+    "Q035:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B. Trang troubleshooting EC2 mô tả đúng lỗi 'Host key validation failed for EC2 Instance Connect' sau khi rotate host key và cách khắc phục là tải host key mới lên AWS trusted host keys database bằng script eic_harvest_hostkeys.",
+    "open_issues": [
+      "Tài liệu dùng script eic_harvest_hostkeys để tải lên; 'manually upload' trong B hiểu là chủ động chạy script này."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại đối thủ mạnh nhất D (tạo SSH key pair mới): EC2 Instance Connect tự đẩy SSH public key tạm thời 60 giây, lỗi nằm ở host key của máy chủ (phía instance) chứ không ở key của người dùng. Re-fetch trang troubleshooting xác nhận: host key mới không tự động được upload lên AWS trusted host keys database, lỗi xảy ra với browser-based client, và cách sửa là chạy eic_harvest_hostkeys. Giữ B, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Sau khi rotate, host key mới không tự động có trong AWS trusted host keys database nên EC2 Instance Connect báo lỗi xác thực host key; cần tải host key mới lên (chạy script eic_harvest_hostkeys trên instance).",
+    "others": {
+      "Q035:A": "Import key material vào AWS KMS là BYOK cho KMS key, không liên quan SSH host key.",
+      "Q035:C": "AmazonSSMManagedInstanceCore phục vụ Systems Manager, không liên quan xác thực host key của EC2 Instance Connect.",
+      "Q035:D": "Key pair là khóa của người dùng; lỗi nằm ở host key của instance nên tạo key pair mới không sửa được."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "rotated the host keys",
+      "meaning_vi": "Host key mới chưa được đăng ký với EC2 Instance Connect."
+    },
+    {
+      "phrase": "failed host key validation",
+      "meaning_vi": "Lỗi xác thực máy chủ, không phải lỗi quyền hay key người dùng."
+    }
+  ],
+  "memory_tip_vi": "Nếu EC2 Instance Connect báo host key validation failed sau khi rotate host key -> nghĩ đến tải host key mới lên AWS trusted host keys database (eic_harvest_hostkeys); kiểm tra: không phải lỗi key pair hay quyền SSM.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "Amazon EC2",
+      "EC2 Instance Connect"
+    ],
+    "reason_vi": "Truy cập an toàn vào EC2 và xử lý sự cố xác thực host key."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html",
+      "title": "Troubleshoot issues connecting to your Amazon EC2 Linux instance",
+      "section": "Error: Host key validation failed for EC2 Instance Connect",
+      "snapshot_id": "55f6581085dd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you rotate your instance host keys, the new host keys are not automatically uploaded to the AWS trusted host keys database.",
+      "supports": "Nguyên nhân lỗi: host key mới chưa có trong AWS trusted host keys database.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html",
+      "title": "Troubleshoot issues connecting to your Amazon EC2 Linux instance",
+      "section": "Error: Host key validation failed for EC2 Instance Connect",
+      "snapshot_id": "55f6581085dd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To resolve the error, you must run the eic_harvest_hostkeys script on your instance, which uploads your new host key to EC2 Instance Connect.",
+      "supports": "Cách khắc phục: tải host key mới lên (thủ công chạy script).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-linux-inst-eic.html",
+      "title": "Connect to your Linux instance using a public IP address and EC2 Instance Connect",
+      "section": "Overview",
+      "snapshot_id": "2aa378e2d70a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the EC2 Instance Connect API pushes an SSH public key to the instance metadata where it remains for 60 seconds.",
+      "supports": "EIC dùng key tạm thời do API đẩy lên, không phụ thuộc key pair mới hay quyền SSM.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys.html",
+      "title": "Importing key material for AWS KMS keys",
+      "section": "Importing key material",
+      "snapshot_id": "1e3ebbced033",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can create a KMS key without key material and then import your own key material into that KMS key",
+      "supports": "Import key material chỉ áp dụng cho KMS key, không cho SSH host key.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-instance-permissions.html",
+      "title": "Configure instance permissions required for Systems Manager",
+      "section": "Configure instance permissions",
+      "snapshot_id": "926ef201cd64",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, AWS Systems Manager doesn't have permission to perform actions on your instances.",
+      "supports": "AmazonSSMManagedInstanceCore phục vụ Systems Manager, không phải cơ chế xác thực host key của EIC.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q035:stem:1",
+      "detail_vi": "'do lo resolve' là lỗi đánh máy của 'to resolve'."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:41:23Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q035:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:00Z",
+      "change": "Reconciliation: khớp source key B; không đổi kết luận, option_reviews và source_issues giữ nguyên; status verified (high).",
+      "previous_answer": [
+        "Q035:B"
+      ]
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:53:14+00:00",
+      "change": "Timestamp correction only (fabricated future timestamps replaced by file mtime); last_reviewed_at: 2026-09-30T19:55:00Z → 2026-09-30T19:49:24Z",
+      "previous_answer": [
+        "Q035:B"
+      ]
+    }
+  ],
+  "timestamp_correction": {
+    "corrected_at": "2026-09-30T19:53:14+00:00",
+    "by": "main agent (tools/fix_timestamps.py)",
+    "fields": {
+      "last_reviewed_at": {
+        "original": "2026-09-30T19:55:00Z",
+        "corrected": "2026-09-30T19:49:24Z"
+      }
+    }
+  }
+}
