@@ -36,9 +36,9 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 | 18 | Q103–Q108 | done 6/6 valid | done 6/6 valid (5 verified, Q107 disputed) |
 | 19 | Q109–Q114 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 20 | Q115–Q120 | done 6/6 valid | done 6/6 valid (5 verified, Q118 ambiguous) |
-| 21 | Q121–Q126 | done 6/6 valid | running |
+| 21 | Q121–Q126 | done 6/6 valid | done 6/6 valid (5 verified, Q122 ambiguous) |
 | 22 | Q127–Q132 | done 6/6 valid | done 6/6 valid (6 verified) |
-| 23 | Q133–Q138 | done 6/6 valid | running |
+| 23 | Q133–Q138 | done 6/6 valid | done 6/6 valid (5 verified, Q133 ambiguous) |
 | 24 | Q139–Q143 | done 5/5 valid | done 5/5 valid (5 verified) |
 
 ## Execution notes
@@ -70,3 +70,7 @@ Rule: any question whose final status/answer moved TOWARD the source key after t
 - Q118 — blind ambiguous/outdated: ALB access logs → CloudWatch Logs since 2026-07-23 makes option A also viable. Q116 — medium (KMS permissions named in C incomplete).
 - Q107 — DISPUTED: blind A (RAM customer managed permission, write-only + PrincipalTag), source B (AWS managed permission + dev-account IAM policies). Not graded by research.
 - ALL 143 BLIND RECORDS COMPLETE (2026-09-30). Q122 — blind ambiguous (WAF cannot attach to NLB).
+
+## Audit pass (lượt 3) — started 2026-09-30
+Selection: `research/audit_selection.json` (48 risk questions by rule: non-verified, differs, confidence<high, blind→final change, time-dependent, policy/code image choices; + random sample of 10 high-confidence verified, seed 20260930). Q121–Q126 added after their reconciliation. 5 fresh auditor agents (`.claude/agents/scs-auditor.md`), none of which wrote the records.
+- ALL 143 FINAL RECORDS COMPLETE (2026-09-30) before audit.

@@ -1,0 +1,254 @@
+URL: https://aws.amazon.com/blogs/security/how-to-investigate-and-take-action-on-security-issues-in-amazon-eks-clusters-with-amazon-detective-part-2/
+TITLE: How to investigate and take action on security issues in Amazon EKS clusters with Amazon Detective – Part 2 | AWS Security Blog
+
+## AWS Security Blog
+
+# How to investigate and take action on security issues in Amazon EKS clusters with Amazon Detective – Part 2
+
+March 15, 2023: We’ve updated this post to incorporate a section to investigate VPC flow logs.
+
+In part 1 of this of this two-part series, How to detect security issues in Amazon EKS cluster using Amazon GuardDuty, we walked through a real-world observed security issue in an Amazon Elastic Kubernetes Service (Amazon EKS) cluster and saw how Amazon GuardDuty detected each phase by following MITRE ATT&CK tactics.
+
+In this blog post, we’ll walk you through investigative techniques to use with Amazon Detective, paired with the GuardDuty EKS and malware findings from the security issue. After we have identified impacted resources through our investigation, we’ll provide example remediation tactics and preventative controls to address and help prevent security issues in EKS clusters.
+
+Amazon Detective can help you investigate security issues and related resources in your account. Detective provides EKS coverage that you can enable within your accounts. When this coverage is enabled, Detective can help investigate and remediate potentially unauthorized EKS activity that results from misconfiguration of the control plane nodes or application. Although GuardDuty is not a prerequisite to enable Detective, it is recommended that you enable GuardDuty to enhance the visualization capabilities in Detective with GuardDuty findings.
+
+## Prerequisites
+
+You must have the following services enabled in your AWS account to generate and investigate findings associated with EKS security events in a similar manner as outlined in this blog. If you do not have GuardDuty enabled, you can still investigate with Detective, but in a limited capacity.
+
+- Amazon GuardDuty, along with these features of GuardDuty:
+
+- Kubernetes Protection
+
+- Malware Protection
+
+- Amazon Detective, along with this feature of Detective:
+
+- EKS audit logs
+
+## Investigate with Amazon Detective
+
+In the five phases we walked through in part 1, we discussed GuardDuty findings and MITRE ATT&CK tactics that can help you detect and understand each phase of the unauthorized activity, from the initial misconfiguration to the impact on our application when the EKS cluster is used for crypto mining.
+
+The next recommended step is to investigate the EKS cluster and any associated resources. Amazon Detective can help you to investigate whether there was any other related unauthorized activity in the environment. We will walk through Detective capabilities for visualizing and gathering important information to effectively respond to the security issue. If you’re interested in creating detailed incident response playbooks for your security team to follow in your own environment, refer to these sample AWS incident response playbooks.
+
+Depending on your scenario, there are various resources you can use to start your investigation, such as Security Hub findings, GuardDuty findings, related Kubernetes subjects, or an AWS account’s AWS CloudTrail activity. For our walkthrough, we’ll start our investigation from the GuardDuty finding and use the EKS cluster resource to pivot to the Detective console, as shown in Figure 1. Although we initially focus on the EKS cluster, you could start from any entities that are supported in the Detective behavior graph structure in the Amazon Detective User Guide. For example, we could start directly with the Kubernetes subject system:anonymous and find activity associated with the anonymous user.
+
+Figure 1: Example Detective popup from GuardDuty finding for EKS cluster
+
+We’ll now go over the information that you would need to gather from Detective in order to investigate the example security issue.
+
+To investigate EKS cluster findings with Detective
+
+- In the GuardDuty console, navigate to an individual finding and hover over Investigate with Detective. Choose one of the specific resources to start. In the image below, we selected the EKS cluster resource to investigate with Detective. You will need to gather some preliminary information about the IAM roles associated with the EKS cluster.
+
+- Questions: When was the cluster created? What IAM role created the cluster? What IAM role is assigned to the cluster?
+
+- Why it matters: If you are an incident responder, these details can potentially help you identify the owner of the cluster and help you determine what IAM principals are involved.
+
+- What next: Start looking into each IAM principal’s activity, as seen in CloudTrail, to investigate whether the IAM entity itself is potentially compromised or what other resources may have been impacted.
+
+Figure 2: Detective summary page for EKS cluster metadata details
+
+- Next, on the EKS cluster overview page, you can see the container details associated with the cluster.
+
+- Question: What are some of the other container details for the cluster? Does anything look out of the ordinary? Is it using a public image? Is it missing a network policy?
+
+- Why it matters: Based on the architecture related to this cluster, you might be able to use this information to determine whether there are unauthorized containers. The contents of unauthorized containers will depend on your organization but typically consist of public images or unauthorized RBAC, pod security policies, or network policy configurations. It’s important to keep in mind that when you look at data in Detective, the scope time is very important. When you pivot from a GuardDuty finding, the scope time will be set to the first time the GuardDuty finding was seen to the last time the finding was seen. The container details reflect the containers that were running during the selected scope time. Changing the scope time might change the containers that are listed in the table shown in Figure 3.
+
+- What next: Information found on this page can help to highlight unauthorized resources or configurations that will need to be remediated. You will also need to look at how these resources were initially created and if there are missing guardrails that should have been created during the provisioning of the cluster.
+
+Figure 3: Detective summary page for EKS container metadata details
+
+- Next, you will see associated security findings with this specific EKS cluster, similar to Figure 4.
+
+- Question: Are there any other security findings associated with this cluster that I previously was not aware of?
+
+- Why it matters: In our example scenario, we walked through the findings that were initially detected and the events that unfolded from those findings. After further investigation, you might see other findings that were not part of the original investigation. This can occur if your security team is only investigating specific findings or severity values. The finding for PrivilegeEscalation:Kubernetes/PrivilegedContainer informs you that a privileged container was launched on your Kubernetes cluster by using an image that has never before been used to launch privileged containers in your cluster. A privileged container has root level access to the host. The other finding, Persistence:Kubernetes/ContainerWithSensitiveMount, informs you that a container was launched with a configuration that included a sensitive host path with write access in the volumeMounts section. This makes the sensitive host path accessible and writable from inside the container. Any finding associated to the suspicious or compromised cluster is valuable because it provides additional insight into what the unauthorized entity was trying to accomplish after the initial detection.
+
+- What next: With Detective, you might want to continue your investigation by selecting each of these findings and reviewing all details related to the finding. Depending on the findings, you could bring in additional team members to help investigate further. For this example, we will move on to the next step.
+
+Figure 4: Example Detective summary of security findings associated with the EKS cluster
+
+- You could also look at VPC flow logs for any specific EKS pods, similar to Figure 5, by selecting specific the pod within the EKS cluster overview page in Detective. You will then be redirected to the VPC flow logs for that pod, similar to Figure 6.
+
+- Question: Were there any anomalies or large data transfers involved with the EKS cluster during a specific time frame?
+
+- Why it matters: If the EKS cluster is primarily used to communicate with a specific IP range, this will help you identify where inbound and outbound connections were being requested. For example, if the EKS cluster has only been authorized to communicate with internal corporate IP range and you see public IP addresses, this could indicate the cluster is not being used in an authorized manner. You can then determine which inbound or outbound connections were successful to focus your investigation. Once you identify successful requests, you could start looking at specific requests that have large data transfers, which could indicate possible data exfiltration attempts.
+
+- What next: If you find something of interest in the network traffic of the EKS cluster, you can dive into the VPC flow logs for specific IP addresses. Detective collects data relating to the IP address you selected and displays any existing security findings, overall VPC flow log volume, and AWS resources associated to the IP. For our investigation, we will continue from the overview page.
+
+Figure 5: Example Detective summary page for EKS container pods on the EKS cluster
+
+Figure 6: Example Detective summary page for VPC Flow log activity on the EKS pod
+
+- Shift from the EKS cluster overview section to the Kubernetes API activity section, similar to Figure 7 below. This will give you the opportunity to dig into the API activity associated with this cluster.
+
+- Question: What other Kubernetes API activity was attempted from the cluster? Which API calls were successful? Which API calls failed? What was the unauthorized user trying to do?
+
+- Why it matters: It’s important to determine which actions were successfully invoked by the unauthorized user so that appropriate remediation actions can be taken. You can look at trends of successful and failed API calls, and can even search by Subject, IP address, or Kubernetes API call.
+
+- What next: You might want to look at all cluster role binding from days before the first GuardDuty finding was seen to determine if there was any other suspicious activity you should be investigating regarding the cluster.
+
+Figure 7: Example Detective summary page for Kubernetes API activity on the EKS cluster
+
+- Next, you will want to look at the Newly observed Kubernetes API calls section, similar to Figure 8 below.
+
+- Question: What are some of the more recent Kubernetes API calls? What are they trying to access right now and are they successful? Do I need to start taking action for other resources outside of EKS?
+
+- Why it matters: This data shows Kubernetes subjects who were observed issuing API calls to this cluster for the first time during our scope time. Detective provides you this information by keeping a baseline of the activity associated with supported AWS resources. This can help you more quickly determine whether activity might be suspicious and worth looking into. In our example, we used the search functionality to look at API calls associated with the built-in Kubernetes secrets management. A common way to start your search is to see if an unauthorized user has successfully accessed any secrets, which can help you determine what information you might want to search in the overall API call volume section discussed in step 4.
+
+- What next: If the unauthorized user has successfully accessed any secret, those secrets should be marked as compromised, and they should be rotated immediately.
+
+Figure 8: Example Detective summary for newly observed Kubernetes API calls from the EKS cluster
+
+- You can also consider the following question when you look at the Newly observed Kubernetes API calls section.
+
+- Question: Has the IP address associated with the finding been communicating with any other resources in our environment, and if so, what are the details of that communication?
+
+- Why it matters: To answer this question, you can use Detective’s search functionality and the ability to use wild cards to search for IP addresses with the same first three octets. Also note that you can use CIDR notation to search, as well. Based on the results in the example in Figure 9, you can see that there are a number of related IP addresses associated with the environment. With this information, you now can look at the traffic associated with these different IPs and what resources they were communicating with.
+
+Figure 9: Example Detective results page from a query against IP addresses associated with the EKS cluster
+
+- You can select one of the IP addresses in the search results to get more information related to it, similar to Figure 10 below.
+
+- Question: What was the first time an IP address was observed in the environment? When was the last time it was observed?
+
+- Why it matters: You can use this information to start isolating where unauthorized activity is coming from and what actions are being taken. You can also start creating a time series of unauthorized activity and scope.
+
+- What next: You can repeat some of the previous investigation steps for each IP address, like looking at the different tabs to review New behavior, Resource interaction, and Kubernetes activity.
+
+Figure 10: Example Detective results page for specific IP address and associated metadata details
+
+In summary, we began our investigation with a GuardDuty finding about an anonymous API request that was successful in using system:anonymous on one of our EKS clusters. We then used Detective to investigate and visualize activity associated with that EKS cluster, such as volume of successful or unsuccessful API requests, where and when those actions were attempted and other security findings associated with the resource. Once we have completed the investigation, we can confirm scope and impact of the security event and start moving towards taking action.
+
+## Remediation techniques for Amazon EKS
+
+In this section, we will focus on how to remediate the security issue in our example. Your actions will vary based on your organization and the resources affected. It’s important to note that these actions will impact the EKS cluster and associated workloads, and should accordingly be performed by or coordinated with the cluster operator.
+
+Before you take action on the EKS cluster, you will need to preserve forensic artifacts and evidence for the impacted EKS resources. The order of operations for these actions matters, because you want to get all the data from forensic artifacts in order to determine the overall impact to the resources affected. If you quarantine resources before you capture forensic artifacts, there is a risk that running processes will be interrupted or that the malware attempts to destroy resources that are valuable to a forensics investigation, to cover its tracks.
+
+To preserve forensic evidence
+
+- Enable termination protection on the impacted worker node and change the shutdown behavior to Stop.
+
+- Label the offending pod or node with a label indicating that it is part of an active investigation.
+
+- Cordon the worker node.
+
+- Capture both volatile (temporary memory) and non-volatile (Amazon EBS snapshots) artifacts on the worker node.
+
+Now that you have the forensic evidence, you can start to quarantine your EKS resources to restrict unauthorized network communication. The main objective is to prevent the affected EKS pods from communicating with internal resources or exfiltrating data externally.
+
+To quarantine EKS resources
+
+- Isolate the pod by creating a network policy that denies ingress and egress traffic to the pod.
+
+- Attach a security group to the host and remove inbound and outbound rules. Take this action if you believe the underlying host has been compromised.
+
+Depending on existing inbound and outbound rules on the security group, the connections will either be tracked or untracked. Applying an isolation security group will drop untracked connections. For tracked connections, new connections with the host will not be allowed from the isolation security group, but existing tracked connections will not be interrupted.
+
+Important: This action will affect all containers running on the host.
+
+- Attach a deny rule for the EKS resources in a network access control list (network ACL). Because network ACLs are stateless firewalls, all connections will be interrupted, whether they are tracked or untracked connections.
+
+Important: This action will affect all subnets using the network ACL and all resources within those subnets.
+
+At this point, the affected EKS resources are quarantined, but the cluster is still configured to allow anonymous, unauthenticated access. You will need to remove all unauthorized permissions that were created or added.
+
+To remove unauthorized permissions
+
+- Update the RBAC configuration to remove system:anonymous access.
+
+- Revoke temporary security credentials that are assigned to the pod or worker node, if necessary. You can also remove the IAM role associated with the EKS resources.
+
+Note: Removing IAM policies or attaching IAM policies to restrict permissions will affect the resources that are using the IAM role.
+
+- Remove any unauthorized ClusterRoleBinding created by the system:anonymous user.
+
+- Redeploy the compromised pod or workload resource.
+
+The actions taken so far primarily target the EKS resource, but based on our Detective investigation, there are other actions you might need to take. Because secrets were involved that could be used outside of the EKS cluster, those secrets will need to be rotated wherever they are referenced. Detective will also suggest additional areas where you can investigate and remediate additional unauthorized activity in your AWS account.
+
+It is important that your team go through game days or run-throughs for investigating and responding to different scenarios in order to make sure the team is prepared. You can run through the EKS security workshop to get your security team more familiar with remediation for EKS.
+
+For more information about responding to EKS cluster related security issues, refer to GuardDuty EKS remediation in the GuardDuty User Guide and the EKS Best Practices Guide.
+
+## Preventative controls for EKS
+
+This section covers several preventative controls that you can use to protect EKS clusters.
+
+### How can I prevent external access to the EKS cluster?
+
+To help prevent external access to your EKS clusters, limit the exposure of your API server. You can achieve that in two ways:
+
+- Set the API server endpoint access to Private. This will effectively forbid anyone outside of the VPC to send Kubernetes API requests to your EKS cluster.
+
+- Set an IP address allow list for the EKS cluster public access endpoint.
+
+### How can I prevent giving admin access to the EKS cluster?
+
+To help prevent an EKS cluster user from granting any type of access to anonymous or unauthenticated users, you can set up a ValidatingAdmissionWebhook. This is a special type of Kubernetes admission controller that can be configured in the Kubernetes API. (To learn how to build serverless admission webhooks, see the blog post Building serverless admission webhooks for Kubernetes with AWS SAM.)
+
+The ValidatingAdmissionWebhook will deny a Kubernetes API request that matches all of the following checks:
+
+- The request is creating or modifying a ClusterRoleBinding or RoleBinding.
+
+- The subjects section contains either of the following:
+
+- The user system:anonymous
+
+- The group system:unauthenticated
+
+### How can I prevent malicious images from being deployed?
+
+Now that you have set controls to prevent external access to the EKS cluster and prevent granting access to anonymous users, you can focus on preventing the deployment of potentially malicious images.
+
+Malicious container images can have different origins, including:
+
+- Images stored in public or unauthorized registries
+
+- Images replacing the ones that are stored in authorized registries
+
+- Authorized images that contain software with existing or newly discovered vulnerabilities
+
+You can address these sources of malicious images by doing the following:
+
+- Use admission controllers to verify that images meet your organization’s requirements, including for the image origin. You can also refer to this this blog post to implement a solution with a webhook and admission controllers.
+
+- Enable tag immutability in your registry, a control that prevents an actor from maliciously replacing container images without changing the image’s tags. Additionally, you can enable an AWS Config rule to check tag immutability
+
+- Configure another ValidatingAdmissionWebhook that will only accept images if they meet all of the following criteria.
+
+- Images that come from approved registries.
+
+- Images that pass the vulnerability scan during deployment time.
+
+- Images that are signed by a trusted party. Amazon Elastic Container Registry (Amazon ECR) is working on a product enhancement to store image signatures. Currently, you can use an open-source cosign tool to verify and store image signatures.
+
+Note: These criteria can vary based on your use case and internal security and compliance standards.
+
+The above controls will help prevent the deployment of a vulnerable, unauthorized, or potentially malicious container image.
+
+### How can I prevent lateral movement inside the cluster?
+
+To prevent lateral movement inside the cluster, it is recommended to use network policies, as follows:
+
+- Enforce Kubernetes network policies to enforce ingress and egress controls within the cluster. You can implement these policies by following the steps in the Securing your cluster with network policies EKS workshop.
+
+It’s important to note that you could use security groups for the same purpose, but pod security groups should only be used if the cluster is compromised and when you want to control the traffic between a pod and a resource that resides in the VPC, not inter-pod traffic.
+
+In this section, we’ve reviewed different preventative controls that could have helped mitigate our example security incident. With the first preventative control, we could have prevented external actors from connecting to the API server. The second control could have prevented granting access to anonymous users. The third control could have prevented the deployment of an unauthorized or vulnerable container image. Finally, the fourth control could have helped limit the impact of the deployed vulnerable images to only the pods where the images were deployed, making it harder to laterally move to other pods in the cluster.
+
+## Conclusion
+
+In this post, we walked you through how to investigate an EKS cluster related security issue with Amazon Detective. We also provided some recommended remediation and preventative controls to put in place for the EKS cluster specific security issues. When pairing GuardDuty’s ability for continuous threat detection and monitoring with Detective’s organization and visualization capabilities, you enable your security team to conduct faster and more effective investigation. By providing the security team the ability quickly view an organized set of data associated with security events within your AWS account, you reduce the overall Mean Time to Respond (MTTR).
+
+Now that you understand the investigative capabilities with Detective, it’s time to try things out! It is important that you provide a mechanism for your security team to practice detection, investigation, and remediation techniques using security incident response simulations. By periodically running simulations, your security team will be prepared to quickly respond to possible security events. You can find more detailed incident response playbooks that can assist you in preparing for events in your environment, see these sample AWS incident response playbooks.
+
+If you have feedback about this post, submit comments in the Comments section below. If you have questions about this post, start a thread on Amazon GuardDuty re:Post.
+
+Want more AWS Security news? Follow us on Twitter.
+
+Loading comments…

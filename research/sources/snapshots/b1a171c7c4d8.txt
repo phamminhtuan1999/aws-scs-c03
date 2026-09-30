@@ -1,0 +1,165 @@
+URL: https://repost.aws/questions/QUTvw3p9wbQb-eRT5Arl3cJQ/how-to-isolate-an-ec2-instance
+TITLE: How to isolate an EC2 instance? | AWS re:Post
+
+AWS Builder Center: Learn, Build and Connect with builders in the AWS community
+
+AWS Builder Center is the official home for builders on AWS. Share and read what others are working on, follow people who inspire you, explore training and workshops, and find tools to support what you're building.
+
+# How to isolate an EC2 instance?
+
+0
+
+Hello, I am creating an incident response initiative with automated workflows and would like to know how I can isolate my EC2 instance if any malicious activity is detected, in order to conduct forensic analysis later?
+
+FollowCommentShare
+
+Topics
+
+ComputeSecurity, Identity, & Compliance
+
+Tags
+
+Amazon EC2Security, Identity, & Compliance
+
+Language
+
+English
+
+Raphael
+
+asked 3 years ago1.8K views
+
+1 Answer
+
+- Newest
+
+- Most votes
+
+- Most comments
+
+0
+
+Accepted Answer
+
+Hello, there are 3 options for you to perform instance isolation:
+
+1 - Security Group-level containment:
+a. Create a dedicated “Isolation” security group
+b. Create a single rule of 0.0.0.0/0 (0-65535) for all traffic in both the
+inbound rules and outbound rules
+c. Application of these rules will convert all existing (and new) traffic to
+“untracked”
+d. Remove the existing security group association from the instance and
+associate the “Isolation” security group with the instance
+e. Delete both rules of 0.0.0.0/0 (0-65535) for all traffic from both the
+inbound rules and outbound rules of the “Isolation” security group
+
+2 - Subnet-level containment:
+a. Identify the subnet associated with the instance
+b. Identify the NACL associated with the subnet
+c. Add a DENY ALL NACL rule to both the inbound and outbound rules as rule
+number 1 for all traffic (0.0.0.0/0)
+d. If you need to delete an existing rule to make space, ensure you record the details of
+the deleted rule in order to restore it in the future
+
+3 - VPC-level containment:
+a. Remove all the IGW routes from all route tables
+b. Attach a custom route table with no routes to all subnets within the VPC
+c. Options available depending on your needs and the situation
+d. This is a big hammer: Use it wisely
+
+https://docs.aws.amazon.com/vpc/latest/userguide/infrastructure-security.html
+
+CommentShare
+
+Henrique Souza
+
+answered 3 years ago
+
+EXPERT
+
+Sedat SALMAN
+
+reviewed 3 years ago
+
+EXPERT
+
+Damianenko Max Zeballos Torres
+
+reviewed 3 years ago
+
+- MichaelFischer EXPERT
+2 years ago
+
+The first solution does not work completely because it does not interrupt existing established flows - only new flows will be denied. The second solution only works for cross-subnet traffic because NACLs are not evaluated for flows within a subnet (i.e., that don't cross subnet or VPC boundaries). See https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html ("We evaluate the network ACL rules when traffic enters and leaves the subnet, not as it is routed within a subnet.")
+
+- Share
+
+### Add your answer
+
+You are not logged in. Log in to post an answer.
+
+A good answer clearly answers the question and provides constructive feedback and encourages professional growth in the question asker.
+
+Guidelines for Answering Questions
+
+ClearPost answer
+
+## Relevant content
+
+- Trying to isolate IAM user to have AmazonEC2ReadOnlyAccess to only select instances using python boto3
+
+Accepted Answer
+
+chrisjd20
+
+asked 5 years ago
+
+- Timeout when connecting to an EC2 using ssh (and ping) from Windows 10.
+How can I get my *account _really_ reactivated*?
+
+rePost-User-6812835
+
+asked 4 years ago
+
+- How can I activate IPv6 for a currently running EC2 instance and establish an SSH connection utilizing IPv6?
+
+Deepak Patil
+
+asked 3 years ago
+
+- Would like to run AWSSupport-ConfigureEC2Metadata Automation document on all current and future instances.
+
+rePost-User-7973960
+
+asked 3 years ago
+
+- How do I perform an in-place upgrade on my Amazon EC2 Windows instance?
+
+AWS OFFICIALUpdated 8 months ago
+
+- How do I resolve a Windows activation fail message on my Amazon EC2 Windows instance?
+
+AWS OFFICIALUpdated a month ago
+
+- How do I connect to my Amazon EC2 instance if I lose my SSH key pair after the initial instance launch?
+
+AWS OFFICIALUpdated a year ago
+
+- How do I automatically evaluate and remediate the increasing volume on an Amazon EC2 instance when free disk space is low?
+
+AWS OFFICIALUpdated 3 years ago
+
+- Support Automation Workflow (SAW) Runbook: Contain a compromised EC2 instance
+
+EXPERT
+
+Maya Karalic
+
+published 2 years ago
+
+- Improving automated response time: Integrating AWS Incident Detection and Response with Sumo Logic
+
+AWS OFFICIALUpdated 7 months ago
+
+FEEDBACK
