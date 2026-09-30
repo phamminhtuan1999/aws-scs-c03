@@ -1,0 +1,95 @@
+URL: https://docs.aws.amazon.com/vpc/latest/ipam/share-pool-ipam.html
+TITLE: Share an IPAM pool using AWS RAM - Amazon Virtual Private Cloud
+
+# Share an IPAM pool using AWS RAM
+
+Follow the steps in this section to share an IPAM pool using AWS Resource Access Manager
+(RAM). When you share an IPAM pool with RAM, "principals" can allocate CIDRs from the pool
+to AWS resources, such as VPCs, from their respective accounts. A principal is a concept
+in RAM that means any AWS account, IAM role or organizational unit in AWS Organizations.
+For more information, see Sharing
+your AWS resources in the AWS RAM User
+Guide.
+
+Note
+
+- You can only share an IPAM pool with AWS RAM if you've integrated IPAM with AWS Organizations. For
+more information, see Integrate IPAM with accounts in an AWS Organization. You cannot share an
+IPAM pool with AWS RAM if you are a single account IPAM user.
+
+- You must enable resource sharing with AWS Organizations in AWS RAM. For
+more information, see Enable resource sharing within AWS Organizations in the AWS RAM User Guide.
+
+- RAM sharing is only available in the home AWS Region of your IPAM. You must create the share in
+the AWS Region that the IPAM is in, not in the Region of the IPAM pool.
+
+- The account that creates and deletes IPAM pool resource shares must have the
+following permissions in the IAM policy attached to their IAM role:
+
+- ec2:PutResourcePolicy
+
+- ec2:DeleteResourcePolicy
+
+- You can add multiple IPAM pools to a RAM share.
+
+- While you can share IPAM pools with any AWS account outside an AWS Organization, IPAM will only monitor the IP addresses in accounts outside the Organization if the account owner has gone through the process of sharing their resource discovery with the delegated IPAM admin as described in Integrate IPAM with accounts outside of your organization.
+
+AWS Management Console
+
+To share an IPAM pool using RAM
+
+- Open the IPAM console at
+https://console.aws.amazon.com/ipam/.
+
+- In the navigation pane, choose Pools.
+
+- By default, the default private scope is selected. If you don't want to use the default
+private scope, from the dropdown menu at the top of the content pane, choose the scope you want to use. For more information about scopes, see How IPAM works.
+
+- In the content pane, choose the pool you want to share and choose Actions > View details.
+
+- Under Resource sharing, choose Create resource share. As a result, the AWS RAM console opens. You'll create the shared pool in AWS RAM.
+
+- Choose Create a resource share.
+
+- Add a Name for the shared resource.
+
+- Under Select resource type, select IPAM pools and choose
+one or more IPAM pools.
+
+- Choose Next.
+
+- Choose one of the permissions for the resource share:
+
+- AWSRAMDefaultPermissionsIpamPool: Choose this permission to
+allow principals to view the CIDRs and allocations in the shared
+IPAM pool and allocate/release CIDRs in the pool.
+
+- AWSRAMPermissionIpamPoolByoipCidrImport: Choose this
+permission to allow principals to import BYOIP CIDRs into the shared IPAM pool. You will
+need this permission only if you have existing BYOIP CIDRs and you want to import them to IPAM and
+share them with principals. For additional information on BYOIP CIDRs to IPAM,
+see Tutorial: Transfer a BYOIP IPv4 CIDR to IPAM.
+
+- Choose the principals that are allowed to access this resource. If principals will be importing existing BYOIP CIDRs
+to this shared IPAM pool, add the BYOIP CIDR owner account as principal.
+
+- Review the resource share options and the principals you'll be sharing with and choose Create.
+
+Command line
+
+The command(s) in this section link to the AWS CLI Command Reference. There you'll find detailed descriptions
+of the options you can use when you run the command(s).
+
+Use the following AWS CLI commands to share an IPAM pool using RAM:
+
+- Get the ARN of the IPAM: describe-ipam-pools
+
+- Create the resource share: create-resource-share
+
+- View the resource share: get-resource-shares
+
+As a result of creating the resource share in RAM, other principals can now allocate CIDRs
+to resources using the IPAM pool. For information on monitoring resources
+created by principals, see Monitor CIDR usage by resource. For more information
+on how to create a VPC and allocate a CIDR from a shared IPAM pool, see Create a VPC in the Amazon VPC User Guide.

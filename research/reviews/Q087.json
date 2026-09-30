@@ -1,0 +1,408 @@
+{
+  "question_id": "Q087",
+  "question_content_hash": "5f2f11a247712b4f28aa311e94337c9da1169d9a98ee322ac9ce86ae2bdcb8a6",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:55:57Z",
+  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "65cb109ce220c47b9b053f1806f8d57ac449b0deffa05e37c5571dc514f2275c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Tự động triển khai bộ 10 AWS Config rules tới mọi account hiện có và tương lai trong organization.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Tự động bật AWS Config (configuration recorder) khi tạo account mới.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Bối cảnh: AWS Organizations, một Region; security-01 là delegated administrator cho AWS Config (aggregator đã dùng); management-01 là management account; không nói security-01 là delegated admin cho CloudFormation StackSets.",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn đúng 2 bước (Choose two) kết hợp lại đáp ứng R1 và R2.",
+      "kind": "condition"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Tiêu chí ngầm: theo best practice, ủy quyền công việc ra khỏi management account khi có thể (delegated administrator).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q087:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "security-01 chỉ được nêu là delegated admin cho AWS Config, không phải cho StackSets; StackSets service-managed (có automatic deployment cho account tương lai) chỉ tạo được từ management account hoặc delegated admin của StackSets. Ngoài ra rule deploy qua stack không có ràng buộc rằng Config đã bật trước.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q087:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Organization conformance pack (PutOrganizationConformancePack) có thể gọi từ delegated administrator (config-multiaccountsetup) và tự động deploy tới account mới gia nhập organization, đáp ứng R1 và phù hợp best practice ủy quyền khỏi management account.",
+      "requirement_ids": [
+        "R1",
+        "R3",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q087:C",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Management account cũng gọi được PutOrganizationConformancePack nên về kỹ thuật vẫn deploy được 10 rules tới account hiện có và tương lai; nhưng công ty đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị ủy quyền công việc ra khỏi management account.",
+      "requirement_ids": [
+        "R1",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q087:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Không có dữ kiện security-01 là delegated admin cho StackSets; từ account thường chỉ dùng được self-managed StackSets, vốn không có automatic deployment tới account mới, nên không tự bật Config khi tạo account.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q087:E",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Từ management account có thể tạo StackSet service-managed với automatic deployment, nên template bật AWS Config được tự động deploy vào account mới khi được thêm vào organization/OU đích.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref8",
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q087:B",
+      "Q087:E"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "E là cách duy nhất trong các phương án bật Config tự động cho account mới (StackSets service-managed từ management account vì security-01 không phải delegated admin StackSets). Giữa B và C đều khả thi kỹ thuật; B được ưu tiên vì security-01 đã là delegated admin cho Config và best practice ủy quyền khỏi management account.",
+      "open_issues": [
+        "C (deploy conformance pack từ management-01) cũng hoạt động về kỹ thuật; đề không nêu rõ tiêu chí tối ưu, sự phân biệt B/C dựa trên best practice.",
+        "Để B deploy tới chính management account từ delegated admin cần service-linked role trong management account (tạo thủ công).",
+        "Đề nói 'delegated administrator for AWS Config' - giả định đã đăng ký cả config-multiaccountsetup.amazonaws.com như hướng dẫn AWS; nếu chỉ đăng ký config.amazonaws.com (aggregator) thì B cần thêm bước đăng ký.",
+        "Conformance pack chỉ retry deploy 7 giờ cho account mới nếu chưa có recorder; StackSets automatic deployment (E) cần bật recorder trong khoảng này."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref6",
+      "ref8",
+      "ref9",
+      "ref10"
+    ],
+    "recorded_at": "2026-09-30T19:55:57Z"
+  },
+  "source_answer": [
+    "Q087:B",
+    "Q087:E"
+  ],
+  "researched_answer": [
+    "Q087:B",
+    "Q087:E"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "E là phương án duy nhất bật AWS Config tự động cho account mới (StackSets service-managed với automatic deployment chỉ tạo được từ management account hoặc StackSets delegated admin; security-01 chỉ là delegated admin của Config). Cho phần 10 rules, B và C đều khả thi kỹ thuật; B được chọn vì đề cố ý chỉ định security-01 làm delegated admin cho Config, tính năng delegated admin được AWS giới thiệu chính cho tài khoản security/compliance chuyên trách, và AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể.",
+    "open_issues": [
+      "C (deploy organization conformance pack từ management-01) cũng hoạt động về kỹ thuật: PutOrganizationConformancePack gọi được từ management account và delegated admin; tổ hợp C+E đáp ứng yêu cầu chức năng. Đề không nêu tiêu chí 'best practice/least privilege', nên phân biệt B/C dựa trên khuyến nghị delegate ra khỏi management account và dữ kiện security-01 được chỉ định.",
+      "Trang AWS Config về organization conformance packs có câu 'Use the management account ... to enforce governance', cho thấy management account là cách hợp lệ (không làm C sai), chỉ kém hơn B theo best practice.",
+      "Giả định 'delegated administrator for AWS Config' bao gồm cả config-multiaccountsetup.amazonaws.com (như hướng dẫn đăng ký của AWS); nếu chỉ đăng ký config.amazonaws.com cho aggregator thì B cần thêm bước đăng ký.",
+      "Organization conformance pack chỉ retry 7 giờ cho account mới nếu chưa có recorder; StackSets automatic deployment (E) cần bật recorder trong khoảng này."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn B+E. Đã xem xét kỹ phương án C theo yêu cầu: What's New (05/2020) xác nhận có thể deploy Config rules/conformance packs từ delegated member account 'in addition to the master account', và API PutOrganizationConformancePack cho phép cả management account lẫn delegated admin - nên C+E cũng chạy được về kỹ thuật; trang Config còn mô tả dùng management account để enforce governance. Phía ngược lại: blog AWS về tính năng delegated admin nêu lý do là khách hàng có tài khoản security/audit/compliance chuyên trách muốn quản lý Config từ đó thay vì management account, và trang best practice của AWS Organizations khuyến nghị ủy quyền ra khỏi management account khi có thể; đề cố ý nêu security-01 là delegated admin cho Config. Với E, dùng management-01 là bắt buộc vì security-01 không được nêu là delegated admin của StackSets (A, D không có automatic deployment từ account thường). Kết luận: B+E là tổ hợp duy nhất vừa đúng chức năng vừa đúng best practice; C là meets_but_suboptimal chứ không 'ngang bằng'. Giữ B+E, verified với confidence medium và ghi rõ C khả thi kỹ thuật trong open_issues.",
+  "explanation_vi": {
+    "why_correct": "B: organization conformance pack deploy từ delegated admin security-01 tự áp 10 Config rules cho mọi account hiện có và account mới gia nhập, đúng best practice ủy quyền ra khỏi management account. E: StackSet service-managed từ management-01 (security-01 không phải delegated admin của StackSets) với automatic deployment sẽ bật AWS Config ngay khi account mới được thêm vào organization. Lưu ý: C cũng chạy được kỹ thuật, chỉ kém B về best practice.",
+    "others": {
+      "Q087:A": "security-01 không phải delegated admin của StackSets nên không tạo được StackSet service-managed có automatic deployment cho account tương lai; conformance pack cũng là cách chuẩn hơn để deploy rules.",
+      "Q087:C": "Management account cũng gọi được PutOrganizationConformancePack nên C chạy được, nhưng đề đã chỉ định security-01 làm delegated admin cho Config và AWS khuyến nghị không dồn việc vào management account.",
+      "Q087:D": "Từ security-01 (không phải StackSets delegated admin) chỉ dùng được self-managed StackSets, không có automatic deployment nên không tự bật Config khi tạo account mới."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "delegated administrator for AWS Config",
+      "meaning_vi": "security-01 được ủy quyền quản lý Config cho organization (rules, conformance packs, aggregator) - nên deploy conformance pack từ đây."
+    },
+    {
+      "phrase": "all existing and future AWS accounts",
+      "meaning_vi": "Cần cơ chế tự áp cho account mới: organization conformance pack và StackSets automatic deployment."
+    },
+    {
+      "phrase": "turn on AWS Config automatically during account creation",
+      "meaning_vi": "Cần StackSets service-managed (automatic deployment) để bật configuration recorder ở account mới."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần deploy Config rules toàn organization và đã có delegated admin cho Config -> nghĩ đến organization conformance pack từ delegated admin; nếu cần bật Config cho account mới -> StackSets service-managed + automatic deployment; kiểm tra account đó có là delegated admin của StackSets không (nếu không thì dùng management account).",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "1 Detection"
+    ],
+    "services": [
+      "AWS Config",
+      "AWS Organizations",
+      "AWS CloudFormation StackSets"
+    ],
+    "reason_vi": "Quản trị compliance đa account: tự động bật Config và deploy conformance pack cho account hiện có và tương lai."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+      "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+      "section": "Considerations - For accounts within an organization",
+      "snapshot_id": "34826975d0b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If a new account joins an organization, the rule or conformance pack is deployed to that account.",
+      "supports": "Organization conformance pack tự deploy tới account mới (R1).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_PutOrganizationConformancePack.html",
+      "title": "PutOrganizationConformancePack - AWS Config",
+      "section": "Description",
+      "snapshot_id": "e4efacaeb1e3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Only a management account and a delegated administrator can call this API.",
+      "supports": "Cả management account và delegated admin đều có thể deploy organization conformance pack (B và C đều khả thi).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/aggregated-register-delegated-administrator.html",
+      "title": "Registering a Delegated Administrator for AWS Config",
+      "section": "Registering a Delegated Administrator",
+      "snapshot_id": "5e744e71be78",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "for your organization to deploy and manage AWS Config rules and conformance packs across your organization",
+      "supports": "Delegated administrator cho AWS Config dùng để deploy/quản lý Config rules và conformance packs toàn organization.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+      "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+      "section": "Retry mechanism for new accounts added to an organization",
+      "snapshot_id": "34826975d0b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Deployment of existing organizational rules and conformance packs will only be retried for 7 hours after an account is added to your organization if a recorder is not available.",
+      "supports": "Conformance pack cần recorder trong account mới, nên cần kết hợp một bước bật Config tự động (E).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+      "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+      "section": "Organization management accounts, delegated administrators, and service-linked roles",
+      "snapshot_id": "34826975d0b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you do not have an SLR for your management account, you will not be able to deploy resources to that account from a delegated administrator account.",
+      "supports": "Giới hạn của B: cần SLR trong management account để deploy tới chính management account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html",
+      "title": "StackSets concepts - AWS CloudFormation",
+      "section": "Administrator and target accounts",
+      "snapshot_id": "312d020aa890",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For StackSets with service-managed permissions, the administrator account is either the organization's management account or a delegated administrator account.",
+      "supports": "StackSets service-managed chỉ tạo từ management account hoặc delegated admin (của StackSets).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-delegated-admin.html",
+      "title": "Register a delegated administrator member account - AWS CloudFormation",
+      "section": "Register a delegated administrator member account",
+      "snapshot_id": "71f580546a8d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "member accounts with delegated administrator permissions can create and manage StackSets with service-managed permissions for the organization.",
+      "supports": "Member account phải được đăng ký delegated admin cho StackSets mới tạo StackSets service-managed; đề không nói security-01 được đăng ký cho StackSets.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html",
+      "title": "StackSets concepts - AWS CloudFormation",
+      "section": "Permission models for StackSets",
+      "snapshot_id": "312d020aa890",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With this model, you can also turn on automatic deployments to accounts that you add to your organization in the future.",
+      "supports": "Automatic deployment tới account tương lai chỉ có ở service-managed permissions.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_best-practices_mgmt-acct.html",
+      "title": "Best practices for the management account - AWS Organizations",
+      "section": "Delegate responsibilities outside the management account for decentralization",
+      "snapshot_id": "c5aa429677a2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Where possible, we recommend delegating responsibilities and services outside the management account.",
+      "supports": "Ưu tiên deploy conformance pack từ delegated admin security-01 (B) hơn management account (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-orgs-manage-auto-deployment.html",
+      "title": "Enable or disable automatic deployments for StackSets in AWS Organizations",
+      "section": "Enable or disable automatic deployments",
+      "snapshot_id": "aeab1639ebd8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudFormation can automatically deploy additional stacks to new AWS Organizations accounts when they're added to your target organization",
+      "supports": "StackSet bật Config được tự deploy vào account mới (R2).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2020/05/now-deploy-aws-config-rules-and-conformance-packs-across-an-organization-from-a-delegated-member-account/",
+      "title": "Now deploy AWS Config rules and conformance packs across an organization from a delegated member account",
+      "section": "What's New (May 27, 2020)",
+      "snapshot_id": "b24246d2307c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can deploy these AWS Config artifacts from any delegated member account in your organization, in addition to the master account",
+      "supports": "Cả delegated admin (B) và management account (C) đều deploy được - C khả thi kỹ thuật.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref12",
+      "url": "https://aws.amazon.com/blogs/mt/deploy-aws-config-rules-and-conformance-packs-using-a-delegated-admin/",
+      "title": "Deploy AWS Config Rules and Conformance Packs using a delegated admin",
+      "section": "Introduction",
+      "snapshot_id": "40d4089f72b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2021-01-15T20:47:00-08:00",
+      "quote": "Customers have dedicated accounts for security, audit, and compliance and may want to manage organization-wide Config deployments from those dedicated accounts instead.",
+      "supports": "Lý do tồn tại của delegated admin: quản lý Config từ tài khoản security chuyên trách thay vì management account (ủng hộ B hơn C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref13",
+      "url": "https://aws.amazon.com/blogs/mt/deploy-aws-config-rules-and-conformance-packs-using-a-delegated-admin/",
+      "title": "Deploy AWS Config Rules and Conformance Packs using a delegated admin",
+      "section": "Prerequisites",
+      "snapshot_id": "40d4089f72b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": "2021-01-15T20:47:00-08:00",
+      "quote": "you can enable it for all accounts in AWS Organizations using StackSets",
+      "supports": "Bật AWS Config cho các account bằng StackSets là cách AWS gợi ý (phù hợp E).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref14",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html",
+      "title": "Managing Conformance Packs for AWS Config Across all Accounts in Your Organization",
+      "section": "Introduction",
+      "snapshot_id": "34826975d0b0",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use the management account in AWS Organizations to enforce governance",
+      "supports": "Bằng chứng phía C: management account là cách hợp lệ để deploy conformance pack (C không 'does_not_meet').",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Kết hợp hợp lý: E (StackSets service-managed từ management-01 bật Config cho account mới) + B (organization conformance pack từ delegated admin security-01). C là phương án thay thế khả thi nhưng kém hơn theo best practice.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:57Z",
+      "change": "blind verdict [\"Q087:B\", \"Q087:E\"] (verified, medium)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:06:17Z",
+      "change": "reconciliation: source key BE khớp blind; nghiên cứu thêm C (What's New 2020, Config doc: management account hợp lệ) và phía B (blog delegated admin, Organizations best practice); giữ BE, verified (medium), C ghi là meets_but_suboptimal",
+      "previous_answer": null
+    }
+  ]
+}

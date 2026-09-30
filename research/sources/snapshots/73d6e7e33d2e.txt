@@ -1,0 +1,399 @@
+URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ecr-repository.html
+TITLE: AWS::ECR::Repository - AWS CloudFormation
+
+This is the new CloudFormation Template Reference Guide.
+Please update your bookmarks and links. For help getting started with CloudFormation, see the
+AWS CloudFormation User Guide.
+
+# AWS::ECR::Repository
+
+The AWS::ECR::Repository resource specifies an Amazon Elastic Container
+Registry (Amazon ECR) repository, where users can push and pull Docker images, Open
+Container Initiative (OCI) images, and OCI compatible artifacts. For more information,
+see Amazon ECR private repositories in the Amazon ECR User
+Guide.
+
+## Syntax
+
+To declare this entity in your CloudFormation template, use the following syntax:
+
+### JSON
+
+{
+"Type" : "AWS::ECR::Repository",
+"Properties" : {
+"EmptyOnDelete" : Boolean,
+"EncryptionConfiguration" : EncryptionConfiguration,
+"ImageScanningConfiguration" : ImageScanningConfiguration,
+"ImageTagMutability" : String,
+"ImageTagMutabilityExclusionFilters" : [ ImageTagMutabilityExclusionFilter, ... ],
+"LifecyclePolicy" : LifecyclePolicy,
+"RepositoryName" : String,
+"RepositoryPolicyText" : Json,
+"Tags" : [ Tag, ... ]
+}
+}
+
+### YAML
+
+Type: AWS::ECR::Repository
+Properties:
+EmptyOnDelete: Boolean
+EncryptionConfiguration:
+EncryptionConfiguration
+ImageScanningConfiguration:
+ImageScanningConfiguration
+ImageTagMutability: String
+ImageTagMutabilityExclusionFilters:
+- ImageTagMutabilityExclusionFilter
+LifecyclePolicy:
+LifecyclePolicy
+RepositoryName: String
+RepositoryPolicyText: Json
+Tags:
+- Tag
+
+## Properties
+
+EmptyOnDelete
+
+If true, deleting the repository force deletes the contents of the repository. If
+false, the repository must be empty before attempting to delete it.
+
+Required: No
+
+Type: Boolean
+
+Update requires: No interruption
+
+EncryptionConfiguration
+
+The encryption configuration for the repository. This determines how the contents of
+your repository are encrypted at rest.
+
+Required: No
+
+Type: EncryptionConfiguration
+
+Update requires: Replacement
+
+ImageScanningConfiguration
+
+Important
+
+The imageScanningConfiguration parameter is being deprecated, in
+favor of specifying the image scanning configuration at the registry level. For more
+information, see PutRegistryScanningConfiguration.
+
+The image scanning configuration for the repository. This determines whether images
+are scanned for known vulnerabilities after being pushed to the repository.
+
+Required: No
+
+Type: ImageScanningConfiguration
+
+Update requires: No interruption
+
+ImageTagMutability
+
+The tag mutability setting for the repository. If this parameter is omitted, the
+default setting of MUTABLE will be used which will allow image tags to be
+overwritten. If IMMUTABLE is specified, all image tags within the
+repository will be immutable which will prevent them from being overwritten.
+
+Required: No
+
+Type: String
+
+Allowed values: MUTABLE | IMMUTABLE | MUTABLE_WITH_EXCLUSION | IMMUTABLE_WITH_EXCLUSION
+
+Update requires: No interruption
+
+ImageTagMutabilityExclusionFilters
+
+A list of filters that specify which image tags are excluded from the repository's
+image tag mutability setting.
+
+Required: No
+
+Type: Array of ImageTagMutabilityExclusionFilter
+
+Minimum: 1
+
+Maximum: 5
+
+Update requires: No interruption
+
+LifecyclePolicy
+
+Creates or updates a lifecycle policy. For information about lifecycle policy syntax,
+see Lifecycle policy template.
+
+Required: No
+
+Type: LifecyclePolicy
+
+Update requires: No interruption
+
+RepositoryName
+
+The name to use for the repository. The repository name may be specified on its own
+(such as nginx-web-app) or it can be prepended with a namespace to group
+the repository into a category (such as project-a/nginx-web-app). If you
+don't specify a name, AWS CloudFormation generates a unique physical ID and uses
+that ID for the repository name. For more information, see Name
+type.
+
+The repository name must start with a letter and can only contain lowercase letters,
+numbers, hyphens, underscores, and forward slashes.
+
+Note
+
+If you specify a name, you cannot perform updates that require replacement of this
+resource. You can perform updates that require no or some interruption. If you must
+replace the resource, specify a new name.
+
+Required: No
+
+Type: String
+
+Pattern: ^(?=.{2,256}$)([a-z0-9]+((\.|_|__|-+)[a-z0-9]+)*(\/[a-z0-9]+((\.|_|__|-+)[a-z0-9]+)*)*)$
+
+Minimum: 2
+
+Maximum: 256
+
+Update requires: Replacement
+
+RepositoryPolicyText
+
+The JSON repository policy text to apply to the repository. For more information, see
+Amazon ECR repository
+policies in the Amazon Elastic Container Registry User Guide.
+
+Required: No
+
+Type: Json
+
+Minimum: 0
+
+Maximum: 10240
+
+Update requires: No interruption
+
+Tags
+
+An array of key-value pairs to apply to this resource.
+
+Required: No
+
+Type: Array of Tag
+
+Maximum: 50
+
+Update requires: No interruption
+
+## Return values
+
+### Ref
+
+When you pass the logical ID of this resource to the intrinsic Ref function, Ref returns the resource name, such as
+test-repository.
+
+For more information about using the Ref function, see Ref.
+
+### Fn::GetAtt
+
+The Fn::GetAtt intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+For more information about using the Fn::GetAtt intrinsic function, see Fn::GetAtt.
+
+####
+
+Arn
+
+Returns the Amazon Resource Name (ARN) for the specified
+AWS::ECR::Repository resource. For example,
+arn:aws:ecr:eu-west-1:123456789012:repository/test-repository.
+
+RepositoryUri
+
+Returns the URI for the specified AWS::ECR::Repository resource. For
+example,
+123456789012.dkr.ecr.us-west-2.amazonaws.com/repository.
+
+## Examples
+
+- Specify a repository
+
+- Specify a repository with an image scanning configuration
+
+- Specify a repository with a lifecycle policy
+
+### Specify a repository
+
+The following example specifies a repository named
+test-repository. Its policy permits the users Bob
+and Alice to push and pull images. Note that the IAM
+users actually need to exist, or stack creation will fail.
+
+#### JSON
+
+"MyRepository": {
+"Type": "AWS::ECR::Repository",
+"Properties": {
+"RepositoryName" : "test-repository",
+"RepositoryPolicyText" : {
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "AllowPushPull",
+"Effect": "Allow",
+"Principal": {
+"AWS": [
+"arn:aws:iam::123456789012:user/Bob",
+"arn:aws:iam::123456789012:user/Alice"
+]
+},
+"Action": [
+"ecr:GetDownloadUrlForLayer",
+"ecr:BatchGetImage",
+"ecr:BatchCheckLayerAvailability",
+"ecr:PutImage",
+"ecr:InitiateLayerUpload",
+"ecr:UploadLayerPart",
+"ecr:CompleteLayerUpload"
+]
+}
+]
+}
+}
+}
+
+#### YAML
+
+MyRepository:
+Type: AWS::ECR::Repository
+Properties:
+RepositoryName: "test-repository"
+RepositoryPolicyText:
+Version: "2012-10-17"
+Statement:
+- Sid: AllowPushPull
+Effect: Allow
+Principal:
+AWS:
+- "arn:aws:iam::123456789012:user/Bob"
+- "arn:aws:iam::123456789012:user/Alice"
+Action:
+- "ecr:GetDownloadUrlForLayer"
+- "ecr:BatchGetImage"
+- "ecr:BatchCheckLayerAvailability"
+- "ecr:PutImage"
+- "ecr:InitiateLayerUpload"
+- "ecr:UploadLayerPart"
+- "ecr:CompleteLayerUpload"
+
+### Specify a repository with an image scanning configuration
+
+The following example creates a repository named test-repository
+with image scanning enabled. For more information on image scanning, see Image scanning in the Amazon ECR User
+Guide.
+
+#### JSON
+
+"MyRepository": {
+"Type": "AWS::ECR::Repository",
+"Properties": {
+"RepositoryName" : "test-repository",
+"ImageScanningConfiguration" : {
+"ScanOnPush": true
+}
+}
+}
+
+#### YAML
+
+MyRepository:
+Type: AWS::ECR::Repository
+Properties:
+RepositoryName: "test-repository"
+ImageScanningConfiguration:
+ScanOnPush: true
+
+### Specify a repository with a lifecycle policy
+
+The following example creates a repository with a lifecycle policy.
+
+#### JSON
+
+{
+"Parameters": {
+"lifecyclePolicyText": {
+"Type": "String"
+},
+"repositoryName": {
+"Type": "String"
+},
+"registryId": {
+"Type": "String"
+}
+},
+"Resources": {
+"MyRepository": {
+"Type": "AWS::ECR::Repository",
+"Properties": {
+"LifecyclePolicy": {
+"LifecyclePolicyText": {
+"Ref": "lifecyclePolicyText"
+},
+"RegistryId": {
+"Ref": "registryId"
+}
+},
+"RepositoryName": {
+"Ref": "repositoryName"
+}
+}
+}
+},
+"Outputs": {
+"Arn": {
+"Value": {
+"Fn::GetAtt": [
+"MyRepository",
+"Arn"
+]
+}
+}
+}
+}
+
+#### YAML
+
+Parameters:
+lifecyclePolicyText:
+Type: String
+repositoryName:
+Type: String
+registryId:
+Type: String
+Resources:
+MyRepository:
+Type: AWS::ECR::Repository
+Properties:
+LifecyclePolicy:
+LifecyclePolicyText: !Ref lifecyclePolicyText
+RegistryId: !Ref registryId
+RepositoryName: !Ref repositoryName
+Outputs:
+Arn:
+Value: !GetAtt MyRepository.Arn
+
+## See also
+
+- Creating a lifecycle
+policy in the Amazon ECR User Guide
+
+- PutLifecyclePolicy in the Amazon ECR API
+Reference

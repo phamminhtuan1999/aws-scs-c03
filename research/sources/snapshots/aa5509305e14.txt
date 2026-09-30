@@ -1,0 +1,307 @@
+URL: https://repost.aws/articles/ARwkDzoO-8RN-SDQnA1aX-XA/support-automation-workflow-saw-runbook-contain-a-compromised-ec2-instance
+TITLE: Support Automation Workflow (SAW) Runbook: Contain a compromised EC2 instance | AWS re:Post
+
+AWS Builder Center: Learn, Build and Connect with builders in the AWS community
+
+AWS Builder Center is the official home for builders on AWS. Share and read what others are working on, follow people who inspire you, explore training and workshops, and find tools to support what you're building.
+
+# Support Automation Workflow (SAW) Runbook: Contain a compromised EC2 instance
+
+7 minute read
+
+Content level: Intermediate
+
+0
+
+In a cybersecurity incident or when faced with a potentially compromised or suspicious Amazon Elastic Compute Cloud (Amazon EC2) instance, it is crucial to quickly isolate the instance for investigation while preserving its contents. Failing to do so may risk the spread of the compromise or data loss. The AWSSupport-ContainEC2Instance runbook provides a streamlined and reversible approach to contain an EC2 instance, allowing for thorough analysis without disrupting critical workloads.
+
+In this article, I will show you how to use the AWSSupport-ContainEC2Instance, AWS Systems Manager automation runbook to isolate the Amazon Elastic Compute Cloud (Amazon EC2) instance. This runbook performs a reversible network containment of an instance, leaving the instance intact and running, but isolating it from any network activity and preventing it from communicating with resources within your VPC or with internet resources.
+
+Learn more about Support Automation Workflows >>
+
+### Disclaimer:
+
+- Use of Elevated Privileges: This runbook performs various operations that require elevated privileges, such as modifying security groups, creating AMIs, and interacting with Auto Scaling groups. These actions could potentially lead to privilege escalation or impact other workloads in your account. You should review the permissions granted to the role specified by the AutomationAssumeRole parameter and ensure they are appropriate for the intended use case.
+You can refer to the following AWS documentation for more information on IAM permissions:
+
+- Identity and Access Management (IAM) Permissions
+
+- AWS Systems Manager Automation Permissions
+
+- Workload Unavailability Risks: This runbook performs mutative actions that could potentially cause unavailability or disruption to your workloads. Specifically, it modifies the security groups associated with the target EC2 instance, which could impact network connectivity. Additionally, if the instance is part of an Auto Scaling group, the runbook may modify the group's configuration, potentially affecting its scaling behavior.
+
+- Creation of Additional Resources: During the containment process, this runbook creates additional resources, such as security groups and Amazon Machine Images (AMIs). While these resources are tagged for identification, you should be aware of their creation and ensure proper cleanup or management after the containment process is complete.
+
+- Restoration Risks: If the Action parameter is set to "Release", this runbook attempts to restore the EC2 instance's configuration to its original state. However, there is a risk that the restoration process may fail, leaving the instance in an inconsistent state. The runbook provides instructions for manual restoration in case of such failures, but you should be prepared to handle potential issues during the restoration process.
+
+It is recommended to review the runbook thoroughly, understand its potential impacts, and test it in a non-production environment before executing it in your production environment.
+
+### How it works?
+
+This Automation runbook AWSSupport-ContainEC2Instance performs network containment of an EC2 instance through a series of coordinated steps. When executed in "Contain" mode, it first validates the input parameters and checks if the instance is not terminated. It then backs up the current security group configuration to an S3 bucket for later restoration. The runbook creates two security groups: a temporary "all access" security group and a final "containment" security group. It gradually transitions the instance's network interfaces from their original security groups to the all-access security group, and finally to the containment security group. If specified, it creates both unencrypted and encrypted AMI backups of the instance. For instances in an Auto Scaling group, it handles the necessary ASG modifications and brings the instance to standby state. When executed in "Release" mode, it restores the instance to its original network configuration using the backed-up settings from S3. The runbook supports a "DryRun" parameter to preview actions without making actual changes, and includes comprehensive error handling and reporting mechanisms throughout the containment and release workflows.
+
+### Required IAM permissions
+
+The AutomationAssumeRole parameter requires the following permissions to successfully use the runbook:
+
+Non-Mutating Actions:
+
+- ec2:DescribeSnapshots
+
+- ec2:DescribeSecurityGroups
+
+- ec2:DescribeImages
+
+- ec2:DescribeInstances
+
+- ec2:DescribeTags
+
+- autoscaling:DescribeAutoScalingInstances
+
+- autoscaling:DescribeAutoScalingGroups
+
+- autoscaling:DescribeTags
+
+- kms:DescribeKey
+
+- s3:GetAccountPublicAccessBlock
+
+- s3:GetBucketAcl
+
+- s3:GetBucketLocation
+
+- s3:GetBucketOwnershipControls
+
+- s3:GetBucketPolicy
+
+- s3:GetBucketPolicyStatus
+
+- s3:GetBucketPublicAccessBlock
+
+- s3:GetObject
+
+- s3:ListBucket
+
+Mutating Actions:
+
+- ec2:AuthorizeSecurityGroupEgress
+
+- ec2:AuthorizeSecurityGroupIngress
+
+- ec2:DeleteTags
+
+- ec2:CreateTags
+
+- ec2:ModifyNetworkInterfaceAttribute
+
+- ec2:CreateImage
+
+- ec2:CopyImage
+
+- ec2:CreateSecurityGroup
+
+- ec2:RevokeSecurityGroupEgress
+
+- ec2:DeleteSecurityGroup
+
+- ec2:CreateSnapshot
+
+- autoscaling:CreateOrUpdateTags
+
+- autoscaling:DeleteTags
+
+- autoscaling:EnterStandby
+
+- autoscaling:ExitStandby
+
+- autoscaling:UpdateAutoScalingGroup
+
+- kms:CreateGrant
+
+- kms:ReEncryptFrom
+
+- kms:ReEncryptTo
+
+- kms:GenerateDataKeyWithoutPlaintext
+
+- s3:CreateBucket
+
+- s3:DeleteObjectTagging
+
+- s3:PutAccountPublicAccessBlock
+
+- s3:PutBucketPolicy
+
+- s3:PutBucketVersioning
+
+- s3:PutObjectTagging
+
+- s3:PutObject
+
+### Instructions
+
+- Navigate to the AWSSupport-ContainEC2Instance in the AWS Systems Manager console.
+
+- Click on Execute automation.
+
+- For the input parameters enter the following:
+
+- InstanceId (Required): The instance on which you want to execute contain or restore workflow.
+
+- Action (Optional): Contain will instruct the automation to isolate the EC2 instance and Restore will restore the instance to its original configuration. Default action is Contain.
+
+- DryRun (Optional): When set to True, the automation will not execute any mutative commands, instead will report on what it would have attempted to do, detailing out each step. Default value is True.
+
+- CreateAMIBackup (Optional): When set to True, backup ami will be created during containment.
+
+- KmsKey: ID of the Amazon KMS key that will be used to Encrypt the ebs volume. Default is set to alias/aws/ebs.
+
+- IngressInput: Comma separated map of ingress rules with Cidr, IpProtocol, FromPort and ToPort in the format [{"Cidr": "1.2.3.4/32", "IpProtocol": "tcp", "FromPort":"22", "ToPort":"22"}].
+
+- EgressInput: Comma separated map of egress rules with Cidr, IpProtocol, FromPort and ToPort in the format [{"Cidr": "1.2.3.4/32", "IpProtocol": "tcp", "FromPort":"22", "ToPort":"22"}].
+
+- TagIdentifier (Optional): A tag in the format Key=BatchId,Value=78925 that will be added to AWS resources created or modified by this Automation document during the containment workflow. This tag can be used to identify and manage resources associated during containment process. During the release workflow, the tag specified by this parameter will be removed from the resources. Note: Tag key and value are case-sensitive.
+
+- S3BucketName (Required): S3 bucket to upload the configuration when Action is Contain or to restore the configuration when Action is Restore. This parameter is required when Action is Restore type.
+
+- S3PrefixName (Optional): Amazon S3 path to restore the EC2 Instance configuration. This parameter is required when Action is Restore type.
+
+- AutomationAssumeRole (Optional): The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that allows Systems Manager Automation to perform the actions on your behalf. If no role is specified, Systems Manager Automation uses the permissions of the user that starts this runbook.
+
+The following example demonstrates how to use the AWSSupport-ContainEC2Instance automation runbook to contain an EC2 instance present in the AWS account.
+
+- Click on Execute.
+
+- You should see that the automation has been initiated.
+
+- Document will perform the following steps:
+
+- validateRequiredInputs - Validates input parameters required to continue execution of runbook.
+
+- assertInstanceIsNotTerminated - Asserts EC2 instance exists.
+
+- getAutoScalingInstanceInfo - Gets information about the AutoScaling instance in the account.
+
+- backupBucketPreChecks - Checks if the target Amazon S3 potentially grants public read or write access to its objects.
+
+- backupInstanceSecurityGroups - Collects EC2 instance security group details and uploads to the Amazon S3 bucket.
+
+- createAllAccessSecurityGroup - Creates all access security group and replaces existing security groups with all access security group.
+
+- createContainmentSecurityGroup - Creates containment security group and replaces with all access security group with containment security group.
+
+- assertSourceInstanceRootVolumeIsEbs - Asserts the source instance root volume is ebs.
+
+- createImage - Creates an Amazon Machine Image (AMI) of the source EC2 instance.
+
+- createEncryptedCopy - Creates encrypted Amazon Machine Image (AMI) of source EC2 instance backed by EBS volume.
+
+- containFinalOutput - Consolidates containment activity in readable format.
+
+- Once completed, you can review the Outputs section to see a summary of the EC2 instance initial and final configuration.
+
+### Conclusion
+
+In this article, I demonstrated how to contain a compromised EC2 Instance using AWSSupport-ContainEC2Instance, available in the AWS System Manager.
+
+### References
+
+Systems Manager Automation
+
+Run this Automation (console)
+
+Running a simple automation: https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-working-executing.html
+
+Setting up Automation: https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-setup.html
+
+Documentation related to the AWS service
+
+For more information how to run this runbook, please see the AWS public document: AWSSupport-ContainEC2Instance
+
+FollowShare
+
+Topics
+
+End User ComputingCompute
+
+Tags
+
+Amazon EC2AWS Support Automation Workflows
+
+Language
+
+English
+
+EXPERT
+
+Maya Karalic
+
+published 2 years ago1.2K views
+
+No comments
+
+Comment on this article
+
+ClearPost comment
+
+## Relevant content
+
+- Support Automation Workflow (SAW) Runbook: Contain a compromised Identity and Access Management (IAM) User/Role
+
+EXPERT
+
+Maya Karalic
+
+published 2 years ago
+
+- Support Automation Workflow (SAW) Runbook: Contain a compromised AWS S3 Bucket
+
+EXPERT
+
+Maya Karalic
+
+published 2 years ago
+
+- Support Automation Workflow (SAW) Runbook: Analyze connectivity to an AWS service endpoint
+
+EXPERT
+
+Maya Karalic
+
+published 4 years ago
+
+- ECS and Autoscaling groups
+
+rePost-User-2082238
+
+asked 3 years ago
+
+- Seeking Reference for AWS Troubleshooting Guide Across Core Operational Categories
+
+Guru
+
+asked a year ago
+
+- Urgent Escalation Request: Account Compromise & $2000+ Fraudulent Bedrock Charges
+
+iNgunix
+
+asked a month ago
+
+- How do I manage RDP settings on a managed Amazon EC2 Windows instance?
+
+AWS OFFICIALUpdated 2 years ago
+
+- How do I migrate my workloads from Xen-based instances to Nitro-based instances in Amazon EC2?
+
+AWS OFFICIALUpdated 2 years ago
+
+- How do I change a Linux user password on my EC2 instance?
+
+AWS OFFICIALUpdated 7 months ago
+
+- How do I resolve "CannotPullContainerError" errors when I launch an EC2 task in Amazon ECS?
+
+AWS OFFICIALUpdated a year ago
+
+FEEDBACK

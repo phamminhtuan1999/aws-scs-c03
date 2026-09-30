@@ -1,0 +1,109 @@
+URL: https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-create.html
+TITLE: Creating an Amazon ECR private repository to store images - Amazon ECR
+
+# Creating an Amazon ECR private repository to store images
+
+Important
+
+Dual-layer server-side encryption with AWS KMS (DSSE-KMS) is only available in
+the AWS GovCloud (US) Regions.
+
+Create an Amazon ECR private repository, and then use the repository to store your
+container images. Use the following steps to create a private repository using the
+AWS Management Console.
+
+To create a repository (AWS Management Console)
+
+- Open the Amazon ECR console at
+https://console.aws.amazon.com/ecr/repositories.
+
+- From the navigation bar, choose the Region to create your repository
+in.
+
+- Choose Private repositories, and then choose
+Create repository.
+
+- For Repository name, enter a unique name for your
+repository. The repository name can be specified on its own (for example
+nginx-web-app). Alternatively, it can be prepended with a
+namespace to group the repository into a category (for example
+project-a/nginx-web-app).
+
+Note
+
+The repository name may container a maximum of 256
+characters. The name must start with a letter and can only contain lowercase
+letters, numbers, hyphens, underscores, periods and forward slashes. Using a
+double forward slash isn't supported.
+
+- For Image tag immutability, choose one of the following
+tag mutability settings for the repository.
+
+- Mutable – Choose this option if you want
+image tags to be overwritten. Recommended for repositories using pull
+through cache actions to ensure Amazon ECR can update cached images.
+Additionally, to disable tag updates for a few mutable tags, enter tag
+names or use wildcards (*) to match multiple similar tags in the
+Mutable tag exclusion text box.
+
+- Immutable – Choose this option if you want
+to prevent image tags from being overwritten, and it applies to all tags
+and exclusions in the repository when pushing an image with existing
+tag. Amazon ECR returns an ImageTagAlreadyExistsException if you
+attempt to push an image with an existing tag. Additionally, to enable
+tag updates for a few immutable tags, enter tag names or use wildcards
+(*) to match multiple similar tags in the Immutable tag
+exclusion text box.
+
+Note
+
+Individual tag mutability settings aren't supported.
+
+- For Encryption configuration, choose between
+AES-256 or AWS KMS. For more
+information, see Encryption at rest.
+
+- If AWS KMS is chosen, choose between Single-layer encryption and
+Dual-layer encryption. There are additional charges for using AWS KMS or
+Dual-layer encryption. For more information, see Amazon ECR Service Pricing.
+
+- By default, AWS managed key with the alias aws/ecr is
+chosen. This key is created in your account the first time that you
+create a repository with AWS KMS encryption enabled. Select
+Customer managed key (advanced) to choose your own AWS KMS
+key. The AWS KMS key must be in the same Region as the cluster. Select
+Create an AWS KMS key to navigate to the AWS KMS
+console to create your own key.
+
+- For Image scanning settings, while
+you can specify the scan settings at the repository level for basic scanning,
+it is a best practice to specify the scan configuration at the private registry
+level. Configuring the scanning settings at the private registry level enables
+you to choose between enhanced scanning or basic scanning, and also allows you
+to define filters to specify which repositories should be scanned.
+
+- Choose Create.
+
+To create a repository (AWS CLI)
+
+- You can create a repository using the AWS CLI with the
+aws ecr create-repository command.
+
+aws ecr create-repository \
+--repository-name hello-repository \
+--region region
+
+- If you have a repository creation template defined, you can create
+a repository by pushing your image using familiar Amazon ECR push commands with
+your desired repository name. Amazon ECR will automatically create the repository
+for you using the predefined settings of your repository creation template.
+If you do not have a repository creation template defined yet, your request
+to your nonexistent image repository will fail.
+
+docker push aws_account_id.dkr.ecr.region.amazonaws.com/prefix/my-new-repository:tag
+
+## Next steps
+
+To view the steps to push an image to your repository, select the repository and
+choose View push commands. For more information about pushing
+an image to your repository, see Pushing an image to an Amazon ECR private repository.

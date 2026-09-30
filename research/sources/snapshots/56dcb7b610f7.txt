@@ -1,0 +1,543 @@
+URL: https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/automation-awssupport-containec2instance.html
+TITLE: AWSSupport-ContainEC2Instance - AWS Systems Manager Automation Runbook Reference
+
+# AWSSupport-ContainEC2Instance
+
+Description
+
+The AWSSupport-ContainEC2Instance runbook provides an automated solution for
+the procedure outlined in the article How do I isolate the Amazon EC2 Instance
+when faced with a potentially compromised or suspicious? The automation branches
+depending on the values you specify.
+
+How does it work?
+
+This Automation runbook AWSSupport-ContainEC2Instance performs network
+containment of an Amazon EC2 Instance through a series of coordinated steps. When executed in
+Contain mode, it first validates the input parameters and checks if the
+instance is not terminated. It then backs up the current security group configuration to an
+Amazon S3 bucket for later restoration. The runbook creates two security groups: a temporary "all
+access" security group and a final "containment" security group. It gradually transitions
+the instance's network interfaces from their original security groups to the all-access
+security group, and finally to the containment security group. If specified, it creates both
+unencrypted and encrypted AMI backups of the instance. For instances in an Auto Scaling
+group, it handles the necessary Auto Scaling group modifications and brings the instance to
+standby state. When executed in Release mode, it restores the instance to its
+original network configuration using the backed-up settings from Amazon S3. The runbook supports
+a DryRun parameter to preview actions without making actual changes, and
+includes comprehensive error handling and reporting mechanisms throughout the containment
+and release workflows.
+
+Important
+
+- This runbook performs various operations that require elevated privileges,
+such as modifying security groups, creating AMIs, and interacting with Auto
+Scaling groups. These actions could potentially lead to privilege escalation or
+impact other workloads in your account. You should review the permissions
+granted to the role specified by the AutomationAssumeRole parameter
+and ensure they are appropriate for the intended use case. You can refer to the
+following AWS documentation for more information on IAM permissions: AWS Identity and Access Management (IAM) Permissions
+AWS Systems Manager Automation Permissions.
+
+- This runbook performs mutative actions that could potentially cause
+unavailability or disruption to your workloads. Specifically, it modifies the
+security groups associated with the target Amazon EC2 Instance, which could impact
+network connectivity. Additionally, if the instance is part of an Auto Scaling
+group, the runbook may modify the group's configuration, potentially affecting
+its scaling behavior.
+
+- During the containment process, this runbook creates additional resources,
+such as security groups and AMIs. While these resources are tagged for
+identification, you should be aware of their creation and ensure proper cleanup
+or management after the containment process is complete.
+
+- If the Action parameter is set to Release, this
+runbook attempts to restore the Amazon EC2 Instance's configuration to its original
+state. However, there is a risk that the restoration process may fail, leaving
+the instance in an inconsistent state. The runbook provides instructions for
+manual restoration in case of such failures, but you should be prepared to
+handle potential issues during the restoration process.
+
+It is recommended to review the runbook thoroughly, understand its potential impacts,
+and test it in a non-production environment before executing it in your production
+environment.
+
+Run this Automation (console)
+
+Document type
+
+Automation
+
+Owner
+
+Amazon
+
+Platforms
+
+/
+
+Required IAM permissions
+
+The AutomationAssumeRole parameter requires the following actions to
+use the runbook successfully.
+
+- autoscaling:CreateOrUpdateTags
+
+- autoscaling:DeleteTags
+
+- autoscaling:DescribeAutoScalingGroups
+
+- autoscaling:DescribeAutoScalingInstances
+
+- autoscaling:DescribeTags
+
+- autoscaling:EnterStandby
+
+- autoscaling:ExitStandby
+
+- autoscaling:UpdateAutoScalingGroup
+
+- ec2:AuthorizeSecurityGroupEgress
+
+- ec2:AuthorizeSecurityGroupIngress
+
+- ec2:CopyImage
+
+- ec2:CreateImage
+
+- ec2:CreateSecurityGroup
+
+- ec2:CreateSnapshot
+
+- ec2:CreateTags
+
+- ec2:DeleteSecurityGroup
+
+- ec2:DeleteTags
+
+- ec2:DescribeImages
+
+- ec2:DescribeInstances
+
+- ec2:DescribeSecurityGroups
+
+- ec2:DescribeSnapshots
+
+- ec2:DescribeTags
+
+- ec2:ModifyNetworkInterfaceAttribute
+
+- ec2:RevokeSecurityGroupEgress
+
+- kms:CreateGrant
+
+- kms:DescribeKey
+
+- kms:GenerateDataKeyWithoutPlaintext
+
+- kms:ReEncryptFrom
+
+- kms:ReEncryptTo
+
+- s3:CreateBucket
+
+- s3:DeleteObjectTagging
+
+- s3:GetAccountPublicAccessBlock
+
+- s3:GetBucketAcl
+
+- s3:GetBucketLocation
+
+- s3:GetBucketOwnershipControls
+
+- s3:GetBucketPolicy
+
+- s3:GetBucketPolicyStatus
+
+- s3:GetBucketPublicAccessBlock
+
+- s3:GetObject
+
+- s3:ListBucket
+
+- s3:PutAccountPublicAccessBlock
+
+- s3:PutBucketPolicy
+
+- s3:PutBucketVersioning
+
+- s3:PutObject
+
+- s3:PutObjectTagging
+
+Example Policy:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "ReadOperations",
+"Effect": "Allow",
+"Action": [
+"autoscaling:DescribeAutoScalingGroups",
+"autoscaling:DescribeAutoScalingInstances",
+"autoscaling:DescribeTags",
+"ec2:DescribeImages",
+"ec2:DescribeInstances",
+"ec2:DescribeSecurityGroups",
+"ec2:DescribeSnapshots",
+"ec2:DescribeTags",
+"kms:DescribeKey",
+"s3:GetAccountPublicAccessBlock",
+"s3:GetBucketAcl",
+"s3:GetBucketLocation",
+"s3:GetBucketOwnershipControls",
+"s3:GetBucketPolicy",
+"s3:GetBucketPolicyStatus",
+"s3:GetBucketPublicAccessBlock",
+"s3:GetObject",
+"s3:ListBucket"
+],
+"Resource": "*"
+},
+{
+"Sid": "WriteOperations",
+"Effect": "Allow",
+"Action": [
+"autoscaling:CreateOrUpdateTags",
+"autoscaling:DeleteTags",
+"autoscaling:EnterStandby",
+"autoscaling:ExitStandby",
+"autoscaling:UpdateAutoScalingGroup",
+"ec2:AuthorizeSecurityGroupEgress",
+"ec2:AuthorizeSecurityGroupIngress",
+"ec2:CopyImage",
+"ec2:CreateImage",
+"ec2:CreateSecurityGroup",
+"ec2:CreateSnapshot",
+"ec2:CreateTags",
+"ec2:DeleteSecurityGroup",
+"ec2:DeleteTags",
+"ec2:ModifyNetworkInterfaceAttribute",
+"ec2:RevokeSecurityGroupEgress",
+"kms:CreateGrant",
+"kms:GenerateDataKeyWithoutPlaintext",
+"kms:ReEncryptFrom",
+"kms:ReEncryptTo",
+"s3:CreateBucket",
+"s3:DeleteObjectTagging",
+"s3:PutAccountPublicAccessBlock",
+"s3:PutBucketPolicy",
+"s3:PutBucketVersioning",
+"s3:PutObject",
+"s3:PutObjectTagging"
+],
+"Resource": "*"
+}
+]
+}
+
+Instructions
+
+Follow these steps to configure the automation:
+
+- Navigate to AWSSupport-ContainEC2Instance in Systems Manager under
+Documents.
+
+- Select Execute automation.
+
+- For the input parameters, enter the following:
+
+- AutomationAssumeRole (Optional):
+
+- Description: (Optional) The Amazon Resource Name (ARN) of the
+AWS AWS Identity and Access Management (IAM) role that allows Systems Manager Automation to perform
+the actions on your behalf. If no role is specified, Systems Manager
+Automation uses the permissions of the user who starts this
+runbook.
+
+- Type: AWS::IAM::Role::Arn
+
+- Action (Required):
+
+- Description: (Required) Select Contain to isolate the
+Amazon EC2 instance or Restore to try to restore the Amazon EC2
+instance configuration original configuration from a previous
+backup.
+
+- Type: String
+
+- Allowed Pattern: Contain|Restore
+
+- DryRun (Optional):
+
+- Description: (Optional) When set to true, the
+automation will not execute any of the commands, instead it will
+report on what it would have attempted to do, detailing out each
+step. Default value: true.
+
+- Type: Boolean
+
+- Allowed Values: true|false
+
+- CreateAMIBackup (Optional):
+
+- Description: (Optional) When set to true, an AMI of
+the Amazon EC2 Instance will be created before performing the containment
+actions.
+
+- Type: Boolean
+
+- Allowed Values: true|false
+
+- KmsKey (Optional):
+
+- Description: (Optional) The ID of the AWS KMS key that will be used
+to create an encrypted AMI of target Amazon EC2 instance. Default is
+set to alias/aws/ebs.
+
+- Type: String
+
+- Allowed Pattern:
+^(((arn:(aws|aws-cn|aws-us-gov):kms:([a-z]{2}|[a-z]{2}-gov)-[a-z]+-[0-9]{1}:[0-9]{12}:key/)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|mrk-[a-f0-9]{32}))|(arn:(aws|aws-cn|aws-us-gov):kms:([a-z]{2}|[a-z]{2}-gov)-[a-z]+-[0-9]{1}:[0-9]{12}:)?alias/.{1,})$
+
+- BackupS3BucketName (Conditional):
+
+- Description: (Conditional) Amazon Amazon S3 bucket to upload the
+configuration when Action is Contain or to
+restore the configuration when Action is
+Release. Note: If
+the provided bucket doesn't exist in the account, the automation
+will create a Amazon S3 bucket on your behalf.
+
+- Type: AWS::S3::Bucket::Name
+
+- TagIdentifier (Optional):
+
+- Description: (Optional) A tag in the format
+Key=BatchId,Value=78925 that will be added to the
+AWS resources created or modified by this runbook during the
+containment workflow. This tag can be used to identify and manage
+resources associated during containment process. During the restore
+workflow, the tag specified by this parameter will be removed from
+the resources. Note: Tag keys and
+values are case-sensitive.
+
+- Type: String
+
+- Allowed Pattern:
+^$|^[Kk][Ee][Yy]=[\\+\\-\\=\\.\\_\\:\\/@a-zA-Z0-9]{1,128},[Vv][Aa][Ll][Uu][Ee]=[\\+\\-\\=\\.\\_\\:\\/@a-zA-Z0-9]{0,128}$
+
+- BackupS3BucketAccess
+(Conditional):
+
+- Description: (Conditional) The ARN of the IAM users or roles
+that will be allowed access to the backup Amazon S3 bucket after running
+the containment actions. This parameter is required when
+Action is Contain. The
+AutomationAssumeRole, or in its absence the user
+under whose context the automation is running is automatically added
+to the list.
+
+- Type: String
+
+- Allowed Pattern:
+^$|^arn:(aws|aws-cn|aws-us-gov|aws-iso(-[a-z])?):iam::[0-9]{12}:(role|user)\\/[\\w+\\/=,.@-]+$
+
+- IngressTrafficRules (Optional):
+
+- Description: (Optional) A comma separated map of security group
+ingress rules with Cidr, IpProtocol, FromPort and ToPort in the
+format [{"Cidr": "1.2.3.4/32", "IpProtocol": "tcp",
+"FromPort":"22", "ToPort":"22"}] to be applied to the
+Amazon EC2 instance. If no rules are provided, a security group without
+any ingress rules will be attached to the Amazon EC2 instance,
+effectively isolating it from any incoming traffic.
+
+- Type: MapList
+
+- Allowed Pattern:
+^\\{\\}$|^\\{\"Cidr\":\"[\\x00-\\x7F+]{1,128}\",\"IpProtocol\":\"[\\x00-\\x7F+]{1,128}\",\"FromPort\":\"[\\x00-\\x7F+]{1,128}\",\"ToPort\":\"[\\x00-\\x7F+]{0,255}\"\\}
+
+- EgressTrafficRules (Optional):
+
+- Description: (Optional) A comma separated map of security group
+egress rules with Cidr, IpProtocol, FromPort and ToPort in the
+format [{"Cidr": "1.2.3.4/32", "IpProtocol": "tcp",
+"FromPort":"22", "ToPort":"22"}] to be applied to the
+Amazon Amazon EC2 instance. If no rules are provided, a security group
+without any egress rules will be attached to the Amazon EC2 instance,
+effectively preventing all outgoing traffic.
+
+- Type: MapList
+
+- Allowed Pattern:
+^\\{\\}$|^\\{\"Cidr\":\"[\\x00-\\x7F+]{1,128}\",\"IpProtocol\":\"[\\x00-\\x7F+]{1,128}\",\"FromPort\":\"[\\x00-\\x7F+]{1,128}\",\"ToPort\":\"[\\x00-\\x7F+]{0,255}\"\\}
+
+- BackupS3KeyName (Optional):
+
+- Description: (Optional) If Action is set to
+Restore, this specifies the Amazon S3 key the automation
+will use to try to restore the target Amazon EC2 instance configuration.
+The Amazon S3 key typically follows this format:
+{year}/{month}/{day}/{hour}/{minute}/{automation_execution_id}.json.
+The key can be obtained from the output of a previous containment
+automation execution.
+
+- Type: String
+
+- Allowed Pattern:
+^[a-zA-Z0-9\\.\\-_\\\\!*'()/]{0,1024}$
+
+- Select Execute.
+
+- The automation initiates.
+
+- The document performs the following steps:
+
+- ValidateRequiredInputs
+
+Validates that all required inputs are provided.
+
+- AssertInstanceIsNotTerminated
+
+Checks if the target Amazon EC2 Instance is not in terminated (deleted).
+
+- GetAutoScalingInstanceInfo
+
+Gets the Amazon EC2 instance lifecycle and group name if the target Amazon EC2
+instance is part of an Auto Scaling group.
+
+- CheckBackupS3BucketName
+
+Checks if the target Amazon S3 bucket potentially grants read or
+write public access to its objects. A new Amazon S3 bucket is
+created if the BackupS3BucketName bucket doesn't exist.
+
+- BranchOnActionAndMode
+
+Branches the automation based on the input parameters Action
+and DryRun.
+
+- BranchOnAutoScalingGroupMembership
+
+Branches the automation based on if the target Amazon EC2 Instance is part of
+Auto Scaling group and its lifecycle state.
+
+- DescribeAutoScalingGroups
+
+Gets and stores the associated Amazon EC2 Auto Scaling group
+configuration.
+
+- ModifyAutoScalingGroup
+
+Modifies the associated Amazon EC2 Auto Scaling group configuration for the
+containment actions, setting the Amazon EC2 instance to the Standby
+state and adjusting the Auto Scaling group MinSize
+capacity.
+
+- BackupInstanceSecurityGroups
+
+Gets and stores the configuration of the target Amazon EC2 Instance security
+groups.
+
+- CreateAllAccessSecurityGroup
+
+Creates a temporary security group allowing all ingress traffic that
+replaces the target Amazon EC2 Instance's security groups.
+
+- CreateContainmentSecurityGroup
+
+Creates a restrictive containment security group with the specified
+ingress and egress rules, and replaces the temporary all-access group with
+it.
+
+- BranchOnCreateAMIBackup
+
+Branches the automation based on the CreateAMIBackup input
+parameter.
+
+- AssertSourceInstanceRootVolumeIsEbs
+
+Checks if the target Amazon EC2 Instance root volume is Amazon EBS.
+
+- CreateImage
+
+Creates an AMI of the target Amazon EC2 Instance.
+
+- RestoreInstanceConfiguration
+
+Restores the target Amazon EC2 Instance configuration from the backup.
+
+- ReportContain
+
+Outputs dry run details for the containment actions.
+
+- ReportRestore
+
+Outputs dry run details for the restoring actions.
+
+- ReportRestoreFailure
+
+Provides instructions to restore the target Amazon EC2 Instance original
+configuration during a restore workflow failure scenario.
+
+- ReportContainmentFailure
+
+Provides instructions to restore the target Amazon EC2 Instance original
+configuration during a containment workflow failure scenario.
+
+- FinalOutput
+
+Outputs the details of the containment actions.
+
+- After the execution completes, review the Outputs section for the detailed results
+of the execution:
+
+- FinalOutput.Output
+
+Outputs the details of the containment actions performed by this runbook
+when DryRun is set to False.
+
+- RestoreInstanceConfiguration.Output
+
+Outputs the restore actions performed by this runbook when
+DryRun is set to False.
+
+- ReportContain.Output
+
+Outputs the details of the containment actions performed by this runbook
+when DryRun is set to True.
+
+- ReportRestore.Output
+
+Outputs the details of the restore actions performed by this runbook when
+DryRun is set to True.
+
+- ReportContainmentFailure.Output
+
+Provides instructions to restore the target Amazon EC2 Instance original
+configuration during a containment workflow failure scenario.
+
+- ReportRestoreFailure.Output
+
+Provides instructions to restore the target Amazon EC2 Instance original
+configuration during a restore workflow failure scenario.
+
+References
+
+Systems Manager Automation
+
+- Run this
+Automation (console)
+
+- Running a simple automation
+
+- Setting up
+Automation
+
+- Support Automation
+Workflows

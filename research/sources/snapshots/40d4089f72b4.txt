@@ -1,0 +1,111 @@
+URL: https://aws.amazon.com/blogs/mt/deploy-aws-config-rules-and-conformance-packs-using-a-delegated-admin/
+TITLE: Deploy AWS Config Rules and Conformance Packs using a delegated admin | AWS Cloud Operations Blog
+
+## AWS Cloud Operations Blog
+
+# Deploy AWS Config Rules and Conformance Packs using a delegated admin
+
+AWS Config Rules allow customers to evaluate the configuration of resources against best practices and perform remediation when specified configuration policies are not being followed. Using AWS Config Conformance Packs, customers can create a collection of AWS Config rules and remediation actions in a single pack that can be deployed across AWS Organizations. This provides customers with a centralized way to deploy and manage their Config Rules.
+
+Initially, deploying Conformance Packs and Config Rules across an organization were only available from the organization’s master account. However, there are many customers who use their master account only for consolidated billing. Customers have dedicated accounts for security, audit, and compliance and may want to manage organization-wide Config deployments from those dedicated accounts instead. This is why AWS Config now supports deploying Config Rules and Conformance Packs from a non-master account in AWS Organizations. This new AWS Config feature allows customers to register a delegated admin account that will be used to deploy and manage these Config resources across AWS Organizations.
+
+This blog post demonstrates how customers can deploy conformance packs from a delegated admin account to manage their AWS Config rules and Conformance Packs across their organization.
+
+### Overview of solution
+
+This blog post goes over deploying organizations-wide AWS Config rules using conformance packs from an AWS Organizations’ delegated admin account. For the walkthrough, we deploy the Operational Best Practices for CIS Conformance Pack, which includes a set of Config Rules for things such as ensuring MFA is enabled for all users, access keys are rotated within 90 days, passwords meet your specified requirement, multi-Region AWS CloudTrail is enabled, among other Config Rules.
+
+### Walkthrough
+
+This blog post goes over the following steps:
+
+- Set up the prerequisites for conformance packs
+
+- Register a delegated admin account for deploying and managing the Conformance Pack across AWS Organizations.
+
+- Deploy the conformance pack in AWS Organizations.
+
+- Clean up the environment.
+
+### Prerequisites
+
+For this walkthrough, you should have AWS Config enabled in all the accounts in AWS Organizations (you can enable it for all accounts in AWS Organizations using StackSets), with all features enabled.
+
+### Setting up the conformance pack prerequisites
+
+Set up the proper Conformance Pack prerequisites. Make sure to name the Amazon S3 bucket as specified in the Prerequisites for Organization Conformance Packs section.
+
+### Enable AWS Config service access to AWS Organizations
+
+Run this command from the master account in your organization:
+
+aws organizations enable-aws-service-access --service-principal=config-multiaccountsetup.amazonaws.com
+
+### Register a delegated admin account
+
+To deploy and manage Conformance Packs across AWS Organizations from a non-Master account, you must register a delegated admin account, which is a member account in AWS Organizations. From the master account, register a delegated admin by running this command and changing the admin account ID to your appropriate delegated admin account’s ID.
+
+aws organizations register-delegated-administrator --service-principal=config-multiaccountsetup.amazonaws.com --account-id="{Admin-Account-ID}"
+
+Confirm that the delegated admin registered successfully by running the following command from the master account:
+
+aws organizations list-delegated-administrators --service-principal=config-multiaccountsetup.amazonaws.com
+
+The output should confirm the following information:
+
+{
+"DelegatedAdministrators": [
+{
+"Id": "{delegated-admin-account-id}",
+"Arn": "arn:aws:organizations::{master-account-id}:account/{org-id}/{delegated-admin-account-id}",
+"Email": "{delegated-admin-email}",
+"Name": "child",
+"Status": "ACTIVE",
+"JoinedMethod": "INVITED",
+"JoinedTimestamp": "2020-03-05T11:23:21.521000-08:00",
+"DelegationEnabledDate": "2020-05-20T12:42:17.683000-07:00"
+}
+]
+}
+
+### Deploying the conformance pack
+
+Next you deploy the Operational Best Practices for CIS Conformance packs from the delegated admin account.
+
+- Copy the CIS conformance pack and save it locally.
+
+- Copy the following command, and change the location of the template-body to the same location in which you saved the conformance packs template. Change the Amazon S3 bucket to the one you set up in the Conformance Pack prerequisites. After you make these changes run the command from your delegated admin account:
+
+aws configservice put-organization-conformance-pack --organization-conformance-pack-name="CISPack" --template-body="file://CISConformancePack.yaml" --delivery-s3-bucket="{awsconfigconforms-your-bucket}"
+
+The response you receive from the above command includes the Conformance Pack ARN:
+
+{
+"OrganizationConformancePackArn": "arn:aws:config:us-east-1:{delegated-admin-account-id}:organization-conformance-pack/CISPack-ncg61ejt"
+}
+
+### Viewing the rules created
+
+In all the member accounts of AWS Organizations, you are able to see the Conformance Pack that you created, and the Config Rules deployed with the Conformance Pack. To view the Conformance Pack in your member accounts, go to AWS Config and navigate to Conformance Packs, where you see the deployments by the delegated admin account:
+
+By clicking the Conformance Pack name, you are able to see all the rules that were created as a part of the Conformance Pack:
+
+Up to this point, you successfully registered a delegated admin account and used it to deploy AWS Config Rules using Conformance Packs, across all the member accounts in your organization. Now if an account gets added to the organization, AWS Config automatically adds the conformance pack to that new member account and the delegated admin is able to manage the conformance pack for that account. Conversely, if a member account leaves AWS Organizations then AWS Config deletes the conformance pack from that member account. The delegated admin has full control of the Conformance Pack it creates, however if the master account deregisters the delegated admin, the organization Conformance Pack created by the delegated admin will be deleted from all member accounts.
+
+### Cleanup
+
+To remove all resources created as a part of this example, run the following command from the delegated admin account to delete the conformance pack:
+
+aws configservice delete-organization-conformance-pack --organization-conformance-pack-name "CISPack"
+
+To deregister the delegated admin, change the account ID to your delegated admin and run this command from the master account:
+
+aws organizations deregister-delegated-administrator --account-id={ACCOUNT_ID_OF_DELEGATED_ADMIN} --service-principal=config-multiaccountsetup.amazonaws.com
+
+### Conclusion
+
+This blog post demonstrated how you can deploy Conformance Packs delegated admin account, which is not a master account. The delegated admin has the privileges to update, modify, and delete the Conformance Packs and deploy Config Rules across AWS Organizations. For more details on AWS Config conformance packs visit our AWS documentation.
+
+### About the Author
+
+Shaked Rotlevi is a Solutions Architect working with Federal Government customers based in Washington DC. Shaked enjoys helping her customers implement AWS best practices and likes building new solutions on AWS. In her spare time, Shaked’s favorite acitivities include traveling and surfing.

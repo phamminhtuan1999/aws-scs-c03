@@ -1,0 +1,542 @@
+URL: https://docs.aws.amazon.com/sns/latest/dg/sns-access-policy-use-cases.html
+TITLE: Example cases for Amazon SNS access control - Amazon Simple Notification Service
+
+# Example cases for Amazon SNS access control
+
+This section describes a few examples of typical use cases for access control.
+
+## Grant AWS account access to a topic
+
+Let's say you have a topic in Amazon SNS, and you want to allow one or more AWS accounts to
+perform a specific action on that topic, such as publishing messages. You can accomplish
+this by using the Amazon SNS API action AddPermission.
+
+The AddPermission action allows you to specify a topic, a list of
+AWS account IDs, a list of actions, and a label. Amazon SNS then automatically generates and
+adds a new policy statement to the topic's access control policy. You don’t need to write
+the policy statement yourself—Amazon SNS handles this for you. If you need to remove the policy
+later, you can do so by calling RemovePermission and providing the label you
+used when adding the permission.
+
+For example, if you call AddPermission on the topic
+arn:aws:sns:us-east-2:444455556666:MyTopic, specify AWS account ID
+1111-2222-3333, the Publish action, and the label
+grant-1234-publish, Amazon SNS will generate and insert the following policy
+statement into the topic’s access control policy:
+
+{
+"Statement": [{
+"Sid": "grant-1234-publish",
+"Effect": "Allow",
+"Principal": {
+"AWS": "111122223333"
+},
+"Action": ["sns:Publish"],
+"Resource": "arn:aws:sns:us-east-2:444455556666:MyTopic"
+}]
+}
+
+After this statement is added, the AWS account 1111-2222-3333 will have
+permission to publish messages to the topic.
+
+Additional information:
+
+- Custom policy management: While
+AddPermission is convenient for granting permissions, it's often useful
+to manually manage the topic's access control policy for more complex scenarios, such as
+adding conditions or granting permissions to specific IAM roles or services. You can
+do this by using the SetTopicAttributes API to update the policy attribute
+directly.
+
+- Security best practices: Be cautious when granting
+permissions to ensure only trusted AWS accounts or entities have access to your
+Amazon SNS topics. Regularly review and audit the policies attached to your topics to
+maintain security.
+
+- Policy limits: Keep in mind that there are limits
+to the size and complexity of Amazon SNS policies. If you need to add many permissions or
+complex conditions, make sure your policy stays within these limits.
+
+## Limit subscriptions to HTTPS
+
+To restrict the notification delivery protocol for your Amazon SNS topic to HTTPS, you must
+create a custom policy. The AddPermission action in Amazon SNS does not allow you to
+specify protocol restrictions when granting access to your topic. Therefore, you need to
+manually write a policy that enforces this restriction and then use the
+SetTopicAttributes action to apply the policy to your topic.
+
+Here’s how you can create a policy that limits subscriptions to HTTPS:
+
+- Write the Policy. The policy must specify the
+AWS account ID that you want to grant access to and enforce the condition that only
+HTTPS subscriptions are allowed. Below is an example policy that grants the
+AWS account ID 1111-2222-3333 permission to subscribe to the topic, but only
+if the protocol used is HTTPS.
+
+{
+"Statement": [{
+"Sid": "Statement1",
+"Effect": "Allow",
+"Principal": {
+"AWS": "111122223333"
+},
+"Action": ["sns:Subscribe"],
+"Resource": "arn:aws:sns:us-east-2:444455556666:MyTopic",
+"Condition": {
+"StringEquals": {
+"sns:Protocol": "https"
+}
+}
+}]
+}
+
+- Apply the Policy. Use the
+SetTopicAttributes action in the Amazon SNS API to apply this policy to your
+topic. Set the Policy attribute of the topic to the JSON policy you
+created.
+
+snsClient.setTopicAttributes(SetTopicAttributesRequest.builder()
+.topicArn("arn:aws:sns:us-east-2:444455556666:MyTopic")
+.attributeName("Policy")
+.attributeValue(jsonPolicyString) // The JSON policy as a string
+.build());
+
+Additional information:
+
+- Customizing access control. This approach allows
+you to enforce more granular access controls, such as restricting subscription
+protocols, which is not possible through the AddPermission action alone.
+Custom policies provide flexibility for scenarios requiring specific conditions, such as
+protocol enforcement or IP address restrictions.
+
+- Security best practices. Limiting subscriptions to
+HTTPS enhances the security of your notifications by ensuring that data in transit is
+encrypted. Regularly review your topic policies to make sure they meet your security and
+compliance requirements.
+
+- Policy testing. Before applying the policy in a
+production environment, test it in a development environment to make sure it behaves as
+expected. This helps prevent accidental access issues or unintended restrictions.
+
+## Publish messages to an Amazon SQS queue
+
+To publish messages from your Amazon SNS topic to an Amazon SQS queue, you need to configure the
+correct permissions on the Amazon SQS queue. While both Amazon SNS and Amazon SQS use AWS’s access
+control policy language, you must explicitly set a policy on the Amazon SQS queue to allow
+messages to be sent from the Amazon SNS topic.
+
+You can achieve this by using the SetQueueAttributes action to apply a
+custom policy to the Amazon SQS queue. Unlike Amazon SNS, Amazon SQS does not support the
+AddPermission action for creating policy statements with conditions.
+Therefore, you must write the policy manually.
+
+The following is an example of an Amazon SQS policy that grants Amazon SNS permission to send
+messages to your queue. Note that this policy is associated with the Amazon SQS queue, not the
+Amazon SNS topic. The actions specified are Amazon SQS actions, and the resource is the Amazon
+Resource Name (ARN) of the queue. You can retrieve the queue's ARN by using the
+GetQueueAttributes action.
+
+{
+"Statement": [{
+"Sid": "Allow-SNS-SendMessage",
+"Effect": "Allow",
+"Principal": {
+"Service": "sns.amazonaws.com"
+},
+"Action": ["sqs:SendMessage"],
+"Resource": "arn:aws:sqs:us-east-2:444455556666:MyQueue",
+"Condition": {
+"ArnEquals": {
+"aws:SourceArn": "arn:aws:sns:us-east-2:444455556666:MyTopic"
+}
+}
+}]
+}
+
+This policy uses the aws:SourceArn condition to restrict access to the SQS
+queue based on the source of the messages being sent. This ensures that only messages
+originating from the specified SNS topic (in this case,
+arn:aws:sns:us-east-2:444455556666:MyTopic) are allowed to be delivered
+to the queue.
+
+Additional information:
+
+- Queue ARN. Make sure you retrieve the correct ARN of
+your Amazon SQS queue using the GetQueueAttributes action. This ARN is essential
+for setting the correct permissions.
+
+- Security best practices. When setting up policies,
+always follow the principle of least privilege. Grant only the necessary permissions to
+the Amazon SNS topic to interact with the Amazon SQS queue, and regularly review your policies to
+make sure they are up-to-date and secure
+
+- Default policies in Amazon SNS. Amazon SNS doesn't
+automatically grant a default policy that allows other AWS services or accounts to
+access newly created topics. By default, Amazon SNS topics are created with no permissions,
+meaning they are private and only accessible to the account that created them. To enable
+access for other AWS services, accounts, or principals, you must explicitly define and
+attach an access policy to the topic. This aligns with the principle of least privilege,
+ensuring that no unintended access is granted by default.
+
+- Testing and validation. After setting the policy,
+test the integration by publishing messages to the Amazon SNS topic and verifying that they
+are successfully delivered to the Amazon SQS queue. This helps confirm that the policy is
+correctly configured.
+
+## Allow Amazon S3 event notifications to publish to a topic
+
+To allow an Amazon S3 bucket from another AWS account to publish event notifications to
+your Amazon SNS topic, you need to configure the topic's access policy accordingly. This involves
+writing a custom policy that grants permission to the Amazon S3 service from the specific
+AWS account and then applying this policy to your Amazon SNS topic.
+
+Here’s how you can set it up:
+
+- Write the policy. The policy should grant the Amazon S3
+service (s3.amazonaws.com) the necessary permissions to publish to your
+Amazon SNS topic. You will use the SourceAccount condition to ensure only
+the specified AWS account, which owns the Amazon S3 bucket, can publish notifications to
+your topic.
+
+The following is an example policy:
+
+{
+"Statement": [{
+"Effect": "Allow",
+"Principal": {
+"Service": "s3.amazonaws.com"
+},
+"Action": "sns:Publish",
+"Resource": "arn:aws:sns:us-east-2:111122223333:MyTopic",
+"Condition": {
+"StringEquals": {
+"AWS:SourceAccount": "444455556666"
+}
+}
+}]
+}
+
+- Topic owner – 111122223333 is
+the AWS account ID that owns the Amazon SNS topic.
+
+- Amazon S3 bucket owner –
+444455556666 is the AWS account ID that owns the Amazon S3 bucket sending
+notifications.
+
+- Apply the Policy. Use the
+SetTopicAttributes action to set this policy on your Amazon SNS topic. This
+will update the topic’s access control to include the permissions specified in your
+custom policy.
+
+snsClient.setTopicAttributes(SetTopicAttributesRequest.builder()
+.topicArn("arn:aws:sns:us-east-2:111122223333:MyTopic")
+.attributeName("Policy")
+.attributeValue(jsonPolicyString) // The JSON policy as a string
+.build());
+
+Additional information:
+
+- Using SourceAccount condition. The
+SourceAccount condition ensures that only events originating from the
+specified AWS account (444455556666 in this case) can trigger the Amazon SNS
+topic. This is a security measure to prevent unauthorized accounts from sending
+notifications to your topic.
+
+- Other services supporting
+SourceAccount. The SourceAccount condition is
+supported by the following services. It’s crucial to use this condition when you want to
+restrict access to your Amazon SNS topic based on the originating account.
+
+- Amazon API Gateway
+
+- Amazon CloudWatch
+
+- Amazon DevOps Guru
+
+- Amazon EventBridge
+
+- Amazon GameLift Servers
+
+- Amazon Pinpoint SMS and Voice API
+
+- Amazon RDS
+
+- Amazon Redshift
+
+- Amazon Glacier
+
+- Amazon SES
+
+- Amazon Simple Storage Service
+
+- AWS CodeCommit
+
+- Directory Service
+
+- AWS Lambda
+
+- AWS Systems Manager Incident Manager
+
+- Testing and validation. After applying the policy,
+test the setup by triggering an event in the Amazon S3 bucket and confirming that it
+successfully publishes to your Amazon SNS topic. This will help make sure your policy is
+correctly configured.
+
+- Security best practices. Regularly review and audit
+your Amazon SNS topic policies to make sure they comply with your security requirements.
+Limiting access to only trusted accounts and services is essential for maintaining
+secure operations.
+
+## Allow Amazon SES to publish to a topic that is owned by another account
+
+You can allow another AWS service to publish to a topic that is owned by another
+AWS account. Suppose that you signed into the 111122223333 account, opened
+Amazon SES, and created an email. To publish notifications about this email to a Amazon SNS topic that
+the 444455556666 account owns, you'd create a policy like the following. To do so,
+you need to provide information about the principal (the other service) and each resource's
+ownership. The Resource statement provides the topic ARN, which includes the
+account ID of the topic owner, 444455556666. The "aws:SourceOwner":
+"111122223333" statement specifies that your account owns the email.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "__default_policy_ID",
+"Statement": [
+{
+"Sid": "__default_statement_ID",
+"Effect": "Allow",
+"Principal": {
+"Service": "ses.amazonaws.com"
+},
+"Action": "sns:Publish",
+"Resource": "arn:aws:sns:us-east-2:444455556666:MyTopic",
+"Condition": {
+"StringEquals": {
+"aws:SourceOwner": "111122223333"
+}
+}
+}
+]
+}
+
+When publishing events to Amazon SNS, the following services support
+aws:SourceOwner:
+
+- Amazon API Gateway
+
+- Amazon CloudWatch
+
+- Amazon DevOps Guru
+
+- Amazon GameLift Servers
+
+- Amazon Pinpoint SMS and Voice API
+
+- Amazon RDS
+
+- Amazon Redshift
+
+- Amazon SES
+
+- AWS CodeCommit
+
+- Directory Service
+
+- AWS Lambda
+
+- AWS Systems Manager Incident Manager
+
+## aws:SourceAccount versus aws:SourceOwner
+
+Important
+
+aws:SourceOwner is deprecated and new services can
+integrate with Amazon SNS only through aws:SourceArn and
+aws:SourceAccount. Amazon SNS still maintains backward
+compatibility for existing services that are currently supporting
+aws:SourceOwner.
+
+The aws:SourceAccount and
+aws:SourceOwner condition keys are each set by some
+AWS services when they publish to an Amazon SNS topic. When supported, the value will be the
+12-digit AWS account ID on whose behalf the service is publishing data. Some services
+support one, and some support the other.
+
+- See Allow Amazon S3 event notifications to publish to a topic for how Amazon S3 notifications
+use aws:SourceAccount and a list of AWS services that
+support that condition.
+
+- See Allow Amazon SES to publish to a topic that is owned by another account for how Amazon SES uses
+aws:SourceOwner and a list of AWS services that
+support that condition.
+
+## Allow accounts in an organization in AWS Organizations to publish to a topic in a different account
+
+The AWS Organizations service helps you to centrally manage billing, control access and security,
+and share resources across your AWS accounts.
+
+You can find your organization ID in the Organizations console. For
+more information, see Viewing details of an organization from the management account.
+
+In this example, any AWS account in organization myOrgId can publish to
+Amazon SNS topic MyTopic in account 444455556666. The policy
+checks the organization ID value using the aws:PrincipalOrgID global condition
+key.
+
+{
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"AWS": "*"
+},
+"Action": "sns:Publish",
+"Resource": "arn:aws:sns:us-east-2:444455556666:MyTopic",
+"Condition": {
+"StringEquals": {
+"aws:PrincipalOrgID": "myOrgId"
+}
+}
+}
+]
+}
+
+## Allow any CloudWatch alarm to publish to a topic in a different account
+
+Use the following steps to invoke an Amazon SNS topic with a CloudWatch alarm across different
+AWS accounts. This example uses two accounts:
+
+- Account A is used to create the CloudWatch alarm.
+
+- Account B is used to create an SNS topic.
+
+Create an SNS topic in account B
+
+- Sign in to the Amazon SNS console.
+
+- In the navigation pane, choose Topics, and then choose
+Create topic.
+
+- Choose Standard for the topic type, and then create a name for
+the topic.
+
+- Choose Create topic, and then copy the ARN of the topic.
+
+- In the navigation pane, choose Subscriptions, and then choose
+Create subscription.
+
+- Add the topic's ARN in the Topic ARN section, choose
+Email as the protocol, and then enter an
+email address.
+
+- Choose Create subscription, and then check your email to
+confirm the subscription.
+
+Create a CloudWatch alarm in account A
+
+- Open the CloudWatch console at
+https://console.aws.amazon.com/cloudwatch/.
+
+- In the navigation pane, choose Alarms, and then choose
+Create alarms.
+
+- If you haven't already created an alarm, create one now. Otherwise, select your
+metric, and then provide details for the threshold
+and comparison parameters.
+
+- From Configure Actions, under
+Notifications, choose Use topic ARN to notify other
+accounts, and then enter the topic ARN from Account
+B.
+
+- Create a name for the alarm, and then choose Create
+alarm.
+
+Update the access policy of the SNS topic in account
+B
+
+- Sign in to the Amazon SNS console.
+
+- In the navigation pane, choose Topics, and then select the
+topic.
+
+- Choose Edit, and then add the following to the policy:
+
+Note
+
+Replace the example values in the policy below with your own.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Id": "__default_policy_ID",
+"Statement": [
+{
+"Sid": "__default_statement_ID",
+"Effect": "Allow",
+"Principal": {
+"AWS": "*"
+},
+"Action": [
+"SNS:GetTopicAttributes",
+"SNS:SetTopicAttributes",
+"SNS:AddPermission",
+"SNS:RemovePermission",
+"SNS:DeleteTopic",
+"SNS:Subscribe",
+"SNS:ListSubscriptionsByTopic",
+"SNS:Publish"
+],
+"Resource": "arn:aws:cloudwatch:us-west-1:111122223333:alarm:",
+"Condition": {
+"ArnLike": {
+"aws:SourceArn": "arn:aws:cloudwatch:us-west-1:111122223333:alarm:"
+}
+}
+}
+]
+}
+
+Test the alarm
+
+To test the alarm, either change the alarm threshold based on the metric data points, or
+manually change the alarm state. When you change the alarm threshold or alarm state, you
+receive an email notification.
+
+Workaround for using a local Amazon SNS topic and forwarding messages
+
+Use the following steps to enable cross-account Amazon SNS notifications for CloudWatch
+Alarms:
+
+- Create an Amazon SNS
+topic in the same account as the CloudWatch
+alarm (111122223333).
+
+- Subscribe a Lambda
+function or an Amazon EventBridge
+rule to that Amazon SNS topic.
+
+- The Lambda function or EventBridge rule can then publish the message to the Amazon SNS topic in
+the target account (444455556666).
+
+## Restrict publication to an Amazon SNS topic only from a specific VPC endpoint
+
+In this case, the topic in account 444455556666 is allowed to publish only
+from the VPC endpoint with the ID vpce-1ab2c34d.
+
+{
+"Statement": [{
+"Effect": "Deny",
+"Principal": "*",
+"Action": "sns:Publish",
+"Resource": "arn:aws:sns:us-east-2:444455556666:MyTopic",
+"Condition": {
+"StringNotEquals": {
+"aws:sourceVpce": "vpce-1ab2c34d"
+}
+}
+}]
+}

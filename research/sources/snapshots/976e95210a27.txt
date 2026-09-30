@@ -1,0 +1,924 @@
+URL: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-management-events-with-cloudtrail.html
+TITLE: Logging management events - AWS CloudTrail
+
+# Logging management events
+
+By default, trails and event data stores log management events and don't include data or Insights events.
+
+Additional
+charges apply for data or Insights events. For more information, see AWS CloudTrail Pricing.
+
+Contents
+
+- Management events
+
+- Read and write events
+
+- Logging management events with the AWS Management Console
+
+- Updating the management event settings for an existing trail
+
+- Updating the management event settings for an existing event data store
+
+- Logging management events with the AWS CLI
+
+- Examples: Logging management events for trails
+
+- Examples: Logging management events for trails using advanced event selectors
+
+- Examples: Logging management events for trails using basic event selectors
+
+- Examples: Logging management events for event data stores
+
+- Example: Exclude AWS KMS management events
+
+- Example: Exclude Amazon RDS management events
+
+- Example: Exclude AWS service events and events from AWS Management Console sessions
+
+- Example: Exclude management events for a specific IAM identity
+
+- Logging management events with the AWS SDKs
+
+## Management events
+
+Management events provide visibility into management operations that are performed on
+resources in your AWS account. These are also known as control plane operations.
+Example management events include:
+
+- Configuring security (for example, IAM AttachRolePolicy API
+operations)
+
+- Registering devices (for example, Amazon EC2 CreateDefaultVpc API
+operations)
+
+- Configuring rules for routing data (for example, Amazon EC2
+CreateSubnet API operations)
+
+- Setting up logging (for example, AWS CloudTrail CreateTrail API
+operations)
+
+Management events can also include non-API events that occur in your account. For
+example, when a user logs in to your account, CloudTrail logs the ConsoleLogin
+event. For more information, see Non-API events captured by CloudTrail.
+
+By default, trails and event data stores are configured to log management events.
+
+Note
+
+The CloudTrail Event history feature supports only
+management events. You cannot exclude AWS KMS or Amazon RDS Data API events from Event history;
+settings that you apply to a trail or event data store do not apply to Event
+history. For more information, see Working with CloudTrail event history.
+
+## Read and write events
+
+When you configure your trail or event data store to log management events, you can specify whether you
+want read-only events, write-only events, or both.
+
+- Read
+
+Read-only events include API operations that read your resources, but don't
+make changes. For example, read-only events include the Amazon EC2
+DescribeSecurityGroups and DescribeSubnets API
+operations. These operations return only information about your Amazon EC2 resources
+and don't change your configurations.
+
+- Write
+
+Write-only events include API operations that modify (or might modify) your
+resources. For example, the Amazon EC2 RunInstances and
+TerminateInstances API operations modify your instances.
+
+Example: Logging read and write events for separate trails
+
+The following example shows how you can configure trails to split log activity for
+an account into separate S3 buckets: one bucket receives read-only events and a
+second bucket receives write-only events.
+
+- You create a trail and choose an S3 bucket named amzn-s3-demo-bucket1
+to receive log files. You then update the trail to specify that you want
+Read management events.
+
+- You create a second trail and choose an S3 bucket named
+amzn-s3-demo-bucket2 to receive log files. You then update the
+trail to specify that you want Write management
+events.
+
+- The Amazon EC2 DescribeInstances and TerminateInstances
+API operations occur in your account.
+
+- The DescribeInstances API operation is a read-only event and it
+matches the settings for the first trail. The trail logs and delivers the event
+to amzn-s3-demo-bucket1.
+
+- The TerminateInstances API operation is a write-only event and it
+matches the settings for the second trail. The trail logs and delivers the event
+to amzn-s3-demo-bucket2.
+
+## Logging management events with the AWS Management Console
+
+This section describes how to update the management event settings for an existing trail or event data store.
+
+Topics
+
+- Updating the management event settings for an existing trail
+
+- Updating the management event settings for an existing event data store
+
+### Updating the management event settings for an existing trail
+
+Use the following procedure to update the management event settings for an existing trail.
+
+- Sign in to the AWS Management Console and open the CloudTrail console at
+https://console.aws.amazon.com/cloudtrail/.
+
+- Open the Trails page of the CloudTrail console and
+choose the trail name.
+
+- For Management events, choose
+Edit.
+
+- Choose if you want to log Read
+events, Write events, or both.
+
+- Choose Exclude AWS KMS events to filter
+AWS Key Management Service (AWS KMS) events out of your traiL. The default setting is
+to include all AWS KMS events.
+
+The option to log or exclude AWS KMS events is available only if you
+log management events on your trail. If you choose not to log
+management events, AWS KMS events are not logged, and you cannot
+change AWS KMS event logging settings.
+
+AWS KMS actions such as Encrypt, Decrypt,
+and GenerateDataKey typically generate a large volume
+(more than 99%) of events. These actions are now logged as
+Read events. Low-volume, relevant AWS KMS
+actions such as Disable, Delete, and
+ScheduleKey (which typically account for less than
+0.5% of AWS KMS event volume) are logged as Write
+events.
+
+To exclude high-volume events like Encrypt,
+Decrypt, and GenerateDataKey, but
+still log relevant events such as Disable,
+Delete and ScheduleKey, choose to log
+Write management events, and clear the
+check box for Exclude AWS KMS events.
+
+- Choose Exclude Amazon RDS Data API events to
+filter Amazon Relational Database Service Data API events out of your trail. The default
+setting is to include all Amazon RDS Data API events. For more
+information about Amazon RDS Data API events, see Logging Data API calls with
+AWS CloudTrail in the Amazon RDS User Guide for
+Aurora.
+
+- Choose Save changes when you are finished.
+
+### Updating the management event settings for an existing event data store
+
+- Sign in to the AWS Management Console and open the CloudTrail console at
+https://console.aws.amazon.com/cloudtrail/.
+
+- Open the Event data stores page of the CloudTrail console and
+choose the event data store name.
+
+- For Management events, choose
+Edit and then configure the following settings:
+
+- Choose between Simple event collection
+or Advanced event collection:
+
+- Choose Simple event collection if you want to log all events, log only read events, or log only write events.
+You can choose also to exclude AWS Key Management Service and Amazon RDS Data API management events.
+
+- Choose Advanced event collection if you want to include or exclude management events based on the values of advanced event selector fields, including the eventName,
+eventType, eventSource, and userIdentity.arn fields.
+
+- If you selected Simple event collection,
+choose whether you want to log all events, log only read events, or log only write events.
+You can also choose to exclude AWS KMS and Amazon RDS management events.
+
+- If you selected Advanced event collection, make the following selections:
+
+- In Log selector template, choose a predefined template, or Custom to
+build a custom configuration based on advanced event selector field values.
+
+You can choose from the following predefined
+templates:
+
+- Log all events –
+Choose this template to log all events.
+
+- Log only read events –
+Choose this template to log only read events.
+Read-only events are events that do not change the
+state of a resource, such as Get* or Describe*
+events.
+
+- Log only write events – Choose this template to log only write events.
+Write events add, change, or delete resources, attributes, or artifacts,
+such as Put*, Delete*, or Write* events.
+
+- Log only AWS Management Console events –
+Choose this template to log only events originating from the AWS Management Console.
+
+- Exclude AWS service initiated events – Choose this template to exclude
+AWS service events, which have an eventType of AwsServiceEvent,
+and events initiated with AWS service-linked roles (SLRs).
+
+- (Optional) In Selector name, enter a name to identify your selector. The selector name is a
+descriptive name for an advanced event selector, such as "Log management events from AWS Management Console sessions". The selector name is listed as Name in the
+advanced event selector and is viewable if you expand the
+JSON view.
+
+- If you chose Custom, in Advanced event selectors build an expression based on advanced event selector
+field values.
+
+Note
+
+Selectors don't support the use of wildcards like * . To match multiple values with a single condition,
+you may use StartsWith, EndsWith, NotStartsWith, or NotEndsWith to explicitly match the beginning or end of the event field.
+
+- Choose from the following fields.
+
+- readOnly – readOnly can
+be set to equals a value of true or
+false. When it is set to false, the event data store logs
+Write-only management events. Read-only management events are events that do not change the
+state of a resource, such as Get* or Describe* events.
+Write events add, change, or delete resources, attributes, or artifacts, such as
+Put*, Delete*, or Write* events. To log
+both Read and Write events, don't add a
+readOnly selector.
+
+- eventName – eventName
+can use any operator. You can use it to include or exclude any management event, such as CreateAccessPoint or
+GetAccessPoint.
+
+- userIdentity.arn – Include or exclude events for actions taken by specific IAM identities. For more information, see CloudTrail userIdentity element.
+
+- sessionCredentialFromConsole – Include or exclude events originating from an AWS Management Console session. This field can be set to equals or not equals with a value of
+true.
+
+- eventSource –
+You can use it to include or exclude specific event sources. The eventSource is typically a short form of the service name
+without spaces plus .amazonaws.com. For example, you could set eventSource equals to
+ec2.amazonaws.com to log only Amazon EC2 management events.
+
+- eventType – The eventType to include or exclude. For example, you can set this field to
+not equals AwsServiceEvent to exclude AWS service events.
+
+- For each field, choose + Condition to
+add as many conditions as you need, up to a maximum of 500
+specified values for all conditions.
+
+For information about how CloudTrail evaluates multiple conditions, see
+How CloudTrail evaluates multiple conditions for a field.
+
+Note
+
+You can have a maximum of 500 values for all selectors on
+an event data store. This includes arrays of multiple values for a
+selector such as eventName. If you have single
+values for all selectors, you can have a maximum of 500
+conditions added to a selector.
+
+- Choose + Field to add additional fields
+as required. To avoid errors, do not set conflicting or
+duplicate values for fields.
+
+- Optionally, expand JSON view to see your
+advanced event selectors as a JSON block.
+
+- Choose Enable Insights events capture to enable Insights. To enable Insights, you need to set up a destination event data store
+to collect Insights events based upon the management event activity in this event data store.
+
+If you choose to enable Insights, do the following.
+
+- Choose the destination event store that will log Insights events. The destination event data store will collect Insights events
+based upon the management event activity in this event data store. For information about how to
+create the destination event data store, see To create a destination event data store that logs Insights events.
+
+- Choose the Insights types. You can choose
+API call rate, API error rate,
+or both. You must be logging Write management events to
+log Insights events for API call rate. You must be logging
+Read or Write management events to
+log Insights events for API error rate.
+
+- Choose Save changes when you are finished.
+
+## Logging management events with the AWS CLI
+
+You can configure your trails or event data stores to log management events using the AWS CLI.
+
+Topics
+
+- Examples: Logging management events for trails
+
+- Examples: Logging management events for event data stores
+
+### Examples: Logging management events for trails
+
+To view whether your trail is logging management events, run the
+get-event-selectors command.
+
+aws cloudtrail get-event-selectors --trail-name TrailName
+
+The following example returns the default settings for a trail. By default, trails log
+all management events, log events from all event sources, and don't log data
+events.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-1:111122223333:trail/TrailName",
+"AdvancedEventSelectors": [
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+}
+]
+}
+]
+}
+
+You can use either basic or advanced event selectors to log management events. You
+cannot apply both event selectors and advanced event selectors to a trail. If you
+apply advanced event selectors to a trail, any existing basic event selectors are
+overwritten. The following sections provide examples of how to log management events
+using advanced event selectors and basic event selectors.
+
+Topics
+
+- Examples: Logging management events for trails using advanced event selectors
+
+- Examples: Logging management events for trails using basic event selectors
+
+#### Examples: Logging management events for trails using advanced event selectors
+
+The following example creates an advanced event selector for a trail named
+TrailName to include read-only and write-only
+management events (by omitting the readOnly selector), but to
+exclude AWS Key Management Service (AWS KMS) events. Because AWS KMS events are treated as management
+events, and there can be a high volume of them, they can have a substantial
+impact on your CloudTrail bill if you have more than one trail that captures
+management events.
+
+If you choose not to log management events, AWS KMS events are not logged, and
+you cannot change AWS KMS event logging settings.
+
+To start logging AWS KMS events to a trail again, remove the
+eventSource selector, and run the command again.
+
+aws cloudtrail put-event-selectors --trail-name TrailName \
+--advanced-event-selectors '
+[
+{
+"Name": "Log all management events except KMS events",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Management"] },
+{ "Field": "eventSource", "NotEquals": ["kms.amazonaws.com"] }
+]
+}
+]'
+
+The example returns the advanced event selectors that are configured for the
+trail.
+
+{
+"AdvancedEventSelectors": [
+{
+"Name": "Log all management events except KMS events",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [ "Management" ]
+},
+{
+"Field": "eventSource",
+"NotEquals": [ "kms.amazonaws.com" ]
+}
+]
+}
+],
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/TrailName"
+}
+
+To start logging excluded events to a trail again, remove the
+eventSource selector, as shown in the following command.
+
+aws cloudtrail put-event-selectors --trail-name TrailName \
+--advanced-event-selectors '
+[
+{
+"Name": "Log all management events",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Management"] }
+]
+}
+]'
+
+The next example creates an advanced event selector for a trail named
+TrailName to include read-only and write-only
+management events (by omitting the readOnly selector), but to
+exclude Amazon RDS Data API management events. To exclude Amazon RDS Data API management
+events, specify the Amazon RDS Data API event source in the string value for the
+eventSource field: rdsdata.amazonaws.com.
+
+If you choose not to log management events, Amazon RDS Data API management events
+are not logged, and you cannot change Amazon RDS Data API event logging
+settings.
+
+To start logging Amazon RDS Data API management events to a trail again, remove the
+eventSource selector, and run the command again.
+
+aws cloudtrail put-event-selectors --trail-name TrailName \
+--advanced-event-selectors '
+[
+{
+"Name": "Log all management events except Amazon RDS Data API management events",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Management"] },
+{ "Field": "eventSource", "NotEquals": ["rdsdata.amazonaws.com"] }
+]
+}
+]'
+
+The example returns the advanced event selectors that are configured for the
+trail.
+
+{
+"AdvancedEventSelectors": [
+{
+"Name": "Log all management events except Amazon RDS Data API management events",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [ "Management" ]
+},
+{
+"Field": "eventSource",
+"NotEquals": [ "rdsdata.amazonaws.com" ]
+}
+]
+}
+],
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/TrailName"
+}
+
+To start logging excluded events to a trail again, remove the
+eventSource selector, as shown in the following command.
+
+aws cloudtrail put-event-selectors --trail-name TrailName \
+--advanced-event-selectors '
+[
+{
+"Name": "Log all management events",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Management"] }
+]
+}
+]'
+
+#### Examples: Logging management events for trails using basic event selectors
+
+To configure your trail to log management events, run the
+put-event-selectors command. The following example shows how to
+configure your trail to include all management events for two S3 objects. You can
+specify from 1 to 5 event selectors for a trail. You can specify from 1 to 250 data
+resources for a trail.
+
+Note
+
+The maximum number of S3 data resources is 250, regardless of the number of event
+selectors.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --event-selectors '[{ "ReadWriteType": "All", "IncludeManagementEvents":true, "DataResources": [{ "Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::amzn-s3-demo-bucket/prefix", "arn:aws:s3:::amzn-s3-demo-bucket2/prefix2"] }] }]'
+
+The following example returns the event selector configured for the trail.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-1:111122223333:trail/TrailName",
+"EventSelectors": [
+{
+"ReadWriteType": "All",
+"IncludeManagementEvents": true,
+"DataResources": [
+{
+"Type": "AWS::S3::Object",
+"Values": [
+"arn:aws:s3:::amzn-s3-demo-bucket/prefix",
+"arn:aws:s3:::amzn-s3-demo-bucket2/prefix2",
+]
+}
+],
+"ExcludeManagementEventSources": []
+}
+]
+}
+
+To exclude AWS Key Management Service (AWS KMS) events from a trail's logs, run the
+put-event-selectors command and add the attribute
+ExcludeManagementEventSources with a value of
+kms.amazonaws.com. The following example creates an event selector for
+a trail named TrailName to include read-only and write-only
+management events, but exclude AWS KMS events. Because AWS KMS can generate a high volume of
+events, the user in this example might want to limit events to manage the cost of a
+trail.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --event-selectors '[{"ReadWriteType": "All","ExcludeManagementEventSources": ["kms.amazonaws.com"],"IncludeManagementEvents": true}]'
+
+The example returns the event selector configured for the trail.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-1:111122223333:trail/TrailName",
+"EventSelectors": [
+{
+"ReadWriteType": "All",
+"IncludeManagementEvents": true,
+"DataResources": [],
+"ExcludeManagementEventSources": [
+"kms.amazonaws.com"
+]
+}
+]
+}
+
+To exclude Amazon RDS Data API management events from a trail's logs, run the
+put-event-selectors command and add the attribute
+ExcludeManagementEventSources with a value of
+rdsdata.amazonaws.com. The following example creates an event selector
+for a trail named TrailName to include read-only and
+write-only management events, but exclude Amazon RDS Data API management events. Because Amazon RDS Data API
+can generate a high volume of management events, the user in this example might want to limit
+events to manage the cost of a trail.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-1:111122223333:trail/TrailName",
+"EventSelectors": [
+{
+"ReadWriteType": "All",
+"IncludeManagementEvents": true,
+"DataResources": [],
+"ExcludeManagementEventSources": [
+"rdsdata.amazonaws.com"
+]
+}
+]
+}
+
+To start logging AWS KMS or Amazon RDS Data API management events to a trail again,
+pass an empty string as the value of ExcludeManagementEventSources, as
+shown in the following command.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --event-selectors '[{"ReadWriteType": "All","ExcludeManagementEventSources": [],"IncludeManagementEvents": true}]'
+
+To log relevant AWS KMS events to a trail like Disable, Delete
+and ScheduleKey, but exclude high-volume AWS KMS events like
+Encrypt, Decrypt, and GenerateDataKey, log
+write-only management events, and keep the default setting to log AWS KMS events, as shown
+in the following example.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --event-selectors '[{"ReadWriteType": "WriteOnly","ExcludeManagementEventSources": [],"IncludeManagementEvents": true}]'
+
+### Examples: Logging management events for event data stores
+
+You log management events for event data stores by configuring advanced event
+selectors.
+
+The following advanced event selector fields are supported for logging management events on event data stores:
+
+- eventCategory – You must set eventCategory equal to Management to log management events. This is a required field.
+
+- readOnly – readOnly can
+be set to Equals a value of true or
+false. When it is set to false, the event data store logs
+Write-only management events. Read-only management events are events that do not change the
+state of a resource, such as Get* or Describe* events.
+Write events add, change, or delete resources, attributes, or artifacts, such as
+Put*, Delete*, or Write* events. To log
+both Read and Write events, don't add a
+readOnly selector.
+
+- eventName – eventName
+can use any operator. You can use it to include or exclude any management event, such as CreateAccessPoint or
+GetAccessPoint. You can use any operator with this field.
+
+- userIdentity.arn – Include or exclude events for actions taken by specific IAM identities. For more information, see CloudTrail userIdentity element.
+
+- sessionCredentialFromConsole – Include or exclude events originating from an AWS Management Console session.
+This field can be set to Equals or NotEquals with a value of
+true.
+
+- eventSource –
+You can use it to include or exclude specific event sources. The eventSource is typically a short form of the service name
+without spaces plus .amazonaws.com. For example, you could set eventSource Equals to
+ec2.amazonaws.com to log only Amazon EC2 management events.
+
+- eventType – The eventType to include or exclude. For
+example, you can set this field to NotEquals
+AwsServiceEvent to exclude AWS service events. You
+can use any operator with this field.
+
+To view whether your event data store includes management events, run the
+get-event-data-store command.
+
+aws cloudtrail get-event-data-store
+--event-data-store arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE
+
+The following is an example response. Creation and last updated times are in
+timestamp format.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "myManagementEvents",
+"Status": "ENABLED",
+"AdvancedEventSelectors": [
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "FIXED_RETENTION_PRICING",
+"RetentionPeriod": 2557,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-02-04T15:56:27.418000+00:00",
+"UpdatedTimestamp": "2023-02-04T15:56:27.544000+00:00"
+}
+
+To create an event data store that includes all management events, you run the create-event-data-store command. You do not need to specify any advanced event selectors
+to include all management events.
+
+aws cloudtrail create-event-data-store
+--name my-event-data-store
+--retention-period 90\
+
+The following is an example response.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "my-event-data-store",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "Default management events",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 90,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-11-13T16:41:57.224000+00:00",
+"UpdatedTimestamp": "2023-11-13T16:41:57.357000+00:00"
+}
+
+Examples:
+
+- Example: Exclude AWS KMS management events
+
+- Example: Exclude Amazon RDS management events
+
+- Example: Exclude AWS service events and events from AWS Management Console sessions
+
+- Example: Exclude management events for a specific IAM identity
+
+#### Example: Exclude AWS KMS management events
+
+To create an event data store that excludes AWS Key Management Service (AWS KMS) events, run the
+create-event-data-store command and specify that eventSource does not equal kms.amazonaws.com. The following example creates an event data store
+that includes read-only and write-only
+management events, but excludes AWS KMS events.
+
+aws cloudtrail create-event-data-store --name event-data-store-name --retention-period 90 --advanced-event-selectors '[
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{"Field": "eventCategory","Equals": ["Management"]},
+{"Field": "eventSource","NotEquals": ["kms.amazonaws.com"]}
+]
+}
+]'
+
+The following is an example response.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "event-data-store-name",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+},
+{
+"Field": "eventSource",
+"NotEquals": [
+"kms.amazonaws.com"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 90,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-11-13T17:02:02.067000+00:00",
+"UpdatedTimestamp": "2023-11-13T17:02:02.241000+00:00"
+}
+
+#### Example: Exclude Amazon RDS management events
+
+To create an event data store that excludes Amazon RDS Data API management events, run the
+create-event-data-store command and specify that eventSource does not equal rdsdata.amazonaws.com. The following example creates an event data store
+that includes read-only and write-only management events, but excludes Amazon RDS Data API events.
+
+aws cloudtrail create-event-data-store --name event-data-store-name --retention-period 90 --advanced-event-selectors '[
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{"Field": "eventCategory","Equals": ["Management"]},
+{"Field": "eventSource","NotEquals": ["rdsdata.amazonaws.com"]}
+]
+}
+]'
+
+The following is an example response.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "my-event-data-store",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "Management events selector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+},
+{
+"Field": "eventSource",
+"NotEquals": [
+"rdsdata.amazonaws.com"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 90,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-11-13T17:02:02.067000+00:00",
+"UpdatedTimestamp": "2023-11-13T17:02:02.241000+00:00"
+}
+
+#### Example: Exclude AWS service events and events from AWS Management Console sessions
+
+The following example creates an event data store that logs management events but excludes AWS service events and events originating from AWS Management Console sessions.
+
+aws cloudtrail create-event-data-store --name event-data-store-name --advanced-event-selectors '[
+{
+"Name": "Exclude AWS service and console events",
+"FieldSelectors": [
+{"Field": "eventCategory","Equals": ["Management"]},
+{"Field": "eventType","NotEquals": ["AwsServiceEvent"]},
+{"Field": "sessionCredentialFromConsole","NotEquals": ["true"]}
+]
+}
+]'
+
+The following is an example response.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:12345678910:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "event-data-store-name",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "Exclude AWS service and console events",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+},
+{
+"Field": "eventType",
+"NotEquals": [
+"AwsServiceEvent"
+]
+},
+{
+"Field": "sessionCredentialFromConsole",
+"NotEquals": [
+"true"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 366,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2024-11-13T17:02:02.067000+00:00",
+"UpdatedTimestamp": "2024-11-13T17:02:02.241000+00:00"
+}
+
+#### Example: Exclude management events for a specific IAM identity
+
+The following example creates an event data store that logs management events but excludes events generated
+by the bucket-scanner-role userIdentity.
+
+aws cloudtrail create-event-data-store --name event-data-store-name --advanced-event-selectors '[
+{
+"Name": "Exclude events generated by bucket-scanner-role userIdentity",
+"FieldSelectors": [
+{"Field": "eventCategory","Equals": ["Management"]},
+{"Field": "userIdentity.arn","NotStartsWith": ["arn:aws:sts::123456789012:assumed-role/bucket-scanner-role"]}
+]
+}
+]'
+
+The following is an example response.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:123456789012:eventdatastore/EXAMPLE-f852-4e8f-8bd1-bcf6cEXAMPLE",
+"Name": "event-data-store-name",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "Exclude events generated by bucket-scanner-role userIdentity",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Management"
+]
+},
+{
+"Field": "userIdentity.arn",
+"NotStartsWith": [
+"arn:aws:sts::123456789012:assumed-role/bucket-scanner-role"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 366,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2024-11-13T17:02:02.067000+00:00",
+"UpdatedTimestamp": "2024-11-13T17:02:02.241000+00:00"
+}
+
+## Logging management events with the AWS SDKs
+
+Use the GetEventSelectors
+operation to see whether your trail is logging management events for a trail. You can
+configure your trails to log management events with the PutEventSelectors operation.
+For more information, see the AWS CloudTrail API Reference.
+
+Run the GetEventDataStore
+operation to see whether your event data store includes management events. You can
+configure your event data stores to include management events by running the CreateEventDataStore or UpdateEventDataStore operations.
+For more information, see Create, update, and manage event data stores with the AWS CLI and the AWS CloudTrail API Reference.

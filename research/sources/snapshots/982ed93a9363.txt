@@ -1,0 +1,3416 @@
+URL: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html
+TITLE: Logging data events - AWS CloudTrail
+
+# Logging data events
+
+This section describes how to log data events using the CloudTrail console and AWS CLI.
+
+By default, trails and event data stores do not log data events. Additional charges apply for data events. For more information, see AWS CloudTrail Pricing.
+
+Data events provide information about the resource operations performed on or in a
+resource. These are also known as data plane
+operations. Data events are often high-volume activities.
+
+Example data events include:
+
+- Amazon S3 object-level API activity (for example,
+GetObject, DeleteObject, and
+PutObject API operations) on objects in S3 buckets.
+
+- AWS Lambda function execution activity (the Invoke
+API).
+
+- CloudTrail PutAuditEvents activity on a CloudTrail Lake channel
+that is used to log events from outside AWS.
+
+- Amazon SNS Publish and PublishBatch API operations on topics.
+
+You can use advanced event selectors to create fine-grained selectors, which help you control costs by only logging the specific events of interest for your use cases.
+For example, you can use advanced event selectors to log specific API calls by adding a filter on the eventName field. For more information, see Filtering data events by using advanced event selectors.
+
+Note
+
+The events that are logged by your trails are available in Amazon EventBridge. For example, if
+you choose to log data events for S3 objects but not management events, your
+trail processes and logs only data events for the specified S3 objects. The data events
+for these S3 objects are available in Amazon EventBridge. For more information, see AWS service events delivered via CloudTrail in the Amazon EventBridge User Guide and the AWS Events Reference.
+
+Contents
+
+- Data events
+
+- Data events supported by AWS CloudTrail
+
+- Examples: Logging data events for Amazon S3 objects
+
+- Logging data events for S3 objects in other AWS accounts
+
+- Read-only and write-only events
+
+- Logging data events with the AWS Management Console
+
+- Logging data events with the AWS Command Line Interface
+
+- Logging data events for trails with the AWS CLI
+
+- Log data events for trails by using advanced event selectors
+
+- Log all Amazon S3 events for an Amazon S3 bucket by using advanced event selectors
+
+- Log Amazon S3 on AWS Outposts events by using advanced event selectors
+
+- Log events by using basic event selectors
+
+- Logging data events for event data stores with the AWS CLI
+
+- Include all Amazon S3 events for a specific bucket
+
+- Include Amazon S3 on AWS Outposts events
+
+- Filtering data events by using advanced event selectors
+
+- How CloudTrail evaluates multiple conditions for a field
+
+- Example showing multiple conditions for the resources.ARN field
+
+- AWS CLI examples for filtering data events
+
+- Example 1: Filtering on the eventName field
+
+- Example 2: Filtering on the resources.ARN and userIdentity.arn fields
+
+- Example 3: Filtering on the resources.type and eventName fields to exclude individual objects deleted by an Amazon S3 DeleteObjects event
+
+- Example 4: Filtering on the eventSource field to exclude Amazon S3 lifecycle data events
+
+- Example 5: Filtering on the eventSource field to exclude Amazon S3 authentication failure data events
+
+- Aggregating data events
+
+- Enabling aggregations for data events using the console
+
+- Enabling aggregations for data events using the AWS CLI
+
+- Example: API_ACTIVITY aggregated event
+
+- Example: RESOURCE_ACCESS aggregated event
+
+- Logging data events for AWS Config compliance
+
+- Logging data events with the AWS SDKs
+
+- Suppressing recursive events with recursive logging
+
+- What is recursive logging?
+
+- How recursive logging suppression works
+
+- Configuring recursive logging
+
+- Disabling recursive logging (suppressing recursive events)
+
+- Re-enabling recursive logging
+
+- Default behavior
+
+## Data events
+
+The following table shows the resource types available for trails and event
+data stores. The Resource type (console) column shows the appropriate selection in the console.
+The resources.type value column shows the
+resources.type value that you would specify to include data
+events of that type in your trail or event data store using the AWS CLI or CloudTrail APIs.
+
+For trails, you can use basic or advanced event selectors to log data events for Amazon S3 objects in general purpose buckets, Lambda functions, and DynamoDB tables (shown in the first three rows of the table). You can use only advanced event selectors to log the resource types shown in the remaining rows.
+
+For event data stores, you can use only advanced event selectors to include data events.
+
+### Data events supported by AWS CloudTrail
+
+AWS service
+
+Description
+
+Resource type (console)
+
+resources.type value
+
+Amazon WorkSpaces Applications
+
+Agents accessing WorkSpaces Applications MCP tool events
+
+Agent Access MCP Tools
+
+AWS::AgentAccessMCP::Tools
+
+AWS Agent Registry
+
+API activity on AWS::AgentRegistry::Registry resources.
+
+AWS Agent Registry
+
+AWS::AgentRegistry::Registry
+
+Amazon AIDevOps
+
+AIDevOps API activity on agent spaces.
+
+Agent Space
+
+AWS::AIDevOps::AgentSpace
+
+Amazon AIDevOps
+
+AIDevOps API activity on associations.
+
+AIDevOps association
+
+AWS::AIDevOps::Association
+
+Amazon AIDevOps
+
+AIDevOps API activity on operator app teams.
+
+AIDevOps operator app team
+
+AWS::AIDevOps::OperatorAppTeam
+
+Amazon AIDevOps
+
+AIDevOps API activity on pipeline metadata.
+
+AIDevOps Pipelines Metadata
+
+AWS::AIDevOps::PipelineMetadata
+
+Amazon AIDevOps
+
+AIDevOps API activity on services.
+
+AIDevOps service
+
+AWS::AIDevOps::Service
+
+Amazon Q Developer
+
+Amazon Q Developer API activity on operational investigations. For more information, see Amazon Q Developer.
+
+AIOps Investigation Group
+
+AWS::AIOps::InvestigationGroup
+
+Amazon OpenSearch Serverless
+
+API activity on AWS::AOSS::Collection resources.
+
+AWS::AOSS::Collection
+
+AWS::AOSS::Collection
+
+AWS AppConfig
+
+AWS AppConfig API activity for configuration operations such as calls to StartConfigurationSession and GetLatestConfiguration. For more information, see AWS AppConfig.
+
+AWS AppConfig
+
+AWS::AppConfig::Configuration
+
+CloudWatch Application Signals
+
+API activity on AWS::ApplicationSignals::InstrumentationConfig resources.
+
+AWS::ApplicationSignals::InstrumentationConfig
+
+AWS::ApplicationSignals::InstrumentationConfig
+
+AWS AppSync
+
+AWS AppSync API activity on AppSync GraphQL APIs. For more information, see AWS AppSync.
+
+AppSync GraphQL
+
+AWS::AppSync::GraphQLApi
+
+External anthropic workspace
+
+API activity on AWS::AWSExternalAnthropic::Workspace resources.
+
+External anthropic workspace
+
+AWS::AWSExternalAnthropic::Workspace
+
+AWS B2B Data Interchange
+
+B2B Data Interchange API activity for Transformer operations such as calls to GetTransformerJob and StartTransformerJob.
+
+B2B Data Interchange
+
+AWS::B2BI::Transformer
+
+AWS Backup access point
+
+API activity on AWS::Backup::BackupAccessPoint resources.
+
+AWS Backup access point
+
+AWS::Backup::BackupAccessPoint
+
+AWS Backup
+
+AWS Backup Search Data API activity on search jobs.
+
+AWS Backup Search Data APIs
+
+AWS::Backup::SearchJob
+
+Amazon Bedrock
+
+Bedrock API activity on advanced optimize prompt jobs.
+
+AdvancedOptimizePromptJob
+
+AWS::Bedrock::AdvancedOptimizePromptJob
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an agent alias. For more information, see Amazon Bedrock.
+
+Bedrock agent alias
+
+AWS::Bedrock::AgentAlias
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on async invocations.
+
+Bedrock async invoke
+
+AWS::Bedrock::AsyncInvoke
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an automated reasoning policy.
+
+Bedrock Automated Reasoning Policy
+
+AWS::Bedrock::AutomatedReasoningPolicy
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on an automated reasoning policy version.
+
+Bedrock Automated Reasoning Policy Version
+
+AWS::Bedrock::AutomatedReasoningPolicyVersion
+
+Amazon Bedrock
+
+Amazon Bedrock blueprint API activity.
+
+Bedrock blueprint
+
+AWS::Bedrock::Blueprint
+
+Amazon Bedrock
+
+Bedrock data automation invocation API activity.
+
+Bedrock Data Automation invocation
+
+AWS::Bedrock::DataAutomationInvocation
+
+Amazon Bedrock
+
+Amazon Bedrock data automation profile API activity.
+
+Bedrock Data Automation profile
+
+AWS::Bedrock::DataAutomationProfile
+
+Amazon Bedrock
+
+Amazon Bedrock data automation project API activity.
+
+Bedrock Data Automation project
+
+AWS::Bedrock::DataAutomationProject
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on a flow alias.
+
+Bedrock flow alias
+
+AWS::Bedrock::FlowAlias
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on flow executions.
+
+Flow Execution
+
+AWS::Bedrock::FlowExecution
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on guardrails.
+
+Bedrock guardrail
+
+AWS::Bedrock::Guardrail
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on inline agents.
+
+Bedrock Invoke Inline-Agent
+
+AWS::Bedrock::InlineAgent
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on a knowledge base. For more information, see Amazon Bedrock.
+
+Bedrock knowledge base
+
+AWS::Bedrock::KnowledgeBase
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on models.
+
+Bedrock model
+
+AWS::Bedrock::Model
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on prompts.
+
+Bedrock prompt
+
+AWS::Bedrock::PromptVersion
+
+Amazon Bedrock
+
+Amazon Bedrock API activity on sessions.
+
+Bedrock session
+
+AWS::Bedrock::Session
+
+Amazon Bedrock
+
+Amazon Bedrock Tool API activity.
+
+Bedrock Tool
+
+AWS::Bedrock::Tool
+
+Bedrock-AgentCore ABTest
+
+API activity on AWS::BedrockAgentCore::ABTest resources.
+
+Bedrock-AgentCore ABTest
+
+AWS::BedrockAgentCore::ABTest
+
+Amazon Bedrock
+
+Amazon Bedrock APIKey CredentialProvider API activity.
+
+Bedrock-AgentCore APIKey CredentialProvider
+
+AWS::BedrockAgentCore::APIKeyCredentialProvider
+
+BedrockAgentCore batch evaluate
+
+API activity on AWS::BedrockAgentCore::BatchEvaluate resources.
+
+BedrockAgentCore batch evaluate
+
+AWS::BedrockAgentCore::BatchEvaluate
+
+Amazon Bedrock
+
+Amazon Bedrock Browser API activity.
+
+Bedrock-AgentCore Browser
+
+AWS::BedrockAgentCore::Browser
+
+Amazon Bedrock
+
+Amazon Bedrock Browser-Custom API activity.
+
+Bedrock-AgentCore Browser-Custom
+
+AWS::BedrockAgentCore::BrowserCustom
+
+Bedrock-AgentCore Browser Profile
+
+API activity on AWS::BedrockAgentCore::BrowserProfile resources.
+
+Bedrock-AgentCore Browser Profile
+
+AWS::BedrockAgentCore::BrowserProfile
+
+BedrockAgentCore CapacityProvider
+
+API activity on AWS::BedrockAgentCore::CapacityProvider resources.
+
+BedrockAgentCore CapacityProvider
+
+AWS::BedrockAgentCore::CapacityProvider
+
+Amazon Bedrock
+
+Amazon Bedrock Code-Interpreter API activity.
+
+Bedrock-AgentCore Code-Interpreter
+
+AWS::BedrockAgentCore::CodeInterpreter
+
+Amazon Bedrock
+
+Amazon Bedrock Code-Interpreter-Custom API activity.
+
+Bedrock-AgentCore Code-Interpreter-Custom
+
+AWS::BedrockAgentCore::CodeInterpreterCustom
+
+Amazon Bedrock AgentCore
+
+Bedrock AgentCore API activity on evaluators.
+
+Bedrock-AgentCore Evaluator
+
+AWS::BedrockAgentCore::Evaluator
+
+Amazon Bedrock
+
+Amazon Bedrock Gateway API activity.
+
+Bedrock-AgentCore Gateway
+
+AWS::BedrockAgentCore::Gateway
+
+Amazon Bedrock
+
+Amazon Bedrock Memory API activity.
+
+Bedrock-AgentCore Memory
+
+AWS::BedrockAgentCore::Memory
+
+Amazon Bedrock
+
+Amazon Bedrock Oauth2 CredentialProvider API activity.
+
+Bedrock-AgentCore Oauth2 CredentialProvider
+
+AWS::BedrockAgentCore::OAuth2CredentialProvider
+
+Bedrock-AgentCore payments
+
+API activity on AWS::BedrockAgentCore::Payments resources.
+
+Bedrock-AgentCore payments
+
+AWS::BedrockAgentCore::Payments
+
+Bedrock-AgentCore policy
+
+API activity on AWS::BedrockAgentCore::Policy resources.
+
+Bedrock-AgentCore policy
+
+AWS::BedrockAgentCore::Policy
+
+Bedrock-AgentCore policy engine
+
+API activity on AWS::BedrockAgentCore::PolicyEngine resources.
+
+Bedrock-AgentCore policy engine
+
+AWS::BedrockAgentCore::PolicyEngine
+
+Bedrock-AgentCore Recommendation
+
+API activity on AWS::BedrockAgentCore::Recommendation resources.
+
+Bedrock-AgentCore Recommendation
+
+AWS::BedrockAgentCore::Recommendation
+
+Bedrock-AgentCore Registry
+
+API activity on AWS::BedrockAgentCore::Registry resources.
+
+Bedrock-AgentCore Registry
+
+AWS::BedrockAgentCore::Registry
+
+Amazon Bedrock
+
+Amazon Bedrock Runtime API activity.
+
+Bedrock-AgentCore Runtime
+
+AWS::BedrockAgentCore::Runtime
+
+Amazon Bedrock
+
+Amazon Bedrock Runtime-Endpoint API activity.
+
+Bedrock-AgentCore Runtime-Endpoint
+
+AWS::BedrockAgentCore::RuntimeEndpoint
+
+Amazon Bedrock
+
+Amazon Bedrock Token Vault API activity.
+
+Bedrock-AgentCore Token Vault
+
+AWS::BedrockAgentCore::TokenVault
+
+Amazon Bedrock
+
+Amazon Bedrock Workload Identity API activity.
+
+Bedrock-AgentCore Workload Identity
+
+AWS::BedrockAgentCore::WorkloadIdentity
+
+Amazon Bedrock
+
+Amazon Bedrock Workload Identity Directory API activity.
+
+Bedrock-AgentCore Workload Identity Directory
+
+AWS::BedrockAgentCore::WorkloadIdentityDirectory
+
+Bedrock Mantle Project
+
+API activity on AWS::BedrockMantle::Project resources.
+
+Bedrock Mantle Project
+
+AWS::BedrockMantle::Project
+
+Bedrock Web Search Tool
+
+API activity on AWS::BedrockWebSearch::Tool resources.
+
+Bedrock Web Search Tool
+
+AWS::BedrockWebSearch::Tool
+
+Amazon Keyspaces (for Apache Cassandra)
+
+Amazon Keyspaces (for Apache Cassandra) API activity on Cassandra CDC streams.
+
+Cassandra CDC streams
+
+AWS::Cassandra::Stream
+
+Amazon Keyspaces (for Apache Cassandra)
+
+Amazon Keyspaces API activity on a table. For more information, see Amazon Keyspaces (for Apache Cassandra).
+
+Cassandra table
+
+AWS::Cassandra::Table
+
+Certificate Manager
+
+API activity on AWS::CertificateManager::AcmeEndpoint resources.
+
+AWS::CertificateManager::AcmeEndpoint
+
+AWS::CertificateManager::AcmeEndpoint
+
+Clinical Trials Tech codelist
+
+API activity on AWS::ClinicalTrialsTech::Codelist resources.
+
+Clinical Trials Tech codelist
+
+AWS::ClinicalTrialsTech::Codelist
+
+Clinical Trials Tech dataset
+
+API activity on AWS::ClinicalTrialsTech::Dataset resources.
+
+Clinical Trials Tech dataset
+
+AWS::ClinicalTrialsTech::Dataset
+
+Clinical Trials Tech execution
+
+API activity on AWS::ClinicalTrialsTech::Execution resources.
+
+Clinical Trials Tech execution
+
+AWS::ClinicalTrialsTech::Execution
+
+Clinical Trials Tech instance
+
+API activity on AWS::ClinicalTrialsTech::Instance resources.
+
+Clinical Trials Tech instance
+
+AWS::ClinicalTrialsTech::Instance
+
+Clinical Trials Tech mapping
+
+API activity on AWS::ClinicalTrialsTech::Mapping resources.
+
+Clinical Trials Tech mapping
+
+AWS::ClinicalTrialsTech::Mapping
+
+Clinical Trials Tech schedule
+
+API activity on AWS::ClinicalTrialsTech::Schedule resources.
+
+Clinical Trials Tech schedule
+
+AWS::ClinicalTrialsTech::Schedule
+
+Clinical Trials Tech study
+
+API activity on AWS::ClinicalTrialsTech::Study resources.
+
+Clinical Trials Tech study
+
+AWS::ClinicalTrialsTech::Study
+
+Amazon CloudFront
+
+CloudFront API activity on a KeyValueStore. For more information, see Amazon CloudFront.
+
+CloudFront KeyValueStore
+
+AWS::CloudFront::KeyValueStore
+
+Amazon Cost Optimization
+
+CloudOptimization API activity on profiles.
+
+AWS::CloudOptimization::Profile
+
+AWS::CloudOptimization::Profile
+
+Amazon Cost Optimization
+
+CloudOptimization API activity on recommendations.
+
+AWS::CloudOptimization::Recommendation
+
+AWS::CloudOptimization::Recommendation
+
+AWS CloudTrail
+
+CloudTrail PutAuditEvents activity on a CloudTrail Lake channel that is used to log events from outside AWS. For more information, see AWS CloudTrail.
+
+CloudTrail channel
+
+AWS::CloudTrail::Channel
+
+CloudWatch dataset
+
+API activity on AWS::CloudWatch::Dataset resources.
+
+CloudWatch dataset
+
+AWS::CloudWatch::Dataset
+
+Observability ingestion endpoint
+
+API activity on AWS::CloudWatch::IngestionEndpoint resources.
+
+Observability ingestion endpoint
+
+AWS::CloudWatch::IngestionEndpoint
+
+Amazon CloudWatch
+
+Amazon CloudWatch API activity on metrics. For more information, see Amazon CloudWatch.
+
+CloudWatch metric
+
+AWS::CloudWatch::Metric
+
+Amazon CodeGuru Profiler
+
+CodeGuru Profiler API activity on profiling groups.
+
+CodeGuru Profiler profiling group
+
+AWS::CodeGuruProfiler::ProfilingGroup
+
+Amazon CodeWhisperer
+
+Amazon CodeWhisperer API activity on a customization.
+
+CodeWhisperer customization
+
+AWS::CodeWhisperer::Customization
+
+Amazon CodeWhisperer
+
+Amazon CodeWhisperer API activity on a profile.
+
+CodeWhisperer
+
+AWS::CodeWhisperer::Profile
+
+Amazon Cognito
+
+Amazon Cognito API activity on Amazon Cognito identity pools. For more information, see Amazon Cognito.
+
+Cognito Identity Pools
+
+AWS::Cognito::IdentityPool
+
+AWS Data Exchange
+
+AWS Data Exchange API activity on assets.
+
+Data Exchange asset
+
+AWS::DataExchange::Asset
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on fleets. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud fleet
+
+AWS::Deadline::Fleet
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on jobs. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud job
+
+AWS::Deadline::Job
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on queues. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud queue
+
+AWS::Deadline::Queue
+
+AWS Deadline Cloud
+
+Deadline Cloud API activity on workers. For more information, see AWS Deadline Cloud.
+
+Deadline Cloud worker
+
+AWS::Deadline::Worker
+
+Diode Alerting linked alert
+
+API activity on AWS::DiodeAlerting::LinkedAlert resources.
+
+Diode Alerting linked alert
+
+AWS::DiodeAlerting::LinkedAlert
+
+Amazon Aurora DSQL
+
+Amazon Aurora DSQL API activity on cluster resources.
+
+Amazon Aurora DSQL
+
+AWS::DSQL::Cluster
+
+Amazon DynamoDB
+
+Amazon DynamoDB API activity on streams. For more information, see Amazon DynamoDB.
+
+DynamoDB Streams
+
+AWS::DynamoDB::Stream
+
+Amazon DynamoDB
+
+Amazon DynamoDB item-level API activity on tables (for example, PutItem, DeleteItem, and UpdateItem API operations). For tables with streams enabled, the resources field in the data event contains both AWS::DynamoDB::Stream and AWS::DynamoDB::Table. If you specify AWS::DynamoDB::Table for the resources.type, it will log both DynamoDB table and DynamoDB streams events by default. To exclude streams events, add a filter on the eventName field. For more information, see Amazon DynamoDB.
+
+DynamoDB
+
+AWS::DynamoDB::Table
+
+Amazon Elastic Compute Cloud
+
+Amazon EC2 instance connect endpoint API activity.
+
+EC2 instance connect endpoint
+
+AWS::EC2::InstanceConnectEndpoint
+
+Amazon Elastic Block Store
+
+Amazon Elastic Block Store (EBS) direct APIs, such as PutSnapshotBlock, GetSnapshotBlock, and ListChangedBlocks on Amazon EBS snapshots. For more information, see Amazon Elastic Block Store.
+
+EBS direct APIs
+
+AWS::EC2::Snapshot
+
+Amazon Elastic Container Service
+
+Amazon Elastic Container Service API activity on a container instance.
+
+ECS container instance
+
+AWS::ECS::ContainerInstance
+
+Amazon Elastic Kubernetes Service
+
+Amazon Elastic Kubernetes Service API activity on dashboards.
+
+EKS dashboard
+
+AWS::EKS::Dashboard
+
+Amazon EMR
+
+Amazon EMR API activity on a write-ahead log workspace. For more information, see Amazon EMR.
+
+EMR write-ahead log workspace
+
+AWS::EMRWAL::Workspace
+
+EventBridge endpoint
+
+API activity on AWS::Events::Endpoint resources.
+
+EventBridge endpoint
+
+AWS::Events::Endpoint
+
+EventBridge event bus
+
+API activity on AWS::Events::EventBus resources.
+
+EventBridge event bus
+
+AWS::Events::EventBus
+
+EventBridge partner event source
+
+API activity on AWS::Events::EventSource resources.
+
+EventBridge partner event source
+
+AWS::Events::EventSource
+
+EventBridge rule
+
+API activity on AWS::Events::Rule resources.
+
+EventBridge rule
+
+AWS::Events::Rule
+
+Amazon FinSpace
+
+Amazon FinSpace API activity on environments. For more information, see Amazon FinSpace.
+
+FinSpace
+
+AWS::FinSpace::Environment
+
+Amazon FSx
+
+Amazon FSx API activity on volumes.
+
+FSx Volume
+
+AWS::FSx::Volume
+
+Amazon GameLift Streams
+
+Amazon GameLift Streams streaming API activity on applications. For more information, see Amazon GameLift Streams.
+
+GameLift Streams application
+
+AWS::GameLiftStreams::Application
+
+Amazon GameLift Streams
+
+Amazon GameLift Streams streaming API activity on stream groups. For more information, see Amazon GameLift Streams.
+
+GameLift Streams stream group
+
+AWS::GameLiftStreams::StreamGroup
+
+Amazon Location Maps
+
+Amazon Location Maps API activity.
+
+Geo Maps
+
+AWS::GeoMaps::Provider
+
+Amazon Location Places
+
+Amazon Location Places API activity.
+
+Geo Places
+
+AWS::GeoPlaces::Provider
+
+Amazon Location Routes
+
+Amazon Location Routes API activity.
+
+Geo Routes
+
+AWS::GeoRoutes::Provider
+
+AWS Glue
+
+AWS Glue API activity on tables that were created by Lake Formation.
+
+Lake Formation
+
+AWS::Glue::Table
+
+AWS IoT Greengrass Version 2
+
+Greengrass API activity from a Greengrass core device on a component version. Greengrass doesn't log access denied events. For more information, see AWS IoT Greengrass Version 2.
+
+IoT Greengrass component version
+
+AWS::GreengrassV2::ComponentVersion
+
+AWS IoT Greengrass Version 2
+
+Greengrass API activity from a Greengrass core device on a deployment. Greengrass doesn't log access denied events. For more information, see AWS IoT Greengrass Version 2.
+
+IoT Greengrass deployment
+
+AWS::GreengrassV2::Deployment
+
+Amazon GuardDuty
+
+Amazon GuardDuty API activity for a detector. For more information, see Amazon GuardDuty.
+
+GuardDuty detector
+
+AWS::GuardDuty::Detector
+
+Amazon GuardDuty
+
+GuardDuty API activity on malware scans.
+
+GuardDuty malware scan
+
+AWS::GuardDuty::MalwareScan
+
+Health agent domain
+
+API activity on AWS::HealthAgent::Domain resources.
+
+Health agent domain
+
+AWS::HealthAgent::Domain
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::Integration resources.
+
+AWS::HealthAgent::Integration
+
+AWS::HealthAgent::Integration
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::PatientInsightsJob resources.
+
+health-agent.amazonaws.com
+
+AWS::HealthAgent::PatientInsightsJob
+
+Amazon Connect Health
+
+API activity on AWS::HealthAgent::Session resources.
+
+AWS::HealthAgent::Session
+
+AWS::HealthAgent::Session
+
+Health agent subscription
+
+API activity on AWS::HealthAgent::Subscription resources.
+
+Health agent subscription
+
+AWS::HealthAgent::Subscription
+
+Health Lake data transformation profile
+
+API activity on AWS::HealthLake::DataTransformationProfile resources.
+
+Health Lake data transformation profile
+
+AWS::HealthLake::DataTransformationProfile
+
+AWS IoT
+
+AWS IoT API activity on certificates. For more information, see AWS IoT.
+
+IoT certificate
+
+AWS::IoT::Certificate
+
+AWS IoT
+
+AWS IoT API activity on things. For more information, see AWS IoT.
+
+IoT thing
+
+AWS::IoT::Thing
+
+AWS IoT tunnel
+
+API activity on AWS::IoT::Tunnel resources.
+
+AWS IoT tunnel
+
+AWS::IoT::Tunnel
+
+AWS IoT SiteWise
+
+IoT SiteWise API activity on assets. For more information, see AWS IoT SiteWise.
+
+IoT SiteWise asset
+
+AWS::IoTSiteWise::Asset
+
+IoT SiteWise dataset
+
+API activity on AWS::IoTSiteWise::Dataset resources.
+
+IoT SiteWise dataset
+
+AWS::IoTSiteWise::Dataset
+
+IoT SiteWise pipeline
+
+API activity on AWS::IoTSiteWise::Pipeline resources.
+
+IoT SiteWise pipeline
+
+AWS::IoTSiteWise::Pipeline
+
+AWS IoT SiteWise
+
+IoT SiteWise API activity on time series. For more information, see AWS IoT SiteWise.
+
+IoT SiteWise time series
+
+AWS::IoTSiteWise::TimeSeries
+
+IoT SiteWise workspace
+
+API activity on AWS::IoTSiteWise::Workspace resources.
+
+IoT SiteWise workspace
+
+AWS::IoTSiteWise::Workspace
+
+AWS IoT TwinMaker
+
+IoT TwinMaker API activity on an entity. For more information, see AWS IoT TwinMaker.
+
+IoT TwinMaker entity
+
+AWS::IoTTwinMaker::Entity
+
+AWS IoT TwinMaker
+
+IoT TwinMaker API activity on a workspace. For more information, see AWS IoT TwinMaker.
+
+IoT TwinMaker workspace
+
+AWS::IoTTwinMaker::Workspace
+
+Amazon Kendra Intelligent Ranking
+
+Amazon Kendra Intelligent Ranking API activity on rescore execution plans. For more information, see Amazon Kendra Intelligent Ranking.
+
+Kendra Ranking
+
+AWS::KendraRanking::ExecutionPlan
+
+Amazon Kinesis Data Streams
+
+Kinesis Data Streams API activity on streams. For more information, see Amazon Kinesis Data Streams.
+
+Kinesis stream
+
+AWS::Kinesis::Stream
+
+Amazon Kinesis Data Streams
+
+Kinesis Data Streams API activity on stream consumers. For more information, see Amazon Kinesis Data Streams.
+
+Kinesis stream consumer
+
+AWS::Kinesis::StreamConsumer
+
+Amazon Data Firehose
+
+Amazon Data Firehose delivery stream API activity.
+
+Amazon Data Firehose
+
+AWS::KinesisFirehose::DeliveryStream
+
+Amazon Kinesis Video Streams
+
+Kinesis Video Streams video signaling channel API activity.
+
+Kinesis video signaling channel
+
+AWS::KinesisVideo::SignalingChannel
+
+Amazon Kinesis Video Streams
+
+Kinesis Video Streams API activity on video streams, such as calls to GetMedia and PutMedia.
+
+Kinesis video stream
+
+AWS::KinesisVideo::Stream
+
+AWS Lambda
+
+AWS Lambda function execution activity (the Invoke API).
+
+Lambda
+
+AWS::Lambda::Function
+
+Lambda microvm image
+
+API activity on AWS::Lambda::MicrovmImage resources.
+
+Lambda microvm image
+
+AWS::Lambda::MicrovmImage
+
+Lex Bot
+
+API activity on AWS::Lex::Bot resources.
+
+Lex Bot
+
+AWS::Lex::Bot
+
+AWS Lex Bot Alias
+
+API activity on AWS::Lex::BotAlias resources.
+
+AWS Lex Bot Alias
+
+AWS::Lex::BotAlias
+
+CloudWatch Logs log group authorization
+
+API activity on AWS::Logs::LogGroupAuthorization resources.
+
+CloudWatch Logs log group authorization
+
+AWS::Logs::LogGroupAuthorization
+
+Logs ScheduledQuery
+
+API activity on AWS::Logs::ScheduledQuery resources.
+
+Logs ScheduledQuery
+
+AWS::Logs::ScheduledQuery
+
+Amazon Machine Learning
+
+Machine Learning API activity on ML models.
+
+Machine Learning MlModel
+
+AWS::MachineLearning::MlModel
+
+Amazon Managed Blockchain
+
+Amazon Managed Blockchain API activity on a network.
+
+Managed Blockchain network
+
+AWS::ManagedBlockchain::Network
+
+Amazon Managed Blockchain
+
+Amazon Managed Blockchain JSON-RPC calls on Ethereum nodes, such as eth_getBalance or eth_getBlockByNumber. For more information, see Amazon Managed Blockchain.
+
+Managed Blockchain
+
+AWS::ManagedBlockchain::Node
+
+Amazon Managed Blockchain Query
+
+Amazon Managed Blockchain Query API activity.
+
+Managed Blockchain Query
+
+AWS::ManagedBlockchainQuery::QueryAPI
+
+AWS HealthImaging
+
+AWS HealthImaging API activity on data stores.
+
+MedicalImaging data store
+
+AWS::MedicalImaging::Datastore
+
+AWS HealthImaging
+
+AWS HealthImaging image set API activity.
+
+MedicalImaging image set
+
+AWS::MedicalImaging::Imageset
+
+Amazon Managed Workflows for Apache Airflow
+
+Amazon MWAA API activity on environments.
+
+Managed Apache Airflow
+
+AWS::MWAA::Environment
+
+Amazon Neptune Graph
+
+Data API activities, for example queries, algorithms, or vector search, on a Neptune Graph.
+
+Neptune Graph
+
+AWS::NeptuneGraph::Graph
+
+Amazon CloudWatch Network Flow Monitor
+
+Amazon CloudWatch Network Flow Monitor API activity on monitors.
+
+Network Flow Monitor monitor
+
+AWS::NetworkFlowMonitor::Monitor
+
+Amazon CloudWatch Network Flow Monitor
+
+Amazon CloudWatch Network Flow Monitor API activity on scopes.
+
+Network Flow Monitor scope
+
+AWS::NetworkFlowMonitor::Scope
+
+Amazon NovaAct
+
+Amazon NovaAct API activity on workflow definitions.
+
+Workflow definition
+
+AWS::NovaAct::WorkflowDefinition
+
+Amazon NovaAct
+
+Amanzon NovaAct API activity on workflow runs.
+
+Workflow run
+
+AWS::NovaAct::WorkflowRun
+
+Amazon One Enterprise
+
+Amazon One Enterprise API activity on a UKey.
+
+Amazon One UKey
+
+AWS::One::UKey
+
+Amazon One Enterprise
+
+Amazon One Enterprise API activity on users.
+
+Amazon One User
+
+AWS::One::User
+
+AWS Payment Cryptography
+
+AWS Payment Cryptography API activity on aliases.
+
+Payment Cryptography alias
+
+AWS::PaymentCryptography::Alias
+
+AWS Payment Cryptography
+
+AWS Payment Cryptography API activity on keys.
+
+Payment Cryptography key
+
+AWS::PaymentCryptography::Key
+
+AWS Private CA
+
+AWS Private CA Connector for Active Directory API activity.
+
+Private CA Connector for Active Directory
+
+AWS::PCAConnectorAD::Connector
+
+AWS Private CA
+
+AWS Private CA Connector for SCEP API activity.
+
+Private CA Connector for SCEP
+
+AWS::PCAConnectorSCEP::Connector
+
+Amazon Pinpoint
+
+Amazon Pinpoint API activity on mobile targeting applications.
+
+Mobile Targeting Application
+
+AWS::Pinpoint::App
+
+Amazon Q Apps
+
+Data API activity on Amazon Q Apps. For more information, see Amazon Q Apps.
+
+Amazon Q Apps
+
+AWS::QApps::QApp
+
+Amazon Q Apps
+
+Data API activity on Amazon Q App sessions.
+
+Amazon Q App Session
+
+AWS::QApps::QAppSession
+
+Amazon Q Business
+
+Amazon Q Business API activity on an application. For more information, see Amazon Q Business.
+
+Amazon Q Business application
+
+AWS::QBusiness::Application
+
+Amazon Q Business
+
+Amazon Q Business API activity on a data source. For more information, see Amazon Q Business.
+
+Amazon Q Business data source
+
+AWS::QBusiness::DataSource
+
+Amazon Q Business
+
+Amazon Q Business API activity on an index. For more information, see Amazon Q Business.
+
+Amazon Q Business index
+
+AWS::QBusiness::Index
+
+Amazon Q Business
+
+Amazon Q Business integration API activity.
+
+Amazon Q Business integration
+
+AWS::QBusiness::Integration
+
+Amazon Q Business
+
+Amazon Q Business API activity on a web experience. For more information, see Amazon Q Business.
+
+Amazon Q Business web experience
+
+AWS::QBusiness::WebExperience
+
+Amazon Q Developer
+
+Amazon Q Developer API activity on an integration.
+
+Q Developer integration
+
+AWS::QDeveloper::Integration
+
+Amazon Quick
+
+Amazon Quick API activity on an action connector.
+
+AWS QuickSuite Actions
+
+AWS::Quicksight::ActionConnector
+
+Amazon QuickSight App
+
+API activity on AWS::QuickSight::App resources.
+
+Amazon QuickSight App
+
+AWS::QuickSight::App
+
+QuickSight automation
+
+API activity on AWS::QuickSight::Automation resources.
+
+QuickSight automation
+
+AWS::QuickSight::Automation
+
+QuickSight automation job
+
+API activity on AWS::QuickSight::AutomationJob resources.
+
+QuickSight automation job
+
+AWS::QuickSight::AutomationJob
+
+AWS QuickSight Extension
+
+API activity on AWS::QuickSight::Extension resources.
+
+AWS QuickSight Extension
+
+AWS::QuickSight::Extension
+
+AWS QuickSight Extension Access
+
+API activity on AWS::QuickSight::ExtensionAccess resources.
+
+AWS QuickSight Extension Access
+
+AWS::QuickSight::ExtensionAccess
+
+Amazon Quick
+
+Amazon Quick Flow API activity.
+
+AWS QuickSight flow
+
+AWS::QuickSight::Flow
+
+Amazon Quick
+
+Amazon Quick FlowSession API activity.
+
+AWS QuickSight flow session
+
+AWS::QuickSight::FlowSession
+
+Amazon QuickSight Page
+
+API activity on AWS::QuickSight::Page resources.
+
+Amazon QuickSight Page
+
+AWS::QuickSight::Page
+
+QuickSight Task
+
+API activity on AWS::QuickSight::Task resources.
+
+QuickSight Task
+
+AWS::QuickSight::Task
+
+Amazon RDS
+
+Amazon RDS API activity on a DB Cluster. For more information, see Amazon RDS.
+
+RDS Data API - DB Cluster
+
+AWS::RDS::DBCluster
+
+Amazon Redshift
+
+Redshift API activity on clusters.
+
+Redshift Cluster
+
+AWS::Redshift::Cluster
+
+AWS Resource Explorer managed-view
+
+API activity on AWS::ResourceExplorer2::ManagedView resources.
+
+AWS Resource Explorer managed-view
+
+AWS::ResourceExplorer2::ManagedView
+
+AWS Resource Explorer view
+
+API activity on AWS::ResourceExplorer2::View resources.
+
+AWS Resource Explorer view
+
+AWS::ResourceExplorer2::View
+
+Amazon CloudWatch RUM
+
+Amazon CloudWatch RUM API activity on app monitors.
+
+RUM app monitor
+
+AWS::RUM::AppMonitor
+
+Amazon S3
+
+Amazon S3 API activity on access points. For more information, see Amazon S3.
+
+S3 Access Point
+
+AWS::S3::AccessPoint
+
+Amazon S3
+
+Amazon S3 object-level API activity (for example, GetObject, DeleteObject, and PutObject API operations) on objects in general purpose buckets. For more information, see Amazon S3.
+
+S3
+
+AWS::S3::Object
+
+S3 Express Access Point
+
+API activity on AWS::S3Express::AccessPoint resources.
+
+S3 Express Access Point
+
+AWS::S3Express::AccessPoint
+
+Amazon S3
+
+Amazon S3 object-level API activity (for example, GetObject, DeleteObject, and PutObject API operations) on objects in directory buckets. For more information, see Amazon S3.
+
+S3 Express
+
+AWS::S3Express::Object
+
+Amazon S3
+
+Amazon S3 Object Lambda access points API activity, such as calls to CompleteMultipartUpload and GetObject. For more information, see Amazon S3.
+
+S3 Object Lambda
+
+AWS::S3ObjectLambda::AccessPoint
+
+Amazon S3 on Outposts
+
+Amazon S3 on Outposts object-level API activity. For more information, see Amazon S3 on Outposts.
+
+S3 Outposts
+
+AWS::S3Outposts::Object
+
+Amazon S3 Tables
+
+Amazon S3 API activity on tables. For more information, see Amazon S3 Tables.
+
+S3 table
+
+AWS::S3Tables::Table
+
+Amazon S3 Tables
+
+Amazon S3 API activity on table buckets. For more information, see Amazon S3 Tables.
+
+S3 table bucket
+
+AWS::S3Tables::TableBucket
+
+Amazon S3 Vectors
+
+Amazon S3 API activity on vector indexes. For more information, see Amazon S3 Vectors.
+
+S3 vector index
+
+AWS::S3Vectors::Index
+
+Amazon S3 Vectors
+
+Amazon S3 API activity on vector buckets. For more information, see Amazon S3 Vectors.
+
+S3 vector bucket
+
+AWS::S3Vectors::VectorBucket
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI InvokeEndpointWithResponseStream activity on endpoints. For more information, see Amazon SageMaker AI.
+
+SageMaker endpoint
+
+AWS::SageMaker::Endpoint
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI API activity on experiment trial components. For more information, see Amazon SageMaker AI.
+
+SageMaker metrics experiment trial component
+
+AWS::SageMaker::ExperimentTrialComponent
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI API activity on feature stores.
+
+SageMaker Feature Store
+
+AWS::SageMaker::FeatureGroup
+
+SageMaker hub
+
+API activity on AWS::SageMaker::Hub resources.
+
+SageMaker hub
+
+AWS::SageMaker::Hub
+
+SageMaker jobs
+
+API activity on AWS::SageMaker::Job resources.
+
+SageMaker jobs
+
+AWS::SageMaker::Job
+
+AWS SageMaker MlflowApp
+
+API activity on AWS::SageMaker::MlflowApp resources.
+
+AWS SageMaker MlflowApp
+
+AWS::SageMaker::MlflowApp
+
+Amazon SageMaker AI
+
+Amazon SageMaker AI MLflow API activity.
+
+SageMaker MLflow
+
+AWS::SageMaker::MlflowTrackingServer
+
+SageMaker training session
+
+API activity on AWS::SageMaker::TrainingSession resources.
+
+SageMaker training session
+
+AWS::SageMaker::TrainingSession
+
+AWS Supply Chain
+
+API activity on AWS::SCN::BusinessRule resources.
+
+AWS::SCN::BusinessRule
+
+AWS::SCN::BusinessRule
+
+AWS Supply Chain
+
+API activity on AWS::SCN::DataLakeException resources.
+
+AWS::SCN::DataLakeException
+
+AWS::SCN::DataLakeException
+
+AWS Supply Chain
+
+API activity on AWS::SCN::ExceptionInvestigation resources.
+
+AWS::SCN::ExceptionInvestigation
+
+AWS::SCN::ExceptionInvestigation
+
+AWS Supply Chain
+
+API activity on AWS::SCN::ExceptionRule resources.
+
+AWS::SCN::ExceptionRule
+
+AWS::SCN::ExceptionRule
+
+AWS Supply Chain
+
+Supply Chain API activity on an instance.
+
+Amazon Connect Decisions
+
+AWS::SCN::Instance
+
+AWS Supply Chain
+
+API activity on AWS::SCN::Metric resources.
+
+AWS::SCN::Metric
+
+AWS::SCN::Metric
+
+AWS Supply Chain
+
+API activity on AWS::SCN::MetricEvaluation resources.
+
+AWS::SCN::MetricEvaluation
+
+AWS::SCN::MetricEvaluation
+
+AWS Supply Chain
+
+API activity on AWS::SCN::Outcome resources.
+
+AWS::SCN::Outcome
+
+AWS::SCN::Outcome
+
+AWS Supply Chain
+
+API activity on AWS::SCN::OutcomeTemplate resources.
+
+AWS::SCN::OutcomeTemplate
+
+AWS::SCN::OutcomeTemplate
+
+Amazon SimpleDB
+
+Amazon SimpleDB API activity on domains.
+
+SimpleDB domain
+
+AWS::SDB::Domain
+
+AWS Cloud Map
+
+AWS Cloud Map API activity on a namespace. For more information, see AWS Cloud Map.
+
+AWS Cloud Map namespace
+
+AWS::ServiceDiscovery::Namespace
+
+AWS Cloud Map
+
+AWS Cloud Map API activity on a service. For more information, see AWS Cloud Map.
+
+AWS Cloud Map service
+
+AWS::ServiceDiscovery::Service
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on configuration sets.
+
+SES configuration set
+
+AWS::SES::ConfigurationSet
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on email identities.
+
+SES identity
+
+AWS::SES::EmailIdentity
+
+Amazon Simple Email Service
+
+Amazon Simple Email Service (Amazon SES) API activity on templates.
+
+SES template
+
+AWS::SES::Template
+
+AWS Signer
+
+Signer API activity on signing jobs.
+
+Signer signing job
+
+AWS::Signer::SigningJob
+
+AWS Signer
+
+Signer API activity on signing profiles.
+
+Signer signing profile
+
+AWS::Signer::SigningProfile
+
+AWS IoT SiteWise Assistant
+
+Sitewise Assistant API activity on conversations.
+
+Sitewise Assistant conversation
+
+AWS::SitewiseAssistant::Conversation
+
+Carrier Lookup
+
+API activity on AWS::SMSVoice::CarrierLookup resources.
+
+Carrier Lookup
+
+AWS::SMSVoice::CarrierLookup
+
+Configuration Set
+
+API activity on AWS::SMSVoice::ConfigurationSet resources.
+
+Configuration Set
+
+AWS::SMSVoice::ConfigurationSet
+
+AWS End User Messaging SMS
+
+AWS End User Messaging SMS API activity on messages. For more information, see AWS End User Messaging SMS.
+
+SMS Voice message
+
+AWS::SMSVoice::Message
+
+Notify Configuration
+
+API activity on AWS::SMSVoice::NotifyConfiguration resources.
+
+Notify Configuration
+
+AWS::SMSVoice::NotifyConfiguration
+
+AWS End User Messaging SMS
+
+AWS End User Messaging SMS API activity on origination identities. For more information, see AWS End User Messaging SMS.
+
+SMS Voice origination identity
+
+AWS::SMSVoice::OriginationIdentity
+
+Amazon SNS
+
+Amazon SNS Publish API operations on platform endpoints. For more information, see Amazon SNS.
+
+SNS platform endpoint
+
+AWS::SNS::PlatformEndpoint
+
+Amazon SNS
+
+Amazon SNS Publish and PublishBatch API operations on topics. For more information, see Amazon SNS.
+
+SNS topic
+
+AWS::SNS::Topic
+
+AWS End User Messaging Social
+
+AWS End User Messaging Social API activity on phone number IDs. For more information, see AWS End User Messaging Social.
+
+Social-Messaging Phone Number ID
+
+AWS::SocialMessaging::PhoneNumberId
+
+AWS End User Messaging Social
+
+AWS End User Messaging Social API activity on Waba IDs.
+
+Social-Messaging Waba ID
+
+AWS::SocialMessaging::WabaId
+
+Amazon SQS
+
+Amazon SQS API activity on messages. For more information, see Amazon SQS.
+
+SQS
+
+AWS::SQS::Queue
+
+AWS Systems Manager
+
+Systems Manager API activity on impact assessments.
+
+SSM Impact Assessment
+
+AWS::SSM::ExecutionPreview
+
+AWS Systems Manager
+
+Systems Manager API activity on managed nodes. For more information, see AWS Systems Manager.
+
+Systems Manager managed node
+
+AWS::SSM::ManagedNode
+
+AWS Systems Manager
+
+Systems Manager API activity on control channels. For more information, see AWS Systems Manager.
+
+Systems Manager
+
+AWS::SSMMessages::ControlChannel
+
+AWS Step Functions
+
+Step Functions API activity on activities. For more information, see AWS Step Functions.
+
+Step Functions activity
+
+AWS::StepFunctions::Activity
+
+AWS Step Functions
+
+Step Functions API activity on state machines. For more information, see AWS Step Functions.
+
+Step Functions state machine
+
+AWS::StepFunctions::StateMachine
+
+Amazon Support
+
+SupportAccess API activity on tenants.
+
+SupportAccess tenant
+
+AWS::SupportAccess::Tenant
+
+Amazon Support
+
+SupportAccess API activity on trusting accounts.
+
+SupportAccess trusting account
+
+AWS::SupportAccess::TrustingAccount
+
+Amazon Support
+
+SupportAccess API activity on trusting roles.
+
+SupportAccess trusting role
+
+AWS::SupportAccess::TrustingRole
+
+Amazon SWF
+
+Amazon SWF API activity on domains. For more information, see Amazon SWF.
+
+SWF domain
+
+AWS::SWF::Domain
+
+Amazon WorkSpaces Thin Client
+
+WorkSpaces Thin Client API activity on a Device.
+
+Thin Client Device
+
+AWS::ThinClient::Device
+
+Amazon WorkSpaces Thin Client
+
+WorkSpaces Thin Client API activity on an Environment.
+
+Thin Client Environment
+
+AWS::ThinClient::Environment
+
+Amazon Timestream
+
+Amazon Timestream Query API activity on databases. For more information, see Amazon Timestream.
+
+Timestream database
+
+AWS::Timestream::Database
+
+Amazon Timestream
+
+Amazon Timestream API activity on regional endpoints.
+
+Timestream regional endpoint
+
+AWS::Timestream::RegionalEndpoint
+
+Amazon Timestream
+
+Amazon Timestream Query API activity on tables. For more information, see Amazon Timestream.
+
+Timestream table
+
+AWS::Timestream::Table
+
+Amazon Transform
+
+Transform API activity on agent instances.
+
+Transform agent instance
+
+AWS::Transform::AgentInstance
+
+Amazon Q Transform AKA AWS Transform
+
+API activity on AWS::Transform::Profile resources.
+
+transform
+
+AWS::Transform::Profile
+
+Amazon Transform Custom
+
+Transform Custom API activity on campaigns.
+
+Transform-Custom campaign
+
+AWS::TransformCustom::Campaign
+
+Amazon Transform Custom
+
+Transform Custom API activity on conversations.
+
+Transform-Custom conversation
+
+AWS::TransformCustom::Conversation
+
+Amazon Transform Custom
+
+Transform Custom API activity on knowledge items.
+
+Transform-Custom knowledge item
+
+AWS::TransformCustom::KnowledgeItem
+
+Amazon Transform Custom
+
+Transform Custom API activity on packages.
+
+Transform-Custom package
+
+AWS::TransformCustom::Package
+
+UXC account customization
+
+API activity on AWS::UXC::AccountCustomization resources.
+
+UXC account customization
+
+AWS::UXC::AccountCustomization
+
+Amazon Verified Permissions
+
+Amazon Verified Permissions API activity on a policy store.
+
+Amazon Verified Permissions
+
+AWS::VerifiedPermissions::PolicyStore
+
+Well-Architected agent recommendation
+
+API activity on AWS::WellArchitected::AgentRecommendation resources.
+
+Well-Architected agent recommendation
+
+AWS::WellArchitected::AgentRecommendation
+
+AWS X-Ray
+
+X-Ray API activity on traces. For more information, see AWS X-Ray.
+
+X-Ray trace
+
+AWS::XRay::Trace
+
+To record CloudTrail data
+events, you must explicitly add each resource type for which you
+want to collect activity. For more information, see Creating a trail with the CloudTrail console and Create an event data store for CloudTrail events with the console.
+
+On a single-Region trail or event data store, you can log data events only for resources that you can
+access in that Region. Though S3 buckets are global, AWS Lambda functions and DynamoDB
+tables are regional.
+
+Additional charges apply for logging data events. For CloudTrail pricing, see AWS CloudTrail Pricing.
+
+### Examples: Logging data events for Amazon S3 objects
+
+Logging data events for all S3 objects in an S3 bucket
+
+The following example demonstrates how logging works when you configure
+logging of all data events for an S3 bucket named
+amzn-s3-demo-bucket. In this example, the CloudTrail user
+specified an empty prefix, and the option to log both Read
+and Write data events.
+
+- A user uploads an object to amzn-s3-demo-bucket.
+
+- The PutObject API operation is an Amazon S3 object-level API. It
+is recorded as a data event in CloudTrail. Because the CloudTrail user specified an S3
+bucket with an empty prefix, events that occur on any object in that bucket
+are logged. The trail or event data store processes and logs the
+event.
+
+- Another user uploads an object to amzn-s3-demo-bucket2.
+
+- The PutObject API operation occurred on an object in an S3
+bucket that wasn't specified for the trail or event data store. The trail or
+event data store doesn't log the event.
+
+Logging data events for specific S3 objects
+
+The following example demonstrates how logging works when you configure a
+trail or event data store to log events for specific S3 objects. In this
+example, the CloudTrail user specified an S3 bucket named
+amzn-s3-demo-bucket3, with the prefix
+my-images, and the option to log only
+Write data events.
+
+- A user deletes an object that begins with the my-images
+prefix in the bucket, such as
+arn:aws:s3:::amzn-s3-demo-bucket3/my-images/example.jpg.
+
+- The DeleteObject API operation is an Amazon S3 object-level API.
+It is recorded as a Write data event in CloudTrail. The event
+occurred on an object that matches the S3 bucket and prefix specified in the
+trail or event data store. The trail or event data store processes and logs
+the event.
+
+- Another user deletes an object with a different prefix in the S3 bucket,
+such as arn:aws:s3:::amzn-s3-demo-bucket3/my-videos/example.avi.
+
+- The event occurred on an object that doesn't match the prefix specified in
+your trail or event data store. The trail or event data store doesn't log
+the event.
+
+- A user calls the GetObject API operation for the object,
+arn:aws:s3:::amzn-s3-demo-bucket3/my-images/example.jpg.
+
+- The event occurred on a bucket and prefix that are specified in the trail
+or event data store, but GetObject is a read-type Amazon S3
+object-level API. It is recorded as a Read
+data event in CloudTrail, and the trail or event data store is not configured to
+log Read events. The trail or event data
+store doesn't log the event.
+
+Note
+
+For trails, if you are logging data events for specific Amazon S3 buckets, we
+recommend you do not use an Amazon S3 bucket for which you are logging data events to
+receive log files that you have specified in the data events section for your
+trail. Using the same Amazon S3 bucket causes your trail to log a data event each
+time log files are delivered to your Amazon S3 bucket. Log files are aggregated
+events delivered at intervals, so this is not a 1:1 ratio of event to log file;
+the event is logged in the next log file. For example, when CloudTrail delivers logs,
+the PutObject event occurs on the S3 bucket. If the S3 bucket is
+also specified in the data events section, the trail processes and logs the
+PutObject event as a data event. That action is another
+PutObject event, and the trail processes and logs the event
+again.
+
+To avoid logging data events for the Amazon S3 bucket where you receive log files
+if you configure a trail to log all Amazon S3 data events in your AWS account,
+consider one of the following options:
+
+- Set RecursiveLogging to false on the trail
+to suppress events generated by CloudTrail delivery operations. For more
+information, see Suppressing recursive events with recursive logging.
+
+- Configure delivery of log files to an Amazon S3 bucket that belongs to
+another AWS account. For more information, see Receiving CloudTrail log files from multiple accounts.
+
+### Logging data events for S3 objects in other AWS accounts
+
+When you configure your trail to log data events, you can also specify S3 objects
+that belong to other AWS accounts. When an event occurs on a specified object,
+CloudTrail evaluates whether the event matches any trails in each account. If the event
+matches the settings for a trail, the trail processes and logs the event for that
+account. Generally, both API callers and resource owners can receive events.
+
+If you own an S3 object and you specify it in your trail, your trail logs events
+that occur on the object in your account. Because you own the object, your trail
+also logs events when other accounts call the object.
+
+If you specify an S3 object in your trail, and another account owns the object,
+your trail only logs events that occur on that object in your account. Your trail
+doesn't log events that occur in other accounts.
+
+Example: Logging data events for an Amazon S3 object for two AWS accounts
+
+The following example shows how two AWS accounts configure CloudTrail to log
+events for the same S3 object.
+
+- In your account, you want your trail to log data events for all objects in
+your S3 bucket named amzn-s3-demo-bucket. You configure the trail by
+specifying the S3 bucket with an empty object prefix.
+
+- Bob has a separate account that has been granted access to the S3 bucket.
+Bob also wants to log data events for all objects in the same S3 bucket. For
+his trail, he configures his trail and specifies the same S3 bucket with an
+empty object prefix.
+
+- Bob uploads an object to the S3 bucket with the PutObject API
+operation.
+
+- This event occurred in his account and it matches the settings for his
+trail. Bob's trail processes and logs the event.
+
+- Because you own the S3 bucket and the event matches the settings for your
+trail, your trail also processes and logs the same event. Because there are
+now two copies of the event (one logged in Bob's trail, and one logged in
+yours), CloudTrail charges for two copies of the data event.
+
+- You upload an object to the S3 bucket.
+
+- This event occurs in your account and it matches the settings for your
+trail. Your trail processes and logs the event.
+
+- Because the event didn't occur in Bob's account, and he doesn't own the S3
+bucket, Bob's trail doesn't log the event. CloudTrail charges for only one copy of
+this data event.
+
+Example: Logging data events for all buckets, including an S3 bucket used by two AWS accounts
+
+The following example shows the logging behavior when Select all S3
+buckets in your account is enabled for trails that collect data
+events in an AWS account.
+
+- In your account, you want your trail to log data events for all S3
+buckets. You configure the trail by choosing Read
+events, Write events, or both for All current
+and future S3 buckets in Data
+events.
+
+- Bob has a separate account that has been granted access to an S3 bucket in
+your account. He wants to log data events for the bucket to which he has
+access. He configures his trail to get data events for all S3
+buckets.
+
+- Bob uploads an object to the S3 bucket with the PutObject API
+operation.
+
+- This event occurred in his account and it matches the settings for his
+trail. Bob's trail processes and logs the event.
+
+- Because you own the S3 bucket and the event matches the settings for your
+trail, your trail also processes and logs the event. Because there are now
+two copies of the event (one logged in Bob's trail, and one logged in
+yours), CloudTrail charges each account for a copy of the data event.
+
+- You upload an object to the S3 bucket.
+
+- This event occurs in your account and it matches the settings for your
+trail. Your trail processes and logs the event.
+
+- Because the event didn't occur in Bob's account, and he doesn't own the S3
+bucket, Bob's trail doesn't log the event. CloudTrail charges for only one copy of
+this data event in your account.
+
+- A third user, Mary, has access to the S3 bucket, and runs a
+GetObject operation on the bucket. She has a trail
+configured to log data events on all S3 buckets in her account. Because she
+is the API caller, CloudTrail logs a data event in her trail. Though Bob has
+access to the bucket, he is not the resource owner, so no event is logged in
+his trail this time. As the resource owner, you receive an event in your
+trail about the GetObject operation that Mary called. CloudTrail
+charges your account and Mary's account for each copy of the data event: one
+in Mary's trail, and one in yours.
+
+## Read-only and write-only events
+
+When you configure your trail or event data store to log data and management events, you can specify
+whether you want read-only events, write-only events, or both.
+
+- Read
+
+Read events include API operations that read your
+resources, but don't make changes. For example, read-only events include the
+Amazon EC2 DescribeSecurityGroups and DescribeSubnets API
+operations. These operations return only information about your Amazon EC2 resources
+and don't change your configurations.
+
+- Write
+
+Write events include API operations that modify (or might
+modify) your resources. For example, the Amazon EC2 RunInstances and
+TerminateInstances API operations modify your instances.
+
+Example: Logging read and write events for separate trails
+
+The following example shows how you can configure trails to split log activity for
+an account into separate S3 buckets: one bucket named amzn-s3-demo-bucket1 receives read-only events and a
+second amzn-s3-demo-bucket2 receives write-only events.
+
+- You create a trail and choose the S3 bucket named amzn-s3-demo-bucket1
+to receive log files. You then update the trail to specify that you want
+Read management events and data events.
+
+- You create a second trail and choose the S3 bucket the
+amzn-s3-demo-bucket2 to receive log files. You then update the
+trail to specify that you want Write management events and
+data events.
+
+- The Amazon EC2 DescribeInstances and TerminateInstances
+API operations occur in your account.
+
+- The DescribeInstances API operation is a read-only event and it
+matches the settings for the first trail. The trail logs and delivers the event
+to the amzn-s3-demo-bucket1.
+
+- The TerminateInstances API operation is a write-only event and it
+matches the settings for the second trail. The trail logs and delivers the event
+to the amzn-s3-demo-bucket2 .
+
+## Logging data events with the AWS Management Console
+
+The following procedures describe how to an update existing event data store or trail
+to log data events by using the AWS Management Console. For information about how to create an
+event data store to log data events, see Create an event data store for CloudTrail events with the console. For information about how to
+create a trail to log data events, see Creating a trail with the console.
+
+For trails, the steps for logging data events differ based on whether you're using
+advanced event selectors or basic event selectors. You can log data events for all
+resource types using advanced event selectors, but if you use basic event
+selectors you're limited to logging data events for Amazon S3 buckets and bucket objects,
+AWS Lambda functions, and Amazon DynamoDB tables.
+
+Use the following procedure to update an existing event data store to log data events. For more
+information about using advanced event selectors, see Filtering data events by using advanced event selectors in this
+topic.
+
+- Sign in to the AWS Management Console and open the CloudTrail console at
+https://console.aws.amazon.com/cloudtrail/.
+
+- From the navigation pane, under Lake, choose Event data stores.
+
+- On the Event data stores
+page, choose the event data store you want to update.
+
+Note
+
+You can only enable data events on event data stores that contain CloudTrail events. You cannot enable data events
+on CloudTrail event data stores for AWS Config configuration items, CloudTrail Insights events, or non-AWS events.
+
+- On the details page, in Data events,
+choose Edit.
+
+- If you are not already logging data events, choose the Data
+events check box.
+
+- For Resource type, choose the resource type on
+which you want to log data events.
+
+- Choose a log selector template. You can choose a predefined template, or choose Custom
+to define your own event collection conditions.
+
+You can choose from the following predefined
+templates:
+
+- Log all events –
+Choose this template to log all events.
+
+- Log only read events –
+Choose this template to log only read events.
+Read-only events are events that do not change the
+state of a resource, such as Get* or Describe*
+events.
+
+- Log only write events – Choose this template to log only write events.
+Write events add, change, or delete resources, attributes, or artifacts,
+such as Put*, Delete*, or Write* events.
+
+- Log only AWS Management Console events –
+Choose this template to log only events originating from the AWS Management Console.
+
+- Exclude AWS service initiated events – Choose this template to exclude
+AWS service events, which have an eventType of AwsServiceEvent,
+and events initiated with AWS service-linked roles (SLRs).
+
+- (Optional) In Selector name, enter a name to identify your selector. The selector name is a
+descriptive name for an advanced event selector, such as "Log data events for only two S3 buckets". The selector name is listed as Name in the
+advanced event selector and is viewable if you expand the
+JSON view.
+
+- If you selected Custom, in Advanced event selectors build an expression based on the values of advanced event selector fields.
+
+Note
+
+Selectors don't support the use of wildcards like * . To match multiple values with a single condition,
+you may use StartsWith, EndsWith, NotStartsWith, or NotEndsWith to explicitly match the beginning or end of the event field.
+
+- Choose from the following fields.
+
+- readOnly
+- readOnly can be set to
+equals a value of
+true or false. Read-only
+data events are events that do not change the state of a
+resource, such as Get* or
+Describe* events. Write events add,
+change, or delete resources, attributes, or artifacts,
+such as Put*, Delete*, or
+Write* events. To log both
+read and write events,
+don't add a readOnly selector.
+
+- eventName -
+eventName can use any operator. You can
+use it to include or exclude any data event logged to
+CloudTrail, such as PutBucket,
+GetItem, or
+GetSnapshotBlock.
+
+- eventSource – The event source to include or exclude. This field can use any operator.
+
+- eventType – The event type to include or exclude. For example, you can set this field to
+not equals AwsServiceEvent to exclude
+AWS service events. For a list of event types,
+see eventType in
+CloudTrail record contents for management, data, and network activity events.
+
+- sessionCredentialFromConsole – Include or exclude events originating from an AWS Management Console session. This field can be set to equals or not equals with a value of
+true.
+
+- userIdentity.arn – Include or exclude events for actions taken by specific IAM identities. For more information, see CloudTrail userIdentity element.
+
+- resources.ARN - You can use
+any operator with resources.ARN, but if you
+use equals or
+does not equal, the value must
+exactly match the ARN of a valid resource of the type
+you've specified in the template as the value of
+resources.type.
+
+Note
+
+You can't use the resources.ARN field to filter resource types that do not have ARNs.
+
+For more information about the ARN formats of data event
+resources, see Actions, resources, and condition
+keys for AWS services in the Service Authorization Reference.
+
+- For each field, choose + Condition to
+add as many conditions as you need, up to a maximum of 500
+specified values for all conditions. For example, to exclude
+data events for two S3 buckets from data events that are logged
+on your event data store, you can set the field to
+resources.ARN, set the operator for
+does not start with, and then paste in
+an S3 bucket ARN for which you do
+not want to log events.
+
+To add the second S3 bucket, choose +
+Condition, and then repeat the preceding
+instruction, pasting in the ARN for or browsing for a different
+bucket.
+
+For information about how CloudTrail evaluates multiple conditions, see
+How CloudTrail evaluates multiple conditions for a field.
+
+Note
+
+You can have a maximum of 500 values for all selectors on
+an event data store. This includes arrays of multiple values for a
+selector such as eventName. If you have single
+values for all selectors, you can have a maximum of 500
+conditions added to a selector.
+
+- Choose + Field to add additional fields
+as required. To avoid errors, do not set conflicting or
+duplicate values for fields. For example, do not specify an ARN
+in one selector to be equal to a value, then specify that the
+ARN not equal the same value in another selector.
+
+- To add another resource type on which to log data events, choose
+Add data event type. Repeat steps 6 through
+this step to configure advanced event selectors for another resource type.
+
+- After you've reviewed and verified your choices, choose
+Save changes.
+
+In the AWS Management Console, if your trail is using advanced event selectors, you can
+choose from predefined templates that log all data events on a selected
+resource. After you choose a log selector template, you can customize the
+template to include only the data events you most want to see. For more
+information about using advanced event selectors, see Filtering data events by using advanced event selectors in this
+topic.
+
+- On the Dashboard or Trails
+pages of the CloudTrail console, choose the trail you want to update.
+
+- On the details page, in Data events,
+choose Edit.
+
+- If you are not already logging data events, choose the Data
+events check box.
+
+- For Resource type, choose the resource type on
+which you want to log data events.
+
+- Choose a log selector template. You can choose a predefined template, or choose Custom
+to define your own event collection conditions.
+
+You can choose from the following predefined
+templates:
+
+- Log all events –
+Choose this template to log all events.
+
+- Log only read events –
+Choose this template to log only read events.
+Read-only events are events that do not change the
+state of a resource, such as Get* or Describe*
+events.
+
+- Log only write events – Choose this template to log only write events.
+Write events add, change, or delete resources, attributes, or artifacts,
+such as Put*, Delete*, or Write* events.
+
+- Log only AWS Management Console events –
+Choose this template to log only events originating from the AWS Management Console.
+
+- Exclude AWS service initiated events – Choose this template to exclude
+AWS service events, which have an eventType of AwsServiceEvent,
+and events initiated with AWS service-linked roles (SLRs).
+
+Note
+
+Choosing a predefined template for S3 buckets enables data event
+logging for all buckets currently in your AWS account and any
+buckets you create after you finish creating the trail. It also
+enables logging of data event activity performed by any user or role
+in your AWS account, even if that activity is performed on a
+bucket that belongs to another AWS account.
+
+If the trail applies only to one Region, choosing a predefined
+template that logs all S3 buckets enables data event logging for all
+buckets in the same Region as your trail and any buckets you create
+later in that Region. It will not log data events for Amazon S3 buckets
+in other Regions in your AWS account.
+
+If you are creating a trail for all Regions, choosing a predefined
+template for Lambda functions enables data event logging for all
+functions currently in your AWS account, and any Lambda functions
+you might create in any Region after you finish creating the trail.
+If you are creating a trail for a single Region (for trails, this only can be done by using the
+AWS CLI), this selection enables data event logging for all functions
+currently in that Region in your AWS account, and any Lambda
+functions you might create in that Region after you finish creating
+the trail. It does not enable data event logging for Lambda functions
+created in other Regions.
+
+Logging data events for all functions also enables logging of data
+event activity performed by any user or role in your AWS account,
+even if that activity is performed on a function that belongs to
+another AWS account.
+
+- (Optional) In Selector name, enter a name to identify your selector. The selector name is a
+descriptive name for an advanced event selector, such as "Log data events for only two S3 buckets". The selector name is listed as Name in the
+advanced event selector and is viewable if you expand the
+JSON view.
+
+- If you selected Custom, in Advanced event selectors build an expression based on the values of advanced event selector fields.
+
+Note
+
+Selectors don't support the use of wildcards like * . To match multiple values with a single condition,
+you may use StartsWith, EndsWith, NotStartsWith, or NotEndsWith to explicitly match the beginning or end of the event field.
+
+- Choose from the following fields.
+
+- readOnly
+- readOnly can be set to
+equals a value of
+true or false. Read-only
+data events are events that do not change the state of a
+resource, such as Get* or
+Describe* events. Write events add,
+change, or delete resources, attributes, or artifacts,
+such as Put*, Delete*, or
+Write* events. To log both
+read and write events,
+don't add a readOnly selector.
+
+- eventName -
+eventName can use any operator. You can
+use it to include or exclude any data event logged to
+CloudTrail, such as PutBucket,
+GetItem, or
+GetSnapshotBlock.
+
+- eventSource – The event source to include or exclude. This field can use any operator.
+
+- eventType – The event type to include or exclude. For example, you can set this field to
+not equals AwsServiceEvent to exclude
+AWS service events. For a list of event types,
+see eventType in
+CloudTrail record contents for management, data, and network activity events.
+
+- sessionCredentialFromConsole – Include or exclude events originating from an AWS Management Console session. This field can be set to equals or not equals with a value of
+true.
+
+- userIdentity.arn – Include or exclude events for actions taken by specific IAM identities. For more information, see CloudTrail userIdentity element.
+
+- resources.ARN - You can use
+any operator with resources.ARN, but if you
+use equals or
+does not equal, the value must
+exactly match the ARN of a valid resource of the type
+you've specified in the template as the value of
+resources.type.
+
+Note
+
+You can't use the resources.ARN field to filter resource types that do not have ARNs.
+
+For more information about the ARN formats of data event
+resources, see Actions, resources, and condition
+keys for AWS services in the Service Authorization Reference.
+
+- For each field, choose + Condition to
+add as many conditions as you need, up to a maximum of 500
+specified values for all conditions. For example, to exclude
+data events for two S3 buckets from data events that are logged
+on your event data store, you can set the field to
+resources.ARN, set the operator for
+does not start with, and then paste in
+an S3 bucket ARN for which you do
+not want to log events.
+
+To add the second S3 bucket, choose +
+Condition, and then repeat the preceding
+instruction, pasting in the ARN for or browsing for a different
+bucket.
+
+For information about how CloudTrail evaluates multiple conditions, see
+How CloudTrail evaluates multiple conditions for a field.
+
+Note
+
+You can have a maximum of 500 values for all selectors on
+an event data store. This includes arrays of multiple values for a
+selector such as eventName. If you have single
+values for all selectors, you can have a maximum of 500
+conditions added to a selector.
+
+- Choose + Field to add additional fields
+as required. To avoid errors, do not set conflicting or
+duplicate values for fields. For example, do not specify an ARN
+in one selector to be equal to a value, then specify that the
+ARN not equal the same value in another selector.
+
+- To add another resource type on which to log data events, choose
+Add data event type. Repeat steps 4 through
+this step to configure advanced event selectors for the resource type.
+
+- After you've reviewed and verified your choices, choose
+Save changes.
+
+Use the following procedure to update an existing trail to log data events using basic event selectors.
+
+- Sign in to the AWS Management Console and open the CloudTrail console at
+https://console.aws.amazon.com/cloudtrail/.
+
+- Open the Trails page of the CloudTrail console and
+choose the trail name.
+
+Note
+
+While you can edit an existing trail to log data events,
+as a best practice, consider creating a separate trail specifically
+for logging data events.
+
+- For Data events, choose
+Edit.
+
+- For Amazon S3 buckets:
+
+- For Data event source, choose
+S3.
+
+- You can choose to log All current and future S3
+buckets, or you can specify individual buckets or
+functions. By default, data events are logged for all current
+and future S3 buckets.
+
+Note
+
+Keeping the default All current and future S3
+buckets option enables data event logging for
+all buckets currently in your AWS account and any buckets
+you create after you finish creating the trail. It also
+enables logging of data event activity performed by any user
+or role in your AWS account, even if that activity is
+performed on a bucket that belongs to another AWS
+account.
+
+If you are creating a trail for a single Region (done by
+using the AWS CLI), selecting the Select all S3
+buckets in your account option enables data
+event logging for all buckets in the same Region as your
+trail and any buckets you create later in that Region. It
+will not log data events for Amazon S3 buckets in other Regions
+in your AWS account.
+
+- If you leave the default, All current and future S3
+buckets, choose to log Read
+events, Write events, or both.
+
+- To select individual buckets, empty the
+Read and Write
+check boxes for All current and future S3
+buckets. In Individual bucket
+selection, browse for a bucket on which to log
+data events. To find specific buckets, type a bucket prefix for
+the bucket you want. You can select multiple buckets in this
+window. Choose Add bucket to log data
+events for more buckets. Choose to log Read
+events, such as GetObject,
+Write events, such as
+PutObject, or both.
+
+This setting takes precedence over individual settings you
+configure for individual buckets. For example, if you specify
+logging Read events for all S3 buckets, and
+then choose to add a specific bucket for data event logging,
+Read is already selected for the bucket
+you added. You cannot clear the selection. You can only
+configure the option for Write.
+
+To remove a bucket from logging, choose
+X.
+
+- To add another resource type on which to log data events, choose
+Add data event type.
+
+- For Lambda functions:
+
+- For Data event source, choose
+Lambda.
+
+- In Lambda function, choose All
+regions to log all Lambda functions, or
+Input function as ARN to log data
+events on a specific function.
+
+To log data events for all Lambda functions in your AWS
+account, select Log all current and future
+functions. This setting takes precedence over
+individual settings you configure for individual functions. All
+functions are logged, even if all functions are not
+displayed.
+
+Note
+
+If you
+are creating a trail for all Regions, this selection enables
+data event logging for all functions currently in your AWS
+account, and any Lambda functions you might create in any
+Region after you finish creating the trail. If you are
+creating a trail for a single Region (done by using the
+AWS CLI), this selection enables data event logging for all
+functions currently in that Region in your AWS account,
+and any Lambda functions you might create in that Region
+after you finish creating the trail. It does not enable data
+event logging for Lambda functions created in other
+Regions.
+
+Logging data events for all functions also enables logging
+of data event activity performed by any user or role in your
+AWS account, even if that activity is performed on a
+function that belongs to another AWS account.
+
+- If you choose Input function as ARN,
+enter the ARN of a Lambda function.
+
+Note
+
+If you have more than 15,000 Lambda functions in your
+account, you cannot view or select all functions in the CloudTrail
+console when creating a trail. You can still select the
+option to log all functions, even if they are not displayed.
+If you want to log data events for specific functions, you
+can manually add a function if you know its ARN. You can
+also finish creating the trail in the console, and then use
+the AWS CLI and the put-event-selectors
+command to configure data event logging for specific Lambda
+functions. For more information, see Managing trails with the AWS CLI.
+
+- To add another resource type on which to log data events, choose
+Add data event type.
+
+- For DynamoDB tables:
+
+- For Data event source, choose
+DynamoDB.
+
+- In DynamoDB table selection, choose
+Browse to select a table, or paste in
+the ARN of a DynamoDB table to which you have access. A DynamoDB table
+ARN uses the following format:
+
+arn:partition:dynamodb:region:account_ID:table/table_name
+
+To add another table, choose Add row, and
+browse for a table or paste in the ARN of a table to which you
+have access.
+
+- Choose Save changes.
+
+## Logging data events with the AWS Command Line Interface
+
+You can configure your trails or event data stores to log data events using the AWS CLI.
+
+Topics
+
+- Logging data events for trails with the AWS CLI
+
+- Logging data events for event data stores with the AWS CLI
+
+### Logging data events for trails with the AWS CLI
+
+You can configure your trails to log management and data events using the AWS CLI.
+
+Note
+
+- Be aware that if your account is logging more than one copy of management events,
+you incur charges. There is always a charge for logging data events. For more
+information, see AWS CloudTrail
+Pricing.
+
+- You can use either advanced event selectors or basic event selectors, but not both.
+If you apply advanced event selectors to a trail, any existing basic event selectors are overwritten.
+
+- If your trail uses basic event selectors, you can only log the following
+resource types:
+
+- AWS::DynamoDB::Table
+
+- AWS::Lambda::Function
+
+- AWS::S3::Object
+
+To log additional resource types, you'll need to use advanced event
+selectors. To convert a trail to advanced event selectors, run the get-event-selectors command to confirm the
+current event selectors, and then configure the advanced event selectors
+to match the coverage of the previous event selectors, then add
+selectors for any resource types for which you want to log data events.
+
+- You can use advanced event selectors to filter based
+on the value of the supported advanced event selector fieldssupported advanced event selector fields, giving you the ability to log only the
+data events of interest. For more information about configuring these
+fields, see AdvancedFieldSelector in the AWS CloudTrail API Reference and Filtering data events by using advanced event selectors in this
+guide.
+
+To
+see whether your trail is logging management and data events, run the get-event-selectors command.
+
+aws cloudtrail get-event-selectors --trail-name TrailName
+
+The command returns the event selectors for the trail.
+
+Topics
+
+- Log data events for trails by using advanced event selectors
+
+- Log all Amazon S3 events for an Amazon S3 bucket by using advanced event selectors
+
+- Log Amazon S3 on AWS Outposts events by using advanced event selectors
+
+- Log events by using basic event selectors
+
+#### Log data events for trails by using advanced event selectors
+
+Note
+
+If you apply advanced event selectors to a trail, any existing basic event selectors are overwritten. Before configuring advanced event selectors, run the
+get-event-selectors command to confirm the
+current event selectors, and then configure the advanced event selectors
+to match the coverage of the previous event selectors, then add
+selectors for any additional data events you want to log.
+
+The following example creates custom advanced event selectors for a trail
+named TrailName to include read and write management
+events (by omitting the readOnly selector), PutObject
+and DeleteObject data events for all Amazon S3 bucket/prefix
+combinations except for a bucket named amzn-s3-demo-bucket and data
+events for an AWS Lambda function named MyLambdaFunction. Because
+these are custom advanced event selectors, each set of selectors has a
+descriptive name. Note that a trailing slash is part of the ARN value for S3
+buckets.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --advanced-event-selectors
+'[
+{
+"Name": "Log readOnly and writeOnly management events",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Management"] }
+]
+},
+{
+"Name": "Log PutObject and DeleteObject events for all but one bucket",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::S3::Object"] },
+{ "Field": "eventName", "Equals": ["PutObject","DeleteObject"] },
+{ "Field": "resources.ARN", "NotStartsWith": ["arn:aws:s3:::amzn-s3-demo-bucket/"] }
+]
+},
+{
+"Name": "Log data plane actions on MyLambdaFunction",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::Lambda::Function"] },
+{ "Field": "resources.ARN", "Equals": ["arn:aws:lambda:us-east-2:111122223333:function/MyLambdaFunction"] }
+]
+}
+]'
+
+The example returns the advanced event selectors that are configured for the
+trail.
+
+{
+"AdvancedEventSelectors": [
+{
+"Name": "Log readOnly and writeOnly management events",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [ "Management" ]
+}
+]
+},
+{
+"Name": "Log PutObject and DeleteObject events for all but one bucket",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [ "Data" ]
+},
+{
+"Field": "resources.type",
+"Equals": [ "AWS::S3::Object" ]
+},
+{
+"Field": "resources.ARN",
+"NotStartsWith": [ "arn:aws:s3:::amzn-s3-demo-bucket/" ]
+},
+]
+},
+{
+"Name": "Log data plane actions on MyLambdaFunction",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [ "Data" ]
+},
+{
+"Field": "resources.type",
+"Equals": [ "AWS::Lambda::Function" ]
+},
+{
+"Field": "eventName",
+"Equals": [ "Invoke" ]
+},
+{
+"Field": "resources.ARN",
+"Equals": [ "arn:aws:lambda:us-east-2:111122223333:function/MyLambdaFunction" ]
+}
+]
+}
+],
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/TrailName"
+}
+
+#### Log all Amazon S3 events for an Amazon S3 bucket by using advanced event selectors
+
+Note
+
+If you apply advanced event selectors to a trail, any existing basic event selectors are overwritten.
+
+The following example shows how to configure your trail to include all data events
+for all Amazon S3 objects in a specific S3 bucket. The value for S3 events for the
+resources.type field is AWS::S3::Object. Because the
+ARN values for S3 objects and S3 buckets are slightly different, you must add the
+StartsWith operator for resources.ARN to capture all
+events.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --region region \
+--advanced-event-selectors \
+'[
+{
+"Name": "S3EventSelector",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::S3::Object"] },
+{ "Field": "resources.ARN", "StartsWith": ["arn:partition:s3:::amzn-s3-demo-bucket/"] }
+]
+}
+]'
+
+The command returns the following example output.
+
+{
+"TrailARN": "arn:aws:cloudtrail:region:account_ID:trail/TrailName",
+"AdvancedEventSelectors": [
+{
+"Name": "S3EventSelector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Data"
+]
+},
+{
+"Field": "resources.type",
+"Equals": [
+"AWS::S3::Object"
+]
+},
+{
+"Field": "resources.ARN",
+"StartsWith": [
+"arn:partition:s3:::amzn-s3-demo-bucket/"
+]
+}
+]
+}
+]
+}
+
+#### Log Amazon S3 on AWS Outposts events by using advanced event selectors
+
+Note
+
+If you apply advanced event selectors to a trail, any existing basic event selectors are overwritten.
+
+The following example shows how to configure your trail to include all data events
+for all Amazon S3 on Outposts objects in your outpost.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --region region \
+--advanced-event-selectors \
+'[
+{
+"Name": "OutpostsEventSelector",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::S3Outposts::Object"] }
+]
+}
+]'
+
+The command returns the following example output.
+
+{
+"TrailARN": "arn:aws:cloudtrail:region:account_ID:trail/TrailName",
+"AdvancedEventSelectors": [
+{
+"Name": "OutpostsEventSelector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Data"
+]
+},
+{
+"Field": "resources.type",
+"Equals": [
+"AWS::S3Outposts::Object"
+]
+}
+]
+}
+]
+}
+
+#### Log events by using basic event selectors
+
+The following is an example result of the get-event-selectors
+command showing basic event selectors. By default, when you create a trail by using
+the AWS CLI, a trail logs all management events. By default, trails do not log data
+events.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/TrailName",
+"EventSelectors": [
+{
+"IncludeManagementEvents": true,
+"DataResources": [],
+"ReadWriteType": "All"
+}
+]
+}
+
+To configure your trail to log management and data events, run the put-event-selectors command.
+
+The following example shows how to use basic event selectors to configure your
+trail to include all management and data events for the S3 objects in two S3 bucket prefixes. You can specify
+from 1 to 5 event selectors for a trail. You can specify from 1 to 250 data
+resources for a trail.
+
+Note
+
+The maximum number of S3 data resources is 250, if you choose to limit data
+events by using basic event selectors.
+
+aws cloudtrail put-event-selectors --trail-name TrailName --event-selectors '[{ "ReadWriteType": "All", "IncludeManagementEvents":true, "DataResources": [{ "Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::amzn-s3-demo-bucket1/prefix", "arn:aws:s3:::amzn-s3-demo-bucket2;/prefix2"] }] }]'
+
+The command returns the event selectors that are configured for the trail.
+
+{
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/TrailName",
+"EventSelectors": [
+{
+"IncludeManagementEvents": true,
+"DataResources": [
+{
+"Values": [
+"arn:aws:s3:::amzn-s3-demo-bucket1/prefix",
+"arn:aws:s3:::amzn-s3-demo-bucket2/prefix2",
+],
+"Type": "AWS::S3::Object"
+}
+],
+"ReadWriteType": "All"
+}
+]
+}
+
+### Logging data events for event data stores with the AWS CLI
+
+You can configure your event data stores to include data events using the AWS CLI. Use the create-event-data-store command to create a new event data store to
+log data events. Use the update-event-data-store command to update the advanced event selectors for an existing event data store.
+
+You configure advanced event selectors to log data events on an event data store. For a list of supported fields,
+see Filtering data events by using advanced event selectors.
+
+To
+see whether your event data store includes data events, run the get-event-data-store command.
+
+aws cloudtrail get-event-data-store --event-data-store EventDataStoreARN
+
+The command returns the settings for the event data store.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/EXAMPLE492-301f-4053-ac5e-EXAMPLE6441aa",
+"Name": "ebs-data-events",
+"Status": "ENABLED",
+"AdvancedEventSelectors": [
+{
+"Name": "Log all EBS direct APIs on EBS snapshots",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Data"
+]
+},
+{
+"Field": "resources.type",
+"Equals": [
+"AWS::EC2::Snapshot"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 366,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-11-04T15:57:33.701000+00:00",
+"UpdatedTimestamp": "2023-11-20T20:37:34.228000+00:00"
+}
+
+Topics
+
+- Include all Amazon S3 events for a specific bucket
+
+- Include Amazon S3 on AWS Outposts events
+
+#### Include all Amazon S3 events for a specific bucket
+
+The following example shows how to create an event data store to include all data events
+for all Amazon S3 objects in a specific general purpose S3 bucket and exclude AWS service events and events generated by the bucket-scanner-role userIdentity.
+The value for S3 events for the
+resources.type field is AWS::S3::Object. Because the
+ARN values for S3 objects and S3 buckets are slightly different, you must add the
+StartsWith operator for resources.ARN to capture all
+events.
+
+aws cloudtrail create-event-data-store --name "EventDataStoreName" --multi-region-enabled \
+--advanced-event-selectors \
+'[
+{
+"Name": "S3EventSelector",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::S3::Object"] },
+{ "Field": "resources.ARN", "StartsWith": ["arn:partition:s3:::amzn-s3-demo-bucket/"] },
+{ "Field": "userIdentity.arn", "NotStartsWith": ["arn:aws:sts::123456789012:assumed-role/bucket-scanner-role"]},
+{ "Field": "eventType","NotEquals": ["AwsServiceEvent"]}
+]
+}
+]'
+
+The command returns the following example output.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/EXAMPLE492-301f-4053-ac5e-EXAMPLE441aa",
+"Name": "EventDataStoreName",
+"Status": "ENABLED",
+"AdvancedEventSelectors": [
+{
+"Name": "S3EventSelector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Data"
+]
+},
+{
+"Field": "resources.ARN",
+"StartsWith": [
+"arn:partition:s3:::amzn-s3-demo-bucket/"
+]
+},
+{
+"Field": "resources.type",
+"Equals": [
+"AWS::S3::Object"
+]
+},
+{
+"Field": "userIdentity.arn",
+"NotStartsWith": [
+"arn:aws:sts::123456789012:assumed-role/bucket-scanner-role"
+]
+},
+{
+"Field": "eventType",
+"NotEquals": [
+"AwsServiceEvent"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 366,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2024-11-04T15:57:33.701000+00:00",
+"UpdatedTimestamp": "2024-11-20T20:49:21.766000+00:00"
+}
+
+#### Include Amazon S3 on AWS Outposts events
+
+The following example shows how to create an event data store that includes all data events
+for all Amazon S3 on Outposts objects in your outpost.
+
+aws cloudtrail create-event-data-store --name EventDataStoreName \
+--advanced-event-selectors \
+'[
+{
+"Name": "OutpostsEventSelector",
+"FieldSelectors": [
+{ "Field": "eventCategory", "Equals": ["Data"] },
+{ "Field": "resources.type", "Equals": ["AWS::S3Outposts::Object"] }
+]
+}
+]'
+
+The command returns the following example output.
+
+{
+"EventDataStoreArn": "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/EXAMPLEb4a8-99b1-4ec2-9258-EXAMPLEc890",
+"Name": "EventDataStoreName",
+"Status": "CREATED",
+"AdvancedEventSelectors": [
+{
+"Name": "OutpostsEventSelector",
+"FieldSelectors": [
+{
+"Field": "eventCategory",
+"Equals": [
+"Data"
+]
+},
+{
+"Field": "resources.type",
+"Equals": [
+"AWS::S3Outposts::Object"
+]
+}
+]
+}
+],
+"MultiRegionEnabled": true,
+"OrganizationEnabled": false,
+"BillingMode": "EXTENDABLE_RETENTION_PRICING",
+"RetentionPeriod": 366,
+"TerminationProtectionEnabled": true,
+"CreatedTimestamp": "2023-02-20T21:00:17.673000+00:00",
+"UpdatedTimestamp": "2023-02-20T21:00:17.820000+00:00"
+}
+
+## Logging data events for AWS Config compliance
+
+If you are using AWS Config conformance packs to help your enterprise maintain compliance
+with formalized standards such as those required by Federal Risk and Authorization
+Management Program (FedRAMP) or National Institute of Standards and Technology (NIST),
+conformance packs for compliance frameworks generally require you to log data events for
+Amazon S3 buckets, at minimum. Conformance packs for compliance frameworks include a managed rule called cloudtrail-s3-dataevents-enabled that
+checks for S3 data event logging in your account. Many conformance packs that are not
+associated with compliance frameworks also require S3 data event logging. The following
+are examples of conformance packs that include this rule.
+
+- Operational Best Practices for AWS Well-Architected
+Framework Security Pillar
+
+- Operational Best Practices for FDA Title 21 CFR Part
+11
+
+- Operational Best Practices for FFIEC
+
+- Operational Best Practices for
+FedRAMP(Moderate)
+
+- Operational Best Practices for HIPAA
+Security
+
+- Operational Best Practices for K-ISMS
+
+- Operational Best Practices for Logging
+
+For a full list of sample conformance packs available in AWS Config, see Conformance pack sample templates in the AWS Config
+Developer Guide.
+
+## Logging data events with the AWS SDKs
+
+Run the GetEventSelectors
+operation to see whether your trail is logging data events. You can
+configure your trails to log data events by running the PutEventSelectors operation.
+For more information, see the AWS CloudTrail API Reference.
+
+Run the GetEventDataStore
+operation to see whether your event data store is logging data events. You can
+configure your event data stores to include data events by running the CreateEventDataStore or UpdateEventDataStore operations and specifying advanced event selectors.
+For more information, see Create, update, and manage event data stores with the AWS CLI and the AWS CloudTrail API Reference.

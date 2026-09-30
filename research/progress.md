@@ -26,20 +26,20 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 | 8 | Q043–Q048 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 9 | Q049–Q054 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 10 | Q055–Q060 | done 6/6 valid | running |
-| 11 | Q061–Q066 | done 6/6 valid | running |
-| 12 | Q067–Q072 | done 6/6 valid | running |
-| 13 | Q073–Q078 | done 6/6 valid | running |
-| 14 | Q079–Q084 | done 6/6 valid | running |
-| 15 | Q085–Q090 | running (2026-09-30) | queued |
-| 16 | Q091–Q096 | running (2026-09-30) | queued |
-| 17 | Q097–Q102 | running (2026-09-30) | queued |
-| 18 | Q103–Q108 | running (2026-09-30) | queued |
+| 11 | Q061–Q066 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 12 | Q067–Q072 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 13 | Q073–Q078 | done 6/6 valid | done 6/6 valid (5 verified, Q077 ambiguous — differs from source) |
+| 14 | Q079–Q084 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 15 | Q085–Q090 | done 6/6 valid | done 6/6 valid (6 verified) |
+| 16 | Q091–Q096 | done 6/6 valid | running |
+| 17 | Q097–Q102 | done 6/6 valid | running |
+| 18 | Q103–Q108 | done 6/6 valid | running |
 | 19 | Q109–Q114 | running (2026-09-30) | queued |
-| 20 | Q115–Q120 | queued | queued |
-| 21 | Q121–Q126 | queued | queued |
-| 22 | Q127–Q132 | queued | queued |
-| 23 | Q133–Q138 | queued | queued |
-| 24 | Q139–Q143 | queued | queued |
+| 20 | Q115–Q120 | running (2026-09-30) | queued |
+| 21 | Q121–Q126 | running (2026-09-30) | queued |
+| 22 | Q127–Q132 | running (2026-09-30) | queued |
+| 23 | Q133–Q138 | running (2026-09-30) | queued |
+| 24 | Q139–Q143 | running (2026-09-30) | queued |
 
 ## Execution notes
 - Custom agent types in `.claude/agents/` were not loadable mid-session, so agents run as `general-purpose` with an explicit `model` (research: opus = Opus 5.5; web: sonnet = Sonnet 5.5) and read their role file first. The per-agent reasoning-effort setting (high / xhigh) could not be applied through this route; prompts ask for deep, careful work instead. In a new session the definitions in `.claude/agents/` apply model + effort directly.
@@ -62,3 +62,7 @@ Rule: any question whose final status/answer moved TOWARD the source key after t
 - **Timestamp integrity incident (2026-09-30):** several agents wrote estimated/future timestamps (round minutes). Detected by comparing with file mtimes; no ordering violation (every blind file was written before its final file). Fixed with `tools/fix_timestamps.py` (timestamp fields only, audit trail in `research/corrections_log.md` and `timestamp_correction` fields); validator now rejects timestamps later than file write time; `tools/snapshot_mtimes.py` appends write-time snapshots to `research/mtime_snapshots.jsonl`.
 - Q055/Q056 cite AWS Security IR guide PDF via WebFetch (no snapshot) → fetch_doc now supports PDFs; reconciler should convert to snapshots. Q070 — medium (runbook creates trail; periodic rule). Q076 — time-dependent (Shield L7 auto mitigation legacy since 2026-03-26). Q077 — "prevent" wording vs detect-and-remove options. Q079 — Audit Manager maintenance mode from 2026-04-30. Q081 P5 inference. Q082 — "design principles" vs best practices. Q084 — option A contains an impossible filter step.
 - fetch_doc.py had a syntax error for ~minutes after the PDF patch (fixed; main agent). A stale garbage snapshot 199d3825e018 (raw PDF parsed as HTML) was refreshed to real PDF text; broken caches are now auto-refetched.
+- Q087 — medium; option C technically viable (management account can deploy org conformance packs).
+- Q087 — AUDIT: verified at medium although reconciler states option C (with E) also meets all stated requirements; auditor must decide verified vs ambiguous (Choose TWO uniqueness).
+- Q077 — FIRST source-key disagreement: source C (SCP) relies on an EC2 condition key for CIDR/port that does not exist (SAR list_ec2); research answer B (detect+remove) but no option truly 'prevents' → ambiguous. Auditor must re-verify the SAR claim.
+- Q094 — medium (quarantine policy removal order; re:Post KC evidence). Q095 — medium (Firewall Manager policies are per Region).

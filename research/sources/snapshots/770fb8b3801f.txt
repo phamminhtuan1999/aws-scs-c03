@@ -1,0 +1,703 @@
+URL: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ec2_syntax.html
+TITLE: EC2 policy syntax and examples - AWS Organizations
+
+# EC2 policy syntax and examples
+
+This page describes EC2 policy syntax and provides examples.
+
+## Considerations
+
+- When you configure a service attribute using an EC2 policy, it might
+impact multiple APIs. Any noncompliant actions will fail.
+
+- Account administrators will not be able to modify the value of the service
+attribute at the individual account level.
+
+## Syntax for EC2 policies
+
+An EC2 policy is a plaintext file that is structured according to the rules of
+JSON. The syntax for EC2 policies
+follows the syntax for all declarative policy types. For a complete discussion of that
+syntax, see Policy syntax and
+inheritance for declarative policy types. This topic focuses on applying that
+general syntax to the specific requirements of the EC2 policy type.
+
+The following example shows basic EC2 policy syntax:
+
+{
+"ec2_attributes": {
+"exception_message": {
+"@@assign": "Your custom error message.https://myURL"
+}
+}
+}
+
+- The ec2_attributes field key name. Declarative policies always
+start with a fixed key name for the given AWS service. It's the top line in
+the example policy above.
+
+- Under ec2_attributes, you can use exception_message
+to set a custom error message. For more information, see Custom error
+messages for EC2 policies.
+
+- Under ec2_attributes, you can insert one or more of the supported
+EC2 policies. For those schemas, see Supported EC2 policies.
+
+## Supported EC2 policies
+
+The following are the AWS services and attributes that EC2 policies support.
+In some of the following examples, the JSON whitespace formatting might be compressed to
+save space.
+
+- VPC Block Public Access
+
+- Serial Console Access
+
+- Image Block Public Access
+
+- Allowed Images Settings
+
+- Instance Metadata
+
+- Snapshot Block Public Access
+
+- VPC Encryption Controls
+
+VPC Block Public Access
+
+Policy effect
+
+Controls if resources in Amazon VPCs and subnets can reach the internet through
+internet gateways (IGWs). For more information, see Configuration
+for internet access in the Amazon Virtual Private Cloud User
+Guide.
+
+Policy contents
+
+{
+"ec2_attributes": {
+"vpc_block_public_access": {
+"internet_gateway_block": {
+"mode": {
+"@@assign": "block_ingress"
+},
+"exclusions_allowed": {
+"@@assign": "enabled"
+}
+}
+}
+}
+}
+
+The following are the available fields for this attribute:
+
+- "internet_gateway":
+
+- "mode":
+
+- "off": VPC BPA is not enabled.
+
+- "block_ingress": All internet traffic
+to the VPCs (except for VPCs or subnets which are
+excluded) is blocked. Only traffic to and from NAT
+gateways and egress-only internet gateways is
+allowed because these gateways only allow outbound
+connections to be established.
+
+- "block_bidirectional": All traffic to
+and from internet gateways and egress-only internet
+gateways (except for excluded VPCs and subnets) is
+blocked.
+
+- "exclusions_allowed": An exclusion is a mode that can
+be applied to a single VPC or subnet that exempts it from the
+account’s VPC BPA mode and will allow bidirectional or egress-only
+access.
+
+- "enabled": Exclusions can be created by the
+account.
+
+- "disabled": Exclusions cannot be created by
+the account.
+
+Note
+
+You can use the attribute to configure if exclusions are
+allowed, but you cannot create exclusions with this attribute
+itself. To create exclusions, you must create them in the
+account that owns the VPC. For more information about creating
+VPC BPA exclusions, see Create and delete exclusions in the
+Amazon VPC User Guide.
+
+Considerations
+
+If you use this attribute in an EC2 policy, you cannot use the
+following operations to modify the enforced configuration for the accounts
+in scope. This list is not exhaustive:
+
+- ModifyVpcBlockPublicAccessOptions
+
+- CreateVpcBlockPublicAccessExclusion
+
+- ModifyVpcBlockPublicAccessExclusion
+
+Serial Console Access
+
+Policy effect
+
+Controls if the EC2 serial console is accessible. For more information
+about the EC2 serial console, see EC2 Serial
+Console in the Amazon Elastic Compute Cloud User Guide.
+
+Policy contents
+
+{
+"ec2_attributes": {
+"serial_console_access": {
+"status": {
+"@@assign": "enabled"
+}
+}
+}
+}
+
+The following are the available fields for this attribute:
+
+- "status":
+
+- "enabled": EC2 serial console access is
+allowed.
+
+- "disabled": EC2 serial console access is
+blocked.
+
+Considerations
+
+If you use this attribute in an EC2 policy, you cannot use the
+following operations to modify the enforced configuration for the accounts
+in scope. This list is not exhaustive:
+
+- EnableSerialConsoleAccess
+
+- DisableSerialConsoleAccess
+
+Image Block Public Access
+
+Policy effect
+
+Controls if Amazon Machine Images (AMIs) are publicly sharable. For more
+information about AMIs, see Amazon Machine Images
+(AMIs) in the Amazon Elastic Compute Cloud User Guide.
+
+Policy contents
+
+{
+"ec2_attributes": {
+"image_block_public_access": {
+"state": {
+"@@assign": "block_new_sharing"
+}
+}
+}
+}
+
+The following are the available fields for this attribute:
+
+- "state":
+
+- "unblocked": No restrictions on the public
+sharing of AMIs.
+
+- "block_new_sharing": Blocks new public
+sharing of AMIs. AMIs that were already publicly shared
+remain publicly available.
+
+Considerations
+
+If you use this attribute in a EC2 policy, you cannot use the
+following operations to modify the enforced configuration for the accounts
+in scope. This list is not exhaustive:
+
+- EnableImageBlockPublicAccess
+
+- DisableImageBlockPublicAccess
+
+Allowed Images Settings
+
+Policy effect
+
+Controls the discovery and use of Amazon Machine Images (AMI) in Amazon EC2
+with Allowed AMIs. For more information about AMIs, see Control the discovery and use of AMIs in Amazon EC2 with Allowed AMIs in the Amazon Elastic Compute Cloud User
+Guide.
+
+Policy contents
+
+The following are the available fields for this attribute:
+
+{
+"ec2_attributes": {
+"allowed_images_settings": {
+"state": {
+"@@assign": "enabled"
+},
+"image_criteria": {
+"criteria_1": {
+"marketplace_product_codes": {
+"@@append": [
+"abcdefg1234567890"
+]
+}
+},
+"criteria_2": {
+"allowed_image_providers": {
+"@@append": [
+"123456789012",
+"123456789013"
+]
+},
+"creation_date_condition": {
+"maximum_days_since_created": {
+"@@assign": 300
+}
+}
+},
+"criteria_3": {
+"allowed_image_providers": {
+"@@assign": [
+"123456789014"
+]
+},
+"image_names": {
+"@@assign": [
+"golden-ami-*"
+]
+}
+},
+"criteria_4": {
+"allowed_image_providers": {
+"@@assign": [
+"amazon"
+]
+},
+"deprecation_time_condition": {
+"maximum_days_since_deprecated": {
+"@@assign": 0
+}
+}
+},
+"criteria_5": {
+"image_watermarks": {
+"image_watermark_1": {
+"watermark_key": {
+"@@assign": "123456789015:approved-production-*"
+},
+"source_image_region": {
+"@@assign": "us-east-1"
+},
+"maximum_days_since_source_image_created": {
+"@@assign": 365
+},
+"maximum_days_since_watermark_created": {
+"@@assign": 90
+}
+},
+"image_watermark_2": {
+"watermark_key": {
+"@@assign": "123456789016:security-scanned"
+}
+}
+}
+}
+}
+}
+}
+}
+
+- "state" (required):
+
+- "enabled": The attribute is active and
+enforced.
+
+- "disabled": The attribute is inactive and not
+enforced.
+
+- "audit_mode": The attribute is in audit mode.
+This means it will identify noncompliant images but not
+block their use.
+
+- "image_criteria" (optional): A list of criteria. Supports up to 10 criteria with the name from criteria_1 to criteria_10. Each criterion can contain one or more of the following filters:
+
+- "allowed_image_providers": A list of up to
+200 entries. Each entry is a 12-digit account ID or an owner
+alias of amazon,
+aws_marketplace, or
+aws_backup_vault.
+
+- "image_names": A list of up to 50 allowed
+image names. Names can include wildcards (? and
+*). Length: 1–128 characters. With
+?, the minimum is 3 characters.
+
+- "marketplace_product_codes": A list of up to
+50 AWS Marketplace product codes for allowed images.
+Length: 1–25 characters. Valid characters: Letters (A–Z,
+a–z) and numbers (0–9).
+
+- "creation_date_condition": The maximum age
+for allowed images.
+
+- "maximum_days_since_created": The
+maximum number of days that have elapsed since the
+image was created. Valid range:
+0–2147483647.
+
+- "deprecation_time_condition": The maximum
+period since deprecation for allowed images.
+
+- "maximum_days_since_deprecated": The
+maximum number of days that have elapsed since the
+image was deprecated. Valid range:
+0–2147483647.
+
+- "image_watermarks": A collection of
+watermark filters that an image must match. Each filter is
+named image_watermark_1 through
+image_watermark_50. The image passes if any
+filter matches any watermark on the image. Within a filter,
+all specified fields must match the same watermark. Maximum
+50 filters per criterion.
+
+Fields within each filter:
+
+- "watermark_key" (required): The
+watermark key in the format
+<account-id>:<watermark-name>.
+The account-id portion can be an exact 12-digit
+AWS account ID or a pattern using wildcards
+(* and ?). The watermark
+name must be 3–128 characters. Supports wildcards
+(* and ?). Valid
+characters: Letters (A–Z, a–z), numbers (0–9),
+spaces, and () []. / - ' @ _.
+
+- "source_image_region" (optional):
+The AWS Region where the watermark was originally
+created. Supports wildcards (* and
+?).
+
+- "maximum_days_since_source_image_created"
+(optional): The maximum number of days that have
+elapsed since the source image was created. Valid
+range: 0–2147483647.
+
+- "maximum_days_since_watermark_created"
+(optional): The maximum number of days that have
+elapsed since the watermark was attached. Valid
+range: 0–2147483647.
+
+Considerations
+
+If you use this attribute in a EC2 policy, you cannot use the
+following operations to modify the enforced configuration for the accounts
+in scope. This list is not exhaustive:
+
+- EnableAllowedImagesSettings
+
+- ReplaceImageCriteriaInAllowedImagesSettings
+
+- DisableAllowedImagesSettings
+
+Instance Metadata
+
+Policy effect
+
+Controls IMDS defaults and IMDSv2 enforcement for all new EC2 instance
+launches. For more information about IMDS defaults and IMDSv2 enforcement,
+see Use instance
+metadata to manage your EC2 instance in the
+Amazon EC2 User Guide.
+
+Policy contents
+
+The following are the available fields for this attribute:
+
+{
+"ec2_attributes": {
+"instance_metadata_defaults": {
+"http_tokens": {
+"@@assign": "required"
+},
+"http_put_response_hop_limit": {
+"@@assign": "4"
+},
+"http_endpoint": {
+"@@assign": "enabled"
+},
+"instance_metadata_tags": {
+"@@assign": "enabled"
+},
+"http_tokens_enforced": {
+"@@assign": "enabled"
+}
+}
+}
+}
+
+- "http_tokens":
+
+- "no_preference": Other defaults apply. For
+example, AMI defaults if applicable.
+
+- "required": IMDSv2 must be used. IMDSv1 is
+not allowed.
+
+- "optional": Both IMDSv1 and IMDSv2 are
+allowed.
+
+Note
+
+Metadata version
+
+Before setting http_tokens to
+required (IMDSv2 must be used), make sure that
+none of your instances are making IMDSv1 calls. For more
+information, see Step 1: Identify instances with IMDSv2=optional and audit
+IMDSv1 usage in the Amazon EC2 User Guide.
+
+- "http_put_response_hop_limit":
+
+- "Integer": Integer
+value from -1 to 64, representing the maximum number of hops
+the metadata token can travel. To indicate no preference,
+specify -1.
+
+Note
+
+Hop limit
+
+If http_tokens is set to
+required, it is recommended to set
+http_put_response_hop_limit to a
+minimum of 2. For more information, see Instance metadata access considerations in
+the Amazon Elastic Compute Cloud User Guide.
+
+- "http_endpoint":
+
+- "no_preference": Other defaults apply. For
+example, AMI defaults if applicable.
+
+- "enabled": The instance metadata service
+endpoint is accessible.
+
+- "disabled": The instance metadata service
+endpoint is not accessible.
+
+- "instance_metadata_tags":
+
+- "no_preference": Other defaults apply. For
+example, AMI defaults if applicable.
+
+- "enabled": Instance tags can be accessed from
+instance metadata.
+
+- "disabled": Instance tags cannot be accessed
+from instance metadata.
+
+- "http_tokens_enforced":
+
+- "no_preference": Other defaults apply. For
+example, AMI defaults if applicable.
+
+- "enabled": IMDSv2 must be used. Attempts to
+launch an IMDSv1 instance or to enable IMDSv1 on existing
+instances will fail.
+
+- "disabled": Both IMDSv1 and IMDSv2 are
+allowed.
+
+Warning
+
+IMDSv2 enforcement
+
+Enabling IMDSv2 enforcement while allowing IMDSv1 and IMDSv2
+(token optional) will cause launch failures, unless IMDSv1 is
+explicitly disabled, either through launch parameters or AMI
+defaults. For more information, see Launching an IMDSv1-enabled instance fails in the
+Amazon EC2 User Guide.
+
+Snapshot Block Public Access
+
+Policy effect
+
+Controls if Amazon EBS snapshots are publicly accessible. For more
+information about EBS snapshots, see Amazon EBS snapshots in
+the Amazon Elastic Block Store User Guide.
+
+Policy contents
+
+{
+"ec2_attributes": {
+"snapshot_block_public_access": {
+"state": {
+"@@assign": "block_new_sharing"
+}
+}
+}
+}
+
+The following are the available fields for this attribute:
+
+- "state":
+
+- "block_all_sharing": Blocks all public
+sharing of snapshots. Snapshots that were already publicly
+shared are treated as private and are no longer publicly
+available.
+
+- "block_new_sharing": Blocks new public
+sharing of snapshots. Snapshots that were already publicly
+shared remain publicly available.
+
+- "unblocked": No restrictions on the public
+sharing of snapshots.
+
+Considerations
+
+If you use this attribute in a EC2 policy, you cannot use the
+following operations to modify the enforced configuration for the accounts
+in scope. This list is not exhaustive:
+
+- EnableSnapshotBlockPublicAccess
+
+- DisableSnapshotBlockPublicAccess
+
+VPC Encryption Controls
+
+Policy effect
+
+Controls whether Amazon VPC encryption controls are enabled and in which mode
+for the VPCs in accounts that are in scope of the policy. For more information, see
+VPC Encryption
+Controls in the Amazon VPC User Guide.
+
+Policy contents
+
+{
+"ec2_attributes": {
+"vpc_encryption_control": {
+"mode": {
+"@@assign": "attempt_enforce"
+},
+"exclusions": {
+"@@assign": ["internet_gateway", "nat_gateway", "vpc_lattice"]
+}
+}
+}
+}
+
+The following are the available fields for this attribute:
+
+- "mode" (required): The Amazon VPC encryption controls
+mode to apply to all accounts and VPCs in scope.
+
+- "unmanaged": Amazon VPC encryption controls
+is turned off. If you detach the policy, the service
+rolls back the account-level Amazon VPC encryption controls
+to its previous state. The VPCs themselves may or may
+not successfully go back to the previous state—see
+Considerations.
+
+- "attempt_monitor": All in-scope VPCs attempt
+to move to monitor mode. Monitor mode audits the encryption
+status of traffic flows and identifies resources that allow
+unencrypted traffic. A VPC with no encryption controls
+moves to monitor; a VPC already in monitor stays in
+monitor; a VPC in enforce attempts to move to monitor;
+New VPCs are created in monitor mode.
+
+- "attempt_enforce": All in-scope VPCs attempt
+to move to enforce mode, which ensures the VPC only allows
+services that always encrypt traffic in transit. A VPC with
+encryption controls off moves to monitor first, then
+attempts enforce automatically when this mode is enabled at
+the account or organization level; a VPC in monitor mode
+attempts to migrate to enforce; a VPC already in enforce
+stays in enforce; New VPCs are created in enforce mode
+with any resource type exclusions defined at the
+organization or account level.
+
+- "exclusions" (optional): Per-Region map of
+excludable resource types that can be excluded from
+Amazon VPC encryption controls.
+
+- internet_gateway
+
+- nat_gateway
+
+- vpc_lattice
+
+- vpc_peering
+
+- lambda
+
+- egress_only_internet_gateway
+
+- elastic_file_system
+
+- virtual_private_gateway
+
+Considerations
+
+- When transitioning to enforce via account or organization-level
+attempt_enforce, the service places VPCs in
+monitor mode first, then automatically transitions them to enforce.
+The transition to enforce fails if the VPC contains non-compliant
+resources that are not covered by an exclusion; those VPCs remain
+in monitor mode with an enforce-failed state. Remediate those
+resources or add exclusions first.
+
+- If you detach the policy, the encryption control configuration
+at the account level rolls back to its previous state before the
+policy was attached.
+
+- If you use this attribute in an EC2 policy, VPC owners of
+in-scope VPCs will not be able to use the following commands
+at the VPC level (list not exhaustive):
+
+- ModifyVpcEncryptionControl
+
+- DeleteVpcEncryptionControl
+
+- CreateVpcEncryptionControl
+
+- If the transition to either mode fails, use
+DescribeVpcEncryptionControls to find all the VPCs
+that failed the transition, and then use
+GetVpcResourcesBlockingEncryptionEnforcement to find
+the violating resources within the VPCs.
+
+- The order of precedence for exclusions is organization, then OU,
+then account, then VPC. An organization-level exclusion takes
+precedence over an account-level exclusion, which takes precedence
+over a VPC-level exclusion.
+
+Best practices
+
+- Monitor before enforce. Always
+run attempt_monitor org-wide and use the account
+status report to confirm VPCs don't have non-excludable resources
+before moving to attempt_enforce.
+
+- Stage enforcement with
+exclusions. Use per-Region
+exclusions for resources that do not support
+encryption in transit (for example, IGW, NAT gateway, Amazon VPC
+Lattice).
+
+- Understand precedence. Org mode
+and exclusions override account and VPC settings; plan rollouts
+top-down.
+
+- Plan for peering. Delete VPC
+peering exclusions before attempting to move enforce-mode VPCs back
+to monitor.

@@ -1,0 +1,270 @@
+{
+  "question_id": "Q065",
+  "question_content_hash": "e5b9b282748db7140632b9abc388851a1a0b6849fd5e31fb3899c8390e2f8855",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:36Z",
+  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "e5ff3949d0f8e84207a8ad03472b7e1d458f22e0d1c55cdff05bc3c43b11b8b7",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "RTO dưới 1 giờ cho workload on-premises khôi phục trên AWS.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Replicate liên tục cả server vật lý và server ảo.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Tối ưu chi phí lưu trữ và băng thông.",
+      "kind": "optimization"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Giải pháp DR phải tự động hóa.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q065:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "AWS Backup không 'replicate trực tiếp' server on-premises: chỉ hỗ trợ backup VM (qua Backup gateway), không hỗ trợ server vật lý, và là backup theo lịch/PITR cho một số dịch vụ chứ không phải replication liên tục; khôi phục từ backup khó đạt RTO < 1 giờ.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q065:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Volume Gateway cung cấp iSCSI volume cho ứng dụng, không replicate liên tục toàn bộ server vật lý/ảo; phải tự xây quy trình khôi phục từ EBS snapshot.",
+      "requirement_ids": [
+        "R2",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q065:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Elastic Disaster Recovery replicate liên tục ở mức block từ server vật lý và ảo vào staging area subnet dùng storage rẻ và compute tối thiểu, tự chuyển đổi và launch recovery instance trong vài phút.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q065:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Direct Connect chỉ là kết nối mạng, không replicate dữ liệu server; launch EC2 từ AMI dựng sẵn không có dữ liệu mới nhất, và thêm chi phí kết nối riêng.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q065:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu AWS DRS và whitepaper DR mô tả đúng các yêu cầu: replicate liên tục server vật lý/ảo, staging area chi phí thấp, RTO tính bằng phút, tự động chuyển đổi server.",
+      "open_issues": [
+        "RTO thực tế phụ thuộc thời gian boot OS (Linux ~5 phút, Windows ~20 phút theo tài liệu)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:49:36Z"
+  },
+  "source_answer": [
+    "Q065:C"
+  ],
+  "researched_answer": [
+    "Q065:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu AWS DRS và whitepaper DR nêu trực tiếp: replicate liên tục server vật lý và ảo vào staging area dùng storage rẻ và compute tối thiểu, RTO tính bằng phút, tự chuyển đổi server khi launch recovery instance.",
+    "open_issues": [
+      "RTO thực tế phụ thuộc thời gian boot OS và các bước cấu hình launch; tài liệu nói RTO 'typically measured in minutes'."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã rà lại các phương án khác: A — AWS Backup chỉ backup VM on-premises qua Backup gateway (không có server vật lý) và là backup theo lịch, không 'replicate trực tiếp' server; B — Volume Gateway chỉ cung cấp iSCSI volume, không replicate toàn bộ server vật lý/ảo và phải tự dựng quy trình khôi phục; D — Direct Connect là kết nối mạng, AMI dựng sẵn không có dữ liệu mới nhất và tăng chi phí. Không tìm được cách đọc nào khiến A/B/D đáp ứng đủ 'continuously replicate physical and virtual servers' với RTO < 1 giờ. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "AWS Elastic Disaster Recovery dùng replication agent để replicate liên tục ở mức block từ server vật lý và ảo vào staging area subnet chi phí thấp (storage rẻ, compute tối thiểu) và tự launch recovery instance trong vài phút, đáp ứng RTO < 1 giờ và yêu cầu tự động.",
+    "others": {
+      "Q065:A": "AWS Backup không replicate trực tiếp server on-premises (không hỗ trợ server vật lý, là backup theo lịch), khôi phục từ backup khó đạt RTO < 1 giờ.",
+      "Q065:B": "Volume Gateway chỉ cung cấp iSCSI volume lưu trên AWS, không replicate liên tục toàn bộ server vật lý/ảo và phải tự xây quy trình khôi phục.",
+      "Q065:D": "Direct Connect chỉ là kết nối mạng, không replicate dữ liệu; EC2 từ AMI dựng sẵn không có trạng thái server mới nhất và thêm chi phí kết nối."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "continuously replicate physical and virtual servers",
+      "meaning_vi": "Replicate liên tục mức block cho cả server vật lý và ảo -> AWS Elastic Disaster Recovery."
+    },
+    {
+      "phrase": "RTO of less than 1 hour",
+      "meaning_vi": "Cần launch recovery instance trong vài phút, không phải restore từ backup."
+    },
+    {
+      "phrase": "optimize costs for data storage and bandwidth usage",
+      "meaning_vi": "Staging area dùng storage rẻ và compute tối thiểu để duy trì replication."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần DR cho server on-premises (vật lý + ảo) với replicate liên tục và RTO tính bằng phút -> nghĩ đến AWS Elastic Disaster Recovery (staging area chi phí thấp); kiểm tra: AWS Backup là backup theo lịch, Direct Connect chỉ là kết nối.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Elastic Disaster Recovery",
+      "AWS Backup",
+      "AWS Storage Gateway",
+      "AWS Direct Connect"
+    ],
+    "reason_vi": "Khả năng phục hồi (DR) cho workload on-premises lên AWS với RTO thấp và chi phí tối ưu."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/drs/latest/userguide/what-is-drs.html",
+      "title": "What is Elastic Disaster Recovery?",
+      "section": "Overview",
+      "snapshot_id": "aa0e6c4e132a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The staging area design reduces costs by using affordable storage and minimal compute resources to maintain ongoing replication.",
+      "supports": "DRS tối ưu chi phí lưu trữ/compute trong khi replicate liên tục.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/drs/latest/userguide/CloudEndure-Concepts.html",
+      "title": "Elastic Disaster Recovery Concepts",
+      "section": "What is the Recovery Time Objective (RTO)",
+      "snapshot_id": "c16f0fc8ba48",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Recovery Time Objective (RTO) of Elastic Disaster Recovery is typically measured in minutes.",
+      "supports": "DRS đáp ứng RTO dưới 1 giờ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-of-on-premises-applications-to-aws/aws-services-related-to-disaster-recovery.html",
+      "title": "AWS services related to disaster recovery - Disaster Recovery of On-Premises Applications to AWS",
+      "section": "AWS Elastic Disaster Recovery",
+      "snapshot_id": "53f5c9cc1f1d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Elastic Disaster Recovery (AWS DRS) is designed for cloud-based disaster recovery of virtual and physical servers.",
+      "supports": "DRS hỗ trợ cả server vật lý và ảo, replicate block-level liên tục.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/vm-backups.html",
+      "title": "Virtual machine backups - AWS Backup",
+      "section": "Overview",
+      "snapshot_id": "3706782aa36b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Backup supports centralized and automated data protection for on-premises VMware virtual machines (VMs)",
+      "supports": "AWS Backup bảo vệ VM on-premises, không nói tới server vật lý; là backup chứ không phải replication liên tục.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/aws-backup/latest/devguide/point-in-time-recovery.html",
+      "title": "Continuous backups and point-in-time recovery (PITR) - AWS Backup",
+      "section": "Overview",
+      "snapshot_id": "693cdcefd59c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For some resources, AWS Backup supports continuous backups and point-in-time recovery (PITR) in addition to snapshot backups.",
+      "supports": "Continuous backup chỉ cho một số resource, không phải replication server on-premises.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/storagegateway/latest/vgw/WhatIsStorageGateway.html",
+      "title": "What is Volume Gateway? - AWS Storage Gateway",
+      "section": "Overview",
+      "snapshot_id": "271d9b31e36e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Volume Gateway provides cloud-backed storage volumes that you can mount as Internet Small Computer System Interface (iSCSI) devices",
+      "supports": "Volume Gateway là storage volume iSCSI, không phải công cụ replicate server.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Câu hỏi thiên về resilience/DR nhiều hơn bảo mật nhưng cơ chế rõ ràng.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q065:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reconciliation: khớp source key C; rà lại A/B/D (AWS Backup VM-only và theo lịch, Volume Gateway iSCSI, Direct Connect chỉ là kết nối). Giữ C, verified (high).",
+      "previous_answer": [
+        "Q065:C"
+      ]
+    }
+  ]
+}

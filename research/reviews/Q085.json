@@ -1,0 +1,356 @@
+{
+  "question_id": "Q085",
+  "question_content_hash": "07077d65dae99e458b70ded1058b0d8a905220307a9145735c7ff80d182f1043",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:39Z",
+  "last_reviewed_at": "2026-09-30T20:06:17Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages (plus the OpenSearch project docs at docs.opensearch.org referenced by the AWS page) were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "dd5cab7c27729e262ac80c5d315721a67634f3ac7218fa3007aa1a5ac2c43449",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phân tích log từ nhiều AWS service gần thời gian thực (near real time).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Có khả năng tìm kiếm (search) trong log.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Đối chiếu log với detection rules và gửi cảnh báo tới Amazon SNS topic đã có sẵn khi log khớp rule.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn một giải pháp đáp ứng toàn bộ yêu cầu (không có tiêu chí tối ưu chi phí/vận hành được nêu).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q085:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "OpenSearch Service là engine search/analytics cho log analytics; Security Analytics dùng detector + detection rules (Sigma/custom) trên log được ingest và tạo alert gửi qua notification channel, trong đó Amazon SNS là channel type được hỗ trợ.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q085:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security Hub (CSPM) thu thập và hiển thị findings (control findings, findings từ GuardDuty/Inspector/Macie...), không phải công cụ ingest/search log thô; custom action chỉ gửi thủ công các finding được chọn tới EventBridge, không phải cơ chế match log với detection rules.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q085:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Logs Insights đáp ứng việc search, nhưng subscription filter chỉ gửi log tới Kinesis Data Streams, Firehose, Lambda (hoặc logical destination) chứ không gửi thẳng tới SNS topic như phương án mô tả; cảnh báo SNS trong CloudWatch thường cần metric filter + alarm hoặc Lambda trung gian, không có trong phương án.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q085:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Quick Sight là công cụ BI dashboard; threshold alert chỉ áp dụng cho visual KPI/Gauge/Table/Pivot và thông báo qua email, không phải cơ chế detection rule trên log gần thời gian thực gửi tới SNS topic.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref10"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q085:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu AWS mô tả trực tiếp Security Analytics (detector, rules, alerts) và SNS là channel type của OpenSearch Notifications; các phương án khác thiếu cơ chế gửi SNS theo detection rules hoặc không search được log.",
+      "open_issues": [
+        "Security Analytics yêu cầu domain OpenSearch 2.5 trở lên; trang AWS ví dụ channel là Slack/email, việc chọn SNS dựa trên trang Notifications (SNS là channel type được hỗ trợ)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6",
+      "ref8",
+      "ref10",
+      "ref11"
+    ],
+    "recorded_at": "2026-09-30T19:54:39Z"
+  },
+  "source_answer": [
+    "Q085:A"
+  ],
+  "researched_answer": [
+    "Q085:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Trang Security Analytics của OpenSearch Service mô tả trực tiếp detector áp rules lên log đã ingest và gửi alert khi khớp rule; trang Alerting xác nhận Amazon SNS là channel type được hỗ trợ. Subscription filter của CloudWatch Logs không có SNS trong danh sách đích.",
+    "open_issues": [
+      "Security Analytics cần domain OpenSearch 2.5 trở lên; trang Security Analytics chỉ nêu ví dụ Slack/email, việc gửi SNS dựa trên trang Alerting/Notifications (SNS là channel type được hỗ trợ)."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn A. Đã kiểm tra lại đối thủ mạnh nhất là C: API PutSubscriptionFilter liệt kê đích hỗ trợ chỉ gồm Kinesis Data Streams, logical destination (Kinesis/Firehose), Firehose và Lambda - không có SNS, nên C như mô tả không gửi alert tới SNS (muốn vậy phải dùng metric filter + CloudWatch alarm hoặc Lambda trung gian, không có trong phương án). Đọc lại mục Alerts của Security Analytics: alert được kích hoạt khi detector khớp một hoặc nhiều rules và gửi tới channel đã chọn; SNS là channel type được hỗ trợ. B (custom action là thao tác thủ công trên findings) và D (Quick Sight threshold alert qua email) không đáp ứng. Giữ A, verified.",
+  "explanation_vi": {
+    "why_correct": "Amazon OpenSearch Service vừa ingest và search log (OpenSearch API) gần thời gian thực, vừa có Security Analytics: detector áp detection rules lên log và khi khớp rule sẽ tạo alert gửi tới notification channel, trong đó Amazon SNS là channel được hỗ trợ.",
+    "others": {
+      "Q085:B": "Security Hub làm việc với findings chứ không ingest/search log thô, và custom action chỉ là thao tác thủ công gửi finding đã chọn tới EventBridge, không phải cơ chế match detection rules.",
+      "Q085:C": "Logs Insights search được log nhưng subscription filter chỉ gửi tới Kinesis, Firehose hoặc Lambda, không gửi trực tiếp alert tới SNS topic như phương án mô tả.",
+      "Q085:D": "Quick Sight là công cụ BI dashboard; alert của nó là threshold alert qua email trên visual, không phải detection rule trên log gần thời gian thực gửi tới SNS."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "near real time",
+      "meaning_vi": "Phân tích log gần thời gian thực - cần công cụ ingest/phân tích liên tục, không phải BI dashboard."
+    },
+    {
+      "phrase": "search the logs",
+      "meaning_vi": "Cần khả năng tìm kiếm log (search engine như OpenSearch)."
+    },
+    {
+      "phrase": "detection rules",
+      "meaning_vi": "Quy tắc phát hiện mối đe dọa áp lên log - gợi ý Security Analytics (detector + rules) của OpenSearch."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề cần search log + detection rules + alert tới SNS trong một giải pháp -> nghĩ đến OpenSearch Service Security Analytics; kiểm tra: subscription filter của CloudWatch Logs không gửi thẳng tới SNS (chỉ Kinesis/Firehose/Lambda).",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "2 Incident Response"
+    ],
+    "services": [
+      "Amazon OpenSearch Service",
+      "Amazon SNS",
+      "Amazon CloudWatch Logs",
+      "AWS Security Hub",
+      "Amazon QuickSight"
+    ],
+    "reason_vi": "Xây dựng giải pháp phân tích log, phát hiện theo rule và cảnh báo (detection + alerting)."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/security-analytics.html",
+      "title": "Security Analytics for Amazon OpenSearch Service",
+      "section": "Security Analytics for Amazon OpenSearch Service",
+      "snapshot_id": "8b64ca599cd3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "detects potential security threats in real time, and trigger alerts to pre-configured destinations",
+      "supports": "Security Analytics phát hiện mối đe dọa theo thời gian thực và gửi alert tới đích đã cấu hình.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/security-analytics.html",
+      "title": "Security Analytics for Amazon OpenSearch Service",
+      "section": "Rules",
+      "snapshot_id": "8b64ca599cd3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Threat detection rules define the conditions that detectors apply to ingested log data to identify a security event.",
+      "supports": "Detection rules được detector áp dụng lên log đã ingest.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.opensearch.org/latest/security-analytics/sec-analytics-config/detectors-config/",
+      "title": "Creating detectors | OpenSearch Documentation",
+      "section": "Step 2. Set up alerts",
+      "snapshot_id": "cddf22f07575",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the alert setup lets you choose the channel on which to be notified",
+      "supports": "Alert của detector gửi qua một notification channel được chọn (trang AWS dẫn tới tài liệu OpenSearch này).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/alerting.html",
+      "title": "Configuring alerts in Amazon OpenSearch Service",
+      "section": "Notifications",
+      "snapshot_id": "37ccece3cd2e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon Simple Notification Service (Amazon SNS) is a supported channel type for notifications.",
+      "supports": "SNS là channel type được hỗ trợ trong OpenSearch Notifications, nên alert có thể gửi tới SNS topic có sẵn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/what-is.html",
+      "title": "What is Amazon OpenSearch Service?",
+      "section": "What is Amazon OpenSearch Service?",
+      "snapshot_id": "559288ad379a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "fully open-source search and analytics engine for use cases such as log analytics, real-time application monitoring",
+      "supports": "OpenSearch là engine search/analytics dùng cho log analytics gần thời gian thực.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutSubscriptionFilter.html",
+      "title": "PutSubscriptionFilter",
+      "section": "Description",
+      "snapshot_id": "946702aa8489",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An AWS Lambda function that belongs to the same account as the subscription filter, for same-account delivery.",
+      "supports": "Danh sách đích hỗ trợ của subscription filter gồm Kinesis Data Streams, logical destination, Firehose, Lambda; không có SNS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html",
+      "title": "Analyzing log data with CloudWatch Logs Insights",
+      "section": "Analyzing log data with CloudWatch Logs Insights",
+      "snapshot_id": "35255ba80cf5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can interactively search and analyze your log data in Amazon CloudWatch Logs",
+      "supports": "Logs Insights đáp ứng phần search log của phương án C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-integration-types.html",
+      "title": "Security Hub CSPM event types in EventBridge",
+      "section": "Findings for custom actions",
+      "snapshot_id": "05261238db18",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "select findings within Security Hub CSPM and use the custom action in Security Hub CSPM to manually send findings",
+      "supports": "Custom action là thao tác thủ công gửi finding đã chọn tới EventBridge, không phải detection rule trên log.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html",
+      "title": "Introduction to AWS Security Hub CSPM",
+      "section": "Introduction",
+      "snapshot_id": "ce2e8e0fe1c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Security Hub CSPM also receives findings from other AWS services",
+      "supports": "Security Hub làm việc với findings (không phải kho log thô để search).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/quick/latest/userguide/threshold-alerts.html",
+      "title": "Working with threshold alerts in Amazon Quick Sight",
+      "section": "Working with threshold alerts",
+      "snapshot_id": "520ea3f21093",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "set thresholds for your data and be notified by email when your data crosses them",
+      "supports": "Cảnh báo của Quick Sight là threshold alert qua email, không phải detection rule gửi SNS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html",
+      "title": "Real-time processing of log data with subscriptions",
+      "section": "Real-time processing of log data with subscriptions",
+      "snapshot_id": "da1d95832008",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "have it delivered to other services such as an Amazon Kinesis stream, an Amazon Data Firehose stream, or AWS Lambda for custom processing",
+      "supports": "Subscription filter chuyển log tới Kinesis/Firehose/Lambda để xử lý tiếp, không tự gửi cảnh báo SNS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref12",
+      "url": "https://docs.aws.amazon.com/opensearch-service/latest/developerguide/security-analytics.html",
+      "title": "Security Analytics for Amazon OpenSearch Service",
+      "section": "Alerts",
+      "snapshot_id": "8b64ca599cd3",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You set the alert to be triggered when the detector matches one or multiple rules",
+      "supports": "Alert được kích hoạt khi detector khớp detection rules (đúng cơ chế phương án A).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Phương án D thiếu dấu chấm cuối câu (không ảnh hưởng nội dung). Ghi chú: Amazon QuickSight hiện được đổi tên trong tài liệu thành Amazon Quick Sight.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:54:39Z",
+      "change": "blind verdict [\"Q085:A\"] (verified, high)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:06:17Z",
+      "change": "reconciliation: source key A khớp blind; kiểm tra lại C (PutSubscriptionFilter không có đích SNS) và mục Alerts của Security Analytics; giữ A, verified (high)",
+      "previous_answer": null
+    }
+  ]
+}

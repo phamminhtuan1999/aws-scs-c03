@@ -1,0 +1,344 @@
+URL: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html
+TITLE: Amazon S3 bucket policy for CloudTrail - AWS CloudTrail
+
+# Amazon S3 bucket policy for CloudTrail
+
+By default, Amazon S3 buckets and objects are private. Only the resource owner (the AWS
+account that created the bucket) can access the bucket and objects it contains. The resource
+owner can grant access permissions to other resources and users by writing an access
+policy.
+
+To create or modify an Amazon S3 bucket to receive log files for an organization trail, you
+must change the bucket policy. For more information, see Creating a trail for an organization with the AWS CLI.
+
+To deliver log files to an S3 bucket, CloudTrail must have the required permissions, and it
+cannot be configured as a Requester
+Pays bucket.
+
+CloudTrail adds the following fields in the policy for you:
+
+- The allowed SIDs
+
+- The bucket name
+
+- The service principal name for CloudTrail
+
+- The name of the folder where the log files are stored, including the bucket name,
+a prefix (if you specified one), and your AWS account ID
+
+As a security best practice, add an aws:SourceArn condition key to the Amazon S3
+bucket policy. The IAM global condition key aws:SourceArn helps ensure that
+CloudTrail writes to the S3 bucket only for a specific trail or trails. The value of
+aws:SourceArn is always the ARN of the trail (or array of trail ARNs) that
+is using the bucket to store logs. Be sure to add the aws:SourceArn condition
+key to S3 bucket policies for existing trails.
+
+Note
+
+If you misconfigure your trail (for example, the S3 bucket is unreachable),
+CloudTrail will attempt to redeliver the log files to your S3 bucket for 30 days, and
+these attempted-to-deliver events will be subject to standard CloudTrail charges.
+To avoid charges on a misconfigured trail, you need to delete the trail.
+
+The following policy allows CloudTrail to write log files to the bucket from supported AWS Regions.
+Replace amzn-s3-demo-bucket,
+[optionalPrefix]/, myAccountID,
+region, and trailName with the
+appropriate values for your configuration.
+
+S3
+bucket policy
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AWSCloudTrailAclCheck20150319",
+"Effect": "Allow",
+"Principal": {"Service": "cloudtrail.amazonaws.com"},
+"Action": "s3:GetBucketAcl",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"StringEquals": {
+"aws:SourceArn": "arn:aws:cloudtrail:region:myAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailWrite20150319",
+"Effect": "Allow",
+"Principal": {"Service": "cloudtrail.amazonaws.com"},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/[optionalPrefix]/AWSLogs/myAccountID/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:myAccountID:trail/trailName"
+}
+}
+}
+]
+}
+
+For more information about AWS Regions, see CloudTrail supported Regions.
+
+Contents
+
+- Specifying an existing bucket for CloudTrail log delivery
+
+- Receiving log files from other accounts
+
+- Create or update an Amazon S3 bucket to use to store the log files for an organization trail
+
+- Troubleshooting the Amazon S3 bucket policy
+
+- Common Amazon S3 policy configuration errors
+
+- Changing a prefix for an existing bucket
+
+- Additional resources
+
+## Specifying an existing bucket for CloudTrail log delivery
+
+If you specified an existing S3 bucket as the storage location for log file delivery,
+you must attach a policy to the bucket that allows CloudTrail to write to the bucket.
+
+Note
+
+As a best practice, use a dedicated S3 bucket for CloudTrail logs.
+
+To add the required CloudTrail policy to an Amazon S3 bucket
+
+- Open the Amazon S3 console at
+https://console.aws.amazon.com/s3/.
+
+- Choose the bucket where you want CloudTrail to deliver your log files, and then
+choose Permissions.
+
+- Choose Edit.
+
+- Copy the S3 bucket policy to the Bucket Policy
+Editor window. Replace the placeholders in italics with the names
+of your bucket, prefix, and account number. If you specified a prefix when you
+created your trail, include it here. The prefix is an optional addition to the
+S3 object key that creates a folder-like organization in your bucket.
+
+Note
+
+If the existing bucket already has one or more policies attached, add the
+statements for CloudTrail access to that policy or policies. Evaluate the
+resulting set of permissions to be sure that they are appropriate for the
+users who will access the bucket.
+
+## Receiving log files from other accounts
+
+You can configure CloudTrail to deliver log files from multiple AWS accounts to a single
+S3 bucket. For more information, see Receiving CloudTrail log files from multiple accounts.
+
+## Create or update an Amazon S3 bucket to use to store the log files for an organization trail
+
+You must specify an Amazon S3
+bucket to receive the log files for an organization trail. This bucket must have a policy that
+allows CloudTrail to put the log files for the organization into the bucket.
+
+The following is an example policy for an Amazon S3 bucket named
+amzn-s3-demo-bucket, which is owned by the organization's
+management account. Replace amzn-s3-demo-bucket,
+region, managementAccountID,
+trailName, and o-organizationID
+with the values for your organization
+
+This bucket policy contains three statements.
+
+- The first statement allows CloudTrail to call the Amazon S3 GetBucketAcl action
+on the Amazon S3 bucket.
+
+- The second statement allows logging in the event the trail is changed from an organization trail to a trail for that account only.
+
+- The third statement allows logging for an organization trail.
+
+The example policy includes an aws:SourceArn condition key for the Amazon S3
+bucket policy. The IAM global condition key aws:SourceArn helps ensure that
+CloudTrail writes to the S3 bucket only for a specific trail or trails. In an organization trail,
+the value of aws:SourceArn must be a trail ARN that is owned by the management
+account, and uses the management account ID.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AWSCloudTrailAclCheck20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:GetBucketAcl",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"StringEquals": {
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailWrite20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/AWSLogs/managementAccountID/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailOrganizationWrite20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/AWSLogs/o-organizationID/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+}
+]
+}
+
+This example policy does not allow any users from member accounts to access the
+log files created for the organization. By default, organization log files are
+accessible only to the management account. For information about how to allow read
+access to the Amazon S3 bucket for IAM users in member accounts, see Sharing CloudTrail log files between AWS accounts.
+
+## Troubleshooting the Amazon S3 bucket policy
+
+The following sections describe how to troubleshoot the S3 bucket policy.
+
+Note
+
+If you misconfigure your trail (for example, the S3 bucket is unreachable),
+CloudTrail will attempt to redeliver the log files to your S3 bucket for 30 days, and
+these attempted-to-deliver events will be subject to standard CloudTrail charges.
+To avoid charges on a misconfigured trail, you need to delete the trail.
+
+### Common Amazon S3 policy configuration errors
+
+When you create a new bucket as part of creating or updating a trail, CloudTrail
+attaches the required permissions to your bucket. The bucket policy uses the service principal name,
+"cloudtrail.amazonaws.com", which allows CloudTrail to
+deliver logs for all Regions.
+
+If CloudTrail is not delivering logs for a Region, it's possible that your bucket has an
+older policy that specifies CloudTrail account IDs for each Region. This policy gives CloudTrail
+permission to deliver logs only for the Regions specified.
+
+As a best practice, update the policy to use a permission with the CloudTrail service principal.
+To do this, replace the account ID ARNs with the service principal name:
+"cloudtrail.amazonaws.com". This gives CloudTrail permission to deliver logs for
+current and new Regions. As a security best practice, add an aws:SourceArn or
+aws:SourceAccount condition key to the Amazon S3 bucket policy. This helps prevent
+unauthorized account access to your S3 bucket. If you have existing trails, be sure to add one
+or more condition keys. The following example shows a recommended policy configuration.
+Replace amzn-s3-demo-bucket, [optionalPrefix]/,
+myAccountID, region, and
+trailName with the appropriate values for your
+configuration.
+
+Example bucket policy with service principal name
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AWSCloudTrailAclCheck20150319",
+"Effect": "Allow",
+"Principal": {"Service": "cloudtrail.amazonaws.com"},
+"Action": "s3:GetBucketAcl",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"StringEquals": {
+"aws:SourceArn": "arn:aws:cloudtrail:region:myAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailWrite20150319",
+"Effect": "Allow",
+"Principal": {"Service": "cloudtrail.amazonaws.com"},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/[optionalPrefix]/AWSLogs/myAccountID/*",
+"Condition": {"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:myAccountID:trail/trailName"
+}
+}
+}
+]
+}
+
+### Changing a prefix for an existing bucket
+
+If you try to add, modify, or remove a log file prefix for an S3 bucket that
+receives logs from a trail, you might see the error: There is a problem
+with the bucket policy. A bucket policy with an incorrect prefix can
+prevent your trail from delivering logs to the bucket. To resolve this issue, use
+the Amazon S3 console to update the prefix in the bucket policy, and then use the CloudTrail
+console to specify the same prefix for the bucket in the trail.
+
+To update the log file prefix for an Amazon S3 bucket
+
+- Open the Amazon S3 console at
+https://console.aws.amazon.com/s3/.
+
+- Choose the bucket for which you want to modify the prefix, and then choose
+Permissions.
+
+- Choose Edit.
+
+- In the bucket policy, under the s3:PutObject action, edit the
+Resource entry to add, modify, or remove the log file
+prefix/ as needed.
+
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/prefix/AWSLogs/myAccountID/*",
+
+- Choose Save.
+
+- Open the CloudTrail console at
+https://console.aws.amazon.com/cloudtrail/.
+
+- Choose your trail and for Storage location, click the
+pencil icon to edit the settings for your bucket.
+
+- For S3 bucket, choose the bucket with the prefix you
+are changing.
+
+- For Log file prefix, update the prefix to match the
+prefix that you entered in the bucket policy.
+
+- Choose Save.
+
+## Additional resources
+
+For more information about S3 buckets and policies, see Using
+bucket policies in the Amazon Simple Storage Service User Guide.

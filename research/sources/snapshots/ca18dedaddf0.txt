@@ -1,0 +1,170 @@
+URL: https://aws.amazon.com/blogs/mt/monitor-changes-and-auto-enable-logging-in-aws-cloudtrail/
+TITLE: Monitor Changes and Auto-Enable Logging in AWS CloudTrail | AWS Cloud Operations Blog
+
+## AWS Cloud Operations Blog
+
+# Monitor Changes and Auto-Enable Logging in AWS CloudTrail
+
+AWS CloudTrail is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. Hence, it’s crucial to monitor any changes to CloudTrail and make sure that logging is always enabled.
+
+With CloudTrail, you can log, continuously monitor, and retain events related to API calls across your AWS infrastructure. CloudTrail provides a history of API calls for your account, including API calls made through the console, AWS SDKs, command line tools, and other AWS services. This history simplifies security analysis, resource change tracking, and troubleshooting.
+
+In this post, I describe a solution to notify on changes to CloudTrail and re-enable logging whenever logging is disabled.
+
+# Change monitoring and notification
+
+For this walkthrough, you use an Amazon CloudWatch Events rule to monitor changes to a CloudTrail trail. An AWS Lambda function set as a target for this rule contains the logic to detect changes to the trail and publish a message to an Amazon SNS notification. The diagram below depicts the workflow.
+
+- An IAM user makes changes to a CloudTrail trail.
+
+- That change event gets detected by a CloudWatch Events rule.
+
+- The rule triggers a Lambda function.
+
+- The function publishes the change event to an SNS topic.
+
+- The SNS topic sends the email to its subscribers.
+
+- If the change event was to disable logging, the function re-enables logging on that trail.
+
+The CloudWatch Events rule detects the following CloudTrail operational events:
+
+- “StopLogging”
+
+- “StartLogging”
+
+- “UpdateTrail”
+
+- “DeleteTrail”
+
+- “CreateTrail”
+
+- “RemoveTags”
+
+- “AddTags”
+
+- “PutEventSelectors”
+
+After a “StopLogging” event is detected, the Lambda function re-enables logging for that trail. This generates a “StartLogging” event that again sends an SNS notification.
+
+# Walkthrough
+
+Now, I walk you through creating an SNS topic and subscription, Lambda function, and CloudWatch Events rule. To deploy this solution, download the CloudTrailMonitor.json AWS CloudFormation template. The README document provides instructions to deploy the stack.
+
+##
+
+## Create the SNS topic and subscription
+
+In the SNS console, choose Create topic and enter appropriate values for Topic name (such as CloudTrailAlert) and Display name (CT-Alert). Choose Create topic. Select the topic and view the details.
+
+Next, choose Create subscription.
+
+For Protocol, choose Email-JSON. Enter the email address where notifications should be sent and choose Create subscription.
+
+An email is sent to confirm the SNS topic subscription. In the email, open the SubscribeURL link to complete the subscription. Note the SNS topic ARN, as it is used later by the Lambda function.
+
+For more information, see Create a Topic in the Amazon SNS Developer Guide.
+
+## Create the Lambda function
+
+In the Lambda console, choose Functions, Create a Lambda function. Choose Blank Function and on the Configure trigger page, choose Next.
+
+On the next page, enter the following values:
+
+- Name: An appropriate name for the Lambda function
+
+- Runtime: Python 2.7
+
+- Code entry type: Upload a ZIP file
+
+- Function package: Upload the Cloudtraillambdamonitor.zip file
+
+- Environment variables:
+
+- Key: SNSARN
+
+- Value: The SNS topic ARN noted earlier
+
+- Handler: Cloudtraillambdamonitor.lambda_handler
+
+- Role: Create a custom role (takes you to another page). Call the role CloudTrailLambda.
+
+For the policy document, enter the following policy:
+
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "LambdaCloudtraiMonitor",
+"Effect": "Allow",
+"Action": [
+"cloudtrail:DescribeTrails",
+"cloudtrail:GetTrailStatus",
+"cloudtrail:StartLogging"
+],
+"Resource": [
+"arn:aws:cloudtrail:*:<AWS-ACCOUNT-ID>:trail/*"
+]
+},
+{
+"Sid": "CloudWacthLogspermissions",
+"Effect": "Allow",
+"Action": [
+"logs:CreateLogGroup",
+"logs:CreateLogStream",
+"logs:PutLogEvents"
+],
+"Resource": [
+"arn:aws:logs:*:*:*"
+]
+},
+{
+"Sid": "SNSPublishpermissions",
+"Effect": "Allow",
+"Action": [
+"sns:Publish"
+],
+"Resource": [
+"arn:aws:sns:*:*:*"
+]
+}
+]
+}
+
+On the Configure function page, choose Next. Review the configuration settings before choosing Create function.
+
+For more information, see Step 2.1: Create a Hello World Lambda Function in the AWS Lambda Developer Guide.
+
+## Create the CloudWatch Events rule
+
+In the CloudWatch Events console, choose Create rule. Enter the following values:
+
+- Service Name: CloudTrail
+
+- Event Type: AWS API call via CloudTrail
+
+- Specific Operations: StopLogging, StartLogging, UpdateTrail, DeleteTrail, CreateTrail, RemoveTags, AddTags, PutEventSelectors
+
+For Targets, select the name of the Lambda function created earlier and choose Configure details. On next page, enter an appropriate name and description for this rule. For State, select Enabled. Choose Create rule.
+
+For more information, see Tutorial: Schedule Lambda Functions Using CloudWatch Events in the Amazon CloudWatch Events User Guide.
+
+## Validate monitoring
+
+To validate if the solution is working properly, make a change to CloudTrail and see if you get the notification about this change. The following are some sample emails for when a change in CloudTrail was detected. In this case, logging was disabled and re-enabled automatically.
+
+# Summary
+
+In this post, I explained how to create a solution with CloudWatch Events, Lambda, and SNS to notify you about changes to CloudTrail trails, and to re-enable logging automatically whenever logging is disabled. If you can’t guarantee that your compliance logging is fully managed and automatic, your organizational governance or auditing may be at risk.
+
+For more information, I recommend the following whitepapers:
+
+- AWS Security Whitepaper
+
+- Security at Scale: Governance in AWS
+
+- Automating Governance on AWS
+
+### About the Author
+
+Sudhanshu Malhotra is a Solutions Architect at AWS Professional Services. Sudhanshu enjoys working with our customers and helping them deliver complex solutions in AWS in the area of DevOps, Infrastructure-as-Code and Config Management. In his spare time, Sudhanshu enjoys spending time with his family, hiking and tinkering with cars.

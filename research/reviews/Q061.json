@@ -1,0 +1,256 @@
+{
+  "question_id": "Q061",
+  "question_content_hash": "2478edab202b44e01d513d0000607de3dd84f8da92a40814757c494c3b44c019",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:49:36Z",
+  "last_reviewed_at": "2026-09-30T20:04:03+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "c80a5e07855bea46888a50000252c47bf85393abfa0f8d2b786a01b3b8574b50",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "GuardDuty không được tạo finding cho các IP nội bộ đã được xác minh là tin cậy (không chỉ ẩn/archive finding).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chọn đúng HAI bước cấu hình (Choose two): định dạng file danh sách + cách đưa danh sách vào GuardDuty.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q061:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Plaintext (TXT, mỗi dòng một IP/CIDR) là định dạng được GuardDuty chấp nhận cho IP list (giá trị format TXT trong CreateIPSet).",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q061:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "JSON không nằm trong các định dạng hợp lệ của IP list (TXT, STIX, OTX_CSV, ALIEN_VAULT, PROOF_POINT, FIRE_EYE), nên GuardDuty không dùng được file này.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q061:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty không nhận file tải lên trực tiếp; khi thêm list chỉ cung cấp Location là URI của file trong Amazon S3.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q061:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Quy trình chuẩn: đặt file trong S3, thêm trusted IP list trỏ tới S3 URI rồi activate; GuardDuty không tạo finding cho IP trong trusted list.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref4",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q061:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Hộp thoại thêm list trong console chỉ có List name, Location (S3) và Expected bucket owner; không có ô dán nội dung danh sách.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q061:A",
+      "Q061:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu GuardDuty và API CreateIPSet nêu rõ định dạng TXT được hỗ trợ, JSON không có, và list được tham chiếu qua S3 URI.",
+      "open_issues": [
+        "GuardDuty hiện khuyến nghị entity list (cũng dùng file trong S3); IP list vẫn được hỗ trợ nên đáp án không bị lỗi thời."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:49:36Z"
+  },
+  "source_answer": [
+    "Q061:A",
+    "Q061:D"
+  ],
+  "researched_answer": [
+    "Q061:A",
+    "Q061:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A+D. Tài liệu GuardDuty (trang List formats và CreateIPSet) nêu trực tiếp định dạng plaintext TXT được hỗ trợ, JSON không có trong danh sách format; bước thêm list chỉ nhận Location là URI của file trong S3 rồi activate; trusted list khiến GuardDuty không tạo finding.",
+    "open_issues": [
+      "GuardDuty hiện khuyến nghị entity list thay cho IP list (vẫn dùng file TXT trong S3); IP list vẫn được hỗ trợ nên đáp án không lỗi thời.",
+      "List chỉ áp dụng cho IP public-routable; nếu 'IP addresses within the company' là IP private thì trusted list không có tác dụng — đề ngụ ý IP public của công ty."
+    ]
+  },
+  "reconciliation_vi": "Source key = A+D, trùng blind. Đã kiểm tra lại đối thủ mạnh nhất: (1) B (JSON) — trang List formats và giá trị hợp lệ của CreateIPSet chỉ gồm TXT, STIX, OTX_CSV, ALIEN_VAULT, PROOF_POINT, FIRE_EYE, không có JSON; (2) C/E (upload/dán trực tiếp) — trang Adding and activating list chỉ có trường Location trỏ tới S3 URI (định dạng https://s3.amazonaws.com/... hoặc s3://...), không có chỗ upload hay dán nội dung. Cũng đã xem xét suppression rule (không có trong đáp án; rule chỉ archive finding). Bổ sung ref5 về giới hạn IP public-routable. Giữ A+D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "A: GuardDuty chấp nhận trusted IP list dạng plaintext (TXT), mỗi IP/CIDR một dòng. D: file phải đặt trong Amazon S3, rồi thêm trusted IP list trỏ tới S3 URI đó và activate; GuardDuty sẽ không tạo finding cho các IP trong trusted list.",
+    "others": {
+      "Q061:B": "JSON không nằm trong các định dạng GuardDuty chấp nhận (TXT, STIX, OTX_CSV, ALIEN_VAULT, PROOF_POINT, FIRE_EYE).",
+      "Q061:C": "GuardDuty không nhận file upload trực tiếp; list chỉ được tham chiếu qua vị trí file trong S3.",
+      "Q061:E": "Console không có ô để dán nội dung danh sách; chỉ nhập tên list và Location (S3 URI)."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "these IP addresses are trusted and allowed",
+      "meaning_vi": "IP tin cậy -> dùng trusted IP list (hoặc trusted entity list) của GuardDuty."
+    },
+    {
+      "phrase": "does not produce findings for these IP addresses",
+      "meaning_vi": "Không tạo finding (khác suppression rule vẫn tạo rồi archive)."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần GuardDuty không tạo finding cho IP tin cậy -> nghĩ đến trusted IP/entity list: file TXT/STIX đặt trong S3, thêm list trỏ tới S3 URI rồi activate; kiểm tra chỉ áp dụng IPv4 public, còn chỉ muốn ẩn finding thì dùng suppression rule.",
+  "tags": {
+    "domains": [
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon GuardDuty",
+      "Amazon S3"
+    ],
+    "reason_vi": "Tinh chỉnh phát hiện của GuardDuty bằng trusted IP list để giảm finding sai."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html",
+      "title": "Customizing threat detection with entity lists and IP address lists - Amazon GuardDuty",
+      "section": "Understanding entity lists and IP address lists",
+      "snapshot_id": "13caf02bb6ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty does not generate findings for entries listed in trusted sources.",
+      "supports": "Trusted list ngăn GuardDuty tạo finding cho IP tin cậy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateIPSet.html",
+      "title": "CreateIPSet - Amazon GuardDuty",
+      "section": "Request Body: format, location",
+      "snapshot_id": "2c5de35335da",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Valid Values: TXT | STIX | OTX_CSV | ALIEN_VAULT | PROOF_POINT | FIRE_EYE",
+      "supports": "Định dạng hợp lệ gồm TXT (plaintext), không có JSON; location là URI của file.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html",
+      "title": "Customizing threat detection with entity lists and IP address lists - Amazon GuardDuty",
+      "section": "List formats",
+      "snapshot_id": "13caf02bb6ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Each entry must appear on a separate line.",
+      "supports": "Định dạng plaintext: mỗi IP/CIDR trên một dòng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-lists-create-activate.html",
+      "title": "Adding and activating an entity list or IP list - Amazon GuardDuty",
+      "section": "Step 2: Adding trusted or threat intelligence data",
+      "snapshot_id": "fe80b4e6579f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For Location, provide the location where you have uploaded your list.",
+      "supports": "List được thêm bằng cách trỏ tới vị trí file trong S3 (S3 URI), sau đó phải activate.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html",
+      "title": "Customizing threat detection with entity lists and IP address lists - Amazon GuardDuty",
+      "section": "Important considerations for GuardDuty lists",
+      "snapshot_id": "13caf02bb6ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IP address lists and entity lists apply only to traffic destined for publicly routable IP addresses and domains.",
+      "supports": "Trusted list chỉ có tác dụng với IP public-routable (điều kiện ngầm của đề).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Khác với suppression rule (vẫn tạo finding rồi tự archive), trusted list khiến GuardDuty không tạo finding. Chỉ hỗ trợ IPv4 và IP public-routable.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q061:A\", \"Q061:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:04:03+00:00",
+      "change": "Reconciliation: khớp source key A+D; kiểm tra lại B/C/E bằng trang List formats, CreateIPSet và Adding list (S3 Location); thêm ref5 (giới hạn IP public). Giữ A+D, verified (high).",
+      "previous_answer": [
+        "Q061:A",
+        "Q061:D"
+      ]
+    }
+  ]
+}

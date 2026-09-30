@@ -1,0 +1,454 @@
+{
+  "question_id": "Q082",
+  "question_content_hash": "e13286c15370906df1f427acee8eb822485fbbd440ae77346d0e248a6e45da5c",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:00Z",
+  "last_reviewed_at": "2026-09-30T20:09:03+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages (docs.aws.amazon.com / aws.amazon.com) were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "801013d276b938ec1775fbb9e84b283b3c73d019292e82d6ceb419e5bd060d99",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "P1: vá phần mềm thủ công qua quyền admin trực tiếp, bỏ qua pipeline deploy tự động.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "P2: DB production cho phép phiên tương tác của developer để troubleshoot/phân tích.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "P3: security group mở port 0-65535 từ 0.0.0.0/0; WAF chỉ dùng rule mặc định.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "P4: giao tiếp giữa tầng DB và tầng ứng dụng dùng HTTP (không mã hóa).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R5",
+      "text_vi": "P5: sự kiện bảo mật chỉ phát hiện qua review thủ công hàng tuần log CloudTrail thô, không có cảnh báo tự động.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R6",
+      "text_vi": "Chọn nguyên tắc bị vi phạm CHỦ YẾU (primarily); mỗi nguyên tắc dùng đúng một lần.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [
+    {
+      "image": "images/Q082_image_01.png",
+      "text": "Application servers require manual software patching through direct administrator access, which bypasses automated deployment pipelines. [Select... | Configure service and application logging. | Reduce manual management and interactive access. | Deploy software programmatically. | Control traffic flow within your network layers. | Protecting data in transit.]\nProduction database instances allow interactive developer sessions for troubleshooting and data analysis. [same list]\nSecurity groups allow access on ports 0–65535 from 0.0.0.0/0. A WAF is configured with default rules. [same list]\nCommunication between the database and application workload tiers uses HTTP. [same list]\nSecurity events are detected only through weekly manual reviews of raw AWS CloudTrail logs that do not provide automated alerts. [same list]",
+      "notes_vi": "Trong ảnh lựa chọn đầu có dấu chấm cuối ('logging.') còn danh sách text thì không; ảnh dùng dấu gạch ngang en-dash '0–65535'. Không ảnh hưởng nghĩa."
+    }
+  ],
+  "option_reviews": [
+    {
+      "unit_id": "Q082:P1",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "Điểm nhấn là 'bypasses automated deployment pipelines' -> vi phạm SEC11-BP06 Deploy software programmatically (anti-pattern: deploy thủ công vào production). Cũng liên quan SEC06-BP03 nhưng nguyên tắc đó được dùng cho P2.",
+      "requirement_ids": [
+        "R1",
+        "R6"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q082:R3"
+    },
+    {
+      "unit_id": "Q082:P2",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "Phiên tương tác trực tiếp vào DB production để troubleshoot là anti-pattern của SEC06-BP03 Reduce manual management and interactive access.",
+      "requirement_ids": [
+        "R2",
+        "R6"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q082:R2"
+    },
+    {
+      "unit_id": "Q082:P3",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "Mở mọi port từ mọi IP trái với SEC05-BP02: chỉ cho phép luồng mạng cần thiết, dùng security group, WAF để kiểm soát traffic.",
+      "requirement_ids": [
+        "R3",
+        "R6"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q082:R4"
+    },
+    {
+      "unit_id": "Q082:P4",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "HTTP giữa các tầng là không mã hóa; Protecting data in transit bao gồm cả giao tiếp giữa các resource trong workload, SEC09-BP02 yêu cầu dùng TLS.",
+      "requirement_ids": [
+        "R4",
+        "R6"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q082:R5"
+    },
+    {
+      "unit_id": "Q082:P5",
+      "unit_type": "prompt",
+      "verdict": "meets",
+      "reason_vi": "SEC04-BP01 nêu anti-pattern 'dựa hoàn toàn vào quy trình thủ công' cho log và có bước 'Use logs for alerting'; review CloudTrail thô hàng tuần không cảnh báo tự động vi phạm trực tiếp best practice này. Trong 5 lựa chọn chỉ R1 thuộc nhóm detection.",
+      "requirement_ids": [
+        "R5",
+        "R6"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref9"
+      ],
+      "evidence_kind": "direct",
+      "matched_response": "Q082:R1"
+    },
+    {
+      "unit_id": "Q082:R1",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Configure service and application logging bao gồm thiết lập querying và alerting từ log, tránh phụ thuộc quy trình thủ công -> khớp P5.",
+      "requirement_ids": [
+        "R5"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref9"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q082:P5"
+      ]
+    },
+    {
+      "unit_id": "Q082:R2",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Reduce manual management and interactive access: anti-pattern gồm truy cập tương tác và đăng nhập để troubleshoot -> khớp P2.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q082:P2"
+      ]
+    },
+    {
+      "unit_id": "Q082:R3",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Deploy software programmatically: deploy qua CI/CD thay vì thủ công -> khớp P1 (bỏ qua pipeline tự động).",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q082:P1"
+      ]
+    },
+    {
+      "unit_id": "Q082:R4",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Control traffic flow within your network layers: chỉ cho phép luồng cần thiết bằng security group/WAF -> khớp P3.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q082:P3"
+      ]
+    },
+    {
+      "unit_id": "Q082:R5",
+      "unit_type": "response",
+      "verdict": "meets",
+      "reason_vi": "Protecting data in transit: mã hóa giao tiếp giữa các thành phần workload -> khớp P4 (HTTP).",
+      "requirement_ids": [
+        "R4"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct",
+      "used_for": [
+        "Q082:P4"
+      ]
+    }
+  ],
+  "independent_verdict": {
+    "answer": {
+      "Q082:P1": "Q082:R3",
+      "Q082:P2": "Q082:R2",
+      "Q082:P3": "Q082:R4",
+      "Q082:P4": "Q082:R5",
+      "Q082:P5": "Q082:R1"
+    },
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Mỗi phát hiện khớp anti-pattern hoặc mô tả của best practice tương ứng trong Security Pillar; P1 và P2 đều chạm SEC06-BP03 nhưng P1 nhấn 'bypasses automated deployment pipelines' (SEC11-BP06), và ràng buộc dùng mỗi lựa chọn một lần cho mapping duy nhất.",
+      "open_issues": [
+        "SEC06-BP03 liệt kê 'Manually updating or patching software' là anti-pattern nên P1 cũng có thể gán R2 nếu xét riêng lẻ; mapping phụ thuộc ràng buộc one-to-one.",
+        "P5 (thiếu cảnh báo tự động) gần với SEC04 detection hơn là chỉ logging; chọn R1 vì là lựa chọn duy nhất thuộc detection."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:54:00Z"
+  },
+  "source_answer": {
+    "Q082:P1": "Q082:R3",
+    "Q082:P2": "Q082:R2",
+    "Q082:P3": "Q082:R4",
+    "Q082:P4": "Q082:R5",
+    "Q082:P5": "Q082:R1"
+  },
+  "researched_answer": {
+    "Q082:P1": "Q082:R3",
+    "Q082:P2": "Q082:R2",
+    "Q082:P3": "Q082:R4",
+    "Q082:P4": "Q082:R5",
+    "Q082:P5": "Q082:R1"
+  },
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key trùng mapping. Mỗi phát hiện khớp anti-pattern/mô tả của best practice tương ứng: P1 'bypasses automated deployment pipelines' = SEC11-BP06 (Manually deploying software into production); P2 phiên tương tác để troubleshoot = SEC06-BP03; P3 mở mọi port từ mọi IP = SEC05-BP02; P4 HTTP giữa các tầng = Protecting data in transit; P5 không có cảnh báo tự động = SEC04-BP01 (Use logs for alerting).",
+    "open_issues": [
+      "SEC06-BP03 cũng liệt kê 'Manually updating or patching software' là anti-pattern nên P1 xét riêng có thể gán R2; mapping duy nhất nhờ ràng buộc mỗi lựa chọn một lần (P2 chỉ khớp R2).",
+      "Tên các lựa chọn là best practice chứ không phải design principle chính thức (xem source_issues)."
+    ]
+  },
+  "reconciliation_vi": "Source key trùng blind cho cả 5 hàng. Đã kiểm tra: (1) đối thủ ở P1 là R2 (SEC06-BP03 có anti-pattern 'Manually updating or patching software'), nhưng P2 (phiên tương tác developer vào DB production) chỉ khớp R2 trong 5 lựa chọn, còn P1 nhấn 'bypasses automated deployment pipelines' khớp anti-pattern 'Manually deploying software into production' của SEC11-BP06, nên P1->R3, P2->R2 là cách duy nhất thỏa one-to-one. (2) Đọc trang Security foundations: design principles chính thức khác tên lựa chọn – ghi source_issue nhưng không đổi mapping. (3) Bổ sung bằng chứng trực tiếp cho P5: SEC04-BP01 có bước 'Use logs for alerting', nên P5/R1 nâng từ inference lên direct. Giữ verified, high.",
+  "explanation_vi": {
+    "why_correct": "P1 (vá thủ công, bỏ qua pipeline) -> Deploy software programmatically. P2 (phiên tương tác vào DB production) -> Reduce manual management and interactive access. P3 (security group mở 0-65535 từ 0.0.0.0/0) -> Control traffic flow within your network layers. P4 (HTTP giữa tầng app và DB) -> Protecting data in transit. P5 (chỉ review CloudTrail thủ công, không cảnh báo tự động) -> Configure service and application logging (gồm dùng log để cảnh báo).",
+    "others": {}
+  },
+  "keywords": [
+    {
+      "phrase": "primarily violates",
+      "meaning_vi": "Chọn best practice bị vi phạm CHỦ YẾU khi một phát hiện chạm nhiều mục."
+    },
+    {
+      "phrase": "Select each security pillar design principle one time",
+      "meaning_vi": "Ghép một-một, dùng loại trừ để phân biệt P1 và P2."
+    },
+    {
+      "phrase": "Well-Architected Framework security pillar",
+      "meaning_vi": "Các lựa chọn là tên best practice trong Security Pillar."
+    }
+  ],
+  "memory_tip_vi": "Nếu phát hiện nhấn 'bypasses deployment pipeline' -> Deploy software programmatically; nếu nhấn 'interactive session/login để troubleshoot' -> Reduce manual management and interactive access; kiểm tra từ khóa chính của từng phát hiện trước khi loại trừ.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "3 Infrastructure Security",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Well-Architected Tool",
+      "AWS CloudTrail",
+      "AWS WAF",
+      "Amazon VPC"
+    ],
+    "reason_vi": "Đánh giá workload theo best practice của Security Pillar: deploy, truy cập compute, mạng, mã hóa in transit, logging/alerting."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_appsec_deploy_software_programmatically.html",
+      "title": "SEC11-BP06 Deploy software programmatically",
+      "section": "Common anti-patterns",
+      "snapshot_id": "3eb026c4da2a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Manually deploying software into production.",
+      "supports": "Cài/vá phần mềm thủ công bỏ qua pipeline vi phạm SEC11-BP06.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_protect_compute_reduce_manual_management.html",
+      "title": "SEC06-BP03 Reduce manual management and interactive access",
+      "section": "Common anti-patterns",
+      "snapshot_id": "49468ddd3760",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Logging into an instance to troubleshoot problems.",
+      "supports": "Phiên tương tác để troubleshoot vi phạm SEC06-BP03 (trang cũng liệt kê 'Manually updating or patching software').",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_network_protection_layered.html",
+      "title": "SEC05-BP02 Control traffic flow within your network layers",
+      "section": "SEC05-BP02",
+      "snapshot_id": "a6052d9e4c5e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Within the layers of your network, use further segmentation to restrict traffic only to the flows necessary for each workload.",
+      "supports": "Security group mở 0-65535 từ 0.0.0.0/0 vi phạm SEC05-BP02.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-data-in-transit.html",
+      "title": "Protecting data in transit",
+      "section": "Protecting data in transit",
+      "snapshot_id": "26297af2b94e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This includes communication between resources within your workload as well as communication between other services and your end users.",
+      "supports": "Giao tiếp giữa tầng app và DB thuộc phạm vi data in transit.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_protect_data_transit_encrypt.html",
+      "title": "SEC09-BP02 Enforce encryption in transit",
+      "section": "Desired outcome",
+      "snapshot_id": "52e99a8bfeb5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You encrypt network traffic within your internal AWS environment according to your security requirements.",
+      "supports": "HTTP không mã hóa giữa các tầng vi phạm bảo vệ data in transit.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_detect_investigate_events_app_service_logging.html",
+      "title": "SEC04-BP01 Configure service and application logging",
+      "section": "Common anti-patterns",
+      "snapshot_id": "578d8dde49db",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Relying entirely on manual processes for log governance and use.",
+      "supports": "Chỉ review log thủ công là anti-pattern của SEC04-BP01.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_detect_investigate_events_app_service_logging.html",
+      "title": "SEC04-BP01 Configure service and application logging",
+      "section": "Implementation guidance",
+      "snapshot_id": "578d8dde49db",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "It is critical to select, turn on, store, and set up querying and retrieval mechanisms and alerting.",
+      "supports": "SEC04-BP01 bao gồm thiết lập alerting từ log.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/security.html",
+      "title": "Security foundations - Security Pillar",
+      "section": "Design principles",
+      "snapshot_id": "98fe73337e2a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In the cloud, there are a number of principles that can help you strengthen your workload security:",
+      "supports": "Danh sách design principles chính thức (Implement a strong identity foundation, Maintain traceability, Apply security at all layers, ...) khác với tên các lựa chọn; các lựa chọn là tên best practice/phần.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/sec_detect_investigate_events_app_service_logging.html",
+      "title": "SEC04-BP01 Configure service and application logging",
+      "section": "Implementation steps - Use logs for alerting",
+      "snapshot_id": "578d8dde49db",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use logs for alerting: AWS provides alerting through several security services:",
+      "supports": "SEC04-BP01 bao gồm dùng log để cảnh báo tự động; P5 thiếu cảnh báo tự động vi phạm best practice này.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q082:stem:3",
+      "detail_vi": "Đề gọi các mục là 'security pillar design principle', nhưng design principles chính thức của Security Pillar là: Implement a strong identity foundation, Maintain traceability, Apply security at all layers, Automate security best practices, Protect data in transit and at rest, Keep people away from data, Prepare for security events. Các lựa chọn thực ra là tên best practice (SEC04-BP01, SEC06-BP03, SEC11-BP06, SEC05-BP02) và tên phần 'Protecting data in transit'. Không ảnh hưởng mapping."
+    },
+    {
+      "type": "layout",
+      "location": "Q082:R1",
+      "detail_vi": "Danh sách text ghi 'Configure service and application logging' (không dấu chấm) còn dropdown trong ảnh có dấu chấm; ảnh dùng '0–65535' (en-dash) còn prompt dùng '-'. Không ảnh hưởng nghĩa."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:54:00Z",
+      "change": "Blind verdict (scs-researcher): answer={\"Q082:P1\": \"Q082:R3\", \"Q082:P2\": \"Q082:R2\", \"Q082:P3\": \"Q082:R4\", \"Q082:P4\": \"Q082:R5\", \"Q082:P5\": \"Q082:R1\"}, proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:09:03+00:00",
+      "change": "Reconciliation: khớp source key (P1->R3, P2->R2, P3->R4, P4->R5, P5->R1). Thêm ref8 (design principles chính thức) và ref9 (SEC04-BP01 'Use logs for alerting'); P5 và R1 đổi evidence_kind inference -> direct; mở rộng source_issue về 'design principle'. Mapping không đổi, verified high.",
+      "previous_answer": {
+        "Q082:P1": "Q082:R3",
+        "Q082:P2": "Q082:R2",
+        "Q082:P3": "Q082:R4",
+        "Q082:P4": "Q082:R5",
+        "Q082:P5": "Q082:R1"
+      }
+    }
+  ],
+  "notes_vi": "Mapping: P1 Deploy software programmatically, P2 Reduce manual management and interactive access, P3 Control traffic flow within your network layers, P4 Protecting data in transit, P5 Configure service and application logging."
+}

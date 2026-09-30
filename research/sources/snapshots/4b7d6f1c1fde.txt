@@ -1,0 +1,329 @@
+URL: https://docs.aws.amazon.com/systems-manager-automation-runbooks/latest/userguide/awssupport-troubleshootiamaccessdeniedevents.html
+TITLE: AWSSupport-TroubleshootIAMAccessDeniedEvents - AWS Systems Manager Automation Runbook Reference
+
+# AWSSupport-TroubleshootIAMAccessDeniedEvents
+
+Description
+
+The AWSSupport-TroubleshootIAMAccessDeniedEvents
+automation runbook helps troubleshooting AWS Identity and Access Management (IAM) access denied issues. The runbook
+queries CloudTrail for recent access denied events related to the specified IAM entity and AWS
+service event source. It analyzes events within a configurable time window of up to 24
+hours, processing up to 10 events per execution. Each identified access denied event is
+examined to help understand the context of the denial and the attempted actions. The
+automation analyzes both identity-based and resource-based IAM policies. For
+identity-based policies, it examines inline and managed policies attached to the IAM
+entity. For resource-based policies, it evaluates policies across multiple AWS services
+including Amazon Simple Storage Service(Amazon S3), AWS Key Management Service (AWS KMS), AWS Lambda, Amazon Simple Notification Service (Amazon SNS), Amazon Elastic Container Registry
+(Amazon ECR), Amazon API Gateway, CodeArtifact, Amazon Elastic File System (Amazon EFS), Amazon Simple Queue Service (Amazon SQS), AWS Cloud9, Amazon OpenSearch Service, AWS
+Signer, AWS Serverless Application Repository, and AWS Secrets Manager.
+
+The runbook utilizes IAM policy simulation capabilities to evaluate these policies
+against the denied actions found in the CloudTrail events. The runbook leverages IAM's policy
+simulation capabilities through both SimulatePrincipalPolicy
+for IAM users and SimulateCustomPolicy
+for IAM roles to evaluate these policies against the denied actions found in the CloudTrail
+events. The automation outputs a report that helps identify the specific actions that were
+denied, differentiating between implicit and explicit denies, listing the policies
+responsible for access denials and provides explanations for each denial. The report also
+suggests potential resolutions, such as identifying missing allow statements or conflicting
+deny statements
+
+How does it work?
+
+The runbook performs the following steps:
+
+- Describes and validates RequesterARN (role or user) to get
+information such as IAM entity type, and IAM Id.
+
+- Fetches CloudTrail events associated with the RequesterARN,
+EventSource, and ResourceARN if provided.
+
+- Analyzes the CloudTrail events to get the action that was performed when the Access
+Denied error was returned, then examines all the IAM policies such as inline and
+managed policies attached to the IAM entity, as well as resource-based policies.
+It then simulates these policies against the actions found in the Access Denied
+errors from the CloudTrail events in question to determine the cause of the error.
+
+- Outputs a report determining the type of Access Denied error, the policies
+responsible for the errors, and gives suggestions for potential solution to the
+error.
+
+Run this Automation (console)
+
+Document type
+
+Automation
+
+Owner
+
+Amazon
+
+Platforms
+
+/
+
+Required IAM permissions
+
+The AutomationAssumeRole parameter requires the following actions to
+use the runbook successfully.
+
+- apigateway:GetRestApis
+
+- cloudtrail:LookupEvents
+
+- cloud9:GetEnvironment
+
+- codeartifact:GetRepositoryPermissionsPolicy
+
+- ecr:GetRepositoryPolicy
+
+- elasticfilesystem:GetFileSystemPolicy
+
+- es:DescribeDomain
+
+- iam:GetPolicy
+
+- iam:GetPolicyVersion
+
+- iam:GetRole
+
+- iam:GetRolePolicy
+
+- iam:GetUser
+
+- iam:GetUserPolicy
+
+- iam:ListAttachedRolePolicies
+
+- iam:ListAttachedUserPolicies
+
+- iam:ListRolePolicies
+
+- iam:ListUserPolicies
+
+- iam:SimulatePrincipalPolicy
+
+- iam:SimulateCustomPolicy
+
+- kms:GetKeyPolicy
+
+- lambda:GetPolicy
+
+- secretsmanager:GetResourcePolicy
+
+- serverlessrepo:GetApplication
+
+- signer:GetSigningProfile
+
+- sns:GetTopicAttributes
+
+- ssm:StartAutomationExecution
+
+- ssm:StopAutomationExecution
+
+- sqs:GetQueueAttributes
+
+- s3:GetBucketPolicy
+
+Example Policy:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Action": [
+"iam:GetUser",
+"iam:GetRole",
+"iam:SimulatePrincipalPolicy",
+"iam:ListUserPolicies",
+"iam:ListRolePolicies",
+"iam:GetRolePolicy",
+"iam:ListAttachedRolePolicies",
+"iam:GetPolicy",
+"iam:GetUserPolicy",
+"iam:GetPolicyVersion",
+"iam:ListAttachedUserPolicies",
+"ssm:StartAutomationExecution",
+"ssm:StopAutomationExecution",
+"cloudtrail:LookupEvents",
+"iam:SimulateCustomPolicy"
+],
+"Resource": "*",
+"Effect": "Allow"
+},
+{
+"Action": [
+"s3:GetBucketPolicy",
+"kms:GetKeyPolicy",
+"lambda:GetPolicy",
+"sns:GetTopicAttributes",
+"ecr:GetRepositoryPolicy",
+"apigateway:GET",
+"codeartifact:GetRepositoryPermissionsPolicy",
+"elasticfilesystem:DescribeFileSystemPolicy",
+"sqs:GetQueueAttributes",
+"cloud9:DescribeEnvironmentStatus",
+"es:DescribeDomain",
+"signer:GetSigningProfile",
+"serverlessrepo:GetApplication",
+"secretsmanager:GetResourcePolicy"
+],
+"Resource": "*",
+"Effect": "Allow"
+}
+]
+}
+
+Instructions
+
+Follow these steps to configure the automation:
+
+- Navigate to AWSSupport-TroubleshootIAMAccessDeniedEvents in Systems Manager
+under Documents.
+
+- Select Execute automation.
+
+- For the input parameters, enter the following:
+
+- AutomationAssumeRole (Optional):
+
+- Description: (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management
+(IAM) role that allows SSM Automation to perform the actions on
+your behalf. The role needs to be added to your Amazon EKS cluster access
+entry or RBAC permission to allow Kubernetes API calls.
+
+- Type: AWS::IAM::Role::Arn
+
+- RequesterARN (Required):
+
+- Description: (Required) The ARN of the IAM user or role for
+which you want to investigate the access permissions on a specific
+AWS resource.
+
+- Type: String
+
+- Allow Pattern:
+^arn:(aws|aws-cn|aws-us-gov|aws-iso(-[a-z])?):iam::[0-9]{12}:(role|user)\\/[\\w+\\/=,.@-]+$
+
+- ResourceARN (Optional):
+
+- Description: (Optional) The ARN of AWS the resource for which
+the access denied is evaluated. The AWS target resource should
+exist in the same region where the automation runbook is
+executed.
+
+- Type: String
+
+- Allow Pattern:
+^$|^arn:(aws|aws-cn|aws-us-gov|aws-iso(-[a-z])?):([a-zA-Z0-9\\-]{1,63}):([a-z0-9\\-]{0,63})?:(\\d{12})?:([a-zA-Z0-9\\-_/:.]{1,1024})$
+
+- EventSource (Required):
+
+- Description: (Required) The Amazon API endpoint where the CloudTrail
+event originated. For example: s3.amazonaws.com.
+
+- Type: String
+
+- Allow Pattern:
+^([a-zA-Z0-9.-]+)\\.amazonaws\\.com$
+
+- EventName (Optional):
+
+- Description: (Optional) The Amazon API action name associated with
+the CloudTrail event. For example: s3:CreateBucket.
+
+- Type: String
+
+- Allow Pattern: ^$|^[a-z0-9]+:[A-Za-z0-9]+$
+
+- LookBackHours (Optional):
+
+- Description: (Optional) The number of hours to look back in the
+CloudTrail events when searching for Access Denied events.
+Valid range: 1 to 24 hours.
+
+- Type: Integer
+
+- Allow Pattern: ^([1-9]|1[0-9]|2[0-4])$
+
+- Default: 12
+
+- MaxEvents (Optional):
+
+- Description: (Optional) The maximum number of CloudTrail Access
+Denied events returned when searching for events. Valid
+range: 1 to 5 events.
+
+- Type: Integer
+
+- Allow Pattern: ^([1-9]|1[0-9]|2[0-4])$
+
+- Default: 3
+
+- UseContextEntries (Optional):
+
+- Description: (Optional) If you specify true, the
+automation extracts details about the context of the API request
+from the CloudTrail event and include them for the IAM policy
+simulation.
+
+- Type: Boolean
+
+- Allow Pattern: ^([1-9]|1[0-9]|2[0-4])$
+
+- Default: 3
+
+- Select Execute.
+
+- The automation initiates.
+
+- The document performs the following steps:
+
+- ValidateRequesterArn
+
+Validates and deconstructs the RequesterArn ARN, retrieving
+information about the target IAM user or role.
+
+- GetCloudTrailEventsWithAccessDeniedError
+
+Queries the CloudTrail events for recent Access Denied events
+related to the specified IAM entity and AWS service
+EventSource.
+
+- EvaluateIAMRequesterPolicies
+
+Evaluates the IAM permissions of the requester IAM entity against the
+actions from CloudTrail events. This evaluation includes analyzing both
+identity-based and resource-based policies associated with the requester.
+The automation utilizes IAM's policy simulation capabilities to assess
+these policies in the context of the denied actions identified in the CloudTrail
+events.
+
+- After completed, review the Outputs section for
+the detailed results of the execution:
+
+- PermissionEvaluationResults
+
+Outputs a report that helps to identify the specific actions that were
+denied, differentiating between implicit and explicit denials. It also lists
+the policies responsible for access denials and provides explanations for
+each denial. The report also suggests potential resolutions, such as
+identifying missing allow statements or conflicting deny statements
+
+References
+
+Systems Manager Automation
+
+- Run this Automation (console)
+
+- Run an
+automation
+
+- Setting up an
+Automation
+
+- Support Automation
+Workflows landing page

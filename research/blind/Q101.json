@@ -1,0 +1,64 @@
+{
+  "question_id": "Q101",
+  "question_content_hash": "0a6cdb73abccf7b660d077bf3bed19631fbb7dfaf31808f366420a1d6899e0c3",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:58:29Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Mọi EC2 instance phải có tag environment và tag asset (bắt buộc có mặt).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Giá trị tag environment chỉ được là Development, Staging hoặc Production; asset nhận giá trị bất kỳ.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Phải NGĂN việc launch instance (preventive) nếu thiếu tag bắt buộc – không chỉ phát hiện/khắc phục sau.", "kind": "constraint"},
+    {"id": "R4", "text_vi": "Môi trường dùng AWS Organizations (có thể dùng SCP/tag policy) và AWS Config đã bật.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q101:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Tag policy (enforced cho ec2:instance) chặn tạo resource có giá trị tag environment không hợp lệ; SCP Deny ec2:RunInstances khi aws:RequestTag thiếu (Null) environment/asset chặn launch thiếu tag. Gắn ở root áp dụng toàn org – đúng mô hình AWS khuyến nghị.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q101:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đảo vai trò: tag policy không thể bắt buộc sự có mặt của tag cho thao tác ec2:RunInstances (resource không có tag không bị đánh giá; required tag keys chỉ áp dụng cho IaC). Nên launch thiếu tag qua API/console vẫn thành công.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q101:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "AWS Config required-tags là rule phát hiện, trigger theo configuration changes sau khi resource đã tồn tại; remediation bằng SSM Automation chỉ sửa sau, không ngăn launch. Cũng chỉ cấu hình tag environment, bỏ sót asset.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q101:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Vẫn là AWS Config required-tags (phát hiện sau khi launch) + remediation, không ngăn launch; không ràng buộc giá trị environment.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref5"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q101:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Organizations nêu rõ tag policy enforcement chặn giá trị không hợp lệ nhưng không bắt buộc key có mặt, và khuyến nghị dùng SCP để chặn tạo resource thiếu tag – đúng tổ hợp của A.", "open_issues": ["SCP không áp dụng cho management account.", "Tag policy 'Required tag keys' (report_required_tag_for) mới chỉ áp dụng cho IaC (CloudFormation/Terraform/Pulumi), không làm B đúng với launch qua API/console."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:58:29Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies-enforcement.html", "title": "Enforce tagging consistency - AWS Organizations", "section": "Enforce for \"Basic compliance rules\" – Important",
+     "snapshot_id": "771243d16969", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Use SCPs to prevent IAM users and roles in target accounts from creating certain resource types if the request doesn't include the specified tags.",
+     "supports": "Sự có mặt của tag lúc tạo phải dùng SCP; tag policy basic compliance không enforce thiếu tag key.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies-enforcement.html", "title": "Enforce tagging consistency - AWS Organizations", "section": "Enforce for \"Basic compliance rules\"",
+     "snapshot_id": "771243d16969", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you can prevent resource creation with tag values that do not meet the requirements specified in your tag policy.",
+     "supports": "Tag policy enforcement chặn tạo EC2 với giá trị environment không nằm trong danh sách cho phép (ec2:instance hỗ trợ enforcement).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/whitepapers/latest/tagging-best-practices/implementing-and-enforcing-tagging.html", "title": "Implementing and enforcing tagging - Best Practices for Tagging AWS Resources", "section": "AWS Organizations – Service control policies (SCPs)",
+     "snapshot_id": "2fdbf318ba45", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "In the following example, the policy will deny ec2:RunInstances requests where the example-inc:cost-allocation:CostCenter tag is not present.",
+     "supports": "SCP Deny ec2:RunInstances với điều kiện Null aws:RequestTag để bắt buộc tag khi launch.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html", "title": "Tag policies - AWS Organizations", "section": "What are tag policies?",
+     "snapshot_id": "d64a9382b467", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Untagged resources or tags that aren't defined in the tag policy aren't evaluated for compliance with the tag policy.",
+     "supports": "Tag policy không chặn resource không có tag – không thể bắt buộc sự có mặt của tag cho RunInstances.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/config/latest/developerguide/required-tags.html", "title": "required-tags - AWS Config", "section": "required-tags",
+     "snapshot_id": "6d7f7adba223", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Checks if your resources have the tags that you specify.",
+     "supports": "required-tags là rule kiểm tra (detective, trigger: configuration changes), không ngăn launch.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q101:B", "detail_vi": "\"Development. Staging, or Production\" – dấu chấm thay vì dấu phẩy sau Development."},
+    {"type": "typo", "location": "Q101:C", "detail_vi": "\"Development. Staging, and Production\" – dấu chấm thay vì dấu phẩy sau Development."}
+  ],
+  "notes_vi": "Trang 'Services and resource types that support enforcement' liệt kê ec2:instance hỗ trợ enforcement mode."
+}

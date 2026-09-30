@@ -1,0 +1,53 @@
+{
+  "question_id": "Q094",
+  "question_content_hash": "d1925497bef531d1dc0388eecef696376b44b72fd9089dde049f0b92f3e7f32f",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:58:31Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "AWS Support cảnh báo access key bị lộ trên một account standalone; AWS đã gắn AWSCompromisedKeyQuarantineV3 cho IAM user liên quan.", "kind": "condition"},
+    {"id": "R2", "text_vi": "Phải xác định phạm vi (scope) sự cố: xem hoạt động API trái phép (CloudTrail).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Phải triage và remediate: xoay vòng/thay access key bị lộ, xóa tài nguyên trái phép, khôi phục trạng thái an toàn.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q094:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Xóa user ngay có thể chặn key nhưng không xác định phạm vi bằng CloudTrail (nơi ghi lại API call); CloudWatch không phải nguồn audit hoạt động API và phương án không xóa tài nguyên trái phép.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref3", "ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q094:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Khớp quy trình AWS: xem CloudTrail Event history tìm hoạt động trái phép, xóa tài nguyên không nhận ra, thay (rotate) access key của user; gỡ quarantine policy chỉ ở bước cuối sau khi đã khắc phục.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref2", "ref1"], "evidence_kind": "direct"},
+    {"unit_id": "Q094:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Gỡ AWSCompromisedKeyQuarantineV3 ngay từ đầu trong khi key bị lộ vẫn còn hiệu lực (không rotate key) mở lại quyền cho kẻ tấn công; AWS ghi rõ không được gỡ policy mà phải làm theo hướng dẫn trong support case.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q094:D", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Rotate key và xóa tài nguyên là đúng hướng, nhưng xác định phạm vi dựa vào CloudWatch logs thay vì CloudTrail (nguồn ghi API call) nên scoping yếu/không đầy đủ.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref3", "ref2"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q094:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "Hướng dẫn chính thức của AWS (Knowledge Center) liệt kê đúng các bước ở B: update access key, xem CloudTrail Event history, xóa tài nguyên trái phép. Điểm chưa chắc: trang managed policy ghi 'Do NOT remove this policy' và bảo làm theo support case, không có tài liệu công khai nói rõ khi nào được gỡ.", "open_issues": ["Không tìm được tài liệu công khai nói rõ được gỡ AWSCompromisedKeyQuarantineV3 sau khi khắc phục; trang policy chỉ bảo làm theo hướng dẫn trong support case."]},
+    "reference_ids": ["ref1", "ref2", "ref3"],
+    "recorded_at": "2026-09-30T19:58:31Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AWSCompromisedKeyQuarantineV3.html", "title": "AWSCompromisedKeyQuarantineV3 - AWS Managed Policy", "section": "Description",
+     "snapshot_id": "d8d2d40cfb68", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Do NOT remove this policy. Instead, please follow the instructions specified in the support case created for you regarding this event.",
+     "supports": "Không được gỡ quarantine policy trước khi thực hiện các bước khắc phục trong support case (bác C; B gỡ ở cuối).", "kind": "direct"},
+    {"id": "ref2", "url": "https://repost.aws/knowledge-center/potential-account-compromise", "title": "What can I do if I notice unauthorized activity in my AWS account? (AWS Knowledge Center)", "section": "Remediate unauthorized activity in your account",
+     "snapshot_id": "e936cc90051d", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Review for unsanctioned activity, such as the creation of access keys, policies, roles, or temporary security credentials.",
+     "supports": "Quy trình AWS: update access keys bị lộ, xem CloudTrail Event history, xóa tài nguyên trái phép (khớp B).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html", "title": "What Is AWS CloudTrail?", "section": "intro",
+     "snapshot_id": "64383f1a6ba1", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Actions taken by a user, role, or an AWS service are recorded as events in CloudTrail.",
+     "supports": "CloudTrail là nguồn xác định phạm vi hành động của key bị lộ (A, D dùng CloudWatch).", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q094:D", "detail_vi": "\"IAM abbess keys\" là lỗi chính tả của \"IAM access keys\"."}
+  ]
+}

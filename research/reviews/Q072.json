@@ -1,0 +1,296 @@
+{
+  "question_id": "Q072",
+  "question_content_hash": "e7040fa4ca98bd938533399517dec8f75bc5720e12714169f51944e69dcc274a",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:48:50Z",
+  "last_reviewed_at": "2026-09-30T20:05:05+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5",
+    "blind_performed_by": {
+      "agent": "scs-researcher (blind)",
+      "model": "claude-opus-5-5"
+    }
+  },
+  "blind_record_sha256": "999d3b378c1f221698632cbec1f00f6e522f63605b7a59589d908c55cd68686a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Tổ chức AWS Organizations nhiều account; hiện dùng IAM users và secret access keys.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Mọi truy cập account phải dùng temporary security credentials hết hạn sau 60 phút.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Người dùng phải truy cập qua SAML-based IdP.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q072:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GetSessionToken trả temporary credentials cho IAM user, nghĩa là vẫn cần IAM user và long-term access key để gọi; không có SAML IdP, và access key long-term vẫn dùng được trực tiếp.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q072:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "IAM Identity Center kết nối external IdP qua SAML 2.0, cấp quyền bằng permission set trên các account của organization; session duration của permission set mặc định 1 giờ (tối thiểu 1 giờ); CLI lấy short-term credentials; xóa IAM users loại bỏ long-term keys.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q072:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Secrets Manager lưu secret, get-secret-value không đăng nhập vào AWS account; managed rotation chỉ áp dụng cho secret của một số dịch vụ (RDS, Aurora...). Cognito identity pool dành cho người dùng ứng dụng; tổ hợp này không tạo truy cập account bằng SAML với credential 60 phút.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q072:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "IAM Roles Anywhere xác thực bằng X.509 certificate, không phải SAML IdP; thêm vào đó role chỉ nằm trong management account nên không cấp truy cập trực tiếp các member account, và không loại bỏ IAM users.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q072:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "IAM Identity Center hỗ trợ SAML 2.0 external IdP, permission set session duration mặc định 1 giờ, và CLI nhận short-term credentials; các lựa chọn khác không có SAML hoặc không cấp truy cập account.",
+      "open_issues": [
+        "B yêu cầu lấy credentials qua CLI; truy cập console qua AWS access portal cũng dùng session duration của permission set."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T19:48:50Z"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-idp.html",
+      "title": "External identity providers - AWS IAM Identity Center",
+      "section": "External identity providers",
+      "snapshot_id": "0d65935a9f94",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can connect your existing workforce identities from external identity providers (IdPs) through the Security Assertion Markup Language (SAML) 2.0",
+      "supports": "IAM Identity Center dùng SAML 2.0 với external IdP.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/howtosessionduration.html",
+      "title": "Set session duration for AWS accounts - AWS IAM Identity Center",
+      "section": "Set session duration for AWS accounts",
+      "snapshot_id": "ff824d887b79",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you create a new permission set, the session duration is set to 1 hour (in seconds) by default.",
+      "supports": "Session duration của permission set đáp ứng yêu cầu 60 phút, áp dụng cả console và CLI.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/STS/latest/APIReference/API_GetSessionToken.html",
+      "title": "GetSessionToken - AWS Security Token Service",
+      "section": "GetSessionToken",
+      "snapshot_id": "d1a7331d8b9e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Returns a set of temporary credentials for an AWS account or IAM user.",
+      "supports": "GetSessionToken gắn với IAM user (long-term credentials), không dùng SAML.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_managed.html",
+      "title": "Managed rotation for AWS Secrets Manager secrets",
+      "section": "Managed rotation",
+      "snapshot_id": "b4b951bb797b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Some services offer managed rotation, where the service configures and manages rotation for you.",
+      "supports": "Managed rotation chỉ cho secret của một số dịch vụ, không liên quan truy cập account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html",
+      "title": "Amazon Cognito identity pools",
+      "section": "Amazon Cognito identity pools",
+      "snapshot_id": "aee3aa4ccc52",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Identity pools generate temporary AWS credentials for the users of your app",
+      "supports": "Cognito identity pool dành cho người dùng ứng dụng, không phải workforce truy cập account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html",
+      "title": "What is AWS Identity and Access Management Roles Anywhere?",
+      "section": "What is IAM Roles Anywhere?",
+      "snapshot_id": "8a4f014895bd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use AWS Identity and Access Management Roles Anywhere to obtain temporary security credentials in IAM for workloads such as servers, containers, and applications that run outside of AWS.",
+      "supports": "Roles Anywhere dành cho workload dùng X.509 certificate, không phải SAML IdP cho người dùng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html",
+      "title": "Configuring IAM Identity Center authentication with the AWS CLI",
+      "section": "Configuring IAM Identity Center authentication",
+      "snapshot_id": "fc251d209d82",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "configure the AWS CLI with AWS IAM Identity Center (IAM Identity Center) to retrieve credentials to run AWS CLI commands",
+      "supports": "Người dùng lấy SSO credentials qua AWS CLI.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/howtosessionduration.html",
+      "title": "Set session duration for AWS accounts - AWS IAM Identity Center",
+      "section": "Set session duration for AWS accounts",
+      "snapshot_id": "ff824d887b79",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When users federate into their AWS account console or when the AWS Command Line Interface (AWS CLI) is used, IAM Identity Center uses the session duration setting on the permission set to control the duration of the session.",
+      "supports": "Session duration của permission set (tối thiểu/mặc định 1 giờ) áp dụng cho cả credentials lấy qua AWS CLI, đáp ứng 60 phút.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "source_answer": [
+    "Q072:B"
+  ],
+  "researched_answer": [
+    "Q072:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "IAM Identity Center hỗ trợ external IdP qua SAML 2.0, permission set có session duration mặc định/tối thiểu 1 giờ và áp dụng cho cả console lẫn AWS CLI; các lựa chọn khác không có SAML hoặc không cấp truy cập account.",
+    "open_issues": [
+      "Nếu yêu cầu thời hạn dưới 60 phút thì permission set không đáp ứng (tối thiểu 1 giờ); đề yêu cầu đúng 60 phút nên phù hợp."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key đều là B. Đã kiểm tra thêm: trang session duration của IAM Identity Center nói rõ khi dùng AWS CLI, session duration của permission set kiểm soát thời hạn session (khớp 'retrieve SSO credentials by using the AWS CLI' + 60 phút). Phương án cạnh tranh D (Roles Anywhere) xác thực bằng X.509 certificate chứ không phải SAML IdP, và role nằm ở management account; A (GetSessionToken) vẫn cần IAM user + access key lâu dài và không có SAML. Giữ B, verified, high.",
+  "explanation_vi": {
+    "why_correct": "IAM Identity Center kết nối external IdP qua SAML 2.0, dùng permission set để cấp quyền vào các account trong organization với session duration 1 giờ (áp dụng cả khi lấy credentials qua AWS CLI); xóa IAM users loại bỏ secret access key lâu dài.",
+    "others": {
+      "Q072:A": "GetSessionToken phải được gọi bằng IAM user và access key lâu dài, không dùng SAML IdP, và key gốc vẫn dùng trực tiếp được.",
+      "Q072:C": "Secrets Manager chỉ lưu secret, get-secret-value không đăng nhập vào account; Cognito identity pool dành cho người dùng ứng dụng, không phải cách truy cập account bằng SAML.",
+      "Q072:D": "IAM Roles Anywhere dùng X.509 certificate cho workload ngoài AWS, không phải SAML IdP cho người dùng; role chỉ ở management account và IAM users vẫn còn."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "temporary security credentials that expire after 60 minutes",
+      "meaning_vi": "Session duration 1 giờ → permission set của IAM Identity Center."
+    },
+    {
+      "phrase": "SAML-based identity provider (IdP)",
+      "meaning_vi": "Federation SAML 2.0 → IAM Identity Center với external IdP."
+    },
+    {
+      "phrase": "AWS Organizations",
+      "meaning_vi": "Nhiều account → quản lý tập trung bằng IAM Identity Center."
+    }
+  ],
+  "memory_tip_vi": "Nếu người dùng (workforce) nhiều account cần đăng nhập qua SAML IdP với credentials tạm thời -> nghĩ đến IAM Identity Center + external IdP + permission set session duration; kiểm tra Roles Anywhere là cho workload dùng certificate, GetSessionToken vẫn cần IAM user.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM Identity Center",
+      "AWS STS",
+      "AWS IAM Roles Anywhere",
+      "AWS Secrets Manager",
+      "Amazon Cognito",
+      "AWS Organizations"
+    ],
+    "reason_vi": "Đề về federation SAML và thay long-term access key bằng temporary credentials cho nhiều account."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:48:50Z",
+      "change": "blind verdict ['Q072:B'] (proposed_status=verified)",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:05:05+00:00",
+      "change": "reconciliation: source=['Q072:B'], final=['Q072:B'], status=verified",
+      "previous_answer": [
+        "Q072:B"
+      ]
+    }
+  ],
+  "notes_vi": "SAML + nhiều account + temporary credentials 1 giờ -> IAM Identity Center với external IdP và permission set session duration."
+}

@@ -1,0 +1,40 @@
+URL: https://docs.aws.amazon.com/solutions/latest/automated-forensics-orchestrator-for-amazon-ec2/architecture-overview.html
+TITLE: Architecture overview - Automated Forensics Orchestrator for Amazon EC2 and EKS
+
+# Architecture overview
+
+Deploying this Guidance with the default parameters builds the following environment in the AWS Cloud.
+
+Automated Forensics Orchestrator for Amazon EC2 and EKS architecture diagram
+
+Prior to running the workflow, you will need a forensic Amazon Machine Image (AMI).
+You can use Amazon EC2 Image Builder to build a new forensic AMI or an existing forensic AMI.
+. AWS Step Functions leverages the forensic AMI to perform memory and disk investigation.
+. In the AWS application account, AWS Config managed rules, Amazon GuardDuty, and third-party tools detect malicious activities that are specific to Amazon Elastic Compute Cloud (Amazon EC2) and Amazon Elastic Compute Cloud (Amazon EKS) resources.
+For example, an EC2 instance queries a low reputation domain name that is associated with known abused domains. The findings are sent to AWS Security Hub in the security account through their native or existing integration.
+. By default, all Security Hub findings are then sent to Amazon EventBridge to invoke automated downstream workflows.
+. For a specified event, EventBridge provides an instance ID for the forensics process to target, and initiates the Step Functions workflow.
+. Step Functions triages the request through the following approach: It first gets the instance information.
+It then determines if isolation is required based on the Security Hub action and if acquisition is required based on tags associated with the instance.
+Finally, it initiates the acquisition flow based on triaging output.
+
++
+.. Amazon DynamoDB stores triaging details.
+.. Two acquisition flows are initiated in parallel: The Memory Forensics Flow is a Step Functions workflow that captures the memory data and stores it in Amazon Simple Storage Service (Amazon S3).
+Post memory acquisition, the instance is isolated using security groups.
+To help ensure the chain of custody, a new security group gets attached to the targeted instance and removes any access for users, admins, or developers.
+Isolation is initiated based on the selected Security Hub action.
+The Disk Forensics Flow is a Step Functions workflow that takes a snapshot of an Amazon Elastic Block Store (Amazon EBS) volume and shares it with the forensic account.
+.. DynamoDB stores acquisition details.
+.. Once the disk or memory acquisition process is complete, a notification is sent to an investigation Step Functions state machine to begin the automated investigation of the captured data.
+.. When the Step Functions jobs are complete, DynamoDB stores the state of forensic tasks and their results.
+. Investigation Step Functions starts a forensic instance from an existing forensic AMI loaded with customer forensic tools.
+Step Functions loads the memory data from Amazon S3 for investigation, creates an EBS volume from the snapshot, and attaches the EBS volume for disk analysis.
+. AWS Systems Manager documents (SSM documents) run forensic investigation.
+. Amazon Simple Notification Service (Amazon SNS) shares investigation details with customers.
+. AWS AppSync can query the forensic timeline.
+For more details, refer to Sample AppSync API to query forensic details.
+
+Note
+
+Using a forensics AMI with the required tooling, and the installed AWS Systems Manager Agent (SSM Agent), the state machine will provision an EC2 instance, attach the previously captured snapshots and mount the memory data captured, making the data ready for investigation. Systems Manager using SSM Run Command runs scripts using the forensic tools installed to perform forensic investigative processes such as timelining against the captured data.

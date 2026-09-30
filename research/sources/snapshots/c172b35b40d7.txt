@@ -1,0 +1,408 @@
+URL: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html
+TITLE: Encrypting Amazon RDS resources - Amazon Relational Database Service
+
+# Encrypting Amazon RDS resources
+
+Amazon RDS can encrypt your Amazon RDS DB instances.
+Data that is encrypted at rest includes the underlying storage
+for DB instances, its logs, automated backups, read replicas, and snapshots.
+
+Amazon RDS encrypted DB instances use the industry
+standard AES-256 encryption algorithm to encrypt your data on the server
+that hosts your Amazon RDS DB instances.
+
+After your data is encrypted, Amazon RDS
+handles authentication of
+access and decryption of your data transparently with a minimal
+impact on performance. You don't need to modify your database client
+applications to use encryption.
+
+Note
+
+For encrypted and unencrypted DB instances, data
+that is in transit between the source and the read replicas is encrypted,
+even when replicating across AWS Regions.
+
+Topics
+
+- Overview of encrypting Amazon RDS resources
+
+- Encrypting a DB instance
+
+- Determining whether encryption is turned on for a DB instance
+
+- Availability of Amazon RDS encryption
+
+- Encryption in transit
+
+- Limitations of Amazon RDS encrypted DB instances
+
+## Overview of encrypting Amazon RDS resources
+
+Amazon RDS encrypted DB instances provide an additional layer of data
+protection by securing your data from unauthorized access to the underlying storage. You
+can use Amazon RDS encryption to increase data protection of your applications deployed in
+the cloud, and to fulfill compliance requirements for encryption at rest. For an Amazon RDS
+encrypted DB instance, all logs, backups, and snapshots are encrypted. For more
+information about the availability and limitations of encryption, see Availability of Amazon RDS encryption and Limitations of Amazon RDS encrypted DB instances.
+
+Amazon RDS uses an AWS Key Management Service key to encrypt these resources. AWS KMS combines
+secure, highly available hardware and software to provide a key management system scaled
+for the cloud. You can use an AWS managed key, or you can create customer managed keys.
+
+When you create an encrypted DB instance, you can choose a customer managed key or the
+AWS managed key for Amazon RDS to encrypt your DB instance. If you don't specify the
+key identifier for a customer managed key, Amazon RDS uses the AWS managed key for your new DB
+instance. Amazon RDS creates an AWS managed key for Amazon RDS for your AWS account. Your
+AWS account has a different AWS managed key for Amazon RDS for each AWS Region.
+
+To manage the customer managed keys used for encrypting and decrypting your Amazon RDS resources, you
+use the AWS Key Management Service (AWS KMS).
+
+Using AWS KMS, you can create customer managed keys and define the policies that control the use
+of these customer managed keys. AWS KMS supports CloudTrail, so you can audit KMS key usage to verify
+that customer managed keys are being used appropriately. You can use your customer managed keys with
+Amazon Aurora and supported AWS services such as Amazon S3, Amazon EBS, and Amazon Redshift. For a list of
+services that are integrated with AWS KMS, see AWS Service Integration. Some
+considerations about using KMS keys:
+
+- Once you have created an encrypted DB instance, you can't change the
+KMS key used by that DB instance. Therefore, be sure to determine your
+KMS key requirements before you create your encrypted DB instance.
+
+If you must change the encryption key for your DB instance, create a manual snapshot
+of your instance and enable encryption while copying the snapshot. For more
+information, see re:Post
+Knowledge article.
+
+- If you copy an encrypted snapshot, you can use a different KMS key to
+encrypt the target snapshot than the one that was used to encrypt the source
+snapshot.
+
+- A read replica of an Amazon RDS encrypted instance must be encrypted using the same
+KMS key as the primary DB instance when both are in the same AWS Region.
+
+- If the primary DB instance and read replica are in different AWS Regions,
+you encrypt the read replica using the KMS key for that AWS Region.
+
+- You can't share a snapshot that has been encrypted using the
+AWS managed key of the AWS account that shared the snapshot.
+
+- Amazon RDS also supports encrypting an Oracle or SQL Server DB instance with
+Transparent Data Encryption (TDE). TDE can be used with RDS encryption at rest,
+although using TDE and RDS encryption at rest simultaneously might slightly
+affect the performance of your database. You must manage different keys for each
+encryption method. For more information on TDE, see Oracle Transparent Data Encryption or Support for Transparent Data Encryption in SQL Server.
+
+Important
+
+Amazon RDS loses access to the KMS key for a DB instance when you disable the KMS key.
+If you lose access to a KMS key, the encrypted DB instance goes into the
+inaccessible-encryption-credentials-recoverable state
+2 hours after detection in instances where backups are enabled. The DB instance
+remains in this state for seven days, during which the instance is stopped. API
+calls made to the DB instance during this time might not succeed. To recover the DB instance,
+enable the KMS key and restart this DB instance. Enable the KMS key from the
+AWS Management Console, AWS CLI, or RDS API. Restart the DB instance using the AWS CLI command start-db-instance or
+AWS Management Console.
+
+The inaccessible-encryption-credentials-recoverable state only
+applies to DB instances that can stop. This recoverable state is not applicable to instances
+that can't stop, such as read replicas and instances with read replicas.
+For more information, see Limitations of stopping your DB instance.
+
+If the DB instance isn't recovered within seven days, it goes into the terminal
+inaccessible-encryption-credentials state. In this state, the DB instance
+is no longer usable and you can only restore it from a DB snapshot or backup.
+
+During the creation of a DB instance, Amazon RDS checks if the calling principal has access
+to the KMS key and generates a grant from the KMS key that it uses for the
+entire lifetime of the DB instance. Revoking the calling principal's access to the
+KMS key does not affect a running database. When using KMS keys in cross-account
+scenarios, such as copying a snapshot to another account, the KMS key needs to be
+shared with the other account. If you create a DB instance from the snapshot without
+specifying a different KMS key, the new instance uses the KMS key from the
+source account. Revoking access to the key after you create the DB instance does not
+affect the instance. However, disabling the key impacts all DB instances encrypted with
+that key. To prevent this, specify a different key during the snapshot copy
+operation.
+
+DB instances with disabled backups remain available until the volumes are detached from
+the host during an instance modification or a recovery.
+RDS moves the instances into inaccessible-encryption-credentials-recoverable
+state or inaccessible-encryption-credentials state as applicable.
+
+A DB instance in the inaccessible-encryption-credentials state can't be
+recovered in place, so Amazon RDS automatically creates a final DB snapshot when a DB instance
+transitions to this state. This is similar to the final snapshot that you can request
+when you delete a DB instance.
+
+The snapshot captures data written after your most recent automated backup. This
+includes writes made while the KMS key was inaccessible. You can use the snapshot to
+recover data that would otherwise be lost. Amazon RDS creates it as a manual DB snapshot
+named
+rds-final:db-instance-identifier-resource-id,
+and it appears alongside your other DB snapshots.
+
+The final snapshot is retained until you delete it, and it incurs backup storage
+charges in the same way as a manual DB snapshot. Because charges continue until you
+delete it, delete the snapshot as soon as you no longer need it. For more information,
+see Amazon RDS pricing.
+
+Amazon RDS attempts to create a final snapshot when a DB instance transitions to the
+inaccessible-encryption-credentials state in any of the following
+situations:
+
+- The KMS key becomes inaccessible and the DB instance can't be stopped, so it moves
+directly to the inaccessible-encryption-credentials state. This
+situation includes read replicas and DB instances that have read replicas.
+
+- The DB instance remains in the
+inaccessible-encryption-credentials-recoverable state for seven
+days without being recovered.
+
+- The DB instance requires an operation that Amazon RDS can't complete because the
+KMS key is inaccessible. Examples include replacing the underlying host and
+scaling storage.
+
+Amazon RDS creates the final snapshot only when all of the following are true for the
+DB instance:
+
+- The DB instance has data volumes attached. A DB instance with no attached storage, such as
+one that failed during creation or is already being deleted, has no data to
+capture.
+
+- The DB instance isn't a member of a Multi-AZ DB cluster or an Aurora DB cluster.
+These use cluster-level backups instead of individual instance
+snapshots.
+
+- The data of the DB instance is complete and not changing. Amazon RDS doesn't create a
+final snapshot while a DB instance is in any of the following states:
+
+- Being created
+
+- Being restored from a DB snapshot or backup
+
+- Being migrated
+
+- Having transaction logs replayed
+
+- Being patched offline as part of a restore
+
+- Being prepared or configured as a read replica
+
+Automated backups don't need to be turned on. Amazon RDS also creates a final snapshot for
+DB instances on AWS Outposts, and for DB instances in other terminal states as long as their
+storage is intact.
+
+To restore from the final snapshot, first re-enable the KMS key, because the
+snapshot is encrypted with the same key as the source DB instance. For more information, see
+AWS KMS key management. Then restore the snapshot as you would
+any other DB snapshot. For the full list of parameters, see restore-db-instance-from-db-snapshot in the AWS CLI Command
+Reference.
+
+Example Restore a DB instance from the final DB snapshot
+
+For Linux, macOS, or Unix:
+
+aws rds restore-db-instance-from-db-snapshot \
+--db-instance-identifier mydb-restored \
+--db-snapshot-identifier rds-final:mydb-db-abcdefghijklmnop
+
+For Windows:
+
+aws rds restore-db-instance-from-db-snapshot ^
+--db-instance-identifier mydb-restored ^
+--db-snapshot-identifier rds-final:mydb-db-abcdefghijklmnop
+
+Although automated backups aren't required, turn them on for encrypted DB instances so that
+point-in-time recovery is available in addition to the final snapshot.
+
+For more information about KMS keys, see AWS KMS keys in the
+AWS Key Management Service Developer Guide and AWS KMS key management.
+
+## Encrypting a DB instance
+
+To encrypt a new DB instance, choose Enable encryption
+on the Amazon RDS console. For information on creating
+a DB instance, see Creating an Amazon RDS DB instance.
+
+If you use the create-db-instance AWS CLI command to create an encrypted DB
+instance, set the --storage-encrypted parameter. If you use the
+CreateDBInstance API operation, set the
+StorageEncrypted parameter to true.
+
+If you use the AWS CLI create-db-instance command to create an
+encrypted DB instance with a customer managed key, set the --kms-key-id
+parameter to any key identifier for the KMS key. If you use the Amazon RDS API
+CreateDBInstance operation, set the KmsKeyId
+parameter to any key identifier for the KMS key. To use a customer managed key in a
+different AWS account, specify the key ARN or alias ARN.
+
+## Determining whether encryption is turned on for a DB instance
+
+You can use the AWS Management Console, AWS CLI, or RDS API to determine whether
+encryption at rest is turned on for a DB instance.
+
+To determine whether encryption at rest is turned on for a DB instance
+
+- Sign in to the AWS Management Console and open the Amazon RDS console at
+https://console.aws.amazon.com/rds/.
+
+- In the navigation pane, choose
+Databases.
+
+- Choose the name of the DB instance that you want to check
+to view its details.
+
+- Choose the Configuration tab, and
+check the Encryption value under
+Storage.
+
+It shows either Enabled or Not enabled.
+
+To determine whether encryption at rest is turned on for a DB
+instance by using the AWS CLI, call the describe-db-instances command with the following
+option:
+
+- --db-instance-identifier – The name of
+the DB instance.
+
+The following example uses a query to return either
+TRUE or FALSE regarding encryption at
+rest for the mydb DB instance.
+
+Example
+
+aws rds describe-db-instances --db-instance-identifier mydb --query "*[].{StorageEncrypted:StorageEncrypted}" --output text
+
+To determine whether encryption at rest is turned on for a DB
+instance by using the Amazon RDS API, call the DescribeDBInstances operation with the following
+parameter:
+
+- DBInstanceIdentifier – The name of the
+DB instance.
+
+## Availability of Amazon RDS encryption
+
+Amazon RDS encryption is currently available for all database
+engines and storage types.
+
+Amazon RDS encryption is available for most DB instance
+classes. The following table lists DB instance classes that don't
+support Amazon RDS encryption:
+
+Instance type
+
+Instance class
+
+General purpose (M1)
+
+db.m1.small
+
+db.m1.medium
+
+db.m1.large
+
+db.m1.xlarge
+
+Memory optimized (M2)
+
+db.m2.xlarge
+
+db.m2.2xlarge
+
+db.m2.4xlarge
+
+Burstable (T2)
+
+db.t2.micro
+
+## Encryption in transit
+
+Encryption at the physical layer
+
+All data flowing accross AWS Regions over the AWS global network
+is automatically encrypted at the physical layer before it leaves AWS
+secured facilities. All traffic between AZs is encrypted. Additional layers of encryption,
+including those listed in this section may provide additional protections.
+
+Encryption provided by Amazon VPC peering and Transit Gateway cross-Region peering
+
+All cross-Region traffic that uses Amazon VPC and Transit Gateway peering is automatically bulk-encrypted
+when it exits a Region. An additional layer of encryption is automatically provided at the physical layer
+for all traffic before it leaves AWS secured facilities.
+
+Encryption between instances
+
+AWS provides secure and private connectivity between DB instances of all
+types. In addition, some instance types use the offload capabilities of the
+underlying Nitro System hardware to automatically encrypt in-transit traffic
+between instances. This encryption uses Authenticated Encryption with
+Associated Data (AEAD) algorithms, with 256-bit encryption. There is no
+impact on network performance. To support this additional in-transit traffic
+encryption between instances, the following requirements must be met:
+
+- The instances use the following instance types:
+
+- General purpose: M6i,
+M6id, M6in, M6idn, M7g
+
+- Memory optimized: R6i,
+R6id, R6in, R6idn, R7g, X2idn, X2iedn, X2iezn
+
+- The instances are in the same AWS Region.
+
+- The instances are in the same VPC or peered VPCs, and the traffic
+does not pass through a virtual network device or service, such as a
+load balancer or a transit gateway.
+
+## Limitations of Amazon RDS encrypted DB instances
+
+The following limitations exist for Amazon RDS encrypted
+DB instances:
+
+- You can only encrypt an Amazon RDS DB instance when you create it, not
+after the DB instance is created.
+
+However, because you can encrypt a copy of an unencrypted
+snapshot, you can effectively add encryption to an unencrypted DB
+instance. That is, you can create a snapshot of your DB instance,
+and then create an encrypted copy of that snapshot. You can then
+restore a DB instance from the encrypted snapshot, and thus you have
+an encrypted copy of your original DB instance. For more
+information, see Copying a DB snapshot for Amazon RDS.
+
+- You can't turn off encryption on an encrypted DB instance.
+
+- You can't create an encrypted snapshot of an unencrypted DB
+instance.
+
+- A snapshot of an encrypted DB instance
+must be encrypted using the same KMS key as the DB instance.
+
+- You can't have an encrypted read replica of an unencrypted DB
+instance or an unencrypted read replica of an encrypted DB
+instance.
+
+- Encrypted read replicas must be encrypted with the same KMS key
+as the source DB instance when both are in the same AWS
+Region.
+
+- You can't restore an unencrypted backup or snapshot to an
+encrypted DB instance.
+
+- To copy an encrypted snapshot from one AWS Region to another,
+you must specify the KMS key in the destination AWS Region. This
+is because KMS keys are specific to the AWS Region that they are
+created in.
+
+The source snapshot remains encrypted throughout the copy process.
+Amazon RDS uses envelope encryption
+to protect data during the copy process. For more information about
+envelope encryption, see Envelope encryption in the AWS Key Management Service
+Developer Guide.
+
+- You can't unencrypt an encrypted DB instance. However, you can export
+data from an encrypted DB instance
+and import the data into an unencrypted DB instance.

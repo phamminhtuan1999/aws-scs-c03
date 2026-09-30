@@ -1,0 +1,127 @@
+URL: https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-create-cmk.html
+TITLE: Step 1: Create an AWS KMS key without key material - AWS Key Management Service
+
+# Step 1: Create an AWS KMS key without key material
+
+By default, AWS KMS creates key material for you when you create a KMS key. To import your
+own key material instead, start by creating a KMS key with no key material. Then import the
+key material. To create a KMS key with no key material, use AWS KMS console or the CreateKey operation.
+
+To create a key with no key material, specify an origin of
+EXTERNAL. The origin property of a KMS key is immutable. Once you create it,
+you cannot convert a KMS key designed for imported key material into a KMS key with key
+material from AWS KMS or any other source.
+
+The key state of a KMS key with an EXTERNAL
+origin and no key material is PendingImport. A KMS key can remain in
+PendingImport state indefinitely. However, you cannot use a KMS key in
+PendingImport state in cryptographic operations. When you import key material,
+the key state of the KMS key changes to Enabled, and you can use it in
+cryptographic operations.
+
+AWS KMS records an event in your AWS CloudTrail log when you create the
+KMS key, download the public key and import
+token, and import the key material. AWS KMS
+also records a CloudTrail event when you delete imported
+key material or when AWS KMS deletes expired
+key material.
+
+Topics
+
+- Creating a KMS key with no key material (console)
+
+- Creating a KMS key with no key material (AWS KMS API)
+
+## Creating a KMS key with no key material (console)
+
+You only need to create a KMS key for the imported key material once. You can import and
+reimport the same key material into the existing KMS key as often as you need to, but you
+cannot import different key material into a KMS key. For details, see Step 2: Download the wrapping public key and import token.
+
+To find existing KMS keys with imported key material in your Customer managed
+keys table, use the gear icon in the upper right corner to show the
+Origin column in the list of KMS keys. Imported keys have an
+Origin value of External (Import Key
+material).
+
+To create a KMS key with imported key material, begin by following the instructions for creating a KMS key of your
+preferred key type, with the following exception.
+
+After choosing the key usage, do the following:
+
+- Expand Advanced options.
+
+- For Key material origin, choose External (Import key
+material).
+
+- Choose the check box next to I understand the security and durability
+implications of using an imported key to indicate that you understand the
+implications of using imported key material. To read about these implications, see Protecting imported key material.
+
+- Optional: To create a multi-Region
+KMS key with imported key material, under Regionality
+select Multi-Region key.
+
+- Return to the basic instructions. The remaining steps of the basic procedure are the
+same for all KMS keys of that type.
+
+When you choose Finish, you have created a KMS key with no key
+material and a status (key state) of Pending
+import.
+
+However. instead of returning to the Customer managed keys table, the
+console displays a page where you can download the public key and import token that you need
+to import your key material. You can continue with the download step now, or choose
+Cancel to stop at this point. You can return to this download step at
+any time.
+
+Next: Step 2: Download the wrapping public key and import token.
+
+## Creating a KMS key with no key material (AWS KMS API)
+
+To use the AWS KMS API to create a symmetric encryption
+KMS key with no key material, send a CreateKey request with the Origin parameter set to
+EXTERNAL. The following example shows how to do this with the AWS Command Line Interface (AWS CLI).
+
+$ aws kms create-key --origin EXTERNAL
+
+When the command is successful, you see output similar to the following. The AWS KMS key's
+Origin is EXTERNAL and its KeyState is
+PendingImport.
+
+Tip
+
+If the command does not succeed, you might see a KMSInvalidStateException
+or a NotFoundException. You can retry the request.
+
+{
+"KeyMetadata": {
+"Origin": "EXTERNAL",
+"KeyId": "1234abcd-12ab-34cd-56ef-1234567890ab",
+"Description": "",
+"Enabled": false,
+"MultiRegion": false,
+"KeyUsage": "ENCRYPT_DECRYPT",
+"KeyState": "PendingImport",
+"CreationDate": 1568289600.0,
+"Arn": "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+"AWSAccountId": "111122223333",
+"KeyManager": "CUSTOMER",
+"KeySpec": "SYMMETRIC_DEFAULT",
+"CustomerMasterKeySpec": "SYMMETRIC_DEFAULT",
+"EncryptionAlgorithms": [
+"SYMMETRIC_DEFAULT"
+]
+}
+}
+
+Copy the KeyId value from your command output to use in later steps, and then
+proceed to Step 2: Download the wrapping public key and import token.
+
+Note
+
+This command creates a symmetric encryption KMS key with a KeySpec of
+SYMMETRIC_DEFAULT and KeyUsage of ENCRYPT_DECRYPT.
+You can use the optional parameters --key-spec and --key-usage to
+create an asymmetric or HMAC KMS key. For more information, see the CreateKey
+operation.
