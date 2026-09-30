@@ -1,0 +1,471 @@
+URL: https://docs.aws.amazon.com/vpc/latest/ipam/tutorials-create-vpc-ipam.html
+TITLE: Tutorial: Create an IPAM and pools using the AWS CLI - Amazon Virtual Private Cloud
+
+# Tutorial: Create an IPAM and pools using the AWS CLI
+
+Follow the steps in this tutorial to use the AWS CLI to create an IPAM, create IP address pools,
+and allocate a VPC with a CIDR from an IPAM pool.
+
+The following is an example hierarchy of the pool structure that you will create by
+following the steps in this section:
+
+- IPAM operating in AWS Region 1, AWS Region 2
+
+- Private scope
+
+- Top-level pool
+
+- Regional pool in AWS Region 2
+
+- Development pool
+
+- Allocation for a VPC
+
+Note
+
+In this section, you'll create an IPAM. You can only create one IPAM per
+AWS Region. For more information, see Quotas for your IPAM. If you have already delegated an IPAM account and
+created an IPAM, you can skip steps 1 and 2.
+
+Contents
+
+- Step 1: Enable IPAM in your organization
+
+- Step 2: Create an IPAM
+
+- Step 3: Create an IPv4 address pool
+
+- Step 4: Provision a CIDR to the top-level pool
+
+- Step 5. Create a Regional pool with CIDR sourced from the top-level pool
+
+- Step 6: Provision a CIDR to the Regional pool
+
+- Step 7. Create a RAM share for enabling IP assignments across accounts
+
+- Step 8. Create a VPC
+
+- Step 9. Cleanup
+
+## Step 1: Enable IPAM in your organization
+
+This step is optional. Complete this step to enable IPAM in your organization and
+configure your delegated IPAM using the AWS CLI. For more information about the role
+of the IPAM account, see Integrate IPAM with accounts in an AWS Organization.
+
+This request must be made from an AWS Organizations management account. When you run
+the following command, ensure that you're using a role with an IAM policy that permits
+the following actions:
+
+- ec2:EnableIpamOrganizationAdminAccount
+
+- organizations:EnableAwsServiceAccess
+
+- organizations:RegisterDelegatedAdministrator
+
+- iam:CreateServiceLinkedRole
+
+aws ec2 enable-ipam-organization-admin-account --region us-east-1 --delegated-admin-account-id 11111111111
+
+You should see the following output, indicating that enabling was successful.
+
+{
+"Success": true
+}
+
+## Step 2: Create an IPAM
+
+Follow the steps in this section to create an IPAM and view additional information
+about the scopes that are created. You will use this IPAM when you create pools and
+provision IP address ranges for those pools in later steps.
+
+Note
+
+The operating Regions option determines which AWS Regions the IPAM pools can be used for.
+For more information about operating Regions, see Create an IPAM.
+
+To create an IPAM using the AWS CLI
+
+- Run the following command to create the IPAM instance.
+
+aws ec2 create-ipam --description my-ipam --region us-east-1 --operating-regions RegionName=us-west-2
+
+When you create an IPAM, AWS automatically does the following:
+
+- Returns a globally unique resource ID (IpamId) for the IPAM.
+
+- Creates a default public scope (PublicDefaultScopeId) and a default private scope
+(PrivateDefaultScopeId).
+
+{
+"Ipam": {
+"OwnerId": "123456789012",
+"IpamId": "ipam-0de83dba6694560a9",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"PublicDefaultScopeId": "ipam-scope-02a24107598e982c5",
+"PrivateDefaultScopeId": "ipam-scope-065e7dfe880df679c",
+"ScopeCount": 2,
+"Description": "my-ipam",
+"OperatingRegions": [
+{
+"RegionName": "us-west-2"
+},
+{
+"RegionName": "us-east-1"
+}
+],
+"Tags": []
+}
+}
+
+- Run the following command to view additional information related to the
+scopes. The public scope is intended for IP addresses that are going to be
+accessed through the public internet. The private scope is intended for IP addresses
+that are not going to be accessed through the public internet.
+
+aws ec2 describe-ipam-scopes --region us-east-1
+
+In the output, you see the available scopes. You'll use the private scope ID
+in the next step.
+
+{
+"IpamScopes": [
+{
+"OwnerId": "123456789012",
+"IpamScopeId": "ipam-scope-02a24107598e982c5",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-02a24107598e982c5",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"IpamScopeType": "public",
+"IsDefault": true,
+"PoolCount": 0
+},
+{
+"OwnerId": "123456789012",
+"IpamScopeId": "ipam-scope-065e7dfe880df679c",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"IpamScopeType": "private",
+"IsDefault": true,
+"PoolCount": 0
+}
+]
+}
+
+## Step 3: Create an IPv4 address pool
+
+Follow the steps in this section to create an IPv4 address pool.
+
+Important
+
+You won't use the --locale option on this top-level pool. You will set the locale option later on the Regional pool. The locale is the AWS Region where you want a pool to be available for CIDR allocations. As a result of not setting the locale on the top-level pool, the locale will default to None. If a pool has a locale of None, the pool won't be available to VPC resources in any AWS Region. You can only manually allocate IP address space in the pool to reserve space.
+
+To create an IPv4 address pool for all of your AWS resources using the AWS CLI
+
+- Run the following command to create an IPv4 address pool. Use the ID of the
+private scope of the IPAM that you created in the previous step.
+
+aws ec2 create-ipam-pool --ipam-scope-id ipam-scope-065e7dfe880df679c --description "top-level-pool" --address-family ipv4
+
+In the output, you'll see a state of create-in-progress for the
+pool.
+
+{
+"IpamPool": {
+"OwnerId": "123456789012",
+"IpamPoolId": "ipam-pool-0008f25d7187a08d9",
+"IpamPoolArn": "arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0008f25d7187a08d9",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamScopeType": "private",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"Locale": "None",
+"PoolDepth": 1,
+"State": "create-in-progress",
+"Description": "top-level-pool",
+"AutoImport": false,
+"AddressFamily": "ipv4",
+"Tags": []
+}
+}
+
+- Run the following command until you see a state of
+create-complete in the output.
+
+aws ec2 describe-ipam-pools
+
+The following example output shows the correct state.
+
+{
+"IpamPools": [
+{
+"OwnerId": "123456789012",
+"IpamPoolId": "ipam-pool-0008f25d7187a08d9",
+"IpamPoolArn": "arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0008f25d7187a08d9",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamScopeType": "private",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"Locale": "None",
+"PoolDepth": 1,
+"State": "create-complete",
+"Description": "top-level-pool",
+"AutoImport": false,
+"AddressFamily": "ipv4"
+}
+]
+}
+
+## Step 4: Provision a CIDR to the top-level pool
+
+Follow the steps in this section to provision a CIDR to the top-level pool, and then
+verify that the CIDR is provisioned. For more information, see Provision CIDRs to a pool.
+
+To provision a CIDR block to the pool using the AWS CLI
+
+- Run the following command to provision the CIDR.
+
+aws ec2 provision-ipam-pool-cidr --region us-east-1 --ipam-pool-id ipam-pool-0008f25d7187a08d9 --cidr 10.0.0.0/8
+
+In the output, you can verify the state of the provisioning.
+
+{
+"IpamPoolCidr": {
+"Cidr": "10.0.0.0/8",
+"State": "pending-provision"
+}
+}
+
+- Run the following command until you see a state of provisioned in
+the output.
+
+aws ec2 get-ipam-pool-cidrs --region us-east-1 --ipam-pool-id ipam-pool-0008f25d7187a08d9
+
+The following example output shows the correct state.
+
+{
+"IpamPoolCidrs": [
+{
+"Cidr": "10.0.0.0/8",
+"State": "provisioned"
+}
+]
+}
+
+## Step 5. Create a Regional pool with CIDR sourced from the top-level pool
+
+When you create an IPAM pool, the pool belongs to the AWS Region of the IPAM by
+default. When you create a VPC, the pool that the VPC draws from must be in the same
+Region as the VPC. You can use the --locale option when you create a pool
+to make the pool available to services in a Region other than the Region of the IPAM.
+Follow the steps in this section to create a Regional pool in another locale.
+
+To create a pool with a CIDR sourced from the previous pool using the AWS CLI
+
+- Run the following command to create the pool and insert space with a known
+available CIDR from the previous pool.
+
+aws ec2 create-ipam-pool --description "regional--pool" --region us-east-1 --ipam-scope-id ipam-scope-065e7dfe880df679c --source-ipam-pool-id
+ipam-pool-0008f25d7187a08d9 --locale us-west-2 --address-family ipv4
+
+In the output, you'll see the ID of the pool that you created. You'll need
+this ID in the next step.
+
+{
+"IpamPool": {
+"OwnerId": "123456789012",
+"IpamPoolId": "ipam-pool-0da89c821626f1e4b",
+"SourceIpamPoolId": "ipam-pool-0008f25d7187a08d9",
+"IpamPoolArn": "arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0da89c821626f1e4b",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamScopeType": "private",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"Locale": "us-west-2",
+"PoolDepth": 2,
+"State": "create-in-progress",
+"Description": "regional--pool",
+"AutoImport": false,
+"AddressFamily": "ipv4",
+"Tags": []
+}
+}
+
+- Run the following command until you see a state of
+create-complete in the output.
+
+aws ec2 describe-ipam-pools
+
+In the output, you see the pools that you have in your IPAM. In this tutorial,
+we created a top-level and a Regional pool, so you'll see them both.
+
+{
+"IpamPools": [
+{
+"OwnerId": "123456789012",
+"IpamPoolId": "ipam-pool-0008f25d7187a08d9",
+"IpamPoolArn": "arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0008f25d7187a08d9",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamScopeType": "private",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"Locale": "None",
+"PoolDepth": 1,
+"State": "create-complete",
+"Description": "top-level-pool",
+"AutoImport": false,
+"AddressFamily": "ipv4"
+},
+{
+"OwnerId": "123456789012",
+"IpamPoolId": "ipam-pool-0da89c821626f1e4b",
+"SourceIpamPoolId": "ipam-pool-0008f25d7187a08d9",
+"IpamPoolArn": "arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0da89c821626f1e4b",
+"IpamScopeArn": "arn:aws:ec2::123456789012:ipam-scope/ipam-scope-065e7dfe880df679c",
+"IpamScopeType": "private",
+"IpamArn": "arn:aws:ec2::123456789012:ipam/ipam-0de83dba6694560a9",
+"Locale": "us-west-2",
+"PoolDepth": 2,
+"State": "create-complete",
+"Description": "regional--pool",
+"AutoImport": false,
+"AddressFamily": "ipv4"
+}
+]
+}
+
+## Step 6: Provision a CIDR to the Regional pool
+
+Follow the steps in this section to assign a CIDR block to the pool, and validate that
+it's been successfully provisioned.
+
+To assign a CIDR block to the Regional pool using the AWS CLI
+
+- Run the following command to provision the CIDR.
+
+aws ec2 provision-ipam-pool-cidr --region us-east-1 --ipam-pool-id ipam-pool-0da89c821626f1e4b --cidr 10.0.0.0/16
+
+In the output, you see the state of the pool.
+
+{
+"IpamPoolCidr": {
+"Cidr": "10.0.0.0/16",
+"State": "pending-provision"
+}
+}
+
+- Run the following command until you see the state of provisioned
+in the output.
+
+aws ec2 get-ipam-pool-cidrs --region us-east-1 --ipam-pool-id ipam-pool-0da89c821626f1e4b
+
+The following example output shows the correct state.
+
+{
+"IpamPoolCidrs": [
+{
+"Cidr": "10.0.0.0/16",
+"State": "provisioned"
+}
+]
+}
+
+- Run the following command to query the top-level pool to view the allocations.
+The Regional pool is considered an allocation within the top-level pool.
+
+aws ec2 get-ipam-pool-allocations --region us-east-1 --ipam-pool-id ipam-pool-0008f25d7187a08d9
+
+In the output, you see the Regional pool as an allocation in the top-level
+pool.
+
+{
+"IpamPoolAllocations": [
+{
+"Cidr": "10.0.0.0/16",
+"IpamPoolAllocationId": "ipam-pool-alloc-fbd525f6c2bf4e77a75690fc2d93479a",
+"ResourceId": "ipam-pool-0da89c821626f1e4b",
+"ResourceType": "ipam-pool",
+"ResourceOwner": "123456789012"
+}
+]
+}
+
+## Step 7. Create a RAM share for enabling IP assignments across accounts
+
+This step is optional. You can complete this step only if you completed Integrate IPAM with accounts in an AWS Organization.
+
+When you create an IPAM pool AWS RAM share, it enables IP assignments across
+accounts. RAM sharing is only available in your home AWS Region. Note that you create
+this share in the same Region as the IPAM, not in the local Region for the pool. All
+administrative operations on IPAM resources are made through the home Region of your IPAM. The
+example in this tutorial creates a single share for a single pool, but you can add
+multiple pools to a single share. For more information, including an explanation of the
+options that you must enter, see Share an IPAM pool using AWS RAM.
+
+Run the following command to create a resource share.
+
+aws ram create-resource-share --region us-east-1 --name pool_share --resource-arns arn:aws:ec2::123456789012:ipam-pool/ipam-pool-0dec9695bca83e606 --principals 123456
+
+The output shows that the pool was created.
+
+{
+"resourceShare": {
+"resourceShareArn": "arn:aws:ram:us-west-2:123456789012:resource-share/3ab63985-99d9-1cd2-7d24-75e93EXAMPLE",
+"name": "pool_share",
+"owningAccountId": "123456789012",
+"allowExternalPrincipals": false,
+"status": "ACTIVE",
+"creationTime": 1565295733.282,
+"lastUpdatedTime": 1565295733.282
+}
+}
+
+## Step 8. Create a VPC
+
+Run the following command to create a VPC and assign a CIDR block to the VPC from the
+pool in your newly created IPAM.
+
+aws ec2 create-vpc --region us-east-1 --ipv4-ipam-pool-id ipam-pool-04111dca0d960186e --cidr-block 10.0.0.0/24
+
+The output shows that the VPC was created.
+
+{
+"Vpc": {
+"CidrBlock": "10.0.0.0/24",
+"DhcpOptionsId": "dopt-19edf471",
+"State": "pending",
+"VpcId": "vpc-0983f3c454f3d8be5",
+"OwnerId": "123456789012",
+"InstanceTenancy": "default",
+"Ipv6CidrBlockAssociationSet": [],
+"CidrBlockAssociationSet": [
+{
+"AssociationId": "vpc-cidr-assoc-00b24cc1c2EXAMPLE",
+"CidrBlock": "10.0.0.0/24",
+"CidrBlockState": {
+"State": "associated"
+}
+}
+],
+"IsDefault": false
+}
+}
+
+## Step 9. Cleanup
+
+Follow the steps in this section to delete the IPAM resources you've created in this tutorial.
+
+- Delete the VPC.
+
+aws ec2 delete-vpc --vpc-id vpc-0983f3c454f3d8be5
+
+- Delete the IPAM pool RAM share.
+
+aws ram delete-resource-share --resource-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/3ab63985-99d9-1cd2-7d24-75e93EXAMPLE
+
+- Deprovision pool CIDR from the Regional pool.
+
+aws ec2 deprovision-ipam-pool-cidr --ipam-pool-id ipam-pool-0da89c821626f1e4b --region us-east-1
+
+- Deprovision pool CIDR from the top-level pool.
+
+aws ec2 deprovision-ipam-pool-cidr --ipam-pool-id ipam-pool-0008f25d7187a08d9 --region us-east-1
+
+- Delete the IPAM
+
+aws ec2 delete-ipam --region us-east-1

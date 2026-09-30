@@ -1,0 +1,266 @@
+{
+  "question_id": "Q092",
+  "question_content_hash": "b29c19753df6596d3bb414522e9a3c965f89b070c352842fb6599abfc0812822",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:56:18Z",
+  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "a45039fd193db8df66588fdb6d3869d3bf4a244dd6ee1a24b5872ad8bfa74d87",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Users trong IAM group đã có full access S3 (Allow sẵn có); chỉ được thực hiện S3 action sau khi xác thực MFA.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Phải chặn cả request không có MFA từ temporary credentials lẫn long-term access keys (key MFA vắng mặt).",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Ít công sức bảo trì nhất (least maintenance overhead).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Choose TWO: một hành động gắn policy + một điều kiện.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q092:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Deny gắn vào từng user cũng có hiệu lực, nhưng phải gắn/gỡ cho từng user và cho user mới; gắn vào group dễ quản lý hơn nên thua về maintenance overhead.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q092:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Deny s3:* gắn vào group áp dụng cho mọi user trong group (kể cả user mới được thêm); explicit deny ghi đè Allow full S3 hiện có khi điều kiện không-MFA thỏa.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q092:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Users đã có full S3 access qua policy khác; thêm một Allow nữa (dù có điều kiện) không thu hẹp quyền, vì chỉ explicit deny mới ghi đè allow hiện có.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q092:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Deny + BoolIfExists aws:MultiFactorAuthPresent false là tổ hợp AWS khuyến nghị: chặn temporary credentials không MFA và cả request bằng long-term access keys (key vắng mặt). Giá trị false không có dấu nháy vẫn hợp lệ vì Boolean có thể không cần quotes.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q092:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Deny + Bool false được AWS ghi rõ là KHÔNG đáng tin cậy: không chặn request dùng long-term access keys (key không tồn tại). Ngoài ra đoạn JSON thiếu dấu ':' trước false nên sai cú pháp.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q092:B",
+      "Q092:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "IAM docs nêu trực tiếp tổ hợp Deny + BoolIfExists false là khuyến nghị và Bool false là không đáng tin; gắn policy vào group giảm bảo trì so với từng user.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:56:18Z"
+  },
+  "source_answer": [
+    "Q092:B",
+    "Q092:D"
+  ],
+  "researched_answer": [
+    "Q092:B",
+    "Q092:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn B+D. IAM docs nêu trực tiếp tổ hợp Deny + BoolIfExists + false là khuyến nghị, Bool + false không chặn long-term credentials; policy gắn vào group giảm công bảo trì so với gắn từng user.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = B+D, trùng blind. Đã xét lại đối thủ: A (Deny gắn từng user) cũng có hiệu lực nhưng phải gắn cho từng user và user mới, trái 'least maintenance overhead' – group policy tự áp cho thành viên (ref3). C thêm Allow không thu hẹp quyền full S3 sẵn có (explicit deny mới ghi đè allow, ref4). E dùng Bool: tài liệu IAM ghi rõ không chặn request dùng long-term access keys, và đoạn JSON thiếu dấu ':'. Giữ B+D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "B: gắn một customer managed Deny s3:* vào IAM group để áp cho mọi user (kể cả user thêm sau) với ít bảo trì nhất; explicit deny ghi đè quyền full S3 hiện có. D: điều kiện BoolIfExists aws:MultiFactorAuthPresent = false là tổ hợp AWS khuyến nghị, chặn cả request không MFA từ temporary credentials lẫn long-term access keys.",
+    "others": {
+      "Q092:A": "Gắn Deny cho từng user vẫn có tác dụng nhưng phải lặp lại cho mỗi user và user mới, nhiều công bảo trì hơn gắn vào group.",
+      "Q092:C": "Users đã có full S3 access; thêm một Allow nữa không hạn chế được gì vì chỉ explicit deny mới ghi đè allow.",
+      "Q092:E": "Deny với Bool false bỏ lọt request dùng long-term access keys (key không tồn tại nên điều kiện không khớp), và đoạn JSON thiếu dấu ':' nên sai cú pháp."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "only after the users authenticate with MFA",
+      "meaning_vi": "Deny khi không có MFA, dùng aws:MultiFactorAuthPresent."
+    },
+    {
+      "phrase": "least maintenance overhead",
+      "meaning_vi": "Gắn policy một lần vào IAM group thay vì từng user."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần bắt buộc MFA cho quyền đã có sẵn -> nghĩ đến Deny + BoolIfExists aws:MultiFactorAuthPresent false gắn vào group; kiểm tra: Bool (không IfExists) bỏ lọt long-term access keys, Allow thêm không thu hẹp quyền.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "Amazon S3"
+    ],
+    "reason_vi": "Thiết kế IAM policy điều kiện MFA và cách gắn policy (group vs user)."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys",
+      "section": "aws:MultiFactorAuthPresent - Recommended Combination",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This combination of Deny, BoolIfExists, and false denies requests that are not authenticated using MFA.",
+      "supports": "Điều kiện ở D là tổ hợp AWS khuyến nghị để chặn mọi request không MFA.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+      "title": "AWS global condition context keys",
+      "section": "aws:MultiFactorAuthPresent - NOT RECOMMENDED",
+      "snapshot_id": "ee337fc62552",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This statement does not deny access to requests that are made using long-term credentials, or to requests that are authenticated using MFA.",
+      "supports": "Deny + Bool false (E) bỏ lọt request dùng long-term access keys.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_groups.html",
+      "title": "IAM user groups",
+      "section": "intro",
+      "snapshot_id": "50ccbf60036c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "User groups let you specify permissions for multiple users, which can make it easier to manage the permissions for those users.",
+      "supports": "Gắn policy vào group giảm công sức quản lý so với gắn từng user (B hơn A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html",
+      "title": "Policy evaluation logic",
+      "section": "identity-based and resource-based policies",
+      "snapshot_id": "76d60163edfe",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "An explicit deny in either of these policies overrides the allow.",
+      "supports": "Cần Deny (không phải thêm Allow) để hạn chế quyền full S3 đã có.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_grammar.html",
+      "title": "Grammar of the IAM JSON policy language",
+      "section": "notes",
+      "snapshot_id": "f32ee64c2c67",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Quotation marks are optional for numeric and Boolean values.",
+      "supports": "Giá trị false không có quotes trong D vẫn hợp lệ.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q092:E",
+      "detail_vi": "Điều kiện ở E thiếu dấu ':' giữa \"aws:MultiFactorAuthPresent\" và false (JSON không hợp lệ). Có thể do lỗi chép đề; kể cả khi sửa, Bool false vẫn không chặn long-term access keys."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:56:18Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q092:B\", \"Q092:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:46+00:00",
+      "change": "Reconciliation: khớp source key B+D. Xét lại A/C/E, không có thay đổi. Giữ source_issue typo ở E (thiếu ':'). Giữ verified (high).",
+      "previous_answer": [
+        "Q092:B",
+        "Q092:D"
+      ]
+    }
+  ]
+}

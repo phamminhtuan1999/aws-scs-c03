@@ -1,0 +1,291 @@
+{
+  "question_id": "Q096",
+  "question_content_hash": "1296715c39ee4c32bb6512072b84557ea0ec8a4f825103a6ecf080168d04dd97",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:07:36Z",
+  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "ab609aa1c1711c7e7463bfeb6bec1d5c1cef2206d66919471b3c37bff42c453a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giám sát việc xóa KMS customer managed key; cảnh báo TRƯỚC khi key thực sự bị xóa (tức là khi key được lên lịch xóa, trong waiting period).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "CloudTrail đã được tích hợp; cần bước tiếp theo để phát hiện API call liên quan và gửi thông báo.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q096:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Bước đầu sai: thời hạn (expiration) chỉ đặt cho imported key material lúc import, không phải 'deletion time' khi tạo key; đặt hạn còn khiến key material tự bị xóa. Custom Config rule có thể phát hiện Pending deletion nhưng toàn bộ phương án như mô tả không hợp lý.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q096:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "DeleteAlias chỉ xóa alias, không ảnh hưởng KMS key; bắt DeleteAlias không phát hiện việc lên lịch xóa key.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q096:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "EventBridge nhận event 'AWS API Call via CloudTrail'; rule bắt ScheduleKeyDeletion (và DisableKey) gọi Lambda gửi SNS, nên công ty được báo ngay khi key vào trạng thái Pending deletion, trước khi hết waiting period 7-30 ngày.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q096:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SNS policy là access policy kiểm soát ai được truy cập topic, không thể phát hiện API call KMS và không có 'target' Lambda; RevokeGrant cũng không liên quan đến xóa key.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q096:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "ScheduleKeyDeletion khởi động waiting period bắt buộc 7-30 ngày; EventBridge bắt được API call qua CloudTrail và định tuyến tới Lambda/SNS. Các phương án khác dùng API sai hoặc cơ chế không tồn tại.",
+      "open_issues": [
+        "Không phương án nào dùng CloudWatch Logs metric filter + alarm như tài liệu KMS mô tả, dù đề nhắc tích hợp CloudTrail-CloudWatch; C vẫn là phương án duy nhất khả thi."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T20:07:36Z"
+  },
+  "source_answer": [
+    "Q096:C"
+  ],
+  "researched_answer": [
+    "Q096:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. ScheduleKeyDeletion khởi động waiting period bắt buộc 7-30 ngày; EventBridge bắt được API call qua CloudTrail và định tuyến tới Lambda/SNS, nên cảnh báo đến trước khi key bị xóa. Event KMS CMK Deletion chỉ đến sau khi xóa. Các phương án khác dùng API sai hoặc cơ chế không tồn tại.",
+    "open_issues": [
+      "Không phương án nào dùng CloudWatch Logs metric filter + alarm như tài liệu KMS mô tả, dù đề nhắc tích hợp CloudTrail-CloudWatch; C vẫn là phương án duy nhất khả thi. Lambda trung gian là thừa (EventBridge có thể target SNS trực tiếp) nhưng không làm C sai."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại đối thủ A (AWS Config): Config có managed rule kms-cmk-not-scheduled-for-deletion nhưng bước đầu của A ('specify the deletion time of the key material during KMS key creation') không tồn tại – thời hạn chỉ đặt cho imported key material khi import và còn làm key material tự hết hạn. Bổ sung ref8: event KMS CMK Deletion của EventBridge chỉ phát ra sau khi key đã bị xóa, nên muốn báo TRƯỚC phải bắt API ScheduleKeyDeletion như C. B (DeleteAlias không ảnh hưởng key) và D (SNS policy không phát hiện API call) không đáp ứng. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Xóa KMS key luôn phải qua ScheduleKeyDeletion với waiting period 7–30 ngày; EventBridge rule khớp API call này (ghi bởi CloudTrail) rồi gọi Lambda gửi SNS nên công ty được báo trước khi key thực sự bị xóa. Bắt thêm DisableKey giúp phát hiện sớm việc làm key không dùng được.",
+    "others": {
+      "Q096:A": "Không có thiết lập 'deletion time' khi tạo KMS key; thời hạn chỉ áp cho imported key material và còn khiến material tự bị xóa.",
+      "Q096:B": "DeleteAlias chỉ xóa alias, không ảnh hưởng KMS key nên không phát hiện việc lên lịch xóa key.",
+      "Q096:D": "SNS policy là access policy của topic, không phát hiện được API call KMS và không có target Lambda; RevokeGrant cũng không liên quan tới xóa key."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "notify the company before a KMS key is deleted",
+      "meaning_vi": "Bắt ScheduleKeyDeletion (bắt đầu waiting period), không chờ event sau khi xóa."
+    },
+    {
+      "phrase": "integration of AWS CloudTrail with Amazon CloudWatch",
+      "meaning_vi": "API call KMS được ghi lại để EventBridge/CloudWatch dùng làm tín hiệu."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần cảnh báo trước khi KMS key bị xóa -> nghĩ đến EventBridge bắt API ScheduleKeyDeletion (qua CloudTrail) rồi gửi SNS; kiểm tra: DeleteAlias/RevokeGrant không xóa key, event KMS CMK Deletion đến sau khi đã xóa.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "Amazon EventBridge",
+      "AWS CloudTrail",
+      "AWS Lambda",
+      "Amazon SNS"
+    ],
+    "reason_vi": "Giám sát và cảnh báo sự kiện lên lịch xóa KMS key."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html",
+      "title": "Delete an AWS KMS key",
+      "section": "About the waiting period",
+      "snapshot_id": "933a307f5157",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS KMS never deletes your KMS keys unless you explicitly schedule them for deletion and the mandatory waiting period expires.",
+      "supports": "Bắt ScheduleKeyDeletion cho phép cảnh báo trước khi key thực sự bị xóa.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-service-event-cloudtrail.html",
+      "title": "AWS service events delivered via AWS CloudTrail",
+      "section": "intro",
+      "snapshot_id": "fe6ea80aa61e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can create EventBridge rules that use the information from CloudTrail.",
+      "supports": "EventBridge rule có thể khớp API call (ví dụ ScheduleKeyDeletion) ghi bởi CloudTrail.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/kms-events.html",
+      "title": "Monitor KMS keys with Amazon EventBridge",
+      "section": "intro",
+      "snapshot_id": "db658662ad36",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can collect these events and establish rules that route them to one or more targets such as AWS Lambda functions, Amazon SNS topics",
+      "supports": "EventBridge rule định tuyến tới Lambda/SNS để gửi thông báo.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_DeleteAlias.html",
+      "title": "DeleteAlias - AWS KMS API Reference",
+      "section": "Description",
+      "snapshot_id": "a1d30dfa8dc5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Because an alias is not a property of a KMS key, you can delete and change the aliases of a KMS key without affecting the KMS key.",
+      "supports": "DeleteAlias không liên quan đến việc xóa KMS key (bác B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-considerations.html",
+      "title": "Special considerations for imported key material",
+      "section": "You can delete the key material",
+      "snapshot_id": "099d0083dfa6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "when you import key material into a KMS key, you can determine whether the key expires and set its expiration time.",
+      "supports": "Thời hạn chỉ áp dụng cho imported key material lúc import, không phải khi tạo key (bác bước đầu của A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/kms-cmk-not-scheduled-for-deletion.html",
+      "title": "kms-cmk-not-scheduled-for-deletion - AWS Config",
+      "section": "intro",
+      "snapshot_id": "b15e5739386c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The rule is NON_COMPLIANT if KMS keys are scheduled for deletion.",
+      "supports": "AWS Config có thể phát hiện key Pending deletion (phần Config của A khả thi, nhưng bước đầu của A sai).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/sns/latest/dg/sns-access-policy-use-cases.html",
+      "title": "Example cases for Amazon SNS access control",
+      "section": "intro",
+      "snapshot_id": "39c8b82a51bf",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This section describes a few examples of typical use cases for access control.",
+      "supports": "SNS policy dùng cho access control, không phải cơ chế phát hiện API call (bác D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/kms-events.html",
+      "title": "Monitor KMS keys with Amazon EventBridge",
+      "section": "KMS CMK Deletion",
+      "snapshot_id": "db658662ad36",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS KMS deletes the KMS key and sends a KMS CMK Deletion event to EventBridge.",
+      "supports": "Event KMS CMK Deletion chỉ phát ra SAU khi key đã bị xóa; muốn cảnh báo TRƯỚC phải bắt API ScheduleKeyDeletion qua CloudTrail như C.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys-creating-cloudwatch-alarm.html",
+      "title": "Create an alarm that detects use of a KMS key pending deletion",
+      "section": "intro",
+      "snapshot_id": "bdbe6b59535c",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Amazon CloudWatch alarm that notifies you when someone in your account tries to use a KMS key that is pending deletion.",
+      "supports": "Cách AWS mô tả với tích hợp CloudTrail–CloudWatch Logs (metric filter + alarm) không có trong phương án; C là phương án khả thi duy nhất.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:07:36Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q096:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:46+00:00",
+      "change": "Reconciliation: khớp source key C. Bổ sung ref8 (KMS CMK Deletion event chỉ phát sau khi xóa) và ref9 (cách CloudWatch alarm của KMS). Giữ verified (high).",
+      "previous_answer": [
+        "Q096:C"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "question_id": "Q113",
+  "question_content_hash": "f8a249275798743794b76143b954efc75556047d15d03e3bedd45a11cf62826b",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Dữ liệu phải được bảo vệ khi truyền (in transit): client->web, web->RDS.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Dữ liệu phải được mã hoá khi lưu (at rest): RDS và EBS của EC2.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Giảm thiểu chi phí vận hành (operational overhead).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Giảm thiểu chi phí (cost).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q113:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "ACM cert miễn phí trên ALB, self-signed trên EC2 (ALB không kiểm tra), TLS tới RDS, bật RDS encryption và EBS encryption: phủ đủ in transit và at rest bằng tính năng managed, chi phí thấp.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q113:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Chứng chỉ bên thứ ba tốn phí và phải tự gia hạn; Secrets Manager không phải công cụ mã hoá dữ liệu ứng dụng phía client, và không bật mã hoá RDS/EBS nên at rest không được đảm bảo.",
+      "requirement_ids": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q113:C",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Có thể mã hoá in transit và mã hoá dữ liệu ứng dụng bằng khoá CloudHSM, nhưng CloudHSM tính phí theo giờ và đòi hỏi tự quản lý chứng chỉ/khoá; cũng không bật mã hoá storage RDS/EBS. Trái tiêu chí chi phí và vận hành.",
+      "requirement_ids": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q113:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Gửi HTTP từ CloudFront tới origin EC2 nên đoạn này không mã hoá, vi phạm yêu cầu in transit; client-side encryption bằng KMS còn tăng công sức phát triển.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref9"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q113:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu nêu trực tiếp ACM miễn phí trên dịch vụ tích hợp, ALB chấp nhận self-signed trên target, RDS/EBS encryption và TLS tới RDS MySQL.",
+      "open_issues": [
+        "Đánh giá C là 'meets_but_suboptimal' hay 'does_not_meet' tuỳ cách hiểu 'CloudHSM generate TLS certificates' và việc thiếu mã hoá storage; không ảnh hưởng đáp án."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://aws.amazon.com/certificate-manager/pricing/",
+      "title": "AWS Certificate Manager Pricing",
+      "section": "AWS Certificate Manager Pricing",
+      "snapshot_id": "513caba730c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By default, ACM issues certificates at no cost for use with services integrated with ACM.",
+      "supports": "Chứng chỉ ACM dùng trên ALB miễn phí và được ACM quản lý (giảm chi phí và vận hành).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html",
+      "title": "Target groups for your Application Load Balancers",
+      "section": "Routing configuration",
+      "snapshot_id": "23fdfc741ee6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The load balancer does not validate these certificates. Therefore, you can use self-signed certificates or certificates that have expired.",
+      "supports": "Self-signed certificate trên EC2 đủ để mã hoá ALB->target, không tốn phí.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/mysql-ssl-connections.html",
+      "title": "Encrypting client connections with SSL/TLS to MySQL DB instances on Amazon RDS",
+      "section": "Overview",
+      "snapshot_id": "55f4fbcb4f10",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Using SSL/TLS, you can encrypt a connection between your application client and your MySQL DB instance.",
+      "supports": "TLS từ client tới RDS MySQL bảo vệ in transit.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html",
+      "title": "Encrypting Amazon RDS resources",
+      "section": "Overview",
+      "snapshot_id": "c172b35b40d7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Data that is encrypted at rest includes the underlying storage for DB instances, its logs, automated backups, read replicas, and snapshots.",
+      "supports": "Bật RDS encryption bảo vệ at rest toàn bộ storage, log, backup, snapshot.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/ebs-encryption.html",
+      "title": "Amazon EBS encryption",
+      "section": "Overview",
+      "snapshot_id": "2c36fa12fe3e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Encryption operations occur on the servers that host EC2 instances, ensuring the security of both data-at-rest and data-in-transit between an instance and its attached EBS storage.",
+      "supports": "EBS encryption bảo vệ dữ liệu at rest trên EC2, không cần tự quản lý khoá.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html",
+      "title": "What is AWS Secrets Manager?",
+      "section": "Overview",
+      "snapshot_id": "81b41c17ad57",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Secrets Manager helps you manage, retrieve, and rotate database credentials, application credentials, OAuth tokens, API keys, and other secrets throughout their lifecycles.",
+      "supports": "Secrets Manager quản lý secret, không phải dịch vụ mã hoá phía client cho dữ liệu ứng dụng.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://aws.amazon.com/cloudhsm/pricing/",
+      "title": "Pricing | AWS CloudHSM",
+      "section": "Pricing overview",
+      "snapshot_id": "199516d44fc8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With CloudHSM, you pay an hourly fee for each HSM you launch until you terminate the HSM.",
+      "supports": "CloudHSM tính phí theo giờ mỗi HSM - tốn kém hơn ACM/KMS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html",
+      "title": "What is AWS CloudHSM?",
+      "section": "Overview",
+      "snapshot_id": "ced195c2543d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A hardware security module (HSM) is a computing device that processes cryptographic operations and provides secure storage for cryptographic keys.",
+      "supports": "CloudHSM lưu khoá và thực hiện phép mã hoá; không phải CA cấp chứng chỉ TLS, cần tự quản lý nhiều hơn.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-custom-origin.html",
+      "title": "Require HTTPS for communication between CloudFront and your custom origin",
+      "section": "Overview",
+      "snapshot_id": "10a17dfac2ce",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can require HTTPS for communication between CloudFront and your origin.",
+      "supports": "D chọn HTTP tới origin thay vì HTTPS, nên đoạn CloudFront->EC2 không được mã hoá.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "A là phương án duy nhất bật mã hoá at rest ở cả RDS và EBS bằng tính năng managed. Ghi chú công cụ: tools/fetch_doc.py dùng chung bị lỗi cú pháp (SyntaxError dòng 112 trong save_pdf) lúc nghiên cứu; đã dùng một bản sao vá lỗi trong scratchpad (chỉ sửa chuỗi xuống dòng của save_pdf, cùng thư mục snapshots) nên snapshot_id tương thích."
+}

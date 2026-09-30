@@ -1,0 +1,286 @@
+{
+  "question_id": "Q131",
+  "question_content_hash": "7dad53067fb92023011b796e336120d78da0525191f713f988f33abc29bc5d94",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:50+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "86e587fb264f5eb8bfffa5718c6736380fcc0c1d55fde88f85d65526664c170a",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Tập trung log VPC Flow Logs và CloudTrail vào một nơi.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Truy vấn (query) được dữ liệu log sau khi xảy ra sự cố (truy vấn hồi cứu, ad hoc).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q131:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Gửi vào CloudWatch Logs thì tập trung được, nhưng metric filter chỉ biến log thành metric số và không áp dụng hồi tố cho dữ liệu cũ - không phải công cụ truy vấn log sau sự cố.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q131:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Subscription filter chỉ stream log thời gian thực sang Kinesis/Firehose/Lambda; không phải cơ chế truy vấn dữ liệu log đã lưu.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q131:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "VPC Flow Logs chỉ publish tới CloudWatch Logs, S3 hoặc Data Firehose; CloudTrail trail lưu log vào S3 - không dịch vụ nào gửi trực tiếp vào DynamoDB.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q131:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Cả VPC Flow Logs và CloudTrail đều ghi trực tiếp vào S3; Athena hỗ trợ truy vấn SQL cả CloudTrail logs và VPC flow logs trong S3.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q131:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "S3 là đích chung trực tiếp của cả hai nguồn log và Athena có hướng dẫn chính thức để query cả hai; metric/subscription filter không phải công cụ truy vấn.",
+      "open_issues": [
+        "CloudWatch Logs Insights cũng query được log trong CloudWatch Logs, nhưng A/B ghi rõ metric filter/subscription filter nên không dùng Insights."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5",
+      "ref6"
+    ],
+    "recorded_at": "2026-09-30T20:21:50+00:00"
+  },
+  "source_answer": [
+    "Q131:D"
+  ],
+  "researched_answer": [
+    "Q131:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn D. S3 là đích ghi trực tiếp của cả VPC Flow Logs và CloudTrail, Athena có hướng dẫn chính thức để query cả hai; A/B dùng sai công cụ (metric/subscription filter không phải truy vấn), C không có đích DynamoDB.",
+    "open_issues": [
+      "CloudWatch Logs Insights cũng query được log trong CloudWatch Logs, nhưng A/B ghi rõ metric filter/subscription filter nên không dùng Insights."
+    ]
+  },
+  "reconciliation_vi": "Source key = D, trùng blind. Xét lại đối thủ A/B: tài liệu CloudTrail xác nhận vế gửi log vào CloudWatch Logs là khả thi, nhưng công cụ truy vấn log trong CloudWatch Logs là Logs Insights - metric filter chỉ tạo metric (không hồi tố) và subscription filter chỉ stream real-time, nên A/B không đáp ứng yêu cầu query sau sự cố. C không khả thi vì không có đích DynamoDB. Giữ D, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Cả VPC Flow Logs và CloudTrail trail đều ghi trực tiếp vào S3, tạo kho log tập trung; Athena truy vấn SQL trực tiếp log trong S3 khi cần điều tra sau sự cố.",
+    "others": {
+      "Q131:A": "Metric filter chỉ chuyển log thành metric số và không áp dụng cho dữ liệu cũ, không phải công cụ truy vấn log.",
+      "Q131:B": "Subscription filter chỉ stream log real-time sang Kinesis/Firehose/Lambda, không truy vấn được log đã lưu.",
+      "Q131:C": "VPC Flow Logs và CloudTrail không có đích gửi trực tiếp vào DynamoDB; Query theo primary key cũng không hợp cho phân tích log."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "centralize logging",
+      "meaning_vi": "Gom log về một nơi lưu trữ chung (S3 bucket)."
+    },
+    {
+      "phrase": "query the log data after an incident occurs",
+      "meaning_vi": "Truy vấn ad hoc log đã lưu -> Athena trên S3 (hoặc Logs Insights)."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần lưu tập trung CloudTrail + VPC Flow Logs và truy vấn ad hoc sau sự cố -> nghĩ đến S3 + Athena (hoặc CloudWatch Logs Insights nếu log ở CloudWatch); kiểm tra: metric filter/subscription filter không phải công cụ truy vấn.",
+  "tags": {
+    "domains": [
+      "1 Detection",
+      "2 Incident Response"
+    ],
+    "services": [
+      "AWS CloudTrail",
+      "Amazon VPC",
+      "Amazon S3",
+      "Amazon Athena",
+      "Amazon CloudWatch Logs"
+    ],
+    "reason_vi": "Thiết kế giải pháp log tập trung và truy vấn log phục vụ điều tra sự cố."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html",
+      "title": "Logging IP traffic using VPC Flow Logs",
+      "section": "Overview",
+      "snapshot_id": "6d828a2b0fc8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Flow log data can be published to the following locations: Amazon CloudWatch Logs, Amazon S3, or Amazon Data Firehose.",
+      "supports": "Flow logs gửi trực tiếp được vào S3; không có đích DynamoDB.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html",
+      "title": "Query AWS CloudTrail logs",
+      "section": "Query AWS CloudTrail logs",
+      "snapshot_id": "5431a82a2229",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudTrail generates encrypted log files and stores them in Amazon S3.",
+      "supports": "CloudTrail lưu log trong S3, và Athena truy vấn được các log đó.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html",
+      "title": "Query Amazon VPC flow logs",
+      "section": "Query Amazon VPC flow logs",
+      "snapshot_id": "e69c4c901221",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use the logs to investigate network traffic patterns and identify threats and risks across your VPC network.",
+      "supports": "Athena có hướng dẫn truy vấn VPC flow logs để điều tra.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html",
+      "title": "Query Amazon VPC flow logs",
+      "section": "Query Amazon VPC flow logs",
+      "snapshot_id": "e69c4c901221",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To query your Amazon VPC flow logs, you have two options:",
+      "supports": "Athena là công cụ truy vấn chính thức cho flow logs.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+      "title": "Creating metrics from log events using filters",
+      "section": "Overview",
+      "snapshot_id": "18614a309935",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Filters do not retroactively filter data. Filters only publish the metric data points for events that happen after the filter was created.",
+      "supports": "Metric filter chỉ tạo metric và không hồi tố - không phù hợp để truy vấn sau sự cố (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html",
+      "title": "Real-time processing of log data with subscriptions",
+      "section": "Overview",
+      "snapshot_id": "da1d95832008",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use subscriptions to get access to a real-time feed of log events from CloudWatch Logs and have it delivered to other services",
+      "supports": "Subscription filter là cơ chế stream, không phải query (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/send-cloudtrail-events-to-cloudwatch-logs.html",
+      "title": "Sending events to CloudWatch Logs",
+      "section": "Sending events to CloudWatch Logs",
+      "snapshot_id": "e2822e11c418",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudTrail supports sending data, Insights, and management events to CloudWatch Logs.",
+      "supports": "Vế đầu của A/B (gửi CloudTrail vào CloudWatch Logs) khả thi; điểm sai của A/B nằm ở công cụ truy vấn.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html",
+      "title": "Analyzing log data with CloudWatch Logs Insights",
+      "section": "Overview",
+      "snapshot_id": "35255ba80cf5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With CloudWatch Logs Insights, you can interactively search and analyze your log data in Amazon CloudWatch Logs.",
+      "supports": "Công cụ truy vấn log trong CloudWatch Logs là Logs Insights, không phải metric filter hay subscription filter như A/B nêu.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:50+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q131:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:31+00:00",
+      "change": "Reconciliation: khớp source key D; thêm ref7 (CloudTrail gửi được vào CloudWatch Logs) và ref8 (Logs Insights mới là công cụ query, không phải metric/subscription filter); status verified (high).",
+      "previous_answer": [
+        "Q131:D"
+      ]
+    }
+  ],
+  "notes_vi": ""
+}

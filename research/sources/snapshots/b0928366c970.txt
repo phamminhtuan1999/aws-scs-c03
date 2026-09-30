@@ -1,0 +1,288 @@
+URL: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-an-organizational-trail-by-using-the-aws-cli.html
+TITLE: Creating a trail for an organization with the AWS CLI - AWS CloudTrail
+
+# Creating a trail for an organization with the AWS CLI
+
+You can create an organization trail by using the AWS CLI. The AWS CLI is regularly
+updated with additional functionality and commands. To help ensure success, be sure that
+you have installed or updated to a recent AWS CLI version before you begin.
+
+Note
+
+The examples in this section are specific to creating and updating organization
+trails. For examples of using the AWS CLI to manage trails, see Managing trails with the AWS CLI and Configuring CloudWatch Logs monitoring with the AWS CLI. When creating or
+updating an organization trail with the AWS CLI, you must use an AWS CLI profile in the
+management account or delegated administrator account with sufficient permissions.
+If you are converting an organization trail to a non-organization trail, you must
+use the management account for the organization.
+
+You must configure the Amazon S3 bucket used for an organization trail with sufficient
+permissions.
+
+## Create or update an Amazon S3 bucket to use to store the log files for an organization trail
+
+You must specify an Amazon S3
+bucket to receive the log files for an organization trail. This bucket must have a policy that
+allows CloudTrail to put the log files for the organization into the bucket.
+
+The following is an example policy for an Amazon S3 bucket named
+amzn-s3-demo-bucket, which is owned by the organization's
+management account. Replace amzn-s3-demo-bucket,
+region, managementAccountID,
+trailName, and o-organizationID
+with the values for your organization
+
+This bucket policy contains three statements.
+
+- The first statement allows CloudTrail to call the Amazon S3 GetBucketAcl action
+on the Amazon S3 bucket.
+
+- The second statement allows logging in the event the trail is changed from an organization trail to a trail for that account only.
+
+- The third statement allows logging for an organization trail.
+
+The example policy includes an aws:SourceArn condition key for the Amazon S3
+bucket policy. The IAM global condition key aws:SourceArn helps ensure that
+CloudTrail writes to the S3 bucket only for a specific trail or trails. In an organization trail,
+the value of aws:SourceArn must be a trail ARN that is owned by the management
+account, and uses the management account ID.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AWSCloudTrailAclCheck20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:GetBucketAcl",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket",
+"Condition": {
+"StringEquals": {
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailWrite20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/AWSLogs/managementAccountID/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+},
+{
+"Sid": "AWSCloudTrailOrganizationWrite20150319",
+"Effect": "Allow",
+"Principal": {
+"Service": [
+"cloudtrail.amazonaws.com"
+]
+},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket/AWSLogs/o-organizationID/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceArn": "arn:aws:cloudtrail:region:managementAccountID:trail/trailName"
+}
+}
+}
+]
+}
+
+This example policy does not allow any users from member accounts to access the
+log files created for the organization. By default, organization log files are
+accessible only to the management account. For information about how to allow read
+access to the Amazon S3 bucket for IAM users in member accounts, see Sharing CloudTrail log files between AWS accounts.
+
+## Enabling CloudTrail as a trusted service in AWS Organizations
+
+Before you can create an organization trail, you must first enable all features in
+Organizations. For more information, see Enabling All
+Features in Your Organization, or run the following command using a
+profile with sufficient permissions in the management account:
+
+aws organizations enable-all-features
+
+After you enable all features, you must configure Organizations to trust CloudTrail as a trusted
+service. .
+
+To create the trusted service relationship between AWS Organizations and CloudTrail, open a
+terminal or command line and use a profile in the management account. Run the
+aws organizations enable-aws-service-access command, as
+demonstrated in the following example.
+
+aws organizations enable-aws-service-access --service-principal cloudtrail.amazonaws.com
+
+## Using create-trail
+
+### Creating an organization trail that applies to all Regions
+
+To create an organization trail that applies to all Regions, add the
+--is-organization-trail and
+--is-multi-region-trail options.
+
+Note
+
+When you create an organization trail with the AWS CLI, you must use an
+AWS CLI profile in the management account or delegated administrator account
+with sufficient permissions.
+
+The following example creates an organization trail that delivers logs from
+all Regions to an existing bucket named
+amzn-s3-demo-bucket:
+
+aws cloudtrail create-trail --name my-trail --s3-bucket-name amzn-s3-demo-bucket --is-organization-trail --is-multi-region-trail
+
+To confirm that your trail exists in all Regions, the
+IsOrganizationTrail and IsMultiRegionTrail
+parameters in the output are both set to true:
+
+{
+"IncludeGlobalServiceEvents": true,
+"Name": "my-trail",
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/my-trail",
+"LogFileValidationEnabled": false,
+"IsMultiRegionTrail": true,
+"IsOrganizationTrail": true,
+"S3BucketName": "amzn-s3-demo-bucket"
+}
+
+Note
+
+Run the start-logging command to start logging for your
+trail. For more information, see Stopping and starting logging for a trail.
+
+### Creating an organization trail as a single-Region trail
+
+The following command creates an organization trail that only logs events in a
+single AWS Region, also known as a single-Region trail. The AWS Region where
+events are logged is the Region specified in the configuration profile for the
+AWS CLI.
+
+aws cloudtrail create-trail --name my-trail --s3-bucket-name amzn-s3-demo-bucket --is-organization-trail
+
+For more information, see Naming requirements for CloudTrail resources, S3 buckets, and KMS keys.
+
+Sample output:
+
+{
+"IncludeGlobalServiceEvents": true,
+"Name": "my-trail",
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/my-trail",
+"LogFileValidationEnabled": false,
+"IsMultiRegionTrail": false,
+"IsOrganizationTrail": true,
+"S3BucketName": "amzn-s3-demo-bucket"
+}
+
+By default, the create-trail command creates a single-Region
+trail that does not enable log file validation.
+
+Note
+
+Run the start-logging command to start logging for your
+trail.
+
+## Running update-trail to update an organization trail
+
+You can run the update-trail command to change the configuration
+settings for an organization trail, or to apply an existing trail for a single AWS
+account to an entire organization. Remember that you can run the
+update-trail command only from the Region in which the trail was
+created.
+
+Note
+
+If you use the AWS CLI or one of the AWS SDKs to update a trail, be sure that
+the trail's bucket policy is up-to-date. For more information, see Creating a trail for an organization with the AWS CLI.
+
+When you update an organization trail with the AWS CLI, you must use an AWS CLI
+profile in the management account or delegated administrator account with
+sufficient permissions. If you want to convert an organization trail to a
+non-organization trail, you must use the management account for the organization,
+because the management account is the owner of all organization resources.
+
+CloudTrail updates organization trails in member accounts even if a resource
+validation fails. Examples of validation failures include:
+
+- an incorrect Amazon S3 bucket policy
+
+- an incorrect Amazon SNS topic policy
+
+- inability to deliver to a CloudWatch Logs log group
+
+- insufficient permission to encrypt using a KMS key
+
+A member account with CloudTrail permissions can see any validation failures for an
+organization trail by viewing the trail's details page on the CloudTrail console, or
+by running the AWS CLI get-trail-status command.
+
+### Applying an existing trail to an organization
+
+To change an existing trail so that it also applies to an organization instead
+of a single AWS account, add the --is-organization-trail option,
+as shown in the following example.
+
+Note
+
+Use the management account to change an existing non-organization trail to
+an organization trail.
+
+aws cloudtrail update-trail --name my-trail --is-organization-trail
+
+To confirm that the trail now applies to the organization, the
+IsOrganizationTrail parameter in the output has a value of
+true.
+
+{
+"IncludeGlobalServiceEvents": true,
+"Name": "my-trail",
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/my-trail",
+"LogFileValidationEnabled": false,
+"IsMultiRegionTrail": true,
+"IsOrganizationTrail": true,
+"S3BucketName": "amzn-s3-demo-bucket"
+}
+
+In the preceding example, the trail was configured as a multi-Region trail
+("IsMultiRegionTrail": true). A trail that applied only to a
+single Region would show "IsMultiRegionTrail": false in the
+output.
+
+### Converting a single-Region organization trail to a multi-Region organization trail
+
+To convert an existing single-Region organization trail to a multi-Region
+organization trail, add the --is-multi-region-trail option as shown
+in the following example.
+
+aws cloudtrail update-trail --name my-trail --is-multi-region-trail
+
+To confirm that the trail is now a multi-Region, check that the
+IsMultiRegionTrail parameter in the output has a value of
+true.
+
+{
+"IncludeGlobalServiceEvents": true,
+"Name": "my-trail",
+"TrailARN": "arn:aws:cloudtrail:us-east-2:123456789012:trail/my-trail",
+"LogFileValidationEnabled": false,
+"IsMultiRegionTrail": true,
+"IsOrganizationTrail": true,
+"S3BucketName": "amzn-s3-demo-bucket"
+}

@@ -1,0 +1,480 @@
+URL: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-variables-for-access-logging.html
+TITLE: Variables for access logging for API Gateway - Amazon API Gateway
+
+# Variables for access logging for API Gateway
+
+In access logging, you, as an API developer, want to log who has accessed your API and how the caller accessed
+the API. You can create your own log group or choose an existing log group that could be managed by API Gateway. To
+specify the access details, you can use the following case-sensitive $context
+variables.
+
+For a list of reference variables for data transformations, see Variables for data transformations for API Gateway.
+
+Parameter
+
+Description
+
+$context.accountId
+
+The API owner's AWS account ID.
+
+$context.apiId
+
+The identifier API Gateway assigns to your API.
+
+$context.authorize.error
+
+The authorization error message.
+
+$context.authorize.latency
+
+The authorization latency in ms.
+
+$context.authorize.status
+
+The status code returned from an authorization attempt.
+
+$context.authorizer.claims.property
+
+A property of the claims returned from the Amazon Cognito user pool after
+the method caller is successfully authenticated. For more
+information, see Control access to REST APIs using Amazon Cognito user pools as an authorizer.
+
+Note
+
+Calling $context.authorizer.claims returns
+null.
+
+$context.authorizer.error
+
+The error message returned from an authorizer.
+
+$context.authorizer.integrationLatency
+
+The authorizer integration latency in ms.
+
+$context.authorizer.integrationStatus
+
+The status code returned from a Lambda authorizer.
+
+$context.authorizer.latency
+
+The authorizer latency in ms.
+
+$context.authorizer.principalId
+
+The principal user identification associated with the token sent
+by the client and returned from an API Gateway Lambda authorizer (formerly
+known as a custom authorizer). For more information, see Use API Gateway Lambda authorizers.
+
+$context.authorizer.property
+
+The stringified value of the specified key-value pair of the context map returned from an API Gateway
+Lambda authorizer function. For example, if the authorizer returns
+the following context map:
+
+"context" : {
+"key": "value",
+"numKey": 1,
+"boolKey": true
+}
+
+Calling $context.authorizer.key returns the "value" string, calling
+$context.authorizer.numKey returns the "1" string, and calling
+$context.authorizer.boolKey returns the "true" string.
+
+For property, the only supported special character is the underscore
+(_) character.
+
+For more information, see Use API Gateway Lambda authorizers.
+
+$context.authorizer.requestId
+
+The AWS endpoint's request ID.
+
+$context.authorizer.status
+
+The status code returned from an authorizer.
+
+$context.authenticate.error
+
+The error message returned from an authentication attempt.
+
+$context.authenticate.latency
+
+The authentication latency in ms.
+
+$context.authenticate.status
+
+The status code returned from an authentication attempt.
+
+$context.awsEndpointRequestId
+
+The AWS endpoint's request ID.
+
+$context.cipherSuite
+
+The cipher, in IANA format, that is negotiated during the TLS handshake between the client and API Gateway.
+
+$context.customDomain.basePathMatched
+
+The path for an API mapping that an incoming request matched. Applicable when a client
+uses a custom domain name to access an API. For example if a client sends a request to
+https://api.example.com/v1/orders/1234, and the request matches the API mapping with the
+path v1/orders, the value is v1/orders. To learn more, see Use API mappings to connect API stages to a custom domain name for REST APIs.
+
+$context.customDomain.routingRuleIdMatched
+
+The routing rule that an incoming request matched. Applicable when a client
+uses a custom domain name to access an API. To learn more, see Routing rules to connect API stages to a custom domain name for REST APIs.
+
+$context.deploymentId
+
+The ID of the API deployment.
+
+$context.domainName
+
+The full domain name used to invoke the API. This should be the
+same as the incoming Host header.
+
+$context.domainPrefix
+
+The first label of the $context.domainName.
+
+$context.endpointType
+
+The endpoint type of the API.
+
+$context.error.message
+
+A string containing an API Gateway error message. This variable can only
+be used for simple variable substitution in a GatewayResponse body-mapping template, which is not
+processed by the Velocity Template Language engine, and in access
+logging. For more information, see Monitor WebSocket API execution with CloudWatch metrics and Setting up gateway responses to customize error responses.
+
+$context.error.messageString
+
+The quoted value of $context.error.message, namely
+"$context.error.message".
+
+$context.error.responseType
+
+A type of GatewayResponse. This variable can only be used for
+simple variable substitution in a GatewayResponse body-mapping template, which is not
+processed by the Velocity Template Language engine, and in access
+logging. For more information, see Monitor WebSocket API execution with CloudWatch metrics and Setting up gateway responses to customize error responses.
+
+$context.error.validationErrorString
+
+A string containing a detailed validation error message.
+
+$context.extendedRequestId
+
+The extended ID that API Gateway generates and assigns to the API request. The extended request ID contains
+useful information for debugging and troubleshooting.
+
+$context.httpMethod
+
+The HTTP method used. Valid values include: DELETE,
+GET, HEAD, OPTIONS,
+PATCH, POST, and
+PUT.
+
+$context.identity.accountId
+
+The AWS account ID associated with the request.
+
+$context.identity.apiKey
+
+For API methods that require an API key, this variable is the API
+key associated with the method request. For methods that don't
+require an API key, this variable is null. For more information, see
+Usage plans and API keys for REST APIs in API Gateway.
+
+$context.identity.apiKeyId
+
+The API key ID associated with an API request that requires an API
+key.
+
+$context.identity.caller
+
+The principal identifier of the caller that signed the request. Supported for resources that use IAM authorization.
+
+$context.identity.cognitoAuthenticationProvider
+
+A comma-separated list of all the Amazon Cognito authentication providers used by the caller making the
+request. Available only if the request was signed with Amazon Cognito credentials.
+
+For example, for an identity from an Amazon Cognito user pool, cognito-idp.
+region.amazonaws.com/user_pool_id,cognito-idp.region.amazonaws.com/user_pool_id:CognitoSignIn:token
+subject claim
+
+For information about the available Amazon Cognito authentication providers, see Using Federated
+Identities in the Amazon Cognito Developer Guide.
+
+$context.identity.cognitoAuthenticationType
+
+The Amazon Cognito authentication type of the caller making the request. Available only if the request
+was signed with Amazon Cognito credentials. Possible values include authenticated for authenticated
+identities and unauthenticated for unauthenticated identities.
+
+$context.identity.cognitoIdentityId
+
+The Amazon Cognito identity ID of the caller making the request.
+Available only if the request was signed with Amazon Cognito
+credentials.
+
+$context.identity.cognitoIdentityPoolId
+
+The Amazon Cognito identity pool ID of the caller making the request.
+Available only if the request was signed with Amazon Cognito
+credentials.
+
+$context.identity.principalOrgId
+
+The AWS organization ID.
+
+$context.identity.sourceIp
+
+The source IP address of the immediate TCP connection making the request to the API Gateway endpoint.
+
+$context.identity.clientCert.clientCertPem
+
+The PEM-encoded client certificate that the client presented
+during mutual TLS authentication. Present when a client accesses an
+API by using a custom domain name that has mutual TLS enabled.
+
+$context.identity.clientCert.subjectDN
+
+The distinguished name of the subject of the certificate that a
+client presents. Present when a client accesses an API by using a
+custom domain name that has mutual TLS enabled.
+
+$context.identity.clientCert.issuerDN
+
+The distinguished name of the issuer of the certificate that a
+client presents. Present when a client accesses an API by using a
+custom domain name that has mutual TLS enabled.
+
+$context.identity.clientCert.serialNumber
+
+The serial number of the certificate. Present when a client
+accesses an API by using a custom domain name that has mutual TLS
+enabled.
+
+$context.identity.clientCert.validity.notBefore
+
+The date before which the certificate is invalid. Present when a
+client accesses an API by using a custom domain name that has mutual
+TLS enabled.
+
+$context.identity.clientCert.validity.notAfter
+
+The date after which the certificate is invalid. Present when a
+client accesses an API by using a custom domain name that has mutual
+TLS enabled.
+
+$context.identity.vpcId
+
+The VPC ID of the VPC making the request to the API Gateway endpoint.
+
+$context.identity.vpceId
+
+The VPC endpoint ID of the VPC endpoint making the request to the API Gateway endpoint.
+Present only when you have a private API.
+
+$context.identity.user
+
+The principal identifier of the user that will be authorized against resource access. Supported for resources that use IAM authorization.
+
+$context.identity.userAgent
+
+The User-Agent header of the API
+caller.
+
+$context.identity.userArn
+
+The Amazon Resource Name (ARN) of the effective user identified
+after authentication. For more information, see https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users.html.
+
+$context.integration.error
+
+The error message returned from an integration.
+
+$context.integration.integrationStatus
+
+For Lambda proxy integration, the status code returned from AWS Lambda,
+not from the backend Lambda function code.
+
+$context.integration.latency
+
+The integration latency in ms. Equivalent to $context.integrationLatency.
+
+$context.integration.requestId
+
+The AWS endpoint's request ID. Equivalent to $context.awsEndpointRequestId.
+
+$context.integration.responseTransferMode
+
+The response transfer mode of your integration. This can be either BUFFERED or
+STREAMED.
+
+$context.integration.status
+
+The status code returned from an integration. For Lambda proxy integrations, this is the
+status code that your Lambda function code returns.
+
+$context.integration.timeToAllHeaders
+
+The time between when API Gateway establishes the integration connection to when it receives all integration
+response headers from the client.
+
+$context.integration.timeToFirstContent
+
+The time between when API Gateway establishes the integration connection to when it receives the first
+content bytes.
+
+$context.integrationLatency
+
+The integration latency in ms.
+
+$context.integrationStatus
+
+For Lambda proxy integration, this parameter represents the status
+code returned from AWS Lambda, not from the backend Lambda function
+code.
+
+$context.isCanaryRequest
+
+Returns true if the request was directed to the canary and false if the
+request was not directed to the canary. Present only when you have a canary enabled.
+
+$context.path
+
+The request path. For example, for a non-proxy request URL of
+https://{rest-api-id}.execute-api.{region}.amazonaws.com/{stage}/root/child,
+the $context.path value is
+/{stage}/root/child.
+
+$context.protocol
+
+The request protocol, for example, HTTP/1.1.
+
+Note
+
+API Gateway APIs can accept HTTP/2 requests, but API Gateway sends requests to backend integrations using HTTP/1.1. As a result, the request protocol is logged as HTTP/1.1 even if a client sends a request that uses HTTP/2.
+
+$context.requestId
+
+An ID for the request. Clients can override this request ID.
+Use $context.extendedRequestId for a unique request ID that API Gateway generates.
+
+$context.requestOverride.header.header_name
+
+The request header override. If this parameter is defined, it
+contains the headers to be used instead of the HTTP
+Headers that are defined in the Integration
+Request pane. For more information, see Override your API's request and response parameters and status codes for REST APIs in API Gateway.
+
+$context.requestOverride.path.path_name
+
+The request path override. If this parameter is defined, it
+contains the request path to be used instead of the URL
+Path Parameters that are defined in the
+Integration Request pane. For more
+information, see Override your API's request and response parameters and status codes for REST APIs in API Gateway.
+
+$context.requestOverride.querystring.querystring_name
+
+The request query string override. If this parameter is defined,
+it contains the request query strings to be used instead of the
+URL Query String Parameters that are
+defined in the Integration Request pane. For
+more information, see Override your API's request and response parameters and status codes for REST APIs in API Gateway.
+
+$context.responseLatency
+
+The response latency in ms.
+
+$context.responseLength
+
+The response payload length in bytes.
+
+$context.responseOverride.header.header_name
+
+The response header override. If this parameter is defined, it
+contains the header to be returned instead of the Response
+header that is defined as the Default
+mapping in the Integration Response
+pane. For more information, see Override your API's request and response parameters and status codes for REST APIs in API Gateway.
+
+$context.responseOverride.status
+
+The response status code override. If this parameter is defined, it
+contains the status code to be returned instead of the Method
+response status that is defined as the Default
+mapping in the Integration Response
+pane. For more information, see Override your API's request and response parameters and status codes for REST APIs in API Gateway.
+
+$context.requestTime
+
+The CLF-formatted request time (dd/MMM/yyyy:HH:mm:ss
++-hhmm).
+
+$context.requestTimeEpoch
+
+The Epoch-formatted request time, in milliseconds.
+
+$context.resourceId
+
+The identifier that API Gateway assigns to your resource.
+
+$context.resourcePath
+
+The path to your resource. For example, for the non-proxy request
+URI of
+https://{rest-api-id}.execute-api.{region}.amazonaws.com/{stage}/root/child,
+The $context.resourcePath value is
+/root/child. For more information, see Tutorial: Create a REST API with an HTTP non-proxy integration.
+
+$context.stage
+
+The deployment stage of the API request (for example,
+Beta or Prod).
+
+$context.status
+
+The method response status.
+
+$context.tlsVersion
+
+The TLS version that is negotiated during the TLS handshake between the client and API Gateway.
+
+$context.waf.error
+
+The error message returned from AWS WAF.
+
+$context.waf.latency
+
+The AWS WAF latency in ms.
+
+$context.waf.status
+
+The status code returned from AWS WAF.
+
+$context.xrayTraceId
+
+The trace ID for the X-Ray trace. For more information, see Set up AWS X-Ray with API Gateway REST APIs.
+
+$context.wafResponseCode
+
+The response received from AWS WAF:
+WAF_ALLOW or WAF_BLOCK. Will not be
+set if the stage is not associated with a web ACL. For more
+information, see Use AWS WAF to protect your REST APIs in API Gateway.
+
+$context.webaclArn
+
+The complete ARN of the web ACL that is used to decide whether to
+allow or block the request. Will not be set if the stage is not
+associated with a web ACL. For more information, see Use AWS WAF to protect your REST APIs in API Gateway.

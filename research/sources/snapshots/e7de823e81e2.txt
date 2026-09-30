@@ -1,0 +1,296 @@
+URL: https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_add-rules.html
+TITLE: Adding AWS Config Rules - AWS Config
+
+# Adding AWS Config Rules
+
+You can use the AWS Config console or the AWS SDKs to add
+rules.
+
+Topics
+
+- Using the console
+
+- Using the AWS SDKs
+
+## Adding Rules (Console)
+
+The Rules page shows your rules and their current compliance
+results in a table. The result for each rule is Evaluating...
+until AWS Config finishes evaluating your resources against the rule. You can update the
+results with the refresh button. When AWS Config finishes evaluations, you can see the
+rules and resource types that are compliant or noncompliant. For more information,
+see Viewing Compliance Information and Evaluation Results for your AWS Resources with AWS Config.
+
+Note
+
+When you add a new rule, AWS Config evaluates the applicable resources in your resource
+inventory, including previously recorded resources. For example, if you recorded
+AWS::IoT::Policy resources but later excluded them from recording,
+AWS Config retains the initial configuration items (CIs) in your inventory. Although
+AWS Config no longer updates these CIs when their associated resource
+types are excluded from recording, it retains their last recorded state and
+evaluates them when you add applicable rules.
+
+AWS Config does not evaluate resources that are not in the resource inventory. For example, if you add the amplify-branch-tagged
+rule but don't record and have never recorded AWS::Amplify::Branch resources, AWS Config can't evaluate whether the AWS Amplify branches in your account are compliant or noncompliant.
+
+For more information, see Recording AWS Resources with AWS Config.
+
+To add a rule
+
+- Sign in to the AWS Management Console and open the AWS Config console at
+https://console.aws.amazon.com/config/home.
+
+- In the AWS Management Console menu, verify that the region selector is set to a region that
+supports AWS Config rules. For the list of supported regions, see AWS Config Regions and Endpoints
+in the Amazon Web Services General Reference.
+
+- In the left navigation, choose Rules.
+
+- On the Rules page, choose Add rule.
+
+- On the Specify rule type page, specify the rule type by
+completing the following steps:
+
+- Type in the search field to filter the list of managed rules by rule name, description,
+and label. For example, type EC2 to return rules
+that evaluate EC2 resource types or type periodic
+to return rules that are triggered periodically.
+
+- You can also create your own custom rule.
+Choose Create custom rule using Lambda or Create custom rule using Guard,
+and follow the procedure in Creating AWS Config Custom Lambda Rules or Creating AWS Config Custom Policy Rules.
+
+- On the Configure rule page, configure your rule by
+completing the following steps:
+
+- For Name, type a unique name for the rule.
+
+- For Description, type a description for the rule.
+
+- For Evaluation mode, choose when in the resource creation and management process you want AWS Config to evaluate your resources.
+Depending on the rule, AWS Config can evaluate your resource configurations before a resource has been deployed, after a resource has been deployed, or both.
+
+- Choose Turn on proactive evaluation to allow you to run evaluations on the configuration settings of your resources before they are deployed.
+
+After you have turned on proactive evaluation,
+you can use the StartResourceEvaluation API and GetResourceEvaluationSummary API to check if the resources you specify in these commands would be flagged as NON_COMPLIANT by the proactive rules in your account in your Region.
+
+For more information on using this commands, see Evaluating Your Resources with AWS Config Rules. For a list of managed rules that support proactive evaluation, see List of AWS Config Managed Rules by Evaluation Mode.
+
+- Choose Turn on detective evaluation to evaluate the configuration settings of your existing resources.
+
+For detective evaluation, there are two types of triggers: When configuration changes and Periodic.
+
+- If the trigger types for your rule include Configuration
+changes, specify one of the following options for
+Scope of changes with which AWS Config invokes your
+Lambda function:
+
+- Resources – When a resource that
+matches the specified resource type, or the type plus
+identifier, is created, changed, or deleted.
+
+- Tags – When a resource with the
+specified tag is created, changed, or deleted.
+
+- All changes – When a resource
+recorded by AWS Config is created, changed, or deleted.
+
+AWS Config runs the evaluation when it detects a change
+to a resource that matches the rule's scope. You
+can use the scope to define which resources
+initiate evaluations.
+
+- If the trigger types for your rule include
+Periodic, specify the
+Frequency with which AWS Config invokes your Lambda
+function.
+
+- For Parameters, you can customize the values for the
+provided keys if your rule includes parameters. A parameter is an attribute that your resources must adhere to
+before they are considered compliant with the rule.
+
+- On the Review and create page, review all your selections before adding the rule to your AWS account.
+If your rule is not working as expected, you might see one of the
+following for Compliance:
+
+- No results reported - AWS Config evaluated your resources
+against the rule. The rule did not apply to the AWS resources in its
+scope, the specified resources were deleted, or the evaluation results
+were deleted. To get evaluation results, update the rule, change its
+scope, or choose Re-evaluate.
+
+This message may also appear if the rule didn't report evaluation
+results.
+
+- No resources in scope - AWS Config cannot evaluate your
+recorded AWS resources against this rule because none of your
+resources are within the rule’s scope. To get evaluation results, edit
+the rule and change its scope, or add resources for AWS Config to record by
+using the Settings page.
+
+- Evaluations failed - For information that can help
+you determine the problem, choose the rule name to open its details page
+and see the error message.
+
+## Adding Rules (AWS SDKs)
+
+The following code examples show how to use PutConfigRule.
+
+CLI
+
+AWS CLI
+
+To add an AWS managed Config rule
+
+The following command provides JSON code to add an AWS managed Config rule:
+
+aws configservice put-config-rule --config-rule file://RequiredTagsForEC2Instances.json
+
+RequiredTagsForEC2Instances.json is a JSON file that contains the rule configuration:
+
+{
+"ConfigRuleName": "RequiredTagsForEC2Instances",
+"Description": "Checks whether the CostCenter and Owner tags are applied to EC2 instances.",
+"Scope": {
+"ComplianceResourceTypes": [
+"AWS::EC2::Instance"
+]
+},
+"Source": {
+"Owner": "AWS",
+"SourceIdentifier": "REQUIRED_TAGS"
+},
+"InputParameters": "{\"tag1Key\":\"CostCenter\",\"tag2Key\":\"Owner\"}"
+}
+
+For the ComplianceResourceTypes attribute, this JSON code limits the scope to resources of the AWS::EC2::Instance type, so AWS Config will evaluate only EC2 instances against the rule. Because the rule is a managed rule, the Owner attribute is set to AWS, and the SourceIdentifier attribute is set to the rule identifier, REQUIRED_TAGS. For the InputParameters attribute, the tag keys that the rule requires, CostCenter and Owner, are specified.
+
+If the command succeeds, AWS Config returns no output. To verify the rule configuration, run the describe-config-rules command, and specify the rule name.
+
+To add a customer managed Config rule
+
+The following command provides JSON code to add a customer managed Config rule:
+
+aws configservice put-config-rule --config-rule file://InstanceTypesAreT2micro.json
+
+InstanceTypesAreT2micro.json is a JSON file that contains the rule configuration:
+
+{
+"ConfigRuleName": "InstanceTypesAreT2micro",
+"Description": "Evaluates whether EC2 instances are the t2.micro type.",
+"Scope": {
+"ComplianceResourceTypes": [
+"AWS::EC2::Instance"
+]
+},
+"Source": {
+"Owner": "CUSTOM_LAMBDA",
+"SourceIdentifier": "arn:aws:lambda:us-east-1:123456789012:function:InstanceTypeCheck",
+"SourceDetails": [
+{
+"EventSource": "aws.config",
+"MessageType": "ConfigurationItemChangeNotification"
+}
+]
+},
+"InputParameters": "{\"desiredInstanceType\":\"t2.micro\"}"
+}
+
+For the ComplianceResourceTypes attribute, this JSON code limits the scope to resources of the AWS::EC2::Instance type, so AWS Config will evaluate only EC2 instances against the rule. Because this rule is a customer managed rule, the Owner attribute is set to CUSTOM_LAMBDA, and the SourceIdentifier attribute is set to the ARN of the AWS Lambda function. The SourceDetails object is required. The parameters that are specified for the InputParameters attribute are passed to the AWS Lambda function when AWS Config invokes it to evaluate resources against the rule.
+
+If the command succeeds, AWS Config returns no output. To verify the rule configuration, run the describe-config-rules command, and specify the rule name.
+
+- For API details, see
+PutConfigRule
+in AWS CLI Command Reference.
+
+Python
+
+SDK for Python (Boto3)
+
+Note
+
+There's more on GitHub. Find the complete example and learn how to set up and run in the
+AWS Code
+Examples Repository.
+
+class ConfigWrapper:
+"""
+Encapsulates AWS Config functions.
+"""
+
+def __init__(self, config_client):
+"""
+:param config_client: A Boto3 AWS Config client.
+"""
+self.config_client = config_client
+
+def put_config_rule(self, rule_name):
+"""
+Sets a configuration rule that prohibits making Amazon S3 buckets publicly
+readable.
+
+:param rule_name: The name to give the rule.
+"""
+try:
+self.config_client.put_config_rule(
+ConfigRule={
+"ConfigRuleName": rule_name,
+"Description": "S3 Public Read Prohibited Bucket Rule",
+"Scope": {
+"ComplianceResourceTypes": [
+"AWS::S3::Bucket",
+],
+},
+"Source": {
+"Owner": "AWS",
+"SourceIdentifier": "S3_BUCKET_PUBLIC_READ_PROHIBITED",
+},
+"InputParameters": "{}",
+"ConfigRuleState": "ACTIVE",
+}
+)
+logger.info("Created configuration rule %s.", rule_name)
+except ClientError:
+logger.exception("Couldn't create configuration rule %s.", rule_name)
+raise
+
+- For API details, see
+PutConfigRule
+in AWS SDK for Python (Boto3) API Reference.
+
+SAP ABAP
+
+SDK for SAP ABAP
+
+Note
+
+There's more on GitHub. Find the complete example and learn how to set up and run in the
+AWS Code
+Examples Repository.
+
+" Create a config rule for S3 bucket public read prohibition
+lo_cfs->putconfigrule(
+io_configrule = NEW /aws1/cl_cfsconfigrule(
+iv_configrulename = iv_rule_name
+iv_description = |S3 Public Read Prohibited Bucket Rule|
+io_scope = NEW /aws1/cl_cfsscope(
+it_complianceresourcetypes = VALUE /aws1/cl_cfscplncresrctypes_w=>tt_complianceresourcetypes(
+( NEW /aws1/cl_cfscplncresrctypes_w( |AWS::S3::Bucket| ) )
+)
+)
+io_source = NEW /aws1/cl_cfssource(
+iv_owner = |AWS|
+iv_sourceidentifier = |S3_BUCKET_PUBLIC_READ_PROHIBITED|
+)
+iv_inputparameters = '{}'
+iv_configrulestate = |ACTIVE|
+)
+).
+MESSAGE 'Created AWS Config rule.' TYPE 'I'.
+
+- For API details, see
+PutConfigRule
+in AWS SDK for SAP ABAP API reference.

@@ -1,0 +1,59 @@
+{
+  "question_id": "Q121",
+  "question_content_hash": "d4401b9c13c184e088cc4ecf2762f398648a8d14e55165985315f0d16c016197",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:20:09+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Phát hiện resource trong CloudFormation template không tuân thủ tiêu chuẩn nội bộ (theo từng service) và gửi thông báo cho security team.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Developer phải giữ nguyên tốc độ delivery hiện tại (tự tạo stack, pipeline CI/CD tập trung deploy) - không thêm bước review thủ công làm chậm.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Pipeline CI/CD tập trung nằm ở shared services account; stack được deploy qua pipeline đó (và StackSets trong Organizations).", "kind": "scope"},
+    {"id": "R4", "text_vi": "Tiêu chí tối ưu: MOST operationally efficient (ít vận hành nhất).", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q121:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "validate-template chỉ kiểm tra template có phải JSON/YAML hợp lệ (cú pháp), không kiểm tra cấu hình resource theo tiêu chuẩn bảo mật nội bộ, nên không phát hiện được resource không tuân thủ.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q121:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "CloudFormation Guard là công cụ policy-as-code để viết rule cho từng cấu hình resource và validate template trước khi deploy (shift-left); lỗi vi phạm được trả về để pipeline publish lên SNS. Chạy tự động trong pipeline có sẵn nên không làm chậm developer và ít vận hành. ('cm-guard' là lỗi chính tả của cfn-guard.)",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref4", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q121:C", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Cũng dùng Guard để quét template nên về chức năng có thể phát hiện vi phạm, nhưng phải xây và vận hành thêm S3 event, SQS, fleet EC2 Auto Scaling và đổi quy trình (developer upload vào S3, EC2 tự deploy) - overhead cao hơn nhiều so với chạy Guard ngay trong pipeline hiện có.",
+     "requirement_ids": ["R1", "R4"], "reference_ids": ["ref1", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q121:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Bắt mọi resource/cấu hình mới phải gửi security team review thủ công rồi mới thêm vào repository - tạo nút thắt làm giảm tốc độ delivery (vi phạm R2) và không có cơ chế thông báo tự động khi có resource không tuân thủ.",
+     "requirement_ids": ["R1", "R2", "R4"], "reference_ids": [], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q121:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Guard nêu rõ mục đích validate IaC theo rule bảo mật trước deploy và trả về danh sách rule thất bại; validate-template chỉ kiểm tra cú pháp. C và D kém rõ ràng về overhead/tốc độ.", "open_issues": ["Lựa chọn B viết 'cm-guard' thay vì 'cfn-guard' (lỗi chính tả)."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:20:09+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/what-is-guard.html", "title": "What is AWS CloudFormation Guard?", "section": "Guard features", "snapshot_id": "73a0d0fa273c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Validate infrastructure as code (IaC) or infrastructure and service compositions against policy rules that represent your organizational best practices for security and compliance",
+     "supports": "Guard được thiết kế để kiểm tra template theo tiêu chuẩn bảo mật/tuân thủ của tổ chức trước khi deploy (shift-left).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/validating-rules.html", "title": "Validating input data against AWS CloudFormation Guard rules", "section": "validate", "snapshot_id": "0fe39ecb7e17", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If Guard identifies a rule violation, the validate command returns a status report of the rules that failed",
+     "supports": "Pipeline có thể dựa trên kết quả/exit status của cfn-guard validate để phát hiện vi phạm và gửi SNS.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ValidateTemplate.html", "title": "ValidateTemplate - AWS CloudFormation API Reference", "section": "ValidateTemplate", "snapshot_id": "107b6232161f", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Validates a specified template. CloudFormation first checks if the template is valid JSON.",
+     "supports": "validate-template chỉ kiểm tra cú pháp JSON/YAML, không kiểm tra tiêu chuẩn bảo mật của resource.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/what-is-guard.html", "title": "What is AWS CloudFormation Guard?", "section": "intro", "snapshot_id": "73a0d0fa273c", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "provides a simple-to-use and declarative domain-specific language (DSL) that you can use to express policy as code",
+     "supports": "Có thể viết custom rule cho từng cấu hình resource theo yêu cầu security team.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/cfn-guard/latest/ug/setting-up.html", "title": "Setting up AWS CloudFormation Guard", "section": "intro", "snapshot_id": "79f0265753a0", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "how to install Guard using your chosen operating system or as an AWS Lambda function",
+     "supports": "Guard là CLI cài được trên Linux/macOS/Windows (nên chạy được trong container/build step của pipeline) - suy luận cho việc chạy bằng Docker image.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q121:B", "detail_vi": "'cm-guard' là lỗi chính tả của lệnh 'cfn-guard'."},
+    {"type": "typo", "location": "Q121:D", "detail_vi": "'com feted' là lỗi chính tả của 'completed'."}
+  ],
+  "notes_vi": "Guard không enforce phía server; nếu cần chặn cứng có thể dùng CloudFormation Hooks, nhưng đề chỉ yêu cầu thông báo."
+}

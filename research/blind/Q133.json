@@ -1,0 +1,69 @@
+{
+  "question_id": "Q133",
+  "question_content_hash": "e3d34252ae580f182c71f183cdf2eba26e2f7e156be2d73e7d0840d29cdeb3ce",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:36+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed. (A directory listing of research/blind/ was run once by mistake and showed only other file names; no other record was opened.)",
+  "requirements": [
+    {"id": "R1", "text_vi": "Phát hiện (identify) các S3 bucket không tuân thủ: bucket chứa dữ liệu nhạy cảm phải được mã hóa bằng AWS KMS customer managed key.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Chỉ áp dụng cho bucket có tag ContainsSensitiveData = True.", "kind": "scope"},
+    {"id": "R3", "text_vi": "Phải kiểm tra đúng key được phép (customer managed key), không chỉ 'có dùng KMS'.", "kind": "condition"},
+    {"id": "R4", "text_vi": "Đề không nêu tiêu chí tối ưu rõ ràng; theo quy ước đề thi, giải pháp managed sẵn có được ưu tiên hơn code tùy biến.", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q133:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Managed rule s3-default-encryption-kms đánh dấu NON_COMPLIANT khi bucket không mã hóa bằng KMS và có tham số kmsKeyArns giới hạn key được phép; scope của rule (trigger Configuration changes) hỗ trợ Tags (TagKey/TagValue) để chỉ đánh giá bucket có tag ContainsSensitiveData. Lưu ý: tag được khai báo ở phần scope chứ không phải 'parameter' – cách diễn đạt hơi lỏng.",
+     "requirement_ids": ["R1", "R2", "R3", "R4"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q133:B", "unit_type": "choice", "verdict": "meets_but_suboptimal",
+     "reason_vi": "Custom Lambda rule về kỹ thuật có thể đọc tag và kiểm tra KMS key, nên đáp ứng yêu cầu; nhưng phải tự viết và duy trì code Lambda trong khi đã có managed rule làm được việc này.",
+     "requirement_ids": ["R1", "R2", "R4"], "reference_ids": ["ref4"], "evidence_kind": "inference"},
+    {"unit_id": "Q133:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Amazon Inspector là dịch vụ quét lỗ hổng cho EC2, image ECR và Lambda; không đánh giá cấu hình mã hóa của S3 bucket và không có tham số tag/KMS key như mô tả.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q133:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Trusted Advisor cung cấp các check best-practice định sẵn; 'custom policy rule' là khái niệm của AWS Config (Guard), không phải của Trusted Advisor.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref6", "ref4"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q133:A"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium",
+      "reason_vi": "Tài liệu xác nhận managed rule + tham số kmsKeyArns + scope theo tag đáp ứng đủ yêu cầu. Độ tin cậy giảm vì B (custom Lambda rule) cũng chạy được và đề không nêu rõ tiêu chí ít vận hành.",
+      "open_issues": ["Đề không nói 'least operational overhead'; B về kỹ thuật cũng đáp ứng.", "A nói tag là 'parameter' trong khi thực tế tag nằm ở rule scope."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5", "ref6"],
+    "recorded_at": "2026-09-30T20:21:36+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/config/latest/developerguide/s3-default-encryption-kms.html", "title": "s3-default-encryption-kms - AWS Config", "section": "Parameters",
+     "snapshot_id": "251ae49566ed", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Comma separated list of AWS KMS key ARNs allowed for encrypting Amazon S3 Buckets.",
+     "supports": "Managed rule cho phép chỉ định danh sách KMS key ARN được phép (customer managed key).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_add-rules.html", "title": "Adding AWS Config Rules - AWS Config", "section": "To add a rule – Scope of changes",
+     "snapshot_id": "e7de823e81e2", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Tags – When a resource with the specified tag is created, changed, or deleted.",
+     "supports": "Khi thêm rule (kể cả managed rule) có thể giới hạn scope theo tag.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/config/latest/APIReference/API_Scope.html", "title": "Scope - AWS Config API Reference", "section": "Scope",
+     "snapshot_id": "17a9fc903c1e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The scope can include one or more resource types, a combination of a tag key and value, or a combination of one resource type and one resource ID.",
+     "supports": "Scope của Config rule nhận cặp tag key/value (ContainsSensitiveData/True).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html", "title": "AWS Config Custom Rules - AWS Config", "section": "Custom rules",
+     "snapshot_id": "3986009fb779", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS Config custom rules created with Lambda are called AWS Config Custom Lambda Rules and AWS Config custom rules created with Guard are called AWS Config Custom Policy Rules.",
+     "supports": "Custom Lambda rule là code tự viết (B khả thi nhưng tốn công); 'custom policy rule' là khái niệm của AWS Config.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html", "title": "What is Amazon Inspector?", "section": "Overview",
+     "snapshot_id": "6ead4370c770", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon Inspector discovers and scans Amazon EC2 instances, container images in Amazon ECR, and Lambda functions.",
+     "supports": "Inspector không quét cấu hình mã hóa S3 bucket.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/awssupport/latest/user/trusted-advisor.html", "title": "AWS Trusted Advisor - AWS Support", "section": "Overview",
+     "snapshot_id": "97f3850210f9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Trusted Advisor inspects your AWS environment, and then makes recommendations when opportunities exist to save money, improve system availability and performance, or help close security gaps.",
+     "supports": "Trusted Advisor đưa khuyến nghị theo các check định sẵn, không phải công cụ tạo custom policy rule.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q133:D", "detail_vi": "Tên tag viết sai 'ContainsSensltiveData' (chữ l thay cho i) so với 'ContainsSensitiveData' trong đề."}
+  ],
+  "notes_vi": "Managed rule s3-default-encryption-kms có trigger Configuration changes nên scope theo tag hợp lệ. Nếu không chỉ định kmsKeyArns, bucket dùng aws/s3 (AWS managed key) cũng có thể được coi là compliant, nên cần tham số để bảo đảm customer managed key."
+}

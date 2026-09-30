@@ -1,0 +1,494 @@
+URL: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeImages.html
+TITLE: DescribeImages - Amazon Elastic Compute Cloud
+
+# DescribeImages
+
+Describes the specified images (AMIs, AKIs, and ARIs) available to you or all of the
+images available to you.
+
+The images available to you include public images, private images that you own, and
+private images owned by other AWS accounts for which you have explicit launch
+permissions.
+
+Recently deregistered images appear in the returned results for a short interval and then
+return empty results. After all instances that reference a deregistered AMI are terminated,
+specifying the ID of the image will eventually return an error indicating that the AMI ID
+cannot be found.
+
+When Allowed AMIs is set to enabled, only allowed images are returned in the
+results, with the imageAllowed field set to true for each image. In
+audit-mode, the imageAllowed field is set to true for
+images that meet the account's Allowed AMIs criteria, and false for images that
+don't meet the criteria. For more information, see Allowed AMIs.
+
+The Amazon EC2 API follows an eventual consistency model. This means that the result of an API
+command you run that creates or modifies resources might not be immediately available to all
+subsequent commands you run. For guidance on how to manage eventual consistency, see Eventual
+consistency in the Amazon EC2 API in the Amazon EC2 Developer
+Guide.
+
+Important
+
+We strongly recommend using only paginated requests. Unpaginated requests are
+susceptible to throttling and timeouts.
+
+Note
+
+The order of the elements in the response, including those within nested structures,
+might vary. Applications should not assume the elements appear in a particular order.
+
+## Request Parameters
+
+The following parameters are for this specific action. For more information about required and optional parameters that are common to all actions, see Common Query Parameters.
+
+DryRun
+
+Checks whether you have the required permissions for the action, without actually making the request,
+and provides an error response. If you have the required permissions, the error response is
+DryRunOperation. Otherwise, it is UnauthorizedOperation.
+
+Type: Boolean
+
+Required: No
+
+ExecutableBy.N
+
+Scopes the images by users with explicit launch permissions. Specify an AWS account ID, self (the sender of the request), or all
+(public AMIs).
+
+- If you specify an AWS account ID that is not your own, only AMIs shared
+with that specific AWS account ID are returned. However, AMIs that are
+shared with the account’s organization or organizational unit (OU) are not
+returned.
+
+- If you specify self or your own AWS account ID, AMIs
+shared with your account are returned. In addition, AMIs that are shared with the
+organization or OU of which you are member are also returned.
+
+- If you specify all, all public AMIs are returned.
+
+Type: Array of strings
+
+Required: No
+
+Filter.N
+
+The filters.
+
+- architecture - The image architecture (i386 |
+x86_64 | arm64 | x86_64_mac |
+arm64_mac).
+
+- block-device-mapping.delete-on-termination - A Boolean value that indicates
+whether the Amazon EBS volume is deleted on instance termination.
+
+- block-device-mapping.device-name - The device name specified in the block
+device mapping (for example, /dev/sdh or xvdh).
+
+- block-device-mapping.snapshot-id - The ID of the snapshot used for the Amazon EBS
+volume.
+
+- block-device-mapping.volume-size - The volume size of the Amazon EBS volume, in
+GiB.
+
+- block-device-mapping.volume-type - The volume type of the Amazon EBS volume
+(io1 | io2 | gp2 | gp3 | sc1
+| st1 | standard).
+
+- block-device-mapping.encrypted - A Boolean that indicates whether the Amazon EBS
+volume is encrypted.
+
+- boot-mode – The boot mode of the image (legacy-bios |
+uefi | uefi-preferred).
+
+- creation-date - The time when the image was created, in the ISO 8601
+format in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ), for example,
+2021-09-29T11:04:43.305Z. You can use a wildcard (*), for
+example, 2021-09-29T*, which matches an entire day.
+
+- description - The description of the image (provided during image
+creation).
+
+- ena-support - A Boolean that indicates whether enhanced networking with
+ENA is enabled.
+
+- free-tier-eligible - A Boolean that indicates whether this image can be
+used under the AWS Free Tier (true | false).
+
+- hypervisor - The hypervisor type (ovm |
+xen).
+
+- image-allowed - A Boolean that indicates whether the image meets the
+criteria specified for Allowed AMIs.
+
+- image-id - The ID of the image.
+
+- image-watermark.source-image-creation-time - The creation date of the
+source AMI, in the ISO 8601 format in the UTC time zone
+(
+YYYY-MM-DDTHH:MM:SS.ssssss+HH:MM
+).
+You can use a wildcard (*), for example, 2021-09-29T*, which
+matches an entire day.
+
+- image-watermark.source-image-id - The ID of the AMI to which the
+watermark was originally attached.
+
+- image-watermark.source-image-region - The Region where the watermark
+was originally attached.
+
+- image-watermark.watermark-creation-time - The date and time the
+watermark was attached to the AMI, in the ISO 8601 format in the UTC time zone
+(
+YYYY-MM-DDTHH:MM:SS.ssssss+HH:MM
+).
+You can use a wildcard (*), for example, 2021-09-29T*, which
+matches an entire day.
+
+- image-watermark.watermark-key - The watermark identifier, in
+accountId:watermarkName format (for example,
+123456789012:approvedAmi).
+
+- image-type - The image type (machine | kernel |
+ramdisk).
+
+- instance-type-specification.supported-instance-type – The instance
+types that are compatible with the AMI, as specified by the AMI owner. Values can be
+individual instance types (for example, t3.micro) or wildcard patterns that
+match multiple instance types (for example, t3.*).
+
+- instance-type-specification.unsupported-instance-type – The instance
+types that are not compatible with the AMI, as specified by the AMI owner. Values can be
+individual instance types (for example, t3.micro) or wildcard patterns that
+match multiple instance types (for example, t3.*).
+
+- is-public - A Boolean that indicates whether the image is public.
+
+- kernel-id - The kernel ID.
+
+- manifest-location - The location of the image manifest.
+
+- name - The name of the AMI (provided during image creation).
+
+- owner-alias - The owner alias (amazon |
+aws-backup-vault | aws-marketplace). The valid aliases are
+defined in an Amazon-maintained list. This is not the AWS account alias
+that can be set using the IAM console. We recommend that you use the Owner request parameter instead of this filter.
+
+- owner-id - The AWS account ID of the owner. We recommend
+that you use the Owner request parameter instead of this
+filter.
+
+- platform - The platform. The only supported value is
+windows.
+
+- product-code - The product code.
+
+- product-code.type - The type of the product code
+(marketplace).
+
+- public-ssm-parameter-name - The name of a public Systems Manager
+parameter associated with the AMI. The parameter must be in a trusted AWS namespace
+under aws/service/. Returns all AMIs that have ever been associated with
+the parameter, including previous versions.
+
+- ramdisk-id - The RAM disk ID.
+
+- root-device-name - The device name of the root device volume (for example,
+/dev/sda1).
+
+- root-device-type - The type of the root device volume (ebs |
+instance-store).
+
+- source-image-id - The ID of the source AMI from which the AMI was
+created.
+
+- source-image-region - The Region of the source AMI.
+
+- source-instance-id - The ID of the instance that the AMI was created from
+if the AMI was created using CreateImage. This filter is applicable only if the AMI was
+created using CreateImage.
+
+- state - The state of the image (available | pending
+| failed).
+
+- state-reason-code - The reason code for the state change.
+
+- state-reason-message - The message for the state change.
+
+- sriov-net-support - A value of simple indicates that
+enhanced networking with the Intel 82599 VF interface is enabled.
+
+- tag:<key> - The key/value combination of a tag assigned to the resource. Use the tag key in the filter name and the tag value as the filter value.
+For example, to find all resources that have a tag with the key Owner and the value TeamA, specify tag:Owner for the filter name and TeamA for the filter value.
+
+- tag-key - The key of a tag assigned to the resource. Use this filter to find all resources assigned a tag with a specific key, regardless of the tag value.
+
+- virtualization-type - The virtualization type (paravirtual |
+hvm).
+
+Type: Array of Filter objects
+
+Required: No
+
+ImageId.N
+
+The image IDs.
+
+Default: Describes all images available to you.
+
+Type: Array of strings
+
+Required: No
+
+IncludeDeprecated
+
+Specifies whether to include deprecated AMIs.
+
+Default: No deprecated AMIs are included in the response.
+
+Note
+
+If you are the AMI owner, all deprecated AMIs appear in the response regardless of what
+you specify for this parameter.
+
+Type: Boolean
+
+Required: No
+
+IncludeDisabled
+
+Specifies whether to include disabled AMIs.
+
+Default: No disabled AMIs are included in the response.
+
+Type: Boolean
+
+Required: No
+
+MaxResults
+
+The maximum number of items to return for this request.
+To get the next page of items, make another request with the token returned in the output.
+For more information, see Pagination.
+
+Type: Integer
+
+Required: No
+
+NextToken
+
+The token returned from a previous paginated request. Pagination continues from the end of the items returned by the previous request.
+
+Type: String
+
+Required: No
+
+Owner.N
+
+Scopes the results to images with the specified owners. You can specify a combination of
+AWS account IDs, self, amazon,
+aws-backup-vault, and aws-marketplace. If you omit this parameter,
+the results include all images for which you have launch permissions, regardless of
+ownership.
+
+Type: Array of strings
+
+Required: No
+
+## Response Elements
+
+The following elements are returned by the service.
+
+imagesSet
+
+Information about the images.
+
+Type: Array of Image objects
+
+nextToken
+
+The token to include in another request to get the next page of items. This value is null when there
+are no more items to return.
+
+Type: String
+
+requestId
+
+The ID of the request.
+
+Type: String
+
+## Errors
+
+For information about the errors that are common to all actions, see Common Error Types.
+
+## Examples
+
+### Example 1
+
+This example describes the specified AMI.
+
+#### Sample Request
+
+https://ec2.amazonaws.com/?Action=DescribeImages
+&ImageId.1=ami-1234567890EXAMPLE
+&AUTHPARAMS
+
+#### Sample Response
+
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+<requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
+<imagesSet>
+<item>
+<virtualizationType>hvm</virtualizationType>
+<description>Provided by Red Hat, Inc.</description>
+<platformDetails>Red Hat Enterprise Linux</platformDetails>
+<enaSupport>true</enaSupport>
+<hypervisor>xen</hypervisor>
+<imageState>available</imageState>
+<sriovNetSupport>simple</sriovNetSupport>
+<imageId>ami-1234567890EXAMPLE</imageId>
+<usageOperation>RunInstances:0010</usageOperation>
+<blockDeviceMapping>
+<item>
+<deviceName>/dev/sda1</deviceName>
+<ebs>
+<snapshotId>snap-1234567890abcdef0</snapshotId>
+<volumeSize>15</volumeSize>
+<deleteOnTermination>false</deleteOnTermination>
+<volumeType>standard</volumeType>
+</ebs>
+</item>
+</blockDeviceMapping>
+<architecture>x86_64</architecture>
+<imageLocation>123456789012/RHEL-8.0.0_HVM-20190618-x86_64-1-Hourly2-GP2</imageLocation>
+<rootDeviceType>ebs</rootDeviceType>
+<ownerId>123456789012</ownerId>
+<rootDeviceName>/dev/sda1</rootDeviceName>
+<creationDate>2019-05-10T13:17:12.000Z</creationDate>
+<public>true</public>
+<imageType>machine</imageType>
+<name>RHEL-8.0.0_HVM-20190618-x86_64-1-Hourly2-GP2</name>
+<tagSet/>
+</item>
+</imagesSet>
+</DescribeImagesResponse>
+
+### Example 2
+
+This example filters the response to include only public Windows images with an
+x86_64 architecture.
+
+#### Sample Request
+
+https://ec2.amazonaws.com/?Action=DescribeImages
+&Filter.1.Name=is-public
+&Filter.1.Value.1=true
+&Filter.2.Name=architecture
+&Filter.2.Value.1=x86_64
+&Filter.3.Name=platform
+&Filter.3.Value.1=windows
+&AUTHPARAMS
+
+#### Sample Response
+
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+<requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
+<imagesSet>
+<item>
+<imageId>ami-1a2b3c4d</imageId>
+<imageLocation>ec2-public-windows-images/Server2003r2-x86_64-Win-v1.07.manifest.xml</imageLocation>
+<imageState>available</imageState>
+<imageOwnerId>123456789012</imageOwnerId>
+<isPublic>true</isPublic>
+<architecture>x86_64</architecture>
+<imageType>machine</imageType>
+<platform>windows</platform>
+<imageOwnerAlias>amazon</imageOwnerAlias>
+<rootDeviceType>instance-store</rootDeviceType>
+<blockDeviceMapping/>
+<virtualizationType>hvm</virtualizationType>
+<tagSet/>
+<hypervisor>xen</hypervisor>
+</item>
+...
+</imagesSet>
+</DescribeImagesResponse>
+
+### Example 3
+
+This example returns the results to display images where the owner is
+aws-marketplace.
+
+#### Sample Request
+
+https://ec2.amazonaws.com/?Action=DescribeImages
+&Owner.1=aws-marketplace
+&AUTHPARAMS
+
+#### Sample Response
+
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+<requestId>4a4a27a2-2e7c-475d-b35b-ca822EXAMPLE</requestId>
+<imagesSet>
+<item>
+<imageId>ami-1a2b3c4d</imageId>
+<imageLocation>aws-marketplace/example-marketplace-amzn-ami.1</imageLocation>
+<imageState>available</imageState>
+<imageOwnerId>123456789012</imageOwnerId>
+<isPublic>true</isPublic>
+<productCodes>
+<item>
+<productCode>a1b2c3d4e5f6g7h8i9j10k11</productCode>
+<type>marketplace</type>
+</item>
+</productCodes>
+<architecture>i386</architecture>
+<imageType>machine</imageType>
+<kernelId>aki-1a2b3c4d</kernelId>
+<imageOwnerAlias>aws-marketplace</imageOwnerAlias>
+<name>example-marketplace-amzn-ami.1</name>
+<description>Amazon Linux AMI i386 EBS</description>
+<rootDeviceType>ebs</rootDeviceType>
+<rootDeviceName>/dev/sda1</rootDeviceName>
+<blockDeviceMapping>
+<item>
+<deviceName>/dev/sda1</deviceName>
+<ebs>
+<snapshotId>snap-1234567890abcdef0</snapshotId>
+<volumeSize>8</volumeSize>
+<deleteOnTermination>true</deleteOnTermination>
+</ebs>
+</item>
+</blockDeviceMapping>
+<virtualizationType>paravirtual</virtualizationType>
+<hypervisor>xen</hypervisor>
+</item>
+...
+</imagesSet>
+</DescribeImagesResponse>
+
+## See Also
+
+For more information about using this API in one of the language-specific AWS SDKs, see the following:
+
+- AWS Command Line Interface V2
+
+- AWS SDK for .NET V4
+
+- AWS SDK for C++
+
+- AWS SDK for Go v2
+
+- AWS SDK for Java V2
+
+- AWS SDK for JavaScript V3
+
+- AWS SDK for Kotlin
+
+- AWS SDK for PHP V3
+
+- AWS SDK for Python (Boto3)
+
+- AWS SDK for Ruby V3

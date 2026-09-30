@@ -1,0 +1,73 @@
+{
+  "question_id": "Q119",
+  "question_content_hash": "055fd439b6f7fd61aa7b51d21e58706cf42641c7188bd055cd208c341850ed64",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:20:47+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Hoạt động pentest phải được AWS cho phép (theo AWS Customer Support Policy for Penetration Testing), không gây abuse notification/vi phạm Acceptable Use.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Mục tiêu là ứng dụng/hạ tầng của chính công ty trên AWS (nhắm rủi ro SQL injection).", "kind": "scope"},
+    {"id": "R3", "text_vi": "Chọn đúng HAI thủ tục được phép.", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q119:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "EC2 (và ELB, NAT Gateway) nằm trong danh sách Permitted Services; port scanning tài nguyên của chính công ty trong VPC không nằm trong danh sách Prohibited Activities (chỉ port flooding bị cấm).",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q119:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "S3 không có trong Permitted Services và namespace bucket S3 là của chính dịch vụ AWS (dùng chung toàn cầu), trong khi khách hàng không được đánh giá bảo mật chính dịch vụ AWS.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref6", "ref7"], "evidence_kind": "inference"},
+    {"unit_id": "Q119:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Amazon RDS nằm trong Permitted Services; kiểm thử SQL injection trên ứng dụng web của chính công ty (backend RDS PostgreSQL) là pentest ứng dụng hợp lệ, không thuộc hoạt động bị cấm.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q119:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Packet flooding thuộc nhóm DoS/protocol flooding – nằm trong Prohibited Activities (DoS chỉ được mô phỏng theo chính sách DDoS Simulation Testing riêng).",
+     "requirement_ids": ["R1"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q119:E", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "DNS zone walking qua Route 53 Hosted Zones được liệt kê rõ là hoạt động bị cấm.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q119:A", "Q119:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Trang chính sách pentest của AWS liệt kê trực tiếp Permitted Services (EC2, RDS) và Prohibited Activities (DNS zone walking Route 53, DoS/flooding); S3 không phải dịch vụ được phép.", "open_issues": ["Trang chính sách không nêu tên 'port scanning' tường minh; kết luận A được phép dựa trên việc EC2 là dịch vụ được phép và port scanning không nằm trong danh sách cấm."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:20:47+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "AWS Customer Support Policy for Penetration Testing",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS customers are welcome to carry out security assessments or penetration tests of their AWS infrastructure without prior approval for the services listed",
+     "supports": "Pentest được phép không cần phê duyệt trước với các dịch vụ trong danh sách Permitted Services.", "kind": "direct"},
+    {"id": "ref2", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "Permitted Services",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon EC2 instances, WAF, NAT Gateways, and Elastic Load Balancers",
+     "supports": "EC2 trong VPC là dịch vụ được phép kiểm thử (option A).", "kind": "direct"},
+    {"id": "ref3", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "Permitted Services",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Amazon RDS",
+     "supports": "RDS là dịch vụ được phép kiểm thử (option C).", "kind": "direct"},
+    {"id": "ref4", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "Prohibited Activities",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "DNS zone walking via Amazon Route 53 Hosted Zones",
+     "supports": "Option E bị cấm.", "kind": "direct"},
+    {"id": "ref5", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "Prohibited Activities",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Denial of Service (DoS), Distributed Denial of Service (DDoS)",
+     "supports": "DoS/flooding (port, protocol, request flooding) bị cấm – option D.", "kind": "direct"},
+    {"id": "ref6", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "AWS Customer Support Policy for Penetration Testing",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Customers are not permitted to conduct any security assessments of AWS infrastructure or the AWS services themselves.",
+     "supports": "Brute force namespace bucket S3 là tấn công vào chính dịch vụ AWS – không được phép (option B).", "kind": "inference"},
+    {"id": "ref7", "url": "https://aws.amazon.com/security/penetration-testing/", "title": "Penetration Testing - Amazon Web Services (AWS)", "section": "Permitted Services",
+     "snapshot_id": "dd2e9933d60b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Customers seeking to test non approved services will need to work directly with AWS Support or your account representative.",
+     "supports": "S3 không có trong danh sách được phép nên cần làm việc với AWS trước – không phải thủ tục được phép mặc định.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q119:C", "detail_vi": "'PostgreSOL' (chữ O) thay vì 'PostgreSQL' (chữ Q)."}
+  ],
+  "notes_vi": "Nhớ: danh sách Permitted Services (EC2, RDS, Aurora, CloudFront, API Gateway, Lambda, ...) và Prohibited Activities (Route 53 zone walking/hijacking/pharming, DoS/flooding, S3 bucket takeover, subdomain takeover)."
+}

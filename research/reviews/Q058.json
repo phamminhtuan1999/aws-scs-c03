@@ -1,0 +1,256 @@
+{
+  "question_id": "Q058",
+  "question_content_hash": "5962599545081fd2104a085ef67b65bdc6c1bd7a84d27521b648a720d45c2993",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:12:44Z",
+  "last_reviewed_at": "2026-09-30T20:12:44Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "172c0401681f974d4b08096ea00aa8c36b3a0c4f5e51534a5dd610749fe75c4c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "IAM user và S3 bucket cùng account; bucket dùng SSE-KMS với customer managed key cùng account; không có bucket policy.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "IAM policy đã cho kms:Decrypt trên key và s3:List*, s3:Get* trên bucket/object, nhưng user vẫn bị Access Denied khi đọc object.",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn MỘT nguyên nhân khả dĩ gây Access Denied.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q058:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Tải object SSE-KMS chỉ cần kms:Decrypt trên key (ngoài quyền S3); kms:DescribeKey không phải điều kiện để GetObject.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q058:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đổi default encryption không mã hóa lại object cũ (vẫn dùng CMK mà user có Decrypt); object mới dùng aws/s3 thì principal cùng account dùng được qua S3, nên không gây Access Denied.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q058:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Trong cùng account, quyền là hợp của identity-based và resource-based policy; IAM policy cho phép là đủ, không bắt buộc bucket policy.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q058:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Nếu key policy bị bỏ statement cho account (root) quyền truy cập đầy đủ, IAM policy cho phép kms:Decrypt trở nên vô hiệu, nên S3 không giải mã được và trả Access Denied.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q058:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "KMS doc nói trực tiếp: thiếu statement cho account trong key policy thì IAM policy cho phép truy cập key không có hiệu lực; các phương án khác bị tài liệu S3/IAM phản bác.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:49:10Z"
+  },
+  "source_answer": [
+    "Q058:D"
+  ],
+  "researched_answer": [
+    "Q058:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "KMS default key policy doc nói trực tiếp: thiếu statement cho account trong key policy thì IAM policy cho phép dùng key không có hiệu lực — giải thích Access Denied dù IAM policy đã cho kms:Decrypt. A, B, C bị tài liệu S3/KMS/IAM phản bác.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Khớp: blind = D; source key = D. Kiểm tra phương án cạnh tranh mạnh nhất B (đổi bucket sang AWS managed key aws/s3): đổi default encryption không mã hóa lại object cũ (vẫn dùng customer managed key mà user có kms:Decrypt); object mới mã hóa bằng aws/s3 thì chỉ dùng được trong ngữ cảnh S3 bởi principal cùng account, nên user cùng account có quyền S3 vẫn đọc được — không gây Access Denied. A: tải object SSE-KMS chỉ cần kms:Decrypt, không cần kms:DescribeKey. C: cùng account, identity-based policy đủ cho phép, không cần bucket policy. Giữ D.",
+  "explanation_vi": {
+    "why_correct": "Với KMS, key policy là nguồn quyền chính: nếu key policy bị sửa bỏ statement cho account (root) toàn quyền, IAM policy cho phép kms:Decrypt không còn hiệu lực, nên S3 không giải mã được object SSE-KMS và trả Access Denied.",
+    "others": {
+      "Q058:A": "Tải object SSE-KMS chỉ cần kms:Decrypt trên key; kms:DescribeKey không phải điều kiện của GetObject.",
+      "Q058:B": "Đổi default encryption không mã hóa lại object cũ, còn object mã hóa bằng aws/s3 vẫn dùng được bởi principal cùng account qua S3, nên không gây Access Denied.",
+      "Q058:C": "Trong cùng account, IAM policy cho phép là đủ; bucket policy không bắt buộc."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "customer managed key",
+      "meaning_vi": "Quyền dùng key do key policy quyết định; IAM policy chỉ có hiệu lực nếu key policy cho phép account."
+    },
+    {
+      "phrase": "no bucket policy defined",
+      "meaning_vi": "Cùng account nên không cần bucket policy; tìm nguyên nhân ở KMS."
+    },
+    {
+      "phrase": "kms:Decrypt permission",
+      "meaning_vi": "Quyền IAM đã có nhưng có thể vô hiệu nếu key policy không ủy quyền cho IAM."
+    }
+  ],
+  "memory_tip_vi": "Nếu IAM policy đã cho kms:Decrypt mà vẫn Access Denied với object SSE-KMS cùng account → nghĩ đến key policy thiếu statement cho account (root); kiểm tra bucket policy chỉ bắt buộc khi truy cập cross-account.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "Amazon S3",
+      "AWS KMS",
+      "AWS IAM"
+    ],
+    "reason_vi": "Khắc phục Access Denied khi đọc object SSE-KMS: tương tác giữa key policy KMS và IAM policy."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS Key Management Service",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Without this permission, IAM policies that allow access to the key are ineffective, although IAM policies that deny access to the key are still effective.",
+      "supports": "Bỏ statement account khỏi key policy làm IAM policy kms:Decrypt vô hiệu (D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html",
+      "title": "Policy evaluation logic - IAM",
+      "section": "Evaluating identity-based policies with resource-based policies",
+      "snapshot_id": "76d60163edfe",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If an action is allowed by an identity-based policy, a resource-based policy, or both, then AWS allows the action.",
+      "supports": "Cùng account, IAM policy là đủ; không cần bucket policy (C sai).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+      "title": "Using server-side encryption with AWS KMS keys (SSE-KMS) - Amazon S3",
+      "section": "Permissions",
+      "snapshot_id": "e1e1c91f80b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To download an object encrypted with an AWS KMS key, you need kms:Decrypt permissions for the key.",
+      "supports": "Chỉ cần kms:Decrypt để tải object SSE-KMS (A sai).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-encryption.html",
+      "title": "Setting default server-side encryption behavior for Amazon S3 buckets",
+      "section": "Encrypting existing objects",
+      "snapshot_id": "2c093f4a6ecc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can also encrypt existing objects by using the CopyObject API operation or the copy-object AWS CLI command.",
+      "supports": "Object cũ phải được copy lại mới đổi mã hóa; đổi default encryption không đổi key của object cũ (B).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html",
+      "title": "AWS KMS keys - AWS Key Management Service",
+      "section": "AWS managed keys",
+      "snapshot_id": "51ffc263dff1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "it can only be used in the context of the AWS service you’re operating in and it can only be used by principals within the account that the key exists.",
+      "supports": "AWS managed key aws/s3 dùng được bởi principal cùng account qua S3 (B không gây Access Denied).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+      "title": "Using server-side encryption with AWS KMS keys (SSE-KMS) - Amazon S3",
+      "section": "AWS managed key",
+      "snapshot_id": "e1e1c91f80b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the AWS managed key (aws/s3) from the uploading account is used for encryption and required for decryption.",
+      "supports": "aws/s3 là key của chính account, dùng cho mã hóa/giải mã object trong account (B).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:49:10Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q058:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:12:44Z",
+      "change": "Reconciliation: match (blind D = source D). Rà lại B (aws/s3) và A/C; không có bằng chứng phản bác. Status verified, confidence high.",
+      "previous_answer": [
+        "Q058:D"
+      ]
+    }
+  ]
+}

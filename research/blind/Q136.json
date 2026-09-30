@@ -1,0 +1,68 @@
+{
+  "question_id": "Q136",
+  "question_content_hash": "e895d01fcf5d009925bfd8e69b4ef19faed50adf5e4eccd6bac6964f2bd317bf",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:23:29+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Root SCP có statement Allow */* và statement DenySES (Deny ses:* trên Resource *).", "kind": "condition"},
+    {"id": "R2", "text_vi": "Developer có IAM policy cho phép ses:*; OU chứa account có SCP cho phép SES; vẫn bị lỗi not-authorized.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Tìm thay đổi BẮT BUỘC (must) để developer truy cập được SES.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [
+    {"image": "images/Q136_image_01.png",
+     "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Sid\": \"AllowsAllActions\",\n            \"Effect\": \"Allow\",\n            \"Action\": \"*\",\n            \"Resource\": \"*\"\n        },\n        {\n            \"Sid\": \"DenySES\",\n            \"Effect\": \"Deny\",\n            \"Action\": \"ses:*\",\n            \"Resource\": \"*\"\n        }\n    ]\n}",
+     "notes_vi": "Ảnh rõ, không có ký tự không chắc chắn. Statement 1: Allow Action * Resource *; Statement 2: Deny Action ses:* Resource *. Không có Condition."}
+  ],
+  "option_reviews": [
+    {"unit_id": "Q136:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Quyền hiệu lực là giao của SCP với identity-based/resource-based policy; resource policy không vượt qua được explicit Deny ses:* trong root SCP.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q136:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "IAM group không thể làm Principal trong resource-based policy, và dù có resource policy thì explicit Deny trong SCP vẫn chặn; chuỗi ARN trong phương án còn bị sai định dạng.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref3", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q136:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đề không nêu AWS Control Tower; nguyên nhân chặn là statement DenySES trong root SCP được hiển thị, nên gỡ một control của Control Tower không xử lý được deny này.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref1", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q136:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Deny ở SCP gắn root áp dụng cho mọi OU và account bên dưới, bất kể SCP ở OU cho phép; bỏ SES (statement DenySES) khỏi root SCP là thay đổi cần thiết, sau đó Allow * ở root, allow SES ở OU và IAM policy ses:* cho phép truy cập.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q136:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high",
+      "reason_vi": "Tài liệu SCP nêu rõ Deny ở bất kỳ cấp nào (kể cả root) được áp dụng cho mọi OU/account bên dưới và không bị allow ở cấp thấp hơn ghi đè.",
+      "open_issues": ["Giả định account của developer là member account (SCP không áp dụng cho management account); đề nói account là con của OU nên hợp lý."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:23:29+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html", "title": "SCP evaluation - AWS Organizations", "section": "How SCPs work with Deny",
+     "snapshot_id": "d6b8114e42df", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "a deny policy attached to any level in the organization is evaluated for all the OUs and member accounts underneath it.",
+     "supports": "DenySES ở root chặn SES cho mọi account dù OU có SCP cho phép.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html", "title": "Service control policies (SCPs) - AWS Organizations", "section": "Overview",
+     "snapshot_id": "0ace6350695a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The effective permissions are the logical intersection between what is allowed by the SCP and resource control policies (RCPs) and what is allowed by the identity-based and resource-based policies.",
+     "supports": "Thêm resource-based policy không vượt qua được giới hạn của SCP.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html", "title": "AWS JSON policy elements: Principal", "section": "Principal",
+     "snapshot_id": "879eb6158f92", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You cannot identify a user group as a principal in a policy (such as a resource-based policy)",
+     "supports": "Principal group/Dev trong phương án B không hợp lệ.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html", "title": "SCP evaluation - AWS Organizations", "section": "How SCPs work with Allow",
+     "snapshot_id": "d6b8114e42df", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "there must be an explicit Allow statement at every level from the root through each OU in the direct path to the account",
+     "supports": "Sau khi bỏ DenySES, Allow * ở root cùng allow SES ở OU đủ để SCP cho phép SES (cần allow ở cấp account nữa, mặc định FullAWSAccess).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/controltower/latest/controlreference/controls.html", "title": "About controls in AWS Control Tower", "section": "Overview",
+     "snapshot_id": "5d987650c24e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS Control Tower implements preventive, detective, and proactive controls that help you govern your resources and monitor compliance across groups of AWS accounts.",
+     "supports": "Control Tower control là cơ chế riêng; đề không cho thấy có Control Tower hay control nào chặn SES.", "kind": "inference"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q136:B", "detail_vi": "Chuỗi policy có khoảng trắng thừa: \"AWS \" và \"arn:aws :iam ::account-number:group/Dev\" (ARN không hợp lệ về cú pháp)."}
+  ],
+  "notes_vi": "Account-level SCP không được nêu; giả định account có FullAWSAccess mặc định hoặc allow tương đương."
+}

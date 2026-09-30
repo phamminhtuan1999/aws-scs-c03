@@ -1,0 +1,275 @@
+{
+  "question_id": "Q109",
+  "question_content_hash": "c86d8f01079cbacbf47215d48ea19d6d5221b205e68a876bca99136794dbd711",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "08e2f60a3587ff41267624f7dc1804dd2faaafcf196ec484cdcf63bad7fea12b",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Người dùng Internet truy cập web app qua ALB bằng cổng 80/443.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "EC2 web phải kết nối được RDS MySQL (cổng 3306).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Admin SSH (cổng 22) từ máy trạm công ty (ngoài VPC, qua Internet) vào bastion.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Bastion phải kết nối được RDS (3306) để chạy schema update.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R5",
+      "text_vi": "Tiêu chí: cấu hình security group AN TOÀN NHẤT (least privilege, tham chiếu SG thay vì CIDR rộng).",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q109:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "ALB mở 80/443 cho Internet; sgWeb chỉ nhận từ sgLB; sgDB nhận 3306 từ sgWeb và sgBastion; bastion chỉ nhận SSH từ dải IP công ty. Đáp ứng đủ R1-R4 với nguồn hẹp nhất.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q109:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "sgDB cho phép từ sgLB (ALB không cần truy cập DB) và không cho sgBastion nên bastion không chạy được schema update; sgBastion chỉ nhận SSH từ dải VPC nên admin từ máy trạm công ty không SSH được.",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R5"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q109:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Phần ALB/web/DB đúng, nhưng sgBastion chỉ cho SSH từ dải IP của VPC; máy trạm công ty kết nối từ bên ngoài VPC nên bị chặn, admin không vào được bastion.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q109:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Chức năng vẫn chạy nhưng sgWeb mở 80/443 từ 0.0.0.0/0, cho phép vượt qua ALB truy cập trực tiếp EC2 (nếu có đường Internet), kém an toàn hơn so với chỉ tham chiếu sgLB.",
+      "requirement_ids": [
+        "R5"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q109:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu VPC/ALB/RDS/EC2 khuyến nghị trực tiếp tham chiếu SG cho tầng sau và giới hạn SSH theo dải IP quản trị; chỉ A thoả tất cả luồng cần thiết.",
+      "open_issues": [
+        "Đề nói 'these requirements' nhưng không liệt kê yêu cầu rõ; phải suy ra từ mô tả kiến trúc."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "source_answer": [
+    "Q109:A"
+  ],
+  "researched_answer": [
+    "Q109:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn A. Tài liệu ALB khuyến nghị target chỉ nhận traffic từ load balancer, RDS khuyến nghị dùng SG của tầng ứng dụng làm nguồn, EC2 khuyến nghị SSH chỉ từ IP/dải IP mạng của mình; A là phương án duy nhất thỏa mọi luồng với nguồn hẹp nhất.",
+    "open_issues": [
+      "Đề nói 'these requirements' nhưng không liệt kê yêu cầu; yêu cầu được suy ra từ kiến trúc mô tả (ALB công khai, bastion cho admin từ máy trạm công ty)."
+    ]
+  },
+  "reconciliation_vi": "Source key = A, trùng blind. Đã xét lại C (đối thủ mạnh nhất, giống hệt A trừ sgBastion): C chỉ cho SSH từ dải IP của VPC, nhưng admin kết nối từ máy trạm công ty – địa chỉ nguồn là IP công ty (kể cả khi qua VPN, dải mạng công ty khác CIDR của VPC), nên admin không vào được bastion; tài liệu EC2 (ref2) khuyến nghị nguồn SSH là IP/dải IP mạng cục bộ của bạn. D mở sgWeb cho 0.0.0.0/0, trái khuyến nghị ALB chỉ nhận từ load balancer (ref3). B cho DB nhận từ sgLB (ALB không cần DB) và bỏ sgBastion. Giữ A, verified, high.",
+  "explanation_vi": {
+    "why_correct": "A xây chuỗi tham chiếu security group: Internet → sgLB (80/443), chỉ sgLB → sgWeb, chỉ sgWeb và sgBastion → sgDB (3306), và SSH vào bastion chỉ từ dải IP công ty – mỗi tầng chỉ nhận đúng nguồn nó cần.",
+    "others": {
+      "Q109:B": "sgDB cho ALB vào cổng 3306 (không cần thiết) nhưng lại không cho bastion, và SSH chỉ từ dải VPC nên admin ở công ty không kết nối được.",
+      "Q109:C": "SSH vào bastion chỉ từ dải IP của VPC nên máy trạm công ty (ngoài VPC) bị chặn, admin không chạy được schema update.",
+      "Q109:D": "sgWeb mở 80/443 cho 0.0.0.0/0, cho phép vòng qua ALB đến thẳng EC2 – chạy được nhưng kém an toàn hơn A."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "MOST securely",
+      "meaning_vi": "Chọn nguồn hẹp nhất: tham chiếu SG thay vì CIDR rộng."
+    },
+    {
+      "phrase": "from their corporate workstations",
+      "meaning_vi": "SSH đến bastion phải cho phép từ dải IP công ty, không phải dải VPC."
+    },
+    {
+      "phrase": "bastion host to apply schema updates",
+      "meaning_vi": "sgDB phải cho sgBastion vào cổng 3306."
+    }
+  ],
+  "memory_tip_vi": "Nếu hỏi cấu hình security group 'MOST securely' cho kiến trúc nhiều tầng -> nghĩ đến tham chiếu SG theo chuỗi (sgLB→sgWeb→sgDB, sgBastion→sgDB) và SSH chỉ từ dải IP công ty; kiểm tra nguồn SSH có khớp nơi admin thật sự kết nối (không phải dải VPC).",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security"
+    ],
+    "services": [
+      "Amazon VPC",
+      "Elastic Load Balancing",
+      "Amazon EC2",
+      "Amazon RDS"
+    ],
+    "reason_vi": "Thiết kế security group theo nguyên tắc least privilege cho kiến trúc 3 tầng có bastion."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
+      "title": "Security group rules - Amazon VPC",
+      "section": "Security group referencing",
+      "snapshot_id": "5594f61a25d6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For inbound rules, the EC2 instances associated with a security group can receive inbound traffic from the private IP addresses from the network interfaces for the EC2 instances associated with the referenced security group.",
+      "supports": "Tham chiếu SG (sgLB, sgWeb, sgBastion) làm nguồn chỉ cho phép lưu lượng từ các ENI thuộc SG đó.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html",
+      "title": "Security group rules for different use cases - Amazon EC2",
+      "section": "Rules to connect to instances from your computer",
+      "snapshot_id": "287bc47939bc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The public IPv4 address of your computer, or a range of IP addresses in your local network.",
+      "supports": "Nguồn SSH nên là IP công khai/dải IP mạng của người quản trị (dải IP công ty), không phải dải VPC.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-update-security-groups.html",
+      "title": "Security groups for your Application Load Balancer",
+      "section": "Considerations",
+      "snapshot_id": "2767b6098b8f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "restrict the security groups associated with your targets to accept traffic solely from the load balancer.",
+      "supports": "sgWeb nên chỉ nhận lưu lượng từ SG của ALB, không mở 0.0.0.0/0.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.RDSSecurityGroups.html",
+      "title": "Controlling access with security groups - Amazon RDS",
+      "section": "Overview of VPC security groups",
+      "snapshot_id": "2df3c2229760",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By specifying a VPC security group as the source, you allow incoming traffic from all instances (typically application servers) that use the source VPC security group.",
+      "supports": "sgDB có thể cho phép 3306 từ sgWeb và sgBastion bằng tham chiếu SG.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html",
+      "title": "Security group rules for different use cases - Amazon EC2",
+      "section": "Database server rules",
+      "snapshot_id": "287bc47939bc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The default port to access a MySQL or Aurora database",
+      "supports": "Cổng 3306 là cổng MySQL mà sgDB cần mở cho các client hợp lệ.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q109:stem:0",
+      "detail_vi": "'MySOL' là lỗi chính tả của 'MySQL'."
+    },
+    {
+      "type": "ambiguous",
+      "location": "Q109:stem:5",
+      "detail_vi": "Câu hỏi nhắc 'these requirements' nhưng không nêu danh sách yêu cầu cụ thể; yêu cầu phải suy ra từ kiến trúc (ALB công khai, bastion cho admin từ mạng công ty)."
+    }
+  ],
+  "notes_vi": "Điểm phân biệt: sgWeb chỉ từ sgLB, sgDB từ sgWeb+sgBastion, SSH từ dải IP công ty.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:17:00+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q109:A\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:25:15Z",
+      "change": "Reconciliation: khớp source key A; status verified (high); đáp án không đổi; không thêm tham chiếu mới (đã xét lại C và D bằng ref2/ref3 của blind).",
+      "previous_answer": [
+        "Q109:A"
+      ]
+    }
+  ]
+}

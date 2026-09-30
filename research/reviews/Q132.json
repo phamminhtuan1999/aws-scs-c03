@@ -1,0 +1,324 @@
+{
+  "question_id": "Q132",
+  "question_content_hash": "9fb520538b57efe053a2f2c7a8703f82929fff2037482226f459af551e11924f",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:50+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "cc188896f952a3adc255fd130138e135fae30185028d1f1a24d4a44a7e080f65",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Giảm nhiễu từ finding false positive lặp lại (brute force trên FTP server).",
+      "kind": "optimization"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Không làm mất khả năng quan sát (visibility) các hành vi bất thường tiềm ẩn.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q132:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty không cho tắt riêng một detection nền tảng: chỉ suspend/disable cả dịch vụ hoặc tắt từng protection plan; Custom Detection Rules (bật/tắt theo rule) chỉ gồm rule opt-in dựa trên CloudTrail management events. Dù tắt được thì cũng mất visibility cho loại hành vi đó trong cả Region.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref7",
+        "ref8",
+        "ref9"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q132:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Trusted IP list dùng cho IP public bên ngoài mà bạn tin cậy, GuardDuty không sinh finding cho các IP đó - tức mất hẳn visibility; client đến từ nhiều nơi nên cũng không thể liệt kê, và đưa chính FTP server vào list không đúng cơ chế.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q132:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Suppression rule tự archive các finding mới khớp tiêu chí (ví dụ finding type + instance ID của FTP server), giảm nhiễu nhưng finding vẫn được sinh và lưu 90 ngày để xem lại.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref6",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q132:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "GuardDuty không có API xóa finding (chỉ có ArchiveFindings/UnarchiveFindings); dù có thì xóa finding làm mất visibility và tăng overhead so với suppression rule có sẵn.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q132:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu GuardDuty mô tả suppression rule đúng như phương án C, dùng cho false positive, và finding vẫn được giữ ở trạng thái archived.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:21:50+00:00"
+  },
+  "source_answer": [
+    "Q132:C"
+  ],
+  "researched_answer": [
+    "Q132:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu GuardDuty mô tả suppression rule đúng như C (auto-archive, finding vẫn được sinh và lưu 90 ngày) và khuyến nghị trực tiếp dùng nó cho brute force nhắm vào server hợp lệ; không có cơ chế tắt riêng 'FTP rule'.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Bổ sung bằng chứng trực tiếp cho A (blind chỉ suy luận): GuardDuty FAQ và API DetectorFeatureConfiguration cho thấy mức bật/tắt là cả dịch vụ hoặc từng protection plan (S3, EKS, Malware, RDS, Lambda, Runtime...), không có detection FTP riêng. Đã kiểm tra tính năng mới Custom Detection Rules (bật/tắt từng rule): tài liệu nói hiện chỉ hỗ trợ CloudTrail management events và là rule opt-in, nên không áp dụng cho phát hiện brute force dựa trên lưu lượng mạng - A vẫn không khả thi. Lưu ý FAQ 'Can I write custom detections? No' đã lỗi thời so với Custom Detection Rules nên không dùng làm bằng chứng. Thêm bằng chứng cho C: trang finding types khuyến nghị suppression rule (finding type + instance) cho SSHBruteForce nhắm vào bastion host - tình huống tương tự FTP server. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Suppression rule (filter với hành động auto-archive) theo finding type + instance của FTP server tự archive finding lặp lại; GuardDuty vẫn sinh finding và lưu 90 ngày ở mục Archived, nên giảm nhiễu mà không mất visibility - đúng khuyến nghị của AWS cho brute force nhắm vào server hợp lệ.",
+    "others": {
+      "Q132:A": "GuardDuty không có 'FTP rule' để tắt riêng (chỉ tắt cả dịch vụ hoặc từng protection plan), và tắt detection sẽ mất visibility trong Region.",
+      "Q132:B": "Trusted IP list làm GuardDuty ngừng sinh finding cho IP đó (mất visibility), áp dụng cho IP public bên ngoài chứ không phải để đánh dấu chính FTP server.",
+      "Q132:D": "GuardDuty không có API xóa finding (chỉ archive/unarchive), và xóa finding làm mất visibility, lại thêm vận hành Lambda không cần thiết."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "false positive",
+      "meaning_vi": "Hoạt động hợp lệ bị báo nhầm -> suppression rule."
+    },
+    {
+      "phrase": "signal-to-noise ratio",
+      "meaning_vi": "Giảm cảnh báo nhiễu trong danh sách finding đang hoạt động."
+    },
+    {
+      "phrase": "visibility of potential anomalous behavior",
+      "meaning_vi": "Không được ngừng sinh hay xóa finding; archive vẫn giữ để xem lại."
+    }
+  ],
+  "memory_tip_vi": "Nếu finding GuardDuty lặp lại là hành vi hợp lệ đã biết (false positive) -> nghĩ đến suppression rule (auto-archive theo finding type + resource, vẫn giữ finding); kiểm tra: trusted IP list làm GuardDuty ngừng sinh finding, còn finding không xóa được.",
+  "tags": {
+    "domains": [
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon GuardDuty"
+    ],
+    "reason_vi": "Tinh chỉnh phát hiện mối đe dọa: giảm false positive mà vẫn giữ khả năng quan sát."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html",
+      "title": "Suppression rules in GuardDuty",
+      "section": "Suppression rules in GuardDuty",
+      "snapshot_id": "ede1200305cb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Suppression rules can be used to filter low-value findings, false positive findings, or threats you do not intend to act on",
+      "supports": "Suppression rule là cơ chế chuẩn cho false positive (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html",
+      "title": "Suppression rules in GuardDuty",
+      "section": "Suppression rules in GuardDuty",
+      "snapshot_id": "ede1200305cb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty continues to generate findings even when they match your suppression rules, however, those findings are automatically marked as archived.",
+      "supports": "Vẫn giữ visibility: finding vẫn được sinh và xem được ở mục Archived.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html",
+      "title": "Customizing threat detection with entity lists and IP address lists",
+      "section": "Trusted lists",
+      "snapshot_id": "13caf02bb6ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "GuardDuty does not generate findings for entries listed in trusted sources.",
+      "supports": "Trusted IP list chặn hẳn việc sinh finding - mất visibility (B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html",
+      "title": "Customizing threat detection with entity lists and IP address lists",
+      "section": "Important considerations for GuardDuty lists",
+      "snapshot_id": "13caf02bb6ab",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "IP address lists and entity lists apply only to traffic destined for publicly routable IP addresses and domains.",
+      "supports": "Danh sách IP áp dụng cho IP/domain public bên ngoài, không phải để đánh dấu chính EC2 FTP server (B).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_guardduty.html",
+      "title": "Actions, resources, and condition keys for Amazon GuardDuty",
+      "section": "Actions defined by Amazon GuardDuty",
+      "snapshot_id": "bc1d9a2f747d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Grants permission to archive GuardDuty findings",
+      "supports": "Danh sách action GuardDuty có ArchiveFindings nhưng không có action xóa finding (D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "UnauthorizedAccess:EC2/SSHBruteForce - Remediation recommendations",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If the target of the brute force attempt is a bastion host, this may represent expected behavior for your AWS environment. If this is the case, we recommend that you set up a suppression rule for this finding.",
+      "supports": "AWS khuyến nghị trực tiếp dùng suppression rule (finding type + instance) cho brute force nhắm vào server hợp lệ - tình huống giống FTP server trong đề (C).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://aws.amazon.com/guardduty/faqs/",
+      "title": "Amazon GuardDuty FAQs",
+      "section": "How can I prevent GuardDuty from looking at my logs and data sources?",
+      "snapshot_id": "95504248b64d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can also selectively disable capabilities like GuardDuty S3 Protection or GuardDuty EKS Protection through the Management Console or via the AWS CLI.",
+      "supports": "Mức tắt được là cả dịch vụ hoặc từng protection plan, không có 'FTP rule' riêng để tắt (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DetectorFeatureConfiguration.html",
+      "title": "DetectorFeatureConfiguration - GuardDuty API Reference",
+      "section": "name - Valid Values",
+      "snapshot_id": "7c973b53b8c4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Valid Values: S3_DATA_EVENTS | EKS_AUDIT_LOGS | EBS_MALWARE_PROTECTION | RDS_LOGIN_EVENTS | LAMBDA_NETWORK_LOGS",
+      "supports": "Danh sách feature có thể ENABLED/DISABLED gồm các protection plan, không có detection FTP/brute force riêng (A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/custom-detection-rules-how-it-works.html",
+      "title": "How Custom Detection Rules work",
+      "section": "Data sources and signals",
+      "snapshot_id": "e64318349140",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Custom Detection Rules currently supports AWS CloudTrail management events.",
+      "supports": "Tính năng mới bật/tắt từng rule (Custom Detection Rules) chỉ gồm rule opt-in dựa trên CloudTrail management events, không phải phát hiện brute force từ lưu lượng mạng - không biến A thành khả thi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-active.html",
+      "title": "GuardDuty finding types",
+      "section": "Active finding types",
+      "snapshot_id": "9e15498588f7",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "UnauthorizedAccess:EC2/SSHBruteForce",
+      "supports": "Các finding brute force cho EC2 là SSH/RDP/WinRM; không có finding type brute force riêng cho FTP (ghi vào source_issues).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html",
+      "title": "Suppression rules in GuardDuty",
+      "section": "Recommendations",
+      "snapshot_id": "ede1200305cb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Continue using suppression rules to reduce alerts from known trusted activities.",
+      "supports": "Suppression rule là cách được khuyến nghị để giảm cảnh báo từ hoạt động tin cậy đã biết (C).",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "data",
+      "location": "Q132:stem:0",
+      "detail_vi": "Danh sách finding type GuardDuty hiện có SSHBruteForce, RDPBruteForce, WinRMBruteForce nhưng không có finding brute force riêng cho FTP; tình huống trong đề là giả định. Không ảnh hưởng đáp án vì cách xử lý false positive (suppression rule) giống nhau."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:50+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q132:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:31+00:00",
+      "change": "Reconciliation: khớp source key C; thêm ref6-ref11 (khuyến nghị suppression rule cho brute force vào bastion, mức tắt chỉ theo protection plan, Custom Detection Rules chỉ cho CloudTrail management events, danh sách finding brute force); A chuyển evidence_kind inference -> direct; thêm source_issue về FTP brute force; status verified (high).",
+      "previous_answer": [
+        "Q132:C"
+      ]
+    }
+  ],
+  "notes_vi": "Stem nói 'flagged the finding as a false positive' tương ứng UpdateFindingsFeedback (not useful) - chỉ là phản hồi, không lọc finding."
+}

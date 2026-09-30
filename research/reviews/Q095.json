@@ -1,0 +1,300 @@
+{
+  "question_id": "Q095",
+  "question_content_hash": "c0aaab6d05f944e4c9caf932280278de2ae0db50e80dbb6c8bfa8912f3bb470e",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:03:58Z",
+  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "50c3b19a99465829911ec0ee6bb7d33439b6b30e53e6ef0633275e0256236f7f",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Đảm bảo rule group bên thứ ba (AWS Marketplace) được dùng trong MỌI web ACL gắn với MỌI ALB.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Phạm vi: nhiều account trong AWS Organizations và nhiều Region.",
+      "kind": "scope"
+    },
+    {
+      "id": "R3",
+      "text_vi": "LEAST operational overhead.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q095:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "StackSets có thể triển khai stack qua nhiều account/Region, nhưng phải tự định nghĩa/quản lý từng web ACL trong template (web ACL tạo ngoài stack không tự được sửa) và không tự động bao phủ ALB/web ACL mới; overhead cao hơn Firewall Manager.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q095:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "SCP chỉ đặt giới hạn quyền, không cấp quyền và không thực hiện thay đổi cấu hình; SCP không thể chèn rule group vào web ACL.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q095:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Firewall Manager AWS WAF policy hỗ trợ managed rule group của AWS Marketplace, áp dụng cho mọi account trong organization, tạo mới hoặc retrofit web ACL đang gắn với ALB trong scope và tự bao phủ resource/account mới. Lưu ý: Region được chọn theo từng policy nên nhiều Region cần nhiều policy; member account cần subscription Marketplace.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref8",
+        "ref3",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q095:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Security Hub CSPM chỉ đánh giá và tạo finding (detective), không đảm bảo/áp dụng rule group vào web ACL; ngoài ra không có control sẵn cho rule group Marketplace cụ thể.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q095:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Firewall Manager là dịch vụ được thiết kế để áp rule group WAF tập trung cho toàn organization và tự áp dụng cho resource mới; các phương án khác không đảm bảo hoặc tốn công hơn. Giảm xuống medium vì cụm 'all accounts and Regions' không chính xác: policy Firewall Manager theo từng Region.",
+      "open_issues": [
+        "Firewall Manager yêu cầu tạo policy riêng cho mỗi Region; phương án C mô tả scope 'all Regions' trong một policy là không chính xác về kỹ thuật.",
+        "Member account phải có subscription rule group Marketplace thì Firewall Manager mới propagate được."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T20:03:58Z"
+  },
+  "source_answer": [
+    "Q095:C"
+  ],
+  "researched_answer": [
+    "Q095:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn C. Firewall Manager là dịch vụ duy nhất trong các phương án áp rule group WAF tập trung cho toàn organization, retrofit web ACL hiện có và tự áp cho resource mới. Giữ medium vì cụm 'all accounts and Regions' không chính xác: tài liệu yêu cầu mỗi Region một policy (trừ CloudFront).",
+    "open_issues": [
+      "Firewall Manager yêu cầu tạo policy riêng cho mỗi Region (trừ CloudFront/Global); không tìm thấy What's New nào bổ sung policy đa Region tính đến 2026-09-30. Cụm 'scope ... all accounts and Regions' ở C chỉ đúng theo nghĩa lặp lại policy cho mỗi Region.",
+      "Member account phải có subscription rule group Marketplace thì Firewall Manager mới propagate được (điều kiện chung cho mọi phương án)."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét cả hai phía của vấn đề 'per-Region': (1) Tài liệu create-policy xác nhận lại 'you must create separate Firewall Manager policies for each Region' (trừ CloudFront); tìm What's New 2025–2026 không thấy tính năng policy đa Region. Vì vậy C diễn đạt không chính xác, nhưng ý định (dùng Firewall Manager WAF policy với rule group Marketplace, scope toàn organization) vẫn thực hiện được bằng một policy mỗi Region. (2) Đối thủ mạnh nhất A (StackSets): triển khai được đa account/Region nhưng chỉ quản lý web ACL do stack tạo, không tự áp cho web ACL/ALB tạo sau và phải bảo trì template – overhead cao hơn. Bổ sung ref8: Firewall Manager có thể retrofit web ACL đang gắn với resource trong scope, đáp ứng 'every web ACL that is attached to every ALB'. B (SCP không cấu hình được tài nguyên) và D (Security Hub CSPM chỉ phát hiện) không đáp ứng. Lỗi diễn đạt không làm đổi đáp án duy nhất nên giữ verified, medium, và giữ source_issue.",
+  "explanation_vi": {
+    "why_correct": "AWS Firewall Manager AWS WAF policy cho phép chỉ định rule group Marketplace một lần và tự áp (tạo mới hoặc retrofit web ACL) cho mọi ALB trong mọi account của organization, kể cả account/resource mới, nên ít overhead nhất. Lưu ý: thực tế cần một policy cho mỗi Region.",
+    "others": {
+      "Q095:A": "StackSets triển khai được đa account/Region nhưng chỉ quản lý web ACL trong stack, không tự áp cho web ACL/ALB mới và phải bảo trì template – nhiều công hơn.",
+      "Q095:B": "SCP chỉ giới hạn quyền, không thể chèn rule group hay thay đổi cấu hình web ACL.",
+      "Q095:D": "Security Hub CSPM chỉ tạo finding (phát hiện), không đảm bảo rule group được thêm vào web ACL."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "every web ACL that is attached to every ALB",
+      "meaning_vi": "Cần áp bắt buộc, tự động cho mọi web ACL -> Firewall Manager (có retrofit)."
+    },
+    {
+      "phrase": "multiple accounts and multiple AWS Regions",
+      "meaning_vi": "Quản lý tập trung qua Organizations; Firewall Manager policy theo từng Region."
+    },
+    {
+      "phrase": "LEAST operational overhead",
+      "meaning_vi": "Dịch vụ tự áp cho resource mới thay vì tự viết/triển khai template."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần bắt buộc rule group WAF trên mọi ALB/CloudFront của nhiều account trong Organizations -> nghĩ đến AWS Firewall Manager WAF policy; kiểm tra: mỗi Region một policy (CloudFront là Global) và member account cần subscription Marketplace.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS Firewall Manager",
+      "AWS WAF",
+      "AWS Organizations",
+      "AWS Marketplace",
+      "Elastic Load Balancing (ALB)"
+    ],
+    "reason_vi": "Quản trị tập trung bảo vệ lớp ứng dụng (WAF) cho nhiều account/Region."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/create-policy.html",
+      "title": "Creating an AWS Firewall Manager policy",
+      "section": "Creating an AWS Firewall Manager policy for AWS WAF",
+      "snapshot_id": "4acc66a07947",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "In a Firewall Manager AWS WAF policy, you can use managed rule groups, which AWS and AWS Marketplace sellers create and maintain for you.",
+      "supports": "Firewall Manager WAF policy dùng được rule group của AWS Marketplace.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/fms-chapter.html",
+      "title": "AWS Firewall Manager",
+      "section": "intro",
+      "snapshot_id": "3e40c74477bc",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "With Firewall Manager, you set up your protections just once and the service automatically applies them across your accounts and resources, even as you add new accounts and resources.",
+      "supports": "Firewall Manager áp dụng tự động cho mọi account/resource kể cả mới thêm (least overhead).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/create-policy.html",
+      "title": "Creating an AWS Firewall Manager policy",
+      "section": "Region step",
+      "snapshot_id": "4acc66a07947",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To protect resources in multiple Regions (other than CloudFront distributions), you must create separate Firewall Manager policies for each Region.",
+      "supports": "Hạn chế của C: mỗi Region một policy, không có scope 'all Regions' trong một policy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs)",
+      "section": "intro",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs do not grant permissions to the IAM users and IAM roles in your organization. No permissions are granted by an SCP.",
+      "supports": "SCP chỉ là guardrail quyền, không thể chèn rule group vào web ACL (bác B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html",
+      "title": "Introduction to AWS Security Hub CSPM",
+      "section": "intro",
+      "snapshot_id": "ce2e8e0fe1c5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Security Hub CSPM runs checks against security controls and generates control findings to help you assess your compliance against security best practices.",
+      "supports": "Security Hub CSPM chỉ đánh giá/tạo finding, không áp cấu hình (bác D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html",
+      "title": "Managing stacks across accounts and Regions with StackSets",
+      "section": "intro",
+      "snapshot_id": "1da0ec354d4d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudFormation StackSets extends the capability of stacks by allowing you to create, update, or delete stacks across multiple accounts and AWS Regions with a single operation.",
+      "supports": "StackSets triển khai được đa account/Region nhưng chỉ quản lý tài nguyên trong stack (A khả thi nhưng tốn công).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies-rule-groups.html",
+      "title": "Rule group management for AWS WAF policies",
+      "section": "Note",
+      "snapshot_id": "5060784d4362",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you don't have a subscription to AWS WAF marketplace rule groups in your member account, Firewall Manager can't propagate custom or managed rule groups to that account.",
+      "supports": "Điều kiện tiên quyết: member account cần subscription Marketplace (áp dụng cho mọi phương án).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html",
+      "title": "Using AWS WAF policies with Firewall Manager",
+      "section": "intro",
+      "snapshot_id": "c6776773d256",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "keep any web ACLs that are already associated with in-scope resources, and retrofit them for use by the policy.",
+      "supports": "Firewall Manager có thể retrofit web ACL đang gắn với ALB, nên rule group được đưa vào MỌI web ACL của resource trong scope.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q095:C",
+      "detail_vi": "Policy Firewall Manager cho WAF là theo Region (phải tạo policy riêng cho mỗi Region); cụm 'Set the scope of the policy to all accounts and Regions' không chính xác về kỹ thuật, dù ý định (dùng Firewall Manager) vẫn là phương án tốt nhất."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:03:58Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q095:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:46+00:00",
+      "change": "Reconciliation: khớp source key C. Xác nhận lại giới hạn mỗi Region một policy (create-policy) và không có tính năng đa Region trong What's New; bổ sung ref8 (retrofit web ACL hiện có). Giữ source_issue ambiguous ở C, giữ verified (medium).",
+      "previous_answer": [
+        "Q095:C"
+      ]
+    }
+  ]
+}

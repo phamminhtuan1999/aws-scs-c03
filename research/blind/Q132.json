@@ -1,0 +1,54 @@
+{
+  "question_id": "Q132",
+  "question_content_hash": "9fb520538b57efe053a2f2c7a8703f82929fff2037482226f459af551e11924f",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:50+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Giảm nhiễu từ finding false positive lặp lại (brute force trên FTP server).", "kind": "optimization"},
+    {"id": "R2", "text_vi": "Không làm mất khả năng quan sát (visibility) các hành vi bất thường tiềm ẩn.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q132:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Không tìm thấy tính năng tắt riêng một 'FTP rule' trong GuardDuty (bộ lọc chuẩn là filter/suppression rule); kể cả nếu tắt phát hiện theo loại thì sẽ mất hoàn toàn visibility cho loại đó trong Region.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref1"], "evidence_kind": "inference"},
+    {"unit_id": "Q132:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Trusted IP list dùng cho IP public bên ngoài mà bạn tin cậy, GuardDuty không sinh finding cho các IP đó - tức mất hẳn visibility; client đến từ nhiều nơi nên cũng không thể liệt kê, và đưa chính FTP server vào list không đúng cơ chế.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q132:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Suppression rule tự archive các finding mới khớp tiêu chí (ví dụ finding type + instance ID của FTP server), giảm nhiễu nhưng finding vẫn được sinh và lưu 90 ngày để xem lại.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q132:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "GuardDuty không có API xóa finding (chỉ có ArchiveFindings/UnarchiveFindings); dù có thì xóa finding làm mất visibility và tăng overhead so với suppression rule có sẵn.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref5"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q132:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu GuardDuty mô tả suppression rule đúng như phương án C, dùng cho false positive, và finding vẫn được giữ ở trạng thái archived.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:21:50+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html", "title": "Suppression rules in GuardDuty", "section": "Suppression rules in GuardDuty", "snapshot_id": "ede1200305cb", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Suppression rules can be used to filter low-value findings, false positive findings, or threats you do not intend to act on",
+     "supports": "Suppression rule là cơ chế chuẩn cho false positive (C).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html", "title": "Suppression rules in GuardDuty", "section": "Suppression rules in GuardDuty", "snapshot_id": "ede1200305cb", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "GuardDuty continues to generate findings even when they match your suppression rules, however, those findings are automatically marked as archived.",
+     "supports": "Vẫn giữ visibility: finding vẫn được sinh và xem được ở mục Archived.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html", "title": "Customizing threat detection with entity lists and IP address lists", "section": "Trusted lists", "snapshot_id": "13caf02bb6ab", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "GuardDuty does not generate findings for entries listed in trusted sources.",
+     "supports": "Trusted IP list chặn hẳn việc sinh finding - mất visibility (B).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html", "title": "Customizing threat detection with entity lists and IP address lists", "section": "Important considerations for GuardDuty lists", "snapshot_id": "13caf02bb6ab", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "IP address lists and entity lists apply only to traffic destined for publicly routable IP addresses and domains.",
+     "supports": "Danh sách IP áp dụng cho IP/domain public bên ngoài, không phải để đánh dấu chính EC2 FTP server (B).", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/service-authorization/latest/reference/list_guardduty.html", "title": "Actions, resources, and condition keys for Amazon GuardDuty", "section": "Actions defined by Amazon GuardDuty", "snapshot_id": "bc1d9a2f747d", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Grants permission to archive GuardDuty findings",
+     "supports": "Danh sách action GuardDuty có ArchiveFindings nhưng không có action xóa finding (D).", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Stem nói 'flagged the finding as a false positive' tương ứng UpdateFindingsFeedback (not useful) - chỉ là phản hồi, không lọc finding."
+}

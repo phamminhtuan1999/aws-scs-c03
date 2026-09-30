@@ -1,0 +1,312 @@
+URL: https://docs.aws.amazon.com/lambda/latest/dg/troubleshooting-deployment.html
+TITLE: Troubleshoot deployment issues in Lambda - AWS Lambda
+
+# Troubleshoot deployment issues in Lambda
+
+When you update your function, Lambda deploys the change by launching new instances of the
+function with the updated code or settings. Deployment errors prevent the new version from being
+used and can arise from issues with your deployment package, code, permissions, or tools.
+
+When you deploy updates to your function directly with the Lambda API or with a client such
+as the AWS CLI, you can see errors from Lambda directly in the output. If you use services like
+AWS CloudFormation, AWS CodeDeploy, or AWS CodePipeline, look for the response from Lambda in the logs or event
+stream for that service.
+
+The following topics provide troubleshooting advice for errors and issues that you might
+encounter when using the Lambda API, console, or tools. If you find an issue that is not listed
+here, you can use the Feedback button on this page to report it.
+
+For more troubleshooting advice and answers to common support questions, visit the AWS Knowledge
+Center.
+
+For more information about debugging and troubleshooting Lambda applications, see Debugging in Serverless Land.
+
+Topics
+
+- General: Permission is denied or Cannot load such file
+
+- General: Error occurs when calling the UpdateFunctionCode
+
+- Amazon S3: Error Code PermanentRedirect.
+
+- General: Cannot find, cannot load, unable to import, class not found, no such file or directory
+
+- General: Undefined method handler
+
+- General: Lambda code storage limit exceeded
+
+- Lambda: Layer conversion failed
+
+- Lambda: InvalidParameterValueException or RequestEntityTooLargeException
+
+- Lambda: InvalidParameterValueException
+
+- Lambda: Concurrency and memory quotas
+
+- Lambda: Invalid alias configuration for provisioned concurrency
+
+## General: Permission is denied or Cannot load such file
+
+Error:
+EACCES: permission denied, open '/var/task/index.js'
+
+Error:
+cannot load such file -- function
+
+Error:
+[Errno 13] Permission denied: '/var/task/function.py'
+
+The Lambda runtime needs permission to read the files in your deployment package. In Linux permissions octal notation, Lambda needs 644 permissions
+for non-executable files (rw-r--r--) and 755 permissions (rwxr-xr-x) for directories and executable files.
+
+In Linux and MacOS, use the chmod command to change file permissions on files and directories in your deployment package. For
+example, to give a non-executable file the correct permissions, run the following command.
+
+chmod 644 <filepath>
+
+To change file permissions in Windows, see Set, View, Change, or Remove Permissions on an Object
+in the Microsoft Windows documentation.
+
+Note
+
+If you don't grant Lambda the permissions it needs to access directories in your deployment package, Lambda sets the permissions for those directories to 755 (rwxr-xr-x).
+
+## General: Error occurs when calling the UpdateFunctionCode
+
+Error:
+An error occurred (RequestEntityTooLargeException) when calling the
+UpdateFunctionCode operation
+
+When you upload a deployment package or layer archive directly to Lambda, the size of the
+ZIP file is limited to 50 MB. To upload a larger file, store it in Amazon S3 and use the S3Bucket
+and S3Key parameters.
+
+Note
+
+When you upload a file directly with the AWS CLI, AWS SDK, or otherwise, the binary ZIP
+file is converted to base64, which increases its size by about 30%. To allow for this, and
+the size of other parameters in the request, the actual request size limit that Lambda
+applies is larger. Due to this, the 50 MB limit is approximate.
+
+## Amazon S3: Error Code PermanentRedirect.
+
+Error:
+Error occurred while GetObject. S3 Error Code: PermanentRedirect. S3 Error Message:
+The bucket is in this region: us-east-2. Please use this region to retry the
+request
+
+When you upload a function's deployment package from an Amazon S3 bucket, the bucket must be in
+the same Region as the function. This issue can occur when you specify an Amazon S3 object in a
+call to UpdateFunctionCode, or use the package and deploy commands in the AWS CLI or AWS SAM
+CLI. Create a deployment artifact bucket for each Region where you develop
+applications.
+
+## General: Cannot find, cannot load, unable to import, class not found, no such file or directory
+
+Error:
+Cannot find module 'function'
+
+Error:
+cannot load such file -- function
+
+Error:
+Unable to import module 'function'
+
+Error:
+Class not found: function.Handler
+
+Error:
+fork/exec /var/task/function: no such file or directory
+
+Error:
+Unable to load type 'Function.Handler' from assembly 'Function'.
+
+The name of the file or class in your function's handler configuration doesn't match your
+code. See the following section for more information.
+
+## General: Undefined method handler
+
+Error:
+index.handler is undefined or not exported
+
+Error:
+Handler 'handler' missing on module 'function'
+
+Error:
+undefined method `handler' for
+#<LambdaHandler:0x000055b76ccebf98>
+
+Error:
+No public method named handleRequest with appropriate method signature found on
+class function.Handler
+
+Error:
+Unable to find method 'handleRequest' in type 'Function.Handler' from assembly
+'Function'
+
+The name of the handler method in your function's handler configuration doesn't match your
+code. Each runtime defines a naming convention for handlers, such as
+filename.methodname. The handler is
+the method in your function's code that the runtime runs when your function is invoked.
+
+For some languages, Lambda provides a library with an interface that expects a handler
+method to have a specific name. For details about handler naming for each language, see the
+following topics.
+
+- Building Lambda functions with Node.js
+
+- Building Lambda functions with Python
+
+- Building Lambda functions with Ruby
+
+- Building Lambda functions with Java
+
+- Building Lambda functions with Go
+
+- Building Lambda functions with C#
+
+- Building Lambda functions with PowerShell
+
+## General: Lambda code storage limit exceeded
+
+Error:
+Code storage limit exceeded.
+
+Lambda stores a copy of your function code in an internal S3 bucket that's private to your account.
+Each AWS account is allocated 300 GB of code storage (unzipped) in each Region. Code storage includes the
+total storage used by both Lambda functions and layers. If you reach the quota, you receive a
+CodeStorageExceededException when you attempt to deploy new
+functions.
+
+To resolve this issue, you can clean up old versions of functions, remove
+unused code, or use Lambda layers to de-duplicate common code shared between functions. In addition, it's good practice to use separate AWS accounts for separate workloads to
+help manage storage quotas.
+
+Alternatively, you can configure your functions and layers to use self-managed S3 code storage. With self-managed S3 code storage, Lambda references your code directly from your S3 bucket, which does not count against your storage quota.
+
+You can view your total storage usage in the Lambda console, under the
+Dashboard submenu:
+
+## Lambda: Layer conversion failed
+
+Error:
+Lambda layer conversion failed. For advice on resolving this issue, see the
+Troubleshoot deployment issues in Lambda page in the Lambda User Guide.
+
+When you configure a Lambda function with a layer, Lambda merges the layer with your
+function code. If this process fails to complete, Lambda returns this error. If you encounter
+this error, take the following steps:
+
+- Delete any unused files from your layer
+
+- Delete any symbolic links in your layer
+
+- Rename any files that have the same name as a directory in any of your function's
+layers
+
+## Lambda: InvalidParameterValueException or RequestEntityTooLargeException
+
+Error:
+InvalidParameterValueException: Lambda was unable to configure your environment
+variables because the environment variables you have provided exceeded the 4KB limit. String
+measured: {"A1":"uSFeY5cyPiPn7AtnX5BsM...
+
+Error:
+RequestEntityTooLargeException: Request must be smaller than 5120 bytes for the
+UpdateFunctionConfiguration operation
+
+The maximum size of the variables object that is stored in the function's configuration
+must not exceed 4096 bytes. This includes key names, values, quotes, commas, and brackets. The
+total size of the HTTP request body is also limited.
+
+{
+"FunctionName": "my-function",
+"FunctionArn": "arn:aws:lambda:us-east-2:123456789012:function:my-function",
+"Runtime": "nodejs24.x",
+"Role": "arn:aws:iam::123456789012:role/lambda-role",
+"Environment": {
+"Variables": {
+"BUCKET": "amzn-s3-demo-bucket",
+"KEY": "file.txt"
+}
+},
+...
+}
+
+In this example, the object is 39 characters and takes up 39 bytes when it's stored
+(without white space) as the string
+{"BUCKET":"amzn-s3-demo-bucket","KEY":"file.txt"}. Standard ASCII characters in
+environment variable values use one byte each. Extended ASCII and Unicode characters can use
+between 2 bytes and 4 bytes per character.
+
+## Lambda: InvalidParameterValueException
+
+Error:
+InvalidParameterValueException: Lambda was unable to configure your environment
+variables because the environment variables you have provided contains reserved keys that
+are currently not supported for modification.
+
+Lambda reserves some environment variable keys for internal use. For example,
+AWS_REGION is used by the runtime to determine the current Region and cannot be
+overridden. Other variables, like PATH, are used by the runtime but can be
+extended in your function configuration. For a full list, see Defined runtime environment variables.
+
+## Lambda: Concurrency and memory quotas
+
+Error: Specified ConcurrentExecutions for
+function decreases account's UnreservedConcurrentExecution below its minimum
+value
+
+Error: 'MemorySize' value failed to satisfy
+constraint: Member must have value less than or equal to 3008
+
+These errors occur when you exceed the concurrency or memory quotas for your account. New AWS accounts have
+reduced concurrency and memory quotas. To resolve errors related to concurrency, you can
+request a quota increase. You
+cannot request memory quota increases.
+
+- Concurrency: You might get an error if you try to
+create a function using reserved or provisioned concurrency, or if your per-function
+concurrency request (PutFunctionConcurrency) exceeds your account's concurrency
+quota.
+
+- Memory: Errors occur if the amount of memory
+allocated to the function exceeds your account's memory quota.
+
+## Lambda: Invalid alias configuration for provisioned concurrency
+
+Error: Invalid alias configuration for
+provisioned concurrency
+
+This error occurs when you try to update a Lambda function's code or configuration while
+an alias with provisioned concurrency is pointing to a version that has issues. Lambda
+pre-initializes execution environments for provisioned concurrency, and if these environments
+can't be properly initialized due to code errors, resource constraints, or affected stack and
+alias, the deployment fails. If you encounter this issue, take the following steps:
+
+- Roll back the alias: Temporarily update the alias to
+point to the previously working version.
+
+aws lambda update-alias \
+--function-name <function-name> \
+--name <alias-name> \
+--function-version <known-good-version>
+
+- Fix Lambda initialization code: Ensure the
+initialization code that runs outside the handler doesn't have any uncaught exceptions
+and initialize the clients and connections.
+
+- Redeploy safety: Deploy fixed code and publish a new
+version. Then, update alias to point to the fixed version. Optionally, re-enable provisioned concurrency, if necessary.
+
+If using AWS CloudFormation, update stack definition FunctionVersion:!GetAtt
+version.Version so that the alias points to the working version:
+
+alias:
+Type: AWS::Lambda::Alias
+Properties:
+FunctionName: !Ref function
+FunctionVersion: !GetAtt version.Version
+Name: BLUE
+ProvisionedConcurrencyConfig:
+ProvisionedConcurrentExecutions: 1

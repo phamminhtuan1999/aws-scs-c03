@@ -1,0 +1,1099 @@
+URL: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html
+TITLE: Configure standard logging (v2) - Amazon CloudFront
+
+# Configure standard logging (v2)
+
+You can enable access logs (standard logs) when you create or update a distribution. Standard logging
+(v2) includes the following features:
+
+- Send access logs to Amazon CloudWatch Logs, Amazon Data Firehose, and Amazon Simple Storage Service (Amazon S3).
+
+- Select the log fields that you want. You can also select a subset of real-time access log
+fields.
+
+- Select additional output log file
+formats.
+
+If you’re using Amazon S3, you have the following optional features:
+
+- Send logs to opt-in AWS Regions.
+
+- Organize your logs with partitioning.
+
+- Enable Hive-compatible file names.
+
+For more information, see Send logs to Amazon S3.
+
+To get started with standard logging, complete the following steps:
+
+- Set up your required permissions for the specified AWS service that will receive
+your logs.
+
+- Configure standard logging from the CloudFront console or the CloudWatch API.
+
+- View your access logs.
+
+Note
+
+- If you enable standard logging (v2), this doesn’t affect or change standard logging (legacy). You can
+continue to use standard logging (legacy) for your distribution, in addition to using
+standard logging (v2). For more information, see Configure standard logging (legacy).
+
+- If you already enabled standard logging (legacy) and you want to enable standard logging (v2) to Amazon S3,
+we recommend that you specify a different Amazon S3 bucket or
+use a separate path in the same bucket (for
+example, use a log prefix or partitioning). This helps you keep track of which
+log files are associated with which distribution and prevents log files from
+overwriting each other.
+
+## Permissions
+
+CloudFront uses CloudWatch vended logs to deliver access logs. To do so, you need permissions to
+the specified AWS service so that you can enable logging delivery.
+
+To see the required permissions for each logging destination, choose from the
+following topics in the Amazon CloudWatch Logs User Guide.
+
+- CloudWatch Logs
+
+- Firehose
+
+- Amazon S3
+
+After you have set up permissions to your logging destination, you can enable standard
+logging for your distribution.
+
+Note
+
+CloudFront supports sending access logs to different AWS accounts (cross accounts). To
+enable cross-account delivery, both accounts (your account and the receiving
+account) must have the required permissions. For more information, see the Enable standard logging for cross-account delivery section or the Cross-account delivery example in the Amazon CloudWatch Logs User
+Guide.
+
+## Enable standard logging
+
+To enable standard logging, you can use the CloudFront console or the CloudWatch API.
+
+Contents
+
+- Enable standard logging (CloudFront console)
+
+- Enable standard logging (CloudWatch API)
+
+### Enable standard logging (CloudFront console)
+
+To enable standard logging for a CloudFront distribution (console)
+
+- Use the CloudFront console to
+update an existing
+distribution.
+
+- Choose the Logging tab.
+
+- Choose Add, then select the service to
+receive your logs:
+
+- CloudWatch Logs
+
+- Firehose
+
+- Amazon S3
+
+- For the Destination, select the resource for your
+service. If you haven’t already created your resource, you can choose
+Create or see the following documentation.
+
+- For CloudWatch Logs, enter the Log group name.
+
+- For Firehose, enter the Firehose delivery
+stream.
+
+- For Amazon S3, enter the Bucket name.
+
+Tip
+
+To specify a prefix, enter the prefix after the bucket name,
+such as
+amzn-s3-demo-bucket.s3.amazonaws.com/MyLogPrefix.
+If you don't specify a prefix, CloudFront will automatically add one
+for you. For more information, see Send logs to Amazon S3.
+
+- For Additional settings –
+optional, you can specify the following
+options:
+
+- For Field selection, select the log field
+names that you want to deliver to your destination. You can select
+access log
+fields and a subset of real-time access log
+fields.
+
+- (Amazon S3 only) For Partitioning, specify the
+path to partition your log file data.
+
+- (Amazon S3 only) For Hive-compatible file format,
+you can select the checkbox to use Hive-compatible S3 paths. This
+helps simplify loading new data into your Hive-compatible
+tools.
+
+- For Output format, specify your preferred
+format.
+
+Note
+
+If you choose Parquet, this option incurs
+CloudWatch charges for converting your access logs to Apache Parquet.
+For more information, see the Vended Logs section for CloudWatch
+pricing.
+
+- For Field delimiter, specify how to separate
+log fields.
+
+- Complete the steps to update or create your distribution.
+
+- To add another destination, repeat steps 3–6.
+
+- From the Logs page, verify that the standard logs
+status is Enabled next to the distribution.
+
+- (Optional) To enable cookie logging, choose Manage, Settings and turn on Cookie logging, then choose Save changes.
+
+Tip
+
+Cookie logging is a global setting that applies to all standard logging for your distribution. You can’t override this setting for separate delivery destinations.
+
+For more information about the standard logging delivery and log fields,
+see the Standard logging reference.
+
+### Enable standard logging (CloudWatch API)
+
+You can also use the CloudWatch API to enable standard logging for your distributions.
+
+Notes
+
+- When calling the CloudWatch API to enable standard logging, you must specify
+the US East (N. Virginia) Region (us-east-1), even if you want to enable
+cross Region delivery to another destination. For example, if you want
+to send your access logs to an S3 bucket in the Europe (Ireland) Region
+(eu-west-1), use the CloudWatch API in the
+us-east-1 Region.
+
+- There is an additional option to include cookies in standard logging.
+In the CloudFront API, this is the IncludeCookies parameter. If
+you configure access logging by using the CloudWatch API and you specify that
+you want to include cookies, you must use the CloudFront console or CloudFront API
+to update your distribution to include cookies. Otherwise, CloudFront can’t
+send cookies to your log destination. For more information, see Cookie logging.
+
+To enable standard logging for a distribution (CloudWatch API)
+
+- After you a create a distribution, get the Amazon Resource Name (ARN).
+
+You can find the ARN from the Distribution page in
+the CloudFront console or you can use the GetDistribution API operation. A
+distribution ARN follows the format:
+arn:aws:cloudfront::123456789012:distribution/d111111abcdef8
+
+- Next, use the CloudWatch PutDeliverySource API operation to create a delivery source for
+the distribution.
+
+- Enter a name for the delivery source.
+
+- Pass the resourceArn of the distribution.
+
+- For logType, specify ACCESS_LOGS as the
+type of logs that are collected.
+
+- Example AWS CLI put-delivery-source command
+
+The following is an example of configuring a delivery source
+for a distribution.
+
+aws logs put-delivery-source --name S3-delivery --resource-arn arn:aws:cloudfront::123456789012:distribution/d111111abcdef8 --log-type ACCESS_LOGS
+
+Output
+
+{
+"deliverySource": {
+"name": "S3-delivery",
+"arn": "arn:aws:logs:us-east-1:123456789012:delivery-source:S3-delivery",
+"resourceArns": [
+"arn:aws:cloudfront::123456789012:distribution/d111111abcdef8"
+],
+"service": "cloudfront",
+"logType": "ACCESS_LOGS"
+}
+}
+
+- Use the PutDeliveryDestination API operation to
+configure where to store your logs.
+
+- For destinationResourceArn, specify the ARN of the
+destination. This can be a CloudWatch Logs log group, a Firehose delivery stream,
+or an Amazon S3 bucket.
+
+- For outputFormat, specify the output format for your
+logs.
+
+- Example AWS CLI put-delivery-destination command
+
+The following is an example of configuring a delivery
+destination to an Amazon S3 bucket.
+
+aws logs put-delivery-destination --name S3-destination --delivery-destination-configuration destinationResourceArn=arn:aws:s3:::amzn-s3-demo-bucket
+
+Output
+
+{
+"name": "S3-destination",
+"arn": "arn:aws:logs:us-east-1:123456789012:delivery-destination:S3-destination",
+"deliveryDestinationType": "S3",
+"deliveryDestinationConfiguration": {
+"destinationResourceArn": "arn:aws:s3:::amzn-s3-demo-bucket"
+}
+}
+
+Note
+
+If you're delivering logs cross-account, you must use the PutDeliveryDestinationPolicy API operation to assign an
+AWS Identity and Access Management (IAM) policy to the destination account. The IAM policy
+allows delivery from one account to another account.
+
+- Use the CreateDelivery API operation to link the
+delivery source to the destination that you created in the previous steps.
+This API operation associates the delivery source with the end
+destination.
+
+- For deliverySourceName, specify the source
+name.
+
+- For deliveryDestinationArn, specify the ARN for the
+delivery destination.
+
+- For fieldDelimiter, specify the string to separate
+each log field.
+
+- For recordFields, specify the log fields that you
+want.
+
+- If you’re using S3, specify whether to use
+enableHiveCompatiblePath and
+suffixPath.
+
+Example AWS CLI create-delivery command
+
+The following is an example of creating a delivery.
+
+aws logs create-delivery --delivery-source-name cf-delivery --delivery-destination-arn arn:aws:logs:us-east-1:123456789012:delivery-destination:S3-destination
+
+Output
+
+{
+"id": "abcNegnBoTR123",
+"arn": "arn:aws:logs:us-east-1:123456789012:delivery:abcNegnBoTR123",
+"deliverySourceName": "cf-delivery",
+"deliveryDestinationArn": "arn:aws:logs:us-east-1:123456789012:delivery-destination:S3-destination",
+"deliveryDestinationType": "S3",
+"recordFields": [
+"date",
+"time",
+"x-edge-location",
+"sc-bytes",
+"c-ip",
+"cs-method",
+"cs(Host)",
+"cs-uri-stem",
+"sc-status",
+"cs(Referer)",
+"cs(User-Agent)",
+"cs-uri-query",
+"cs(Cookie)",
+"x-edge-result-type",
+"x-edge-request-id",
+"x-host-header",
+"cs-protocol",
+"cs-bytes",
+"time-taken",
+"x-forwarded-for",
+"ssl-protocol",
+"ssl-cipher",
+"x-edge-response-result-type",
+"cs-protocol-version",
+"fle-status",
+"fle-encrypted-fields",
+"c-port",
+"time-to-first-byte",
+"x-edge-detailed-result-type",
+"sc-content-type",
+"sc-content-len",
+"sc-range-start",
+"sc-range-end",
+"c-country",
+"cache-behavior-path-pattern"
+],
+"fieldDelimiter": ""
+}
+
+- From the CloudFront console, on the Logs page, verify that
+the standard logs status is Enabled next to the
+distribution.
+
+For more information about the standard logging delivery and log fields,
+see the Standard logging reference.
+
+Note
+
+To enable standard logging (v2) for CloudFront by using AWS CloudFormation, you can use the following CloudWatch Logs
+properties:
+
+- Delivery
+
+- DeliveryDestination
+
+- DeliverySource
+
+The ResourceArn is the CloudFront distribution and LogType must be ACCESS_LOGS as the supported log type.
+
+## Enable standard logging for cross-account delivery
+
+If you enable standard logging for your AWS account and you want to deliver your
+access logs to another account, make sure that you configure the source account and the
+destination account correctly. The source account with the CloudFront
+distribution sends its access logs to the destination
+account.
+
+In this example procedure, the source account
+111111111111) sends its access logs to an Amazon S3
+bucket in the destination account (222222222222).
+To send access logs to an Amazon S3 bucket in the destination account, use the AWS CLI.
+
+### Configure the destination account
+
+For destination account, complete the following procedure.
+
+To configure the destination account
+
+- To create the log delivery destination, you can enter the following AWS CLI
+command. This example uses the
+MyLogPrefix string to create a
+prefix for your access logs.
+
+aws logs put-delivery-destination --name cloudfront-delivery-destination --delivery-destination-configuration "destinationResourceArn=arn:aws:s3:::amzn-s3-demo-bucket-cloudfront-logs/MyLogPrefix"
+
+Output
+
+{
+"deliveryDestination": {
+"name": "cloudfront-delivery-destination",
+"arn": "arn:aws:logs:us-east-1:222222222222:delivery-destination:cloudfront-delivery-destination",
+"deliveryDestinationType": "S3",
+"deliveryDestinationConfiguration": {"destinationResourceArn": "arn:aws:s3:::amzn-s3-demo-bucket-cloudfront-logs/MyLogPrefix"}
+}
+}
+
+Note
+
+If you specify an S3 bucket without a prefix,
+CloudFront will automatically append the
+AWSLogs/<account-ID>/CloudFront
+as a prefix that appears in the suffixPath of the S3
+delivery destination. For more information, see S3DeliveryConfiguration.
+
+- Add the resource policy for the log delivery destination to allow the
+source account to create a log delivery.
+
+In the following policy, replace
+111111111111 with the source
+account ID and specify the delivery destination ARN from the output in step
+1.
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "AllowCreateDelivery",
+"Effect": "Allow",
+"Principal": {"AWS": "111111111111"},
+"Action": ["logs:CreateDelivery"],
+"Resource": "arn:aws:logs:us-east-1:222222222222:delivery-destination:cloudfront-delivery-destination"
+}
+]
+}
+
+- Save the file, such as deliverypolicy.json.
+
+- To attach the previous policy to the delivery destination, enter the
+following AWS CLI command.
+
+aws logs put-delivery-destination-policy --delivery-destination-name cloudfront-delivery-destination --delivery-destination-policy file://deliverypolicy.json
+
+- Add the below statement to the destination Amazon S3 bucket policy, replacing
+the resource ARN and the source account ID. This policy allows the
+delivery.logs.amazonaws.com service principal to perform
+the s3:PutObject action.
+
+{
+"Sid": "AWSLogsDeliveryWrite",
+"Effect": "Allow",
+"Principal": {"Service": "delivery.logs.amazonaws.com"},
+"Action": "s3:PutObject",
+"Resource": "arn:aws:s3:::amzn-s3-demo-bucket-cloudfront-logs/*",
+"Condition": {
+"StringEquals": {
+"s3:x-amz-acl": "bucket-owner-full-control",
+"aws:SourceAccount": "111111111111"
+},
+"ArnLike": {"aws:SourceArn": "arn:aws:logs:us-east-1:111111111111:delivery-source:*"}
+}
+}
+
+- If you're using AWS KMS for your bucket, add the following statement to the
+KMS key policy to grant permissions to the
+delivery.logs.amazonaws.com service principal.
+
+{
+"Sid": "Allow Logs Delivery to use the key",
+"Effect": "Allow",
+"Principal": {"Service": "delivery.logs.amazonaws.com"},
+"Action": [
+"kms:Encrypt",
+"kms:Decrypt",
+"kms:ReEncrypt*",
+"kms:GenerateDataKey*",
+"kms:DescribeKey"
+],
+"Resource": "*",
+"Condition": {
+"StringEquals": {"aws:SourceAccount": "111111111111"},
+"ArnLike": {"aws:SourceArn": "arn:aws:logs:us-east-1:111111111111:delivery-source:*"}
+}
+}
+
+### Configure the source account
+
+After you configure the destination account, follow this procedure to create the
+delivery source and enable logging for the distribution in the source
+account.
+
+To configure the source account
+
+- Create a delivery source for CloudFront standard logging so that you can send log
+files to CloudWatch Logs.
+
+You can enter the following AWS CLI command, replacing the name and your
+distribution ARN.
+
+aws logs put-delivery-source --name s3-cf-delivery --resource-arn arn:aws:cloudfront::111111111111:distribution/E1TR1RHV123ABC --log-type ACCESS_LOGS
+
+Output
+
+{
+"deliverySource": {
+"name": "s3-cf-delivery",
+"arn": "arn:aws:logs:us-east-1:111111111111:delivery-source:s3-cf-delivery",
+"resourceArns": ["arn:aws:cloudfront::111111111111:distribution/E1TR1RHV123ABC"],
+"service": "cloudfront",
+"logType": "ACCESS_LOGS"
+}
+}
+
+- Create a delivery to map the source account's log delivery source and the
+destination account's log delivery destination.
+
+In the following AWS CLI command, specify the delivery destination ARN from the
+output in Step 1: Configure the
+destination account.
+
+aws logs create-delivery --delivery-source-name s3-cf-delivery --delivery-destination-arn arn:aws:logs:us-east-1:222222222222:delivery-destination:cloudfront-delivery-destination
+
+Output
+
+{
+"delivery": {
+"id": "OPmOpLahVzhx1234",
+"arn": "arn:aws:logs:us-east-1:111111111111:delivery:OPmOpLahVzhx1234",
+"deliverySourceName": "s3-cf-delivery",
+"deliveryDestinationArn": "arn:aws:logs:us-east-1:222222222222:delivery-destination:cloudfront-delivery-destination",
+"deliveryDestinationType": "S3",
+"recordFields": [
+"date",
+"time",
+"x-edge-location",
+"sc-bytes",
+"c-ip",
+"cs-method",
+"cs(Host)",
+"cs-uri-stem",
+"sc-status",
+"cs(Referer)",
+"cs(User-Agent)",
+"cs-uri-query",
+"cs(Cookie)",
+"x-edge-result-type",
+"x-edge-request-id",
+"x-host-header",
+"cs-protocol",
+"cs-bytes",
+"time-taken",
+"x-forwarded-for",
+"ssl-protocol",
+"ssl-cipher",
+"x-edge-response-result-type",
+"cs-protocol-version",
+"fle-status",
+"fle-encrypted-fields",
+"c-port",
+"time-to-first-byte",
+"x-edge-detailed-result-type",
+"sc-content-type",
+"sc-content-len",
+"sc-range-start",
+"sc-range-end",
+"c-country",
+"cache-behavior-path-pattern"
+],
+"fieldDelimiter": "\t"
+}
+}
+
+- Verify your cross-account delivery is successful.
+
+- From the source account, sign in to the
+CloudFront console and choose your distribution. On the
+Logging tab, under Type,
+you will see an entry created for the S3 cross-account log
+delivery.
+
+- From the destination account, sign in to
+the Amazon S3 console and choose your Amazon S3 bucket. You will see the prefix
+MyLogPrefix in the
+bucket name and any access logs delivered to that folder.
+
+## Output file format
+
+Depending on the delivery destination that you choose, you can specify one of the
+following formats for log files:
+
+- JSON
+
+- Plain
+
+- w3c
+
+- Raw
+
+- Parquet (Amazon S3 only)
+
+Note
+
+You can only set the output format when you first create the delivery destination.
+This can't be updated later. To change the output format, delete the delivery and
+create another one.
+
+For more information, see PutDeliveryDestination in the Amazon CloudWatch Logs API
+Reference.
+
+## Edit standard logging settings
+
+You can enable or disable logging and update other log settings by using the CloudFront console or the CloudWatch API. Your
+changes to logging settings take effect within 12 hours.
+
+For more information, see the following topics:
+
+- To update a distribution by using the CloudFront console, see Update a distribution.
+
+- To update a distribution by using the CloudFront API, see UpdateDistribution in the
+Amazon CloudFront API Reference.
+
+- For more information about CloudWatch Logs API operations, see the Amazon CloudWatch Logs API
+Reference.
+
+## Access log fields
+
+You can select the same log fields that standard logging (legacy) supports. For more information,
+see log file fields.
+
+In addition, you can select the following real-time access log fields.
+
+- timestamp(ms) – Timestamp in
+milliseconds.
+
+- origin-fbl – The number of seconds of
+first-byte latency between CloudFront and your origin.
+
+- origin-lbl – The number of seconds of
+last-byte latency between CloudFront and your origin.
+
+- asn – The autonomous system number
+(ASN) of the viewer.
+
+- c-country – A country code that represents the
+viewer's geographic location, as determined by the viewer's IP address. For a
+list of country codes, see ISO 3166-1
+alpha-2.
+
+- cache-behavior-path-pattern – The path pattern that identifies the cache behavior that matched the viewer request.
+
+- viewer-request-log-data –
+Contains the custom data that your viewer request CloudFront function sends by using
+the cf.logCustomData() helper method. CloudFront URL-encodes the value
+and truncates it to a maximum of 800 bytes. If no CloudFront function is
+associated with the viewer request event, or if the function does not call
+cf.logCustomData(), this field is -. For more
+information, see General helper methods.
+
+- viewer-response-log-data –
+Contains the custom data that your viewer response CloudFront function sends by using
+the cf.logCustomData() helper method. CloudFront URL-encodes the value
+and truncates it to a maximum of 800 bytes. If no CloudFront function is
+associated with the viewer response event, or if the function does not call
+cf.logCustomData(), this field is -. For more
+information, see General helper methods.
+
+## Send logs to CloudWatch Logs
+
+To send logs to CloudWatch Logs, create or use an existing CloudWatch Logs log group. For more information
+about configuring a CloudWatch Logs log group, see Working with Log Groups and Log Streams.
+
+After you create your log group, you must have the required permissions to allow
+standard logging. For more information about the required permissions, see Logs sent to CloudWatch Logs in the Amazon CloudWatch Logs User Guide.
+
+Notes
+
+- When you specify the name of the CloudWatch Logs log group, only use the regex
+pattern [\w-]. For more information, see the PutDeliveryDestination API operation in the
+Amazon CloudWatch Logs API Reference.
+
+- Verify that your log group resource policy doesn't exceed the size limit.
+See the Log group resource policy size limit considerations section in
+the CloudWatch Logs topic.
+
+### Example access log sent to CloudWatch Logs
+
+{
+"date": "2024-11-14",
+"time": "21:34:06",
+"x-edge-location": "SOF50-P2",
+"asn": "16509",
+"timestamp(ms)": "1731620046814",
+"origin-fbl": "0.251",
+"origin-lbl": "0.251",
+"x-host-header": "d111111abcdef8.cloudfront.net",
+"cs(Cookie)": "examplecookie=value"
+}
+
+## Send logs to Firehose
+
+To send logs to Firehose, create or use an existing Firehose delivery stream. Then, specify
+the Firehose delivery stream as the log delivery destination. You must specify a Firehose
+delivery stream in the US East (N. Virginia) us-east-1 Region.
+
+For information about creating your delivery stream, see Creating an
+Amazon Data Firehose delivery stream.
+
+After you create your delivery stream, you must have the required permissions to allow
+standard logging. For more information, see Logs sent to Firehose in the Amazon CloudWatch Logs User Guide.
+
+Note
+
+When you specify the name of the Firehose stream, only use the regex pattern
+[\w-]. For more information, see the PutDeliveryDestination API operation in the
+Amazon CloudWatch Logs API Reference.
+
+### Example access log sent to Firehose
+
+{"date":"2024-11-15","time":"19:45:51","x-edge-location":"SOF50-P2","asn":"16509","timestamp(ms)":"1731699951183","origin-fbl":"0.254","origin-lbl":"0.254","x-host-header":"d111111abcdef8.cloudfront.net","cs(Cookie)":"examplecookie=value"}
+{"date":"2024-11-15","time":"19:45:52","x-edge-location":"SOF50-P2","asn":"16509","timestamp(ms)":"1731699952950","origin-fbl":"0.125","origin-lbl":"0.125","x-host-header":"d111111abcdef8.cloudfront.net","cs(Cookie)":"examplecookie=value"}
+
+## Send logs to Amazon S3
+
+To send your access logs to Amazon S3, create or use an existing S3 bucket. When you enable
+logging in CloudFront, specify the bucket name. For information about creating a bucket, see
+Create a bucket
+in the Amazon Simple Storage Service User
+Guide.
+
+After you create your bucket, you must have the required permissions to allow standard
+logging. For more information, see Logs sent to Amazon S3 in the Amazon CloudWatch Logs User Guide.
+
+- After you enable logging, AWS automatically adds the required bucket
+policies for you.
+
+- You can also use S3 buckets in the opt-in
+AWS Regions.
+
+Note
+
+If you already enabled standard logging (legacy) and you want to enable standard logging (v2) to Amazon S3, we
+recommend that you specify a different Amazon S3 bucket or use a
+separate path in the same bucket (for
+example, use a log prefix or partitioning). This helps you keep track of which log
+files are associated with which distribution and prevents log files from overwriting
+each other.
+
+Topics
+
+- Specify an S3 bucket
+
+- Partitioning
+
+- Hive-compatible file name format
+
+- Example paths to access logs
+
+- Example access log sent to Amazon S3
+
+### Specify an S3 bucket
+
+When you specify an S3 bucket as the delivery destination, note the
+following.
+
+The S3 bucket name can only use the regex pattern [\w-]. For more
+information, see the PutDeliveryDestination API operation in the
+Amazon CloudWatch Logs API Reference.
+
+If you specified a prefix for your S3 bucket, your logs appear under that path. If
+you don't specify a prefix, CloudFront will automatically append the
+AWSLogs/{account-id}/CloudFront
+prefix for you.
+
+For more information, see Example paths to access logs.
+
+### Partitioning
+
+You can use partitioning to organize your access logs when CloudFront sends them to your
+S3 bucket. This helps you organize and locate your access logs based on the path
+that you want.
+
+You can use the following variables to create a folder path.
+
+- {DistributionId} or {distributionid}
+
+- {yyyy}
+
+- {MM}
+
+- {dd}
+
+- {HH}
+
+- {accountid}
+
+You can use any number of variables and specify folder names in your path. CloudFront
+then uses this path to create a folder structure for you in the S3 bucket.
+
+Examples
+
+- my_distribution_log_data/{DistributionId}/logs
+
+- /cloudfront/{DistributionId}/my_distribution_log_data/{yyyy}/{MM}/{dd}/{HH}/logs
+
+Note
+
+You can use either variable for distribution ID in the suffix path. However,
+if you're sending access logs to AWS Glue, you must use the
+{distributionid} variable because AWS Glue expects partition names
+to be in lowercase. Update your existing log configuration in CloudFront to replace
+{DistributionId} with {distributionid}.
+
+### Hive-compatible file name format
+
+You can use this option so that S3 objects that contain delivered access logs use
+a prefix structure that allows for integration with Apache Hive. For more
+information, see the CreateDelivery API operation.
+
+Example
+
+/cloudfront/DistributionId={DistributionId}/my_distribution_log_data/year={yyyy}/month={MM}/day={dd}/hour={HH}/logs
+
+For more information about partitioning and the Hive-compatible options, see the
+S3DeliveryConfiguration element in the
+Amazon CloudWatch Logs API Reference.
+
+### Example paths to access logs
+
+When you specify an S3 bucket as the destination, you can use the following
+options to create the path to your access logs:
+
+- An Amazon S3 bucket, with or without a prefix
+
+- Partitioning, by using a CloudFront provided variable or entering your
+own
+
+- Enabling the Hive-compatible option
+
+The following tables show how your access logs appear in your bucket, depending on
+the options that you choose.
+
+#### Amazon S3 bucket with a prefix
+
+Amazon S3 bucket name
+
+Partition that you specify in the suffix path
+
+Updated suffix path
+
+Hive-compatible enabled?
+
+Access logs are sent to
+
+amzn-s3-demo-bucket/MyLogPrefix
+
+None
+
+None
+
+No
+
+amzn-s3-demo-bucket/MyLogPrefix/
+
+amzn-s3-demo-bucket/MyLogPrefix
+
+myFolderA/
+
+myFolderA/
+
+No
+
+amzn-s3-demo-bucket/MyLogPrefix/myFolderA/
+
+amzn-s3-demo-bucket/MyLogPrefix
+
+myFolderA/{yyyy}
+
+myFolderA/{yyyy}
+
+Yes
+
+amzn-s3-demo-bucket/MyLogPrefix/myFolderA/year=2025
+
+#### Amazon S3 bucket without a prefix
+
+Amazon S3 bucket name
+
+Partition that you specify in the suffix path
+
+Updated suffix path
+
+Hive-compatible enabled?
+
+Access logs are sent to
+
+amzn-s3-demo-bucket
+
+None
+
+AWSLogs/{account-id}/CloudFront/
+
+No
+
+amzn-s3-demo-bucket/AWSLogs/<your-account-ID>/CloudFront/
+
+amzn-s3-demo-bucket
+
+myFolderA/
+
+AWSLogs/{account-id}/CloudFront/myFolderA/
+
+No
+
+amzn-s3-demo-bucket/AWSLogs/<your-account-ID>/CloudFront/myFolderA/
+
+amzn-s3-demo-bucket
+
+myFolderA/
+
+AWSLogs/{account-id}/CloudFront/myFolderA/
+
+Yes
+
+amzn-s3-demo-bucket/AWSLogs/aws-account-id=<your-account-ID>/CloudFront/myFolderA/
+
+amzn-s3-demo-bucket
+
+myFolderA/{yyyy}
+
+AWSLogs/{account-id}/CloudFront/myFolderA/{yyyy}
+
+Yes
+
+amzn-s3-demo-bucket/AWSLogs/aws-account-id=<your-account-ID>/CloudFront/myFolderA/year=2025
+
+#### AWS account ID as a partition
+
+Amazon S3 bucket name
+
+Partition that you specify in the suffix path
+
+Updated suffix path
+
+Hive-compatible enabled?
+
+Access logs are sent to
+
+amzn-s3-demo-bucket
+
+None
+
+AWSLogs/{account-id}/CloudFront/
+
+Yes
+
+amzn-s3-demo-bucket/AWSLogs/aws-account-id=<your-account-ID>/CloudFront/
+
+amzn-s3-demo-bucket
+
+myFolderA/{accountid}
+
+AWSLogs/{account-id}/CloudFront/myFolderA/{accountid}
+
+Yes
+
+amzn-s3-demo-bucket/AWSLogs/aws-account-id=<your-account-ID>/CloudFront/myFolderA/accountid=<your-account-ID>
+
+Notes
+
+- The {account-id} variable is reserved for CloudFront. CloudFront
+automatically adds this variable to your suffix path if you specify an
+Amazon S3 bucket without a prefix. If your logs are
+Hive-compatible, this variable appears as
+aws-account-id.
+
+- You can use the {accountid} variable so that CloudFront adds
+your account ID to the suffix path. If your logs are Hive-compatible,
+this variable appears as accountid.
+
+- For more information about the suffix path, see S3DeliveryConfiguration.
+
+### Example access log sent to Amazon S3
+
+#Fields: date time x-edge-location asn timestamp(ms) x-host-header cs(Cookie)
+2024-11-14 22:30:25 SOF50-P2 16509 1731623425421
+d111111abcdef8.cloudfront.net examplecookie=value2
+
+## Disable standard logging
+
+You can disable standard logging for your distribution if you no longer need
+it.
+
+To disable standard logging
+
+- Sign in to the CloudFront console.
+
+- Choose Distribution and then choose your distribution ID.
+
+- Choose Logging and then under Access log
+destinations, select the destination.
+
+- Choose Manage and then choose
+Delete.
+
+- Repeat the previous step if you have more than one standard logging.
+
+Note
+
+When you delete standard logging from the CloudFront console, this action only deletes
+the delivery and the delivery destination. It doesn't delete the delivery source
+from your AWS account. To delete a delivery source, specify the delivery source
+name in the aws logs delete-delivery-source --name DeliverySourceName
+command. For more information, see DeleteDeliverySource in the Amazon CloudWatch Logs API
+Reference.
+
+## Troubleshoot
+
+Use the following information to fix common issues when you work with CloudFront
+standard logging (v2).
+
+### Delivery source already exists
+
+When you enable standard logging for a distribution, you create a delivery source.
+You then use that delivery source to create deliveries to destination type that you
+want: CloudWatch Logs, Firehose, Amazon S3. Currently, you can only have one delivery source per
+distribution. If you try to create another delivery source for the same
+distribution, the following error message appears.
+
+This ResourceId has already been used in another Delivery Source in this account
+
+To create another delivery source, delete the existing one first. For more
+information, see DeleteDeliverySource in the Amazon CloudWatch Logs API
+Reference.
+
+### I changed the suffix path and the Amazon S3 bucket can't receive my logs
+
+If you enabled standard logging (v2) and specify a bucket ARN without a prefix, CloudFront will
+append the following default to the suffix path:
+AWSLogs/{account-id}/CloudFront. If you use the CloudFront console or the
+UpdateDeliveryConfiguration API operation to specify a different suffix
+path, you must update the Amazon S3 bucket policy to use the same path.
+
+Example: Updating the suffix path
+
+- Your default suffix path is AWSLogs/{account-id}/CloudFront and
+you replace it with myFolderA.
+
+- Because your new suffix path is different than the path specified in
+the Amazon S3 bucket policy, your access logs won't be delivered.
+
+- You can do one of the following steps:
+
+- Update the Amazon S3 bucket permission from
+amzn-s3-demo-bucket/AWSLogs/<your-account-ID>/CloudFront/*
+to amzn-s3-demo-bucket/myFolderA/*.
+
+- Update your logging configuration to use the default suffix
+again: AWSLogs/{account-id}/CloudFront
+
+For more information, see Permissions.
+
+## Delete log files
+
+CloudFront doesn't automatically delete log files from your destination. For information
+about deleting log files, see the following topics:
+
+Amazon S3
+
+- Deleting
+objects in the Amazon Simple Storage Service Console User
+Guide
+
+CloudWatch Logs
+
+- Working with log groups and log streams in the
+Amazon CloudWatch Logs User Guide
+
+- DeleteLogGroup in the Amazon CloudWatch Logs API Reference
+
+Firehose
+
+- DeleteDeliveryStream in the Amazon Data Firehose API
+Reference
+
+## Pricing
+
+CloudFront doesn’t charge for enabling standard logs. However, you can incur charges for the
+delivery, ingestion, storage or access, depending on the log delivery destination that
+you select. For more information, see Amazon CloudWatch Logs Pricing. Under Paid Tier, choose the
+Logs tab, and then under Vended Logs, see
+the information for each delivery destination.
+
+For more information about pricing for each AWS service, see the following
+topics:
+
+- Amazon CloudWatch Logs
+Pricing
+
+- Amazon Data Firehose
+Pricing
+
+- Amazon S3 Pricing
+
+Note
+
+There are no additional charges for log delivery to Amazon S3, though you incur
+Amazon S3 charges for storing and accessing the log files. If you enable the
+Parquet option to convert your access logs to
+Apache Parquet, this option incurs CloudWatch charges. For more information, see
+the Vended Logs section
+for CloudWatch pricing.

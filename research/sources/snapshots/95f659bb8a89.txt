@@ -1,0 +1,271 @@
+URL: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-guard.html
+TITLE: Validate templates with Guard - AWS CloudFormation
+
+# Validate templates with Guard
+
+AWS CloudFormation Guard (cfn-guard) is a policy-as-code tool. You write rules in the
+Guard language that describe required or prohibited configurations, and then Guard checks JSON
+or YAML data against those rules. For example, you can require every Amazon S3 bucket in a template to
+use encryption, or block security group rules that open port 22 to the internet.
+
+Guard works with any JSON or YAML data. In addition to CloudFormation templates, you can check
+CloudFormation change sets and AWS Config configuration items. This topic focuses on checking
+templates.
+
+For release notes and the complete command reference, see Guard on GitHub. For
+the complete language reference, see the Guard User Guide.
+
+For the limitations of local validation and steps to take before deployment, see Understand validation scope.
+
+Topics
+
+- Install Guard
+
+- Understand the Guard language
+
+- Write a rule
+
+- Validate a template
+
+- Test your rules
+
+- Generate rules from a template
+
+- Add Guard to your workflow
+
+## Install Guard
+
+On macOS, install Guard with Homebrew:
+
+brew install cloudformation-guard
+
+On Linux or macOS, you can instead run the installation script. The script
+installs the latest release to ~/.guard/bin. Add that directory to your
+PATH after the script finishes.
+
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh
+
+If you have a Rust toolchain, you can also install Guard with Cargo:
+
+cargo install cfn-guard
+
+To confirm the installation, print the installed version:
+
+cfn-guard --version
+
+For Windows installation, a Docker image, and release verification, see Setting up
+Guard.
+
+## Understand the Guard language
+
+Now that Guard is installed, you can start writing rules. Guard rules are built from the following parts:
+
+- Queries – Select values from the data with a
+dotted path, such as Resources.MyBucket.Properties.BucketName. Use
+* to select every value in a map, and [*] to select every
+item in a list. Add a filter in square brackets to narrow the selection. For example,
+Resources.*[ Type == 'AWS::S3::Bucket' ] selects every Amazon S3 bucket.
+
+- Clauses – Make an assertion that evaluates to
+true or false. A clause combines a query with an operator, such as ==,
+!=, >=, in, exists,
+empty, or is_string. Clauses on separate lines must all pass.
+To accept either of two clauses, join them with or.
+
+- Variables – Store the result of a query with
+let and reference it later with a % prefix. Variables let
+you select a set of resources once and reuse it in several rules.
+
+- Named rules – Group clauses in a
+rule block with a name. Add a when condition to skip the rule
+when it doesn't apply, such as when a template has no Amazon S3 buckets. Rules can reference
+other rules, so you can build complex policies from small pieces.
+
+- Custom messages – Add text between
+<< and >> after a clause to explain a failure
+in the output.
+
+For the complete syntax, see Writing Guard rules.
+
+## Write a rule
+
+Save rules in a file with the .guard extension. The following example in
+rules.guard requires every Amazon S3 bucket in a template to specify bucket
+encryption and to block public access:
+
+let s3_buckets = Resources.*[ Type == 'AWS::S3::Bucket' ]
+
+rule S3_BUCKET_ENCRYPTED when %s3_buckets !empty {
+%s3_buckets.Properties.BucketEncryption exists
+<<
+Violation: S3 buckets must specify BucketEncryption.
+Fix: Add a BucketEncryption property with ServerSideEncryptionConfiguration.
+>>
+}
+
+rule S3_BUCKET_PUBLIC_ACCESS_BLOCKED when %s3_buckets !empty {
+%s3_buckets.Properties.PublicAccessBlockConfiguration {
+BlockPublicAcls == true
+BlockPublicPolicy == true
+IgnorePublicAcls == true
+RestrictPublicBuckets == true
+}
+}
+
+The first line stores every Amazon S3 bucket in the s3_buckets variable. Each rule
+runs only when the template contains at least one bucket. The first rule checks that the
+BucketEncryption property exists and includes a message that Guard prints when
+the check fails. The second rule checks four properties inside
+PublicAccessBlockConfiguration. Because the clauses are on separate lines,
+all four must pass.
+
+You can keep many rules in one file, or split rules across files by topic, such as one
+file for storage rules and another for network rules. Guard evaluates every
+.guard file in a directory when you pass the directory to a command.
+
+## Validate a template
+
+Pass the rule file to --rules and the template to --data. Add
+--type CFNTemplate so that Guard reports findings by resource logical
+ID.
+
+cfn-guard validate --rules rules.guard --data template.yaml --type CFNTemplate
+
+When the template passes, Guard prints a PASS status and returns exit code
+0. When a rule fails, Guard lists the failed rules and, for each noncompliant
+resource, the check that failed, the property path, and the reason. The output for a template
+whose bucket is missing BucketEncryption starts like the following:
+
+template.yaml Status = FAIL
+FAILED rules
+rules.guard/S3_BUCKET_ENCRYPTED FAIL
+---
+Evaluating data template.yaml against rules rules.guard
+Number of non-compliant resources 1
+Resource = MyBucket {
+Type = AWS::S3::Bucket
+Rule = S3_BUCKET_ENCRYPTED {
+...
+
+Guard returns exit code 19 when one or more rules fail and 5
+when it can't parse a rule or data file. You can use these exit codes to stop an automated
+build.
+
+The following options are useful when you validate templates:
+
+- Pass --rules or --data more than once, or pass a directory,
+to check multiple rule files or templates in one run. A directory that you pass to
+--data must contain only data files, and a directory that you pass to
+--rules must contain only rule files.
+
+- Use --show-summary with pass, fail,
+skip, all, or none to control which rules appear
+in the summary table. The default is fail.
+
+- Use --output-format with json, yaml,
+junit, or sarif to produce output for other tools. The
+junit and sarif formats work with most build systems and code
+scanning tools.
+
+- Use --input-parameters to pass a JSON or YAML file with values that your
+rules reference, such as a list of approved security group IDs. This keeps
+environment-specific values out of your rules.
+
+For all options, see validate in the
+Guard User Guide.
+
+## Test your rules
+
+Before you use a rule in an automated workflow, test it with the built-in unit testing
+support. A test file lists sample inputs and the result that you expect for each rule:
+PASS, FAIL, or SKIP. The following example in
+rules_tests.yaml tests the S3_BUCKET_ENCRYPTED rule from the
+previous example:
+
+---
+- input:
+Resources: {}
+expectations:
+rules:
+S3_BUCKET_ENCRYPTED: SKIP
+- input:
+Resources:
+MyBucket:
+Type: AWS::S3::Bucket
+Properties: {}
+expectations:
+rules:
+S3_BUCKET_ENCRYPTED: FAIL
+- input:
+Resources:
+MyBucket:
+Type: AWS::S3::Bucket
+Properties:
+BucketEncryption:
+ServerSideEncryptionConfiguration:
+- ServerSideEncryptionByDefault:
+SSEAlgorithm: aws:kms
+expectations:
+rules:
+S3_BUCKET_ENCRYPTED: PASS
+
+Run the tests with the test command:
+
+cfn-guard test --rules-file rules.guard --test-data rules_tests.yaml
+
+Guard prints PASS or FAIL for each expectation and returns exit
+code 7 when any expectation fails. For more information, see Testing Guard
+rules.
+
+## Generate rules from a template
+
+To get started quickly, you can generate rules from a template that already meets your
+requirements. The rulegen command reads the template and writes a rule for
+each resource type that requires the property values found in the template:
+
+cfn-guard rulegen --template template.yaml --output generated.guard
+
+Review the generated file and keep only the checks that represent your policy. Generated
+rules are a starting point and often require the exact values in the source template, which
+might be too strict for other templates.
+
+## Add Guard to your workflow
+
+You can run Guard in the following places:
+
+- In your editor – The CloudFormation Language
+Server runs Guard rule packs while you edit a template and shows failures inline. For
+setup, see CloudFormation Language Server.
+
+- Before a Git commit – Guard provides a
+pre-commit hook that can run validate on changed templates or
+test on changed rules. Add the following to your
+.pre-commit-config.yaml file and replace the paths with your own:
+
+repos:
+- repo: https://github.com/aws-cloudformation/cloudformation-guard
+rev: pre-commit-v0.0.2
+hooks:
+- id: cfn-guard
+args:
+- --operation=validate
+- --rules=rules/
+files: ^templates/.*
+
+- In an automated build – Run cfn-guard
+validate as a build step and use the exit code to fail the build. Use
+--output-format junit or --output-format sarif to publish
+the results. A GitHub Action and a container image are also available. Pull the image
+from public.ecr.aws/aws-cloudformation/cloudformation-guard.
+
+- With cloudformation-validate –
+The cfn-validate command and the AWS CDK validation plugin can run a supported
+subset of Guard rules together with their built-in checks. For more information, see Validate templates with cloudformation-validate.
+
+- During stack operations – To enforce rules
+when CloudFormation or Cloud Control API creates, updates, or deletes resources, use Guard Hooks. For
+more information, see Guard
+Hooks.
+
+For ready-to-use rules that cover common security and compliance controls, see the AWS Guard Rules
+Registry on GitHub.

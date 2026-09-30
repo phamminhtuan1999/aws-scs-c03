@@ -1,0 +1,64 @@
+URL: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_oidc.html
+TITLE: OIDC federation - AWS Identity and Access Management
+
+# OIDC federation
+
+Imagine that you are creating an application that accesses AWS resources, such as GitHub
+Actions that uses workflows to access Amazon S3 and DynamoDB.
+
+When you use these workflows, you make requests to AWS services that must be signed with
+an AWS access key. However, we strongly recommend that you do
+not store AWS credentials long-term in applications outside
+AWS. Instead, configure your applications to request temporary AWS security credentials
+dynamically when needed using OIDC federation. The supplied temporary
+credentials map to an AWS role that only has permissions needed to perform the tasks required
+by the application.
+
+With OIDC federation, you don't need to create custom sign-in code or manage your own user
+identities. Instead, you can use OIDC in applications, such as GitHub Actions or any other
+OpenID Connect (OIDC)-compatible IdP, to
+authenticate with AWS. They receive an authentication token, known as a JSON Web Token (JWT),
+and then exchange that token for temporary security credentials in AWS that map to an IAM
+role with permissions to use specific resources in your AWS account. Using an IdP helps you
+keep your AWS account secure because you don't have to embed and distribute long-term security
+credentials with your application.
+
+OIDC federation supports both machine-to-machine authentication (such as CI/CD pipelines,
+automated scripts, and serverless applications) and human user authentication. For human user
+authentication scenarios where you need to manage user sign-up, sign-in, and user profiles,
+consider using Amazon Cognito as an identity broker. For
+details about using Amazon Cognito with OIDC, see Amazon Cognito for mobile apps.
+
+Note
+
+JSON Web Tokens (JWTs) issued by OpenID Connect (OIDC) identity providers contain an
+expiration time in the exp claim that specifies when the token expires. IAM
+provides a five-minute window beyond the expiration time specified in the JWT to account for
+clock skew, as allowed by the OpenID Connect (OIDC) Core 1.0
+standard. This means OIDC JWTs received by IAM after the expiration time but
+within this five-minute window are accepted for further evaluation and processing.
+
+Topics
+
+- Additional resources for OIDC federation
+
+- Create an OpenID Connect (OIDC) identity provider in IAM
+
+- Obtain the thumbprint for an OpenID Connect identity provider
+
+- Identity-provider controls for shared OIDC providers
+
+## Additional resources for OIDC federation
+
+The following resources can help you learn more about OIDC federation:
+
+- Use OpenID Connect within your GitHub workflows by Configuring OpenID Connect in Amazon Web Services
+
+- Amazon Cognito Identity in the Amplify Libraries for Android Guide and
+Amazon Cognito Identity
+in the Amplify Libraries for Swift Guide.
+
+- How to
+use external ID when granting access to your AWS resources on the
+AWS Security Blog provides guidance on securely configuring
+cross-account access and external identity federation.

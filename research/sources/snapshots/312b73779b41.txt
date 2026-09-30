@@ -1,0 +1,288 @@
+URL: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html
+TITLE: Resource control policies (RCPs) - AWS Organizations
+
+# Resource control policies (RCPs)
+
+Note
+
+Service control policies (SCPs) and resource control policies (RCPs)
+
+Use an SCP when you need to limit permissions of IAM principals within your organization's member accounts.
+
+Use an RCP when you need to restrict IAM principals that are external to your
+organization accounts making requests to access resources within your organization’s member accounts.
+
+For more information, see Understanding SCPs and RCPs.
+
+Resource control policies (RCPs) are a type of organization policy that you can use to
+manage permissions in your organization. RCPs offer central control over the maximum
+available permissions for resources in your organization. RCPs help you to ensure
+resources in your accounts stay within your organization’s access control guidelines. RCPs are available only in an organization that has all features enabled. RCPs aren't
+available if your organization has enabled only the consolidated billing features. For
+instructions on enabling RCPs, see Enabling a policy type.
+
+RCPs alone are not sufficient in granting permissions to the resources in your
+organization. No permissions are granted by an RCP. An RCP defines a permissions guardrail, or sets
+limits, on the actions that identities can take on resources in your organizations. The
+administrator must still attach identity-based policies to IAM users or roles, or
+resource-based policies to resources in your accounts to actually grant permissions. For
+more information, see Identity-based policies and resource-based policies in the
+IAM User Guide.
+
+The effective permissions are the logical intersection between what is allowed by
+the RCPs and service control policies (SCPs) and what is allowed by the identity-based and resource-based policies.
+
+RCPs don't affect resources in the management account
+
+RCPs don't affect resources in the management account. They only affect resources in
+the member accounts within your organization. This also means that RCPs apply to member accounts that are designated as delegated administrators.
+
+Topics
+
+- List of AWS services that support RCPs
+
+- Testing effects of RCPs
+
+- Maximum size of RCPs
+
+- Attaching RCPs to different levels in the organization
+
+- RCP effects on permissions
+
+- Resources and entities not restricted by RCPs
+
+- RCP evaluation
+
+- RCP syntax
+
+- Resource control policy examples
+
+## List of AWS services that support RCPs
+
+RCPs apply to actions for the following AWS services:
+
+- Amazon AppStream (prefix:appstream)
+
+- Amazon Aurora DSQL (prefix:dsql)
+
+- Amazon Cloud Directory (prefix:clouddirectory)
+
+- Amazon CloudFront (prefix:cloudfront)
+
+- Amazon CloudSearch (prefix:cloudsearch)
+
+- Amazon CloudWatch Logs (prefix:logs)
+
+- Network Synthetic Monitor (prefix:networkmonitor)
+
+- Amazon Cognito (prefix:cognito-identity)
+
+- Amazon Cognito User Pools (prefix:cognito-idp)
+
+- Amazon Comprehend (prefix:comprehend)
+
+- Amazon Comprehend Medical (prefix:comprehendmedical)
+
+- Amazon Data Firehose (prefix:firehose)
+
+- Amazon DynamoDB (prefix:dynamodb)
+
+- DynamoDB Accelerator (prefix:dax)
+
+- Amazon EC2 Auto Scaling (prefix:autoscaling)
+
+- Amazon Elastic Container Registry (prefix:ecr)
+
+- Amazon Elastic Container Registry Public (prefix:ecr-public)
+
+- Amazon GameLift Servers (prefix:gamelift)
+
+- Amazon Inspector Scan (prefix:inspector-scan)
+
+- Amazon Kendra (prefix:kendra)
+
+- Amazon Kinesis Video Streams (prefix:kinesisvideo)
+
+- Amazon MemoryDB (prefix:memorydb)
+
+- Amazon OpenSearch Serverless (prefix:aoss)
+
+- Amazon Personalize (prefix:personalize)
+
+- Amazon Polly (prefix:polly)
+
+- Amazon S3 (prefix:s3)
+
+- Amazon Simple Workflow Service (prefix:swf)
+
+- Amazon SQS (prefix:sqs)
+
+- Amazon Textract (prefix:textract)
+
+- Amazon Timestream for InfluxDB (prefix:timestream-influxdb)
+
+- Amazon Transcribe (prefix:transcribe)
+
+- Amazon Translate (prefix:translate)
+
+- Amazon WorkSpaces (prefix:workspaces)
+
+- AWS AppConfig (prefix:appconfig)
+
+- AWS Auto Scaling (prefix:autoscaling-plans)
+
+- AWS Budgets (prefix:budgets)
+
+- AWS Cloud Map (prefix:servicediscovery)
+
+- AWS CloudTrail Data Service (prefix:cloudtrail-data)
+
+- AWS CodeArtifact (prefix:codeartifact)
+
+- AWS CodeBuild (prefix:codebuild)
+
+- AWS CodeCommit (prefix:codecommit)
+
+- AWS CodePipeline (prefix:codepipeline)
+
+- AWS Compute Optimizer (prefix:compute-optimizer)
+
+- AWS Cost Optimization Hub (prefix:cost-optimization-hub)
+
+- Amazon EventBridge (prefix:events)
+
+- AWS Firewall Manager (prefix:fms)
+
+- AWS Fault Injection Service (prefix:fis)
+
+- AWS Health (prefix:health)
+
+- IAM Roles Anywhere (prefix:rolesanywhere)
+
+- AWS Key Management Service (prefix:kms)
+
+- Amazon OpenSearch Service (prefix:opensearch)
+
+- AWS Pricing Calculator (prefix:pricing)
+
+- AWS Private CA Connector for Active Directory (prefix:pca-connector-ad)
+
+- AWS Resource Groups (prefix:resource-groups)
+
+- AWS Secrets Manager (prefix:secretsmanager)
+
+- AWS Security Token Service (prefix:sts)
+
+- AWS Sign-In (prefix:signin)
+
+- AWS Support (prefix:support)
+
+- AWS Transfer Family (prefix:transfer)
+
+- AWS User Notifications (prefix:notifications)
+
+- AWS WAF (prefix:wafv2)
+
+- AWS X-Ray (prefix:xray)
+
+## Testing effects of RCPs
+
+AWS strongly recommends that you don't attach RCPs to the root of your organization
+without thoroughly testing the impact that the policy has on resources in your accounts.
+You can begin by attaching RCPs to individual test accounts, moving them up to OUs lower
+in the hierarchy, and then working your way up through the organization structure as
+needed. One way to determine impact is to review AWS CloudTrail logs for Access Denied errors.
+
+## Maximum size of RCPs
+
+All characters in your RCP count against its maximum
+size. The examples in this guide show the RCPs formatted with extra white
+space to improve their readability. However, to save space if your policy size
+approaches the maximum size, you can delete any white space, such as space characters
+and line breaks that are outside quotation marks.
+
+Tip
+
+Use the visual editor to build your RCP. It automatically removes extra white
+space.
+
+## Attaching RCPs to different levels in the organization
+
+You can attach RCPs directly to individual accounts, OUs, or the organization root.
+For a detailed explanation of how RCPs work, see RCP evaluation.
+
+## RCP effects on permissions
+
+RCPs are a type of AWS Identity and Access Management (IAM) policy. They are most closely related to resource-based
+policies. However, an RCP never grants permissions.
+Instead, RCPs are access controls that specify the maximum available permissions for
+resources in your organization. For more information, see Policy
+evaluation logic in the IAM User Guide.
+
+- RCPs apply to resources for a subset of AWS services. For more information, see List of AWS services that support RCPs.
+
+- RCPs affect only
+resources that are managed by accounts that are
+part of the organization which has attached the RCPs. They don't affect
+resources from accounts outside the organization. For example, consider an Amazon S3 bucket that's owned by Account A in an organization.
+The bucket policy (a resource-based policy) grants access to users from Account B outside the organization. Account A has an RCP attached. That RCP applies to the S3 bucket in Account A even when accessed by users from Account B. However, that RCP does not apply to resources in Account B when accessed by users in Account A.
+
+- An RCP restricts permissions for resources in member accounts. Any resource in
+an account has only those permissions permitted by every parent above it. If
+a permission is blocked at any level above the account, a resource in the
+affected account does not have that permission, even if the resource owner
+attaches a resource-based policy that allows full access to any user.
+
+- RCPs apply to the resources that are authorized as part of an operation request.
+These resources can be found in the “Resource type” column of the Action table
+in the Service Authorization Reference. If a resource is specified in the "Resource type" column, then the RCPs of the resource owner's account are applied.
+For example, s3:GetObject authorizes the object resource. Whenever a GetObject request is made, an applicable RCP will apply to determine whether the requesting principal can invoke the GetObject operation. An applicable RCP is an
+RCP that has been attached to an account, to an organizational unit (OU), or to the root of the organization
+that owns the resource being accessed.
+
+- RCPs affect only resources in member accounts in the organization. They have no
+effect on resources in the management account. This also means that RCPs apply to member accounts that are designated as delegated administrators. For more information, see Best practices for the management account.
+
+- When a principal makes a request to access a resource within an account that
+has an attached RCP (a resource with an applicable RCP), the RCP is included in
+the policy evaluation logic to determine whether the principal is allowed or denied access.
+
+- RCPs impact the effective permissions of principals trying to access resources in a member account with an applicable RCP, regardless of whether the principals belong to the same organizations or not. This includes root users.
+The exception is when principals are service-linked roles because RCPs do not apply to calls made by service-linked roles. Service-linked roles enable AWS services to perform necessary actions on your behalf and can't be restricted by RCPs.
+
+- Users and roles must still be granted permissions with appropriate IAM
+permission policies, including identity-based and resource-based policies. A user or role without any IAM permission policies has no
+access, even if an applicable RCP allows all services, all
+actions, and all resources.
+
+## Resources and entities not restricted by RCPs
+
+You can't use
+RCPs to restrict the following:
+
+- Any action on resources in the management account.
+
+- RCPs do not impact the effective permissions of any service-linked role.
+Service-linked roles are a unique type of IAM role that is linked directly to
+an AWS service and include all the permissions that the service requires to
+call other AWS services on your behalf. The permissions of service-linked
+roles can't be restricted by RCPs. RCPs also do not impact AWS services'
+ability to assume a service-linked role; that is, the service-linked role's
+trust policy is also not impacted by RCPs.
+
+- RCPs do not apply to AWS managed keys for AWS Key Management Service. AWS managed keys are created, managed, and used on your behalf by an AWS service. You cannot change or manage their permissions.
+
+- RCPs do not impact following permissions:
+
+Service
+
+API
+
+Resources not authorized by RCPs
+
+AWS Key Management Service
+
+kms:RetireGrant
+
+RCPs do not impact the kms:RetireGrant permission.
+For more information on how permission to kms:RetireGrant is determined, see Retiring and revoking grants in the AWS KMS Developer Guide.

@@ -1,0 +1,230 @@
+{
+  "question_id": "Q114",
+  "question_content_hash": "870b95419f5a38ac4c3a7699e771f446c8cc13a53aad2e47d216ead16c2dc41a",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "performed_by": {
+    "agent": "scs-researcher (blind)",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Xác thực (validate) finding GuardDuty về đào tiền mã hoá trên EC2 - cần bằng chứng hoạt động thực tế.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Đánh giá tác động (impact) - hoạt động mạng/tiến trình liên quan.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn các nguồn dữ liệu (data sources) phù hợp để phân tích.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q114:A",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "CPU cao là dấu hiệu gián tiếp; phân loại MITRE ATT&CK chỉ là metadata của finding, không phải dữ liệu xác thực; quyền IAM role giúp đánh giá phạm vi ảnh hưởng. Hữu ích một phần nhưng thiếu bằng chứng trực tiếp (tiến trình, DNS, kết nối).",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q114:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đếm số finding, thời điểm launch và alert của Security Hub CSPM không cho thấy tiến trình hay lưu lượng đào coin; không xác thực được finding.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q114:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Chi tiết tiến trình trong finding, truy vấn DNS tới domain mining và kết nối outbound qua VPC Flow Logs là đúng các nguồn mà finding crypto dựa vào, cho phép xác thực và đánh giá phạm vi.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4",
+        "ref5",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q114:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Route 53 DNS records là cấu hình domain, không phải log truy vấn; severity GuardDuty chỉ là mức phân loại; lịch sử Session Manager chỉ cho biết phiên quản trị, không xác thực hoạt động đào coin.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q114:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Tài liệu GuardDuty cho thấy finding crypto dựa trên DNS logs, VPC flow logs và (Runtime Monitoring) thông tin tiến trình - trùng khớp C. Các phương án khác dựa trên suy luận về tính gián tiếp.",
+      "open_issues": [
+        "Phương án A có phần hữu ích (CPU, IAM role cho impact) nên đánh giá dựa trên mức độ trực tiếp của bằng chứng, không phải sai hoàn toàn.",
+        "Thông tin process chỉ có khi bật GuardDuty Runtime Monitoring (hoặc thu thập từ instance)."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref8"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings-runtime-monitoring.html",
+      "title": "GuardDuty Runtime Monitoring finding types",
+      "section": "CryptoCurrency:Runtime/BitcoinTool.B",
+      "snapshot_id": "75cce3ca72fd",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Additional context, including process and process lineage information, is available in the finding for further investigation.",
+      "supports": "Chi tiết tiến trình trong finding giúp xác thực tiến trình đào coin.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "CryptoCurrency:EC2/BitcoinTool.B!DNS",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "querying a domain name that is associated with Bitcoin or other cryptocurrency-related activity.",
+      "supports": "Finding crypto mining dựa trên truy vấn DNS tới domain liên quan tiền mã hoá (data source: DNS logs).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "CryptoCurrency:EC2/BitcoinTool.B",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "querying an IP Address that is associated with Bitcoin or other cryptocurrency-related activity.",
+      "supports": "Finding còn dựa trên kết nối IP (data source: VPC flow logs) - phân tích kết nối outbound xác thực finding.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html",
+      "title": "Logging IP traffic using VPC Flow Logs",
+      "section": "Overview",
+      "snapshot_id": "6d828a2b0fc8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC.",
+      "supports": "VPC Flow Logs cho thấy kết nối outbound của instance.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-query-logs.html",
+      "title": "Resolver query logging",
+      "section": "Overview",
+      "snapshot_id": "bc79af2e80a2",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Queries that originate in Amazon Virtual Private Cloud VPCs that you specify, as well as the responses to those DNS queries.",
+      "supports": "DNS query log (Resolver) là nguồn để xem truy vấn tới domain mining.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/rrsets-working-with.html",
+      "title": "Working with records - Amazon Route 53",
+      "section": "Working with records",
+      "snapshot_id": "caadcb128cc1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you create records to tell the Domain Name System (DNS) how you want traffic to be routed for that domain.",
+      "supports": "Route 53 DNS records là cấu hình định tuyến domain của mình, không phải log truy vấn của instance.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-ec2.html",
+      "title": "GuardDuty EC2 finding types",
+      "section": "Notes",
+      "snapshot_id": "fab5ab142807",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "For all EC2 findings, it is recommended that you examine the resource in question to determine if it is behaving in an expected manner.",
+      "supports": "Validate finding bằng cách kiểm tra hành vi thực tế của tài nguyên.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html",
+      "title": "GuardDuty foundational data sources",
+      "section": "Topics",
+      "snapshot_id": "6600ffb9d938",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "- VPC Flow Logs - Route53 Resolver DNS query logs",
+      "supports": "GuardDuty tự dùng VPC Flow Logs và DNS query logs làm nguồn dữ liệu nền tảng - cùng nguồn C đề xuất phân tích.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q114:stem:0",
+      "detail_vi": "'Indicates' viết hoa giữa câu (lỗi chính tả nhỏ)."
+    }
+  ],
+  "notes_vi": "Keyword: validate + assess impact -> nguồn dữ liệu gốc (process, DNS, flow logs) thay vì metadata/tổng hợp. Ghi chú công cụ: tools/fetch_doc.py dùng chung bị lỗi cú pháp (SyntaxError dòng 112 trong save_pdf) lúc nghiên cứu; đã dùng một bản sao vá lỗi trong scratchpad (chỉ sửa chuỗi xuống dòng của save_pdf, cùng thư mục snapshots) nên snapshot_id tương thích."
+}

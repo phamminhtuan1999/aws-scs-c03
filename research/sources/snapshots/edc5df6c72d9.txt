@@ -1,0 +1,183 @@
+URL: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/header-modification.html
+TITLE: HTTP header modification for your Application Load Balancer - Elastic Load Balancing
+
+# HTTP header modification for your Application Load Balancer
+
+HTTP header modification is supported by Application Load Balancers, for both request and response
+headers. Without having to update your application code, header modification
+allows you more control over your application's traffic and security.
+
+To enable header modification, see Enable header modification.
+
+## Rename mTLS/TLS headers
+
+The header rename capability allows you to configure the names of the mTLS
+and TLS headers that the Application Load Balancer generates and adds to requests.
+
+This ability to modify HTTP headers enables your Application Load Balancer to easily support
+applications that use specifically formatted request and response headers.
+
+Header
+
+Description
+
+X-Amzn-Mtls-Clientcert-Serial-Number
+
+Ensures that the target can identify and
+verify the specific certificate presented by
+the client during the TLS handshake.
+
+X-Amzn-Mtls-Clientcert-Issuer
+
+Helps the target validate and authenticate
+the client certificate by identifying the
+certificate authority that issued the certificate.
+
+X-Amzn-Mtls-Clientcert-Subject
+
+Provides the target with detailed information about the entity
+the client certificate was issued to, which helps in identification,
+authentication, authorization, and logging during mTLS
+authentication.
+
+X-Amzn-Mtls-Clientcert-Validity
+
+Allows the target to verify that the client certificate being
+used is within its defined validity period, ensuring the
+certificate is not expired or prematurely used.
+
+X-Amzn-Mtls-Clientcert-Leaf
+
+Provides the client certificate used in the mTLS handshake,
+allowing the server to authenticate the client and validate
+the certificate chain. This ensures the connection is secure and
+authorized.
+
+X-Amzn-Mtls-Clientcert
+
+Carries the full client certificate. Allowing the target
+to verify the certificate’s authenticity, validate the
+certificate chain, and authenticate the client during the
+mTLS handshake process.
+
+X-Amzn-TLS-Version
+
+Indicates the version of the TLS protocol used for a
+connection. It facilitates determining the security level
+of the communication, troubleshoot connection issues and
+ensuring compliance.
+
+X-Amzn-TLS-Cipher-Suite
+
+Indicates the combination of cryptographic algorithms
+used to secure a connection in TLS. This allows the server
+to assess the security of the connection, helping with
+compatibility troubleshooting, and ensuring compliance
+with security policies.
+
+## Add response headers
+
+Using insert headers, you can configure your Application Load Balancer to add security-related headers
+to responses. With these attributes, you can insert headers including HSTS, CORS,
+and CSP.
+
+By default, these headers are empty. When this happens, the Application Load Balancer does not modify this
+response header.
+
+When you enable a response header, the Application Load Balancer adds the header with the configured value
+to all responses. If the response from target includes the HTTP response header, the load
+balancer updates the header value to be the configured value. Otherwise, the load balancer
+adds the HTTP response header to the response with the configured value.
+
+Header
+
+Description
+
+Strict-Transport-Security
+
+Enforces HTTPS-only connections by the browser for a specified duration,
+helping to protect against man-in-the-middle attacks, protocol downgrades
+and user errors. ensuring all communications between the client and target
+is encrypted.
+
+Access-Control-Allow-Origin
+
+Controls whether resources on a target can be accessed from different
+origins. This allows secure cross-origin interactions while preventing
+unauthorized access.
+
+Access-Control-Allow-Methods
+
+Specifies the HTTP methods that are allowed when making cross-origin
+requests to the target. It provides control over which actions can be
+performed from different origins.
+
+Access-Control-Allow-Headers
+
+Specifies which custom or non-simple headers can be included in a cross-origin
+request. This header gives targets control over which headers can be sent by
+clients from different origins.
+
+Access-Control-Allow-Credentials
+
+Specifies whether the client should include credentials such as cookies,
+HTTP authentication or client certificates in cross-origin requests.
+
+Access-Control-Expose-Headers
+
+Allows the target to specify which additional response headers can be
+access by the client in cross-origin requests.
+
+Access-Control-Max-Age
+
+Defines how long the browser can cache the result of a preflight request,
+reducing the need for repeated preflight checks. This helps to optimize
+performance by reducing the number of OPTIONS requests required for certain
+cross-origin requests.
+
+Content-Security-Policy
+
+Security feature that prevents code injection attacks like XSS by controlling
+which resources such as scripts, styles, images, etc. can be loaded and executed
+by a website.
+
+X-Content-Type-Options
+
+With the no-sniff directive, enhances web security by preventing browsers from
+guessing the MIME type of a resource. It ensures that browsers only interpret
+content according to the declared Content-Type
+
+X-Frame-Options
+
+Header security mechanism that helps prevent click-jacking attacks by controlling
+whether a web page can be embedded in frames. Values such as DENY and SAMEORIGIN
+can ensure that content is not embedded on malicious or untrusted websites.
+
+## Disable headers
+
+Using disable headers, you can configure your Application Load Balancer to disable the
+server:awselb/2.0 header from the responses. This reduces
+exposure of server specific information, while adding an extra
+layer of protection to your application.
+
+The attribute name is
+routing.http.response.server.enabled. The available
+values are true or false. The default
+value is true.
+
+## Limitations
+
+- Header values can contain the following characters
+
+- Alphanumeric characters: a-z, A-Z, and 0-9
+
+- Special characters: _ :;.,\/'?!(){}[]@<>=-+*#&`|~^%
+
+- The value for the attribute can not exceed 1K bytes in size.
+
+- Elastic Load Balancing performs basic input validations to verify
+the header value is valid. However the validation is unable
+to confirm if the value is supported for a specific header.
+
+- Setting an empty value for any attribute will cause the
+Application Load Balancer to revert to the default behavior.

@@ -1,0 +1,215 @@
+URL: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html
+TITLE: Requirements for using SSL/TLS certificates with CloudFront - Amazon CloudFront
+
+# Requirements for using SSL/TLS certificates with CloudFront
+
+The requirements for SSL/TLS certificates are described in this topic. They apply to both
+of the following, except as noted:
+
+- Certificates for using HTTPS between viewers and CloudFront
+
+- Certificates for using HTTPS between CloudFront and your origin
+
+Topics
+
+- Certificate issuer
+
+- AWS Region for AWS Certificate Manager
+
+- Certificate format
+
+- Intermediate certificates
+
+- Key type
+
+- Private key
+
+- Permissions
+
+- Size of the certificate key
+
+- Supported types of certificates
+
+- Certificate expiration date and renewal
+
+- Domain names in the CloudFront distribution and in the certificate
+
+- Minimum SSL/TLS protocol version
+
+- Supported HTTP versions
+
+## Certificate issuer
+
+We recommend that you use a public certificate issued by AWS Certificate Manager (ACM). For
+information about getting a certificate from ACM, see the AWS Certificate Manager User Guide. To use an ACM certificate with a
+CloudFront distribution, make sure you request (or import) the certificate in the
+US East (N. Virginia) Region (us-east-1).
+
+CloudFront supports the same certificate authorities (CAs) as Mozilla, so if you don’t use
+ACM, use a certificate issued by a CA on the Mozilla Included CA
+Certificate List.
+
+TLS certificates used by the origin that you specified for your CloudFront
+distribution also need to be issued from the CA on the Mozilla Included CA
+Certificate List.
+
+For more information about getting and installing a certificate, refer to the
+documentation for your HTTP server software and to the documentation for the
+CA.
+
+## AWS Region for AWS Certificate Manager
+
+To use a certificate in AWS Certificate Manager (ACM) to require HTTPS between viewers and
+CloudFront, make sure you request (or import) the certificate in the
+US East (N. Virginia) Region (us-east-1).
+
+If you want to require HTTPS between CloudFront and your origin, and you’re using a load
+balancer in Elastic Load Balancing as your origin, you can request or import the certificate in
+any AWS Region.
+
+## Certificate format
+
+The certificate must be in X.509 PEM format. This is the default format if you’re using
+AWS Certificate Manager.
+
+## Intermediate certificates
+
+If you’re using a third-party certificate authority (CA), list all of the intermediate
+certificates in the certificate chain that’s in the .pem
+file, beginning with one for the CA that signed the certificate for your domain.
+Typically, you’ll find a file on the CA website that lists intermediate and root
+certificates in the proper chained order.
+
+Important
+
+Do not include the following: the root certificate, intermediate certificates that are
+not in the trust path, or your CA’s public key certificate.
+
+Here’s an example:
+
+-----BEGIN CERTIFICATE-----
+Intermediate certificate 2
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+Intermediate certificate 1
+-----END CERTIFICATE-----
+
+## Key type
+
+CloudFront supports RSA and ECDSA public–private key pairs.
+
+CloudFront supports HTTPS connections to both viewers and origins using RSA and
+ECDSA certificates. With AWS Certificate Manager
+(ACM), you can request and import RSA or ECDSA certificates and then associate them with your CloudFront distribution.
+
+For lists of the RSA and ECDSA ciphers supported by CloudFront that you can
+negotiate in HTTPS connections, see Supported protocols and ciphers between viewers and CloudFront and Supported protocols and ciphers between CloudFront and the origin.
+
+## Private key
+
+If you're using a certificate from a third-party certificate authority (CA),
+note the following:
+
+- The private key must match the public key that is in the
+certificate.
+
+- The private key must be in PEM format.
+
+- The private key cannot be encrypted with a password.
+
+If AWS Certificate Manager (ACM) provided the certificate, ACM doesn’t release the private key. The
+private key is stored in ACM for use by AWS services that are integrated
+with ACM.
+
+## Permissions
+
+You must have permission to use and import the SSL/TLS certificate. If you’re using
+AWS Certificate Manager (ACM), we recommend that you use AWS Identity and Access Management permissions to restrict
+access to the certificates. For more information, see Identity
+and access management in the
+AWS Certificate Manager User Guide.
+
+## Size of the certificate key
+
+The certificate key size that CloudFront supports depends on the type of key and
+certificate.
+
+For RSA certificates:
+
+CloudFront supports 1024-bit, 2048-bit, and 3072-bit, and 4096-bit RSA keys. The maximum key length for an RSA certificate that
+you use with CloudFront is 4096 bits.
+
+Note that ACM issues RSA certificates with up to 2048-bit keys.
+To use a 3072-bit or 4096-bit RSA certificate, you need to obtain the certificate externally and import it into ACM, after which it will be available for you to use with CloudFront.
+
+For information about how to determine the size of an RSA key, see
+Determine the size of the public key in an SSL/TLS RSA certificate.
+
+For ECDSA certificates:
+
+CloudFront supports 256-bit and 384-bit keys. To use an ECDSA
+certificate in ACM to require HTTPS between viewers and
+CloudFront, use the prime256v1 or secp384r1 elliptic
+curve.
+
+## Supported types of certificates
+
+CloudFront supports all types of certificates issued by a trusted certificate authority.
+
+## Certificate expiration date and renewal
+
+If you’re using certificates that you get from a third-party certificate authority (CA),
+you must monitor certificate expiration dates and renew the certificates that
+you import into AWS Certificate Manager (ACM) or upload to the AWS Identity and Access Management certificate store
+before they expire.
+
+Important
+
+To avoid certificate expiration issues, renew or reimport your certificate
+at least 24 hours before the NotAfter value of your current
+certificate. If your certificate expires within 24 hours, request a new
+certificate from ACM or import a new certificate to ACM. Next, associate
+the new certificate to the CloudFront distribution.
+
+CloudFront might continue to use the previous certificate while your certificate
+renewal or reimport is in progress. This is an asynchronous process that can
+take up to 24 hours before CloudFront shows your changes.
+
+If you’re using ACM provided certificates, ACM manages certificate renewals for you.
+For more information, see Managed renewal in the
+AWS Certificate Manager User Guide.
+
+## Domain names in the CloudFront distribution and in the certificate
+
+When you’re using a custom origin, the SSL/TLS certificate on your origin includes a
+domain name in the Common Name field, and possibly several
+more in the Subject Alternative Names field. (CloudFront supports
+wildcard characters in certificate domain names.)
+
+One of the domain names in the certificate must match the domain name that you
+specify for Origin Domain Name. If no domain name matches, CloudFront returns HTTP
+status code 502 (Bad Gateway) to the viewer.
+
+Important
+
+When you add an alternate domain name to a distribution, CloudFront checks that the alternate
+domain name is covered by the certificate that you’ve attached. The
+certificate must cover the alternate domain name in the subject alternate
+name (SAN) field of the certificate. This means the SAN field must contain
+an exact match for the alternate domain name, or contain a wildcard at the
+same level of the alternate domain name that you’re adding.
+
+For more information, see Requirements for using alternate domain names.
+
+## Minimum SSL/TLS protocol version
+
+If you’re using dedicated IP addresses, set the minimum SSL/TLS protocol version for the
+connection between viewers and CloudFront by choosing a security policy.
+
+For more information, see Security policy (minimum SSL/TLS version) in the topic All distribution settings reference.
+
+## Supported HTTP versions
+
+If you associate one certificate with more than one CloudFront distribution, all the
+distributions associated with the certificate must use the same option for Supported HTTP versions. You specify this
+option when you create or update a CloudFront distribution.

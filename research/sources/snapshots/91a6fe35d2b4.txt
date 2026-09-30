@@ -1,0 +1,217 @@
+URL: https://docs.aws.amazon.com/step-functions/latest/dg/choosing-workflow-type.html
+TITLE: Choosing workflow type in Step Functions - AWS Step Functions
+
+# Choosing workflow type in Step Functions
+
+When you create a state machine, you must choose a Type of either Standard (default) or Express, referred to commonly as a standard workflow or an express workflow.
+
+You define both state machine types using the Using Amazon States Language to define Step Functions workflows.
+
+Both standard and express workflows can start in response to events, such as HTTP
+requests from Amazon API Gateway, IoT rules, and over 140 other event sources in Amazon EventBridge.
+
+Workflow type is immutable
+
+The workflow type can not be updated after you create a state machine.
+
+Standard Workflows are ideal for long-running (up to one
+year), durable, and auditable workflows. You can retrieve the full execution history using
+the Step Functions API
+for up to 90 days after your execution completes.
+
+Standard Workflows follow an
+exactly-once model, where your tasks and states are never run more than
+once, unless you have specified Retry behavior in ASL. The exactly-once model makes Standard Workflows suited to orchestrating non-idempotent actions, such as starting an Amazon EMR cluster or processing payments.
+
+Standard Workflow executions are billed according to the number of
+state transitions processed.
+
+Express Workflows are ideal for high-volume,
+event-processing workloads such as IoT data ingestion, streaming data processing and
+transformation, and mobile application backends. They can run for up to five minutes.
+
+Express Workflows use an at-least-once model, so an execution
+could potentially run more than once. The at-least-once model makes Express Workflows better suited for orchestrating idempotent actions, such as transforming input data to store in Amazon DynamoDB using a PUT action.
+
+Express Workflow executions are billed by number of executions, total
+duration of execution, and memory consumed during execution.
+
+Tip
+
+To deploy an example Express workflow, see Processing data in parallel in The AWS Step Functions Workshop.
+
+Comparison of Standard and Express workflow types
+
+Type / Category
+
+Standard Workflows
+
+Express Workflows: Synchronous and Asynchronous
+
+Maximum duration
+
+One year
+
+Five minutes
+
+Supported execution start
+rate
+
+For information about quotas related to supported execution start
+rate, see Quotas related to API action throttling.
+
+For information about quotas related to supported execution start
+rate, see Quotas related to API action throttling.
+
+Supported state transition
+rate
+
+For information about quotas related to supported state transition
+rate, see Quotas related to state throttling.
+
+No limit
+
+Pricing
+
+Priced by number of state transitions. A state
+transition is counted each time a step in your execution is
+completed.
+
+Priced by the number of executions you run, their duration, and memory
+consumption.
+
+Execution history
+
+Executions can be listed and described with Step Functions APIs. Executions can be
+visually debugged through the console. They can also be inspected in CloudWatch Logs
+by enabling logging on your state machine.
+
+For more information about debugging Standard Workflow executions in the console, see Standard and Express console experience differences and Viewing workflow runs.
+
+Unlimited execution history, that is, as many execution history entries are maintained as you can generate
+within a 5-minute period.
+
+Executions can be inspected in CloudWatch Logs or the Step Functions console by enabling
+logging on your state machine.
+
+For more information about debugging Express Workflow executions in the console, see Standard and Express console experience differences and Viewing workflow runs.
+
+Execution
+semantics
+
+Exactly-once workflow execution.
+
+Asynchronous Express Workflows: At-least-once
+workflow execution.
+
+Synchronous Express Workflows:
+At-most-once workflow execution.
+
+Service
+integrations
+
+Supports all service integrations and patterns.
+
+Supports all service integrations.
+
+Note
+
+Express Workflows do not support Job-run (.sync) or Callback
+(.waitForTaskToken) service integration patterns.
+
+Distributed Map
+
+Supported
+
+Not supported
+
+Activities
+
+Supported
+
+Not supported
+
+Optimize workflow type
+
+For a comparison and an example cost impact analysis, see
+Choosing the workflow type in the Large-scale data processing with Step Functions workshop.
+
+## Synchronous and Asynchronous Express Workflows in Step Functions
+
+There are two types of Express Workflows that you can choose: Asynchronous Express
+Workflows and Synchronous Express Workflows.
+
+- Asynchronous Express Workflows return confirmation that
+the workflow was started, but don't wait for the workflow to complete. To get
+the result, you must poll the service's CloudWatch Logs.
+You can use Asynchronous Express Workflows when you don't require immediate
+response output, such as messaging services or data processing that other
+services don't depend on. You can start Asynchronous Express Workflows in
+response to an event, by a nested workflow in Step Functions, or by using the
+StartExecution API call.
+
+- Synchronous Express Workflows start a workflow, wait until
+it completes, and then return the result. Synchronous Express Workflows can be
+used to orchestrate microservices. With Synchronous Express Workflows, you can
+develop applications without the need to develop additional code to handle
+errors, retries, or run parallel tasks. You can run Synchronous Express
+Workflows invoked from Amazon API Gateway, AWS Lambda, or by using the StartSyncExecution API call.
+
+Note
+
+If you run Step Functions Express Workflows synchronously from the console, the
+StartSyncExecution request expires after 60 seconds. To run the
+Express Workflows synchronously for a duration of up to five minutes, make
+the StartSyncExecution request using the AWS SDK or AWS Command Line Interface
+(AWS CLI) instead of the Step Functions console.
+
+Synchronous Express execution API calls don't contribute to existing account
+capacity limits. Step Functions provides capacity on demand and automatically scales with
+sustained workload. Surges in workload may be throttled until capacity is
+available.
+
+## Execution guarantees in Step Functions workflows
+
+Standard Workflows
+
+Asynchronous Express Workflows
+
+Synchronous Express Workflows
+
+Exactly-once workflow execution
+
+At-least-once workflow execution
+
+At-most-once workflow execution
+
+Execution state internally persists between state
+transitions.
+
+Execution state doesn't persist between state transitions.
+
+Execution state doesn't persist between state transitions.
+
+Automatically returns an idempotent response on starting an execution
+with the same name as a currently-running workflow. The new workflow
+doesn't start and an exception is thrown once the currently-running
+workflow is complete.
+
+Idempotency is not automatically managed. Starting multiple workflows
+with the same name results in concurrent executions. Can result in loss
+of internal workflow state if state machine logic is not
+idempotent.
+
+Idempotency is not automatically managed. Step Functions waits once an
+execution starts and returns the state machine's result on completion.
+Workflows don't restart if an exception occurs.
+
+Execution history data removed after 90 days. Workflow names can
+be reused after removal of out-of-date execution data.
+
+To meet compliance, organizational, or regulatory requirements, you can reduce the execution history retention period to 30 days by sending a quota request. To do this, use the AWS Support Center Console and create a new case.
+
+Execution history is not captured by Step Functions. Logging must be enabled
+through Amazon CloudWatch Logs.
+
+Execution history is not captured by Step Functions. Logging must be enabled
+through Amazon CloudWatch Logs.

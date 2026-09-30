@@ -1,0 +1,256 @@
+{
+  "question_id": "Q091",
+  "question_content_hash": "174cb44a472948b1d83f8d125a66e6d265662fd96cc4ddc75db22aa4da696e20",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:21Z",
+  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "81f85ac78e05c851905ba608e29f3305e1140b6c8757fde1fda917e005988cd1",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Customer managed key có imported key material đã bị xóa key material nên key không dùng được (Pending import).",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Phải giải mã được encrypted data key của EBS volume hiện có (dữ liệu trên volume cần giữ).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phải attach được EBS volume vào EC2 instance.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q091:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Key material mới (khác) không giải mã được data key đã mã hóa bằng key material cũ; AWS nói muốn khôi phục key phải reimport CÙNG key material. Với symmetric key, import key material mới chỉ phục vụ on-demand rotation, không thay thế material đã bị xóa.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q091:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Snapshot của volume mã hóa cũng được mã hóa bằng cùng KMS key; khi attach volume tạo từ snapshot, EC2 vẫn phải gọi KMS (CreateGrant/Decrypt) để giải mã data key, mà key đang không dùng được. B cũng không giải mã data key của volume hiện tại.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref6",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q091:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Reimport đúng key material gốc vào chính KMS key đó đưa key về trạng thái dùng được; khi attach, EC2 dùng KMS key giải mã encrypted data key của volume và attach thành công.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q091:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "KMS key mới có key ID/ciphertext khác; symmetric ciphertext của KMS gắn với KMS key đã mã hóa nó nên key mới (dù cùng hay khác material) không giải mã được data key của volume.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q091:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu KMS nêu rõ: không có key material thì KMS key không dùng được, muốn khôi phục phải reimport cùng key material; tài liệu cũng dùng đúng ví dụ EBS attach thất bại.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref3",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:54:21Z"
+  },
+  "source_answer": [
+    "Q091:C"
+  ],
+  "researched_answer": [
+    "Q091:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu KMS nêu trực tiếp: KMS key mất key material thì không dùng được và chỉ khôi phục bằng cách reimport CÙNG key material; tài liệu cũng dùng đúng ví dụ EBS attach thất bại. Đối thủ mạnh nhất B bị bác vì volume tạo từ snapshot vẫn cần cùng KMS key khi attach.",
+    "open_issues": [
+      "Đáp án ngầm giả định công ty còn giữ bản sao key material gốc (KMS không export được key material)."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã kiểm tra lại đối thủ mạnh nhất B (khôi phục từ snapshot cũ): tài liệu EBS mô tả khi attach volume tạo từ snapshot mã hóa, EC2 gửi CreateGrant tới KMS để giải mã data key – snapshot mã hóa bằng cùng KMS key nên B cũng thất bại khi key không dùng được (bổ sung ref6, nâng B từ inference lên direct). A/D bị bác bởi quy định 'reimport the same key material' và 'KMS keys with the same imported key material are not interoperable'. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "KMS key có imported key material bị xóa sẽ không dùng được; cách duy nhất khôi phục là reimport đúng key material gốc vào chính key đó. Khi key dùng được lại, EC2 giải mã được encrypted data key của volume và attach thành công.",
+    "others": {
+      "Q091:A": "Key material mới khác material cũ nên không giải mã được data key đã mã hóa trước đó; AWS yêu cầu reimport CÙNG key material.",
+      "Q091:B": "Snapshot cũng mã hóa bằng cùng KMS key, nên volume khôi phục từ snapshot vẫn cần key đó để giải mã data key khi attach.",
+      "Q091:D": "KMS key mới là key khác; ciphertext gắn với KMS key đã tạo ra nó nên key mới không giải mã được data key của volume."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "key material for the key was deleted",
+      "meaning_vi": "Key ở trạng thái Pending import; chỉ khôi phục bằng reimport đúng material cũ."
+    },
+    {
+      "phrase": "decrypt the EBS volume's encrypted data key",
+      "meaning_vi": "Phải làm CHÍNH KMS key đó dùng được lại, không thay bằng key/material khác."
+    }
+  ],
+  "memory_tip_vi": "Nếu KMS key dùng imported key material bị xóa material -> nghĩ đến reimport đúng key material gốc vào cùng key; kiểm tra: material mới hoặc key mới không giải mã được ciphertext cũ.",
+  "tags": {
+    "domains": [
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS KMS",
+      "Amazon EBS",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Quản lý vòng đời imported key material của KMS và ảnh hưởng tới dữ liệu EBS mã hóa."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-considerations.html",
+      "title": "Special considerations for imported key material",
+      "section": "You can delete the key material",
+      "snapshot_id": "099d0083dfa6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Without key material, the KMS key cannot be used in any cryptographic operation. To restore the key, you must reimport the same key material into the key.",
+      "supports": "Cách duy nhất khôi phục KMS key sau khi xóa imported key material là reimport cùng key material (ủng hộ C, bác A).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-considerations.html",
+      "title": "Special considerations for imported key material",
+      "section": "You can perform on-demand rotation on symmetric encryption keys",
+      "snapshot_id": "099d0083dfa6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can import multiple key materials into these keys and use on-demand rotation to update the current key material.",
+      "supports": "Import key material mới vào symmetric key là để rotation, không thay thế key material cũ cần cho giải mã.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/unusable-kms-keys.html",
+      "title": "How unusable KMS keys affect data keys",
+      "section": "EBS example",
+      "snapshot_id": "a51acf20d7db",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the attachment fails, because Amazon EBS cannot use the KMS key to decrypt the volume's encrypted data key. To use the EBS volume again, you must make the KMS key usable again.",
+      "supports": "Để attach lại volume phải làm cho CHÍNH KMS key đó dùng được trở lại.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/how-ebs-encryption-works.html",
+      "title": "How Amazon EBS encryption works",
+      "section": "intro",
+      "snapshot_id": "295e7153c32a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "All snapshots created from the volume",
+      "supports": "Snapshot của volume mã hóa cũng được mã hóa, nên khôi phục từ snapshot vẫn phụ thuộc KMS key không dùng được.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/importing-keys-considerations.html",
+      "title": "Special considerations for imported key material",
+      "section": "Symmetric encryption keys are not portable or interoperable",
+      "snapshot_id": "099d0083dfa6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "KMS keys with the same imported key material are not interoperable.",
+      "supports": "KMS key mới không giải mã được ciphertext do KMS key cũ tạo ra (bác D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/how-ebs-encryption-works.html",
+      "title": "How Amazon EBS encryption works",
+      "section": "How EBS encryption works when the snapshot is encrypted",
+      "snapshot_id": "295e7153c32a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When you attach the encrypted volume to an instance, Amazon EC2 sends a CreateGrant request to AWS KMS so that it can decrypt the data key.",
+      "supports": "Volume tạo từ snapshot mã hóa vẫn cần KMS key giải mã data key khi attach; key không dùng được thì B cũng thất bại.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Đáp án phụ thuộc giả định công ty còn giữ bản gốc key material bên ngoài AWS (AWS khuyến nghị giữ bản sao vì KMS không export được key material).",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:54:21Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q091:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:46+00:00",
+      "change": "Reconciliation: khớp source key C. Bổ sung ref6 (EBS: attach volume từ snapshot mã hóa vẫn cần KMS giải mã data key) để bác B bằng bằng chứng direct. Giữ verified (high).",
+      "previous_answer": [
+        "Q091:C"
+      ]
+    }
+  ]
+}

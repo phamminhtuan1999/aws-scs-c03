@@ -1,0 +1,249 @@
+URL: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
+TITLE: Restrict access to Application Load Balancers - Amazon CloudFront
+
+# Restrict access to Application Load Balancers
+
+You can use both internal and internet-facing Application Load Balancers with Amazon CloudFront. You can use internal Application Load Balancers inside private subnets with CloudFront by using VPC origins. CloudFront VPC origins allow you to serve content from applications hosted in private VPC subnets without exposing them to the public internet. For more information, see Restrict access with VPC origins.
+
+If you are using an internet-facing Application Load Balancer with CloudFront, you can use the following security mitigations to prevent users from directly accessing an Application Load Balancer, and allow access only through CloudFront.
+
+- Configure CloudFront to add a custom HTTP header to requests that it sends to the
+Application Load Balancer.
+
+- Configure the Application Load Balancer to only forward requests that contain the custom HTTP
+header.
+
+- Require HTTPS to improve the security of this solution.
+
+CloudFront can also help to reduce latency and even absorb some distributed denial of service (DDoS) attacks.
+
+If your use case requires dual access to web applications from both CloudFront and Application Load Balancer directly over the internet, consider splitting your web application APIs as follows:
+
+- APIs that must go through CloudFront. In this case, consider using a separate private Application Load Balancer as an origin.
+
+- APIs that require access through Application Load Balancer. In this case, you bypass CloudFront.
+
+Alternatively, for a web application or other content that’s served by an internet-facing Application Load Balancer in Elastic Load Balancing, CloudFront can cache objects and serve them directly to users (viewers), reducing the load on your Application Load Balancer. An internet-facing load balancer has a publicly resolvable DNS name and routes requests from clients to targets over the internet.
+
+For more information, see the following topics. After you complete these steps, users can
+only access your Application Load Balancer through CloudFront.
+
+Topics
+
+- Configure CloudFront to add a custom HTTP header to requests
+
+- Configure an Application Load Balancer to only forward requests that contain a specific header
+
+- (Optional) Improve the security of this solution
+
+- (Optional) Limit access to origin by using the AWS-managed prefix list for CloudFront
+
+## Configure CloudFront to add a custom HTTP header to requests
+
+You can configure CloudFront to add a custom HTTP header to the requests that it sends to
+your origin (in this case, an Application Load Balancer).
+
+Important
+
+This use case relies on keeping the custom header name and value secret. If the
+header name and value are not secret, other HTTP clients could potentially include
+them in requests that they send directly to the Application Load Balancer. This can cause the Application Load Balancer to
+behave as though the requests came from CloudFront when they did not. To prevent this,
+keep the custom header name and value secret.
+
+You can configure CloudFront to add a custom HTTP header to origin requests with the CloudFront
+console, CloudFormation, or the CloudFront API.
+
+To add a custom HTTP header (CloudFront console)
+
+In the CloudFront console, use the Origin Custom Headers
+setting in Origin Settings. Enter the Header
+Name and its Value.
+
+Note
+
+In production, use randomly generated header names and values. Treat header names and
+values as secure credentials, like usernames and passwords.
+
+You can edit the Origin Custom Headers setting when
+you create or edit an origin for an existing CloudFront distribution, and when you
+create a new distribution. For more information, see Update a distribution
+and Create a distribution.
+
+To add a custom HTTP header (CloudFormation)
+
+In an CloudFormation template, use the OriginCustomHeaders property,
+as shown in the following example.
+
+Note
+
+The header name and value in this example are just for demonstration.
+In production, use randomly generated values. Treat the header name and
+value as a secure credential, like a user name and password.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+TestDistribution:
+Type: 'AWS::CloudFront::Distribution'
+Properties:
+DistributionConfig:
+Origins:
+- DomainName: app-load-balancer.example.com
+Id: Example-ALB
+CustomOriginConfig:
+OriginProtocolPolicy: https-only
+OriginSSLProtocols:
+- TLSv1.2
+OriginCustomHeaders:
+- HeaderName: X-Custom-Header
+HeaderValue: random-value-1234567890
+Enabled: 'true'
+DefaultCacheBehavior:
+TargetOriginId: Example-ALB
+ViewerProtocolPolicy: allow-all
+CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+PriceClass: PriceClass_All
+ViewerCertificate:
+CloudFrontDefaultCertificate: 'true'
+
+For more information, see the Origin and OriginCustomHeader properties in the AWS CloudFormation User Guide.
+
+To add a custom HTTP header (CloudFront API)
+
+In the CloudFront API, use the CustomHeaders object inside
+Origin. For more information, see CreateDistribution and UpdateDistribution in the Amazon CloudFront API Reference, and the documentation for your SDK or other API
+client.
+
+There are some header names that you can’t specify as origin custom headers. For more
+information, see Custom headers that CloudFront can’t add to origin requests.
+
+## Configure an Application Load Balancer to only forward requests that contain a specific header
+
+After you configure CloudFront to add a custom HTTP header to the requests that it sends to
+your Application Load Balancer (see the previous
+section), you can configure the load balancer to only forward requests that
+contain this custom header. You do this by adding a new rule and modifying the default
+rule in your load balancer’s listener.
+
+Prerequisites
+
+To use the following procedures, you need an Application Load Balancer with at least one listener. If you
+haven’t created one yet, see Create an Application Load Balancer in the User Guide for Application Load Balancers.
+
+The following procedures modify an HTTPS listener. You can use the same process to
+modify an HTTP listener.
+
+To update the rules in an Application Load Balancer listener
+
+- Add a new rule. Use the instructions from Add a rule, with the following modifications:
+
+- Add the rule to the load balancer that is the origin for your CloudFront distribution.
+
+- For Add condition, choose
+Http header. Specify the HTTP header name and value
+that you added as an origin custom header in CloudFront.
+
+- For Add action, choose
+Forward to. Choose the target group where you want
+to forward requests.
+
+- Edit the default rule in your load balancer's listener. Use the instructions from Edit a rule, with the following modifications:
+
+- Edit the default rule of the load balancer that is the origin for your CloudFront distribution.
+
+- Delete the default action, and then for Add action, choose
+Return fixed response.
+
+- For Response code, enter
+403.
+
+- For Response body, enter Access
+denied.
+
+After you complete these steps, your load balancer listener has two rules. One rule forwards requests that contain the HTTP header
+(requests that come from CloudFront). The other rule sends a fixed response to all other
+requests (requests that don’t come from CloudFront).
+
+You can verify that the solution works by sending a request to your CloudFront distribution
+and one to your Application Load Balancer. The request to CloudFront returns your web application or content, and
+the one sent directly to your Application Load Balancer returns a 403 response with the plain
+text message Access denied.
+
+## (Optional) Improve the security of this solution
+
+To improve the security of this solution, you can configure your CloudFront distribution to
+always use HTTPS when sending requests to your Application Load Balancer. Remember, this solution only works
+if you keep the custom header name and value secret. Using HTTPS can help prevent an
+eavesdropper from discovering the header name and value. We also recommend rotating the
+header name and value periodically.
+
+Use HTTPS for origin requests
+
+To configure CloudFront to use HTTPS for origin requests, set the Origin Protocol
+Policy setting to HTTPS Only. This setting is available
+in the CloudFront console, CloudFormation, and the CloudFront API. For more information, see Protocol (custom origins only).
+
+The following also applies when you configure CloudFront to use HTTPS for origin
+requests:
+
+- You must configure CloudFront to forward the Host header to the
+origin with the origin request policy. You can use the AllViewer managed origin
+request policy.
+
+- Make sure that
+your Application Load Balancer has an HTTPS listener (as shown in the preceding section). For more information, see Create an HTTPS
+listener in the User Guide for Application Load Balancers. Using an HTTPS listener
+requires you to have an SSL/TLS certificate that matches the domain name that's
+routed to your Application Load Balancer.
+
+- SSL/TLS certificates for CloudFront can only be requested (or imported) in the
+us-east-1 AWS Region in AWS Certificate Manager (ACM). Because CloudFront is a
+global service, it automatically distributes the certificate from the
+us-east-1 Region to all Regions associated with your CloudFront
+distribution.
+
+- For example, if you have an Application Load Balancer (ALB) in the
+ap-southeast-2 Region, you must configure SSL/TLS certificates
+in both the ap-southeast-2 Region (for using HTTPS between CloudFront and
+the ALB origin) and the us-east-1 Region (for using HTTPS between
+viewers and CloudFront). Both certificates should match the domain name that is routed
+to your Application Load Balancer. For more information, see AWS Region for AWS Certificate Manager.
+
+- If the end users (also known as viewers, or
+clients) of your web application can use HTTPS, you
+can also configure CloudFront to prefer (or even require) HTTPS connections from the end
+users. To do this, use the Viewer Protocol Policy setting. You can
+set it to redirect end users from HTTP to HTTPS, or to reject requests that use HTTP.
+This setting is available in the CloudFront console, CloudFormation, and the CloudFront API. For more
+information, see Viewer protocol policy.
+
+Rotate the header name and value
+
+In addition to using HTTPS, we also recommend rotating the header name and value
+periodically. The high-level steps for doing this are as follows:
+
+- Configure CloudFront to add an additional custom HTTP header to requests that it
+sends to the Application Load Balancer.
+
+- Update the Application Load Balancer listener rule to forward requests that contain this
+additional custom HTTP header.
+
+- Configure CloudFront to stop adding the original custom HTTP header to requests that
+it sends to the Application Load Balancer.
+
+- Update the Application Load Balancer listener rule to stop forwarding requests that contain the
+original custom HTTP header.
+
+For more information about accomplishing these steps, see the preceding
+sections.
+
+## (Optional) Limit access to origin by using the AWS-managed prefix list for CloudFront
+
+To further restrict access to your Application Load Balancer, you can configure the security group
+associated with the Application Load Balancer so that it only accept traffic from CloudFront when the service is
+using an AWS-managed prefix list. This prevents traffic that doesn't originate from
+CloudFront from reaching your Application Load Balancer at the network layer (layer 3) or transport layer (layer
+4).
+
+For more information, see the Limit access to your origins using the AWS-managed prefix list
+for Amazon CloudFront blog post.

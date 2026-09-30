@@ -1,0 +1,1468 @@
+URL: https://docs.aws.amazon.com/guardduty/latest/ug/findings-runtime-monitoring.html
+TITLE: GuardDuty Runtime Monitoring finding types - Amazon GuardDuty
+
+# GuardDuty Runtime Monitoring finding types
+
+Amazon GuardDuty generates the following Runtime Monitoring findings to indicate potential threats based on
+the operating system-level behavior from Amazon EC2 hosts and containers in your Amazon EKS clusters,
+Fargate and Amazon ECS workloads, and Amazon EC2 instances.
+
+Note
+
+Runtime Monitoring finding types are based on the runtime logs collected from hosts. The
+logs contain fields such as file paths that may be controlled by a malicious actor. These fields
+are also included in GuardDuty findings to provide runtime context. When processing
+Runtime Monitoring findings outside of GuardDuty console, you must sanitize finding fields. For
+example, you can HTML encode finding fields when displaying them on a webpage.
+
+Topics
+
+- CryptoCurrency:Runtime/BitcoinTool.B
+
+- Backdoor:Runtime/C&CActivity.B
+
+- UnauthorizedAccess:Runtime/TorRelay
+
+- UnauthorizedAccess:Runtime/TorClient
+
+- Trojan:Runtime/BlackholeTraffic
+
+- Trojan:Runtime/DropPoint
+
+- CryptoCurrency:Runtime/BitcoinTool.B!DNS
+
+- Backdoor:Runtime/C&CActivity.B!DNS
+
+- Trojan:Runtime/BlackholeTraffic!DNS
+
+- Trojan:Runtime/DropPoint!DNS
+
+- Trojan:Runtime/DGADomainRequest.C!DNS
+
+- Trojan:Runtime/DriveBySourceTraffic!DNS
+
+- Trojan:Runtime/PhishingDomainRequest!DNS
+
+- Impact:Runtime/AbusedDomainRequest.Reputation
+
+- Impact:Runtime/BitcoinDomainRequest.Reputation
+
+- Impact:Runtime/MaliciousDomainRequest.Reputation
+
+- Impact:Runtime/SuspiciousDomainRequest.Reputation
+
+- UnauthorizedAccess:Runtime/MetadataDNSRebind
+
+- Execution:Runtime/NewBinaryExecuted
+
+- PrivilegeEscalation:Runtime/DockerSocketAccessed
+
+- PrivilegeEscalation:Runtime/RuncContainerEscape
+
+- PrivilegeEscalation:Runtime/CGroupsReleaseAgentModified
+
+- DefenseEvasion:Runtime/ProcessInjection.Proc
+
+- DefenseEvasion:Runtime/ProcessInjection.Ptrace
+
+- DefenseEvasion:Runtime/ProcessInjection.VirtualMemoryWrite
+
+- Execution:Runtime/ReverseShell
+
+- DefenseEvasion:Runtime/FilelessExecution
+
+- Impact:Runtime/CryptoMinerExecuted
+
+- Execution:Runtime/NewLibraryLoaded
+
+- PrivilegeEscalation:Runtime/ContainerMountsHostDirectory
+
+- PrivilegeEscalation:Runtime/UserfaultfdUsage
+
+- Execution:Runtime/SuspiciousTool
+
+- Execution:Runtime/SuspiciousCommand
+
+- DefenseEvasion:Runtime/SuspiciousCommand
+
+- DefenseEvasion:Runtime/PtraceAntiDebugging
+
+- Execution:Runtime/MaliciousFileExecuted
+
+- Execution:Runtime/MaliciousFileExecuted.Custom
+
+- Execution:Runtime/SuspiciousShellCreated
+
+- PrivilegeEscalation:Runtime/ElevationToRoot
+
+- Discovery:Runtime/SuspiciousCommand
+
+- Persistence:Runtime/SuspiciousCommand
+
+- PrivilegeEscalation:Runtime/SuspiciousCommand
+
+- DefenseEvasion:Runtime/KernelModuleLoaded
+
+- Persistence:Runtime/SensitiveFileModified
+
+- PrivilegeEscalation:Runtime/SensitiveFileModified
+
+- DefenseEvasion:Runtime/SensitiveFileModified
+
+## CryptoCurrency:Runtime/BitcoinTool.B
+
+### An Amazon EC2 instance or a container is querying an IP address that is associated with a cryptocurrency-related activity.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS
+environment is querying an IP address that is associated with a cryptocurrency-related
+activity. Threat actors may seek to take control over compute resources to maliciously
+repurpose them for unauthorized cryptocurrency mining.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If you use this EC2 instance or a container to mine or manage cryptocurrency, or either of
+these is otherwise involved in blockchain activity, the
+CryptoCurrency:Runtime/BitcoinTool.B finding could represent expected activity
+for your environment. If this is the case in your AWS environment, we recommend that you set
+up a suppression rule for this finding. The suppression rule should consist of two filter
+criteria. The first filter criterion should use the Finding
+type attribute with a value of CryptoCurrency:Runtime/BitcoinTool.B.
+The second filter criterion should be the Instance ID of the instance or
+the Container Image ID of the container involved in cryptocurrency or
+blockchain-related activity. For more information, see Suppression rules.
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Backdoor:Runtime/C&CActivity.B
+
+### An Amazon EC2 instance or a container is querying an IP that is associated with a known command and control server.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container within your AWS
+environment is querying an IP address
+associated with a known command and control (C&C) server. The listed instance or container
+might be potentially compromised. Command and control servers are computers that issue commands
+to members of a botnet.
+
+A botnet is a collection of internet-connected devices that might include PCs, servers,
+mobile devices, and Internet of Things devices, that are infected and controlled by a common
+type of malware. Botnets are often used to distribute malware and gather misappropriated
+information, such as credit card numbers. Depending on the purpose and structure of the botnet,
+the C&C server might also issue commands to begin a distributed denial of service (DDoS)
+attack.
+
+Note
+
+If the IP queried is log4j-related, then the fields of the associated finding will include
+the following values:
+
+- service.additionalInfo.threatListName = Amazon
+
+- service.additionalInfo.threatName = Log4j Related
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the potentially
+compromised resource, view Resource type in the findings panel in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## UnauthorizedAccess:Runtime/TorRelay
+
+### Your Amazon EC2 instance or a container is making connections to a Tor network as a Tor relay.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment is
+making connections to a Tor network in a manner that suggests that it's acting as a Tor relay.
+Tor is software for enabling anonymous communication. Tor increases anonymity of communication
+by forwarding the client's possibly illicit traffic from one Tor relay to another.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## UnauthorizedAccess:Runtime/TorClient
+
+### Your Amazon EC2 instance or a container is making connections to a Tor Guard or an Authority node.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment is
+making connections to a Tor Guard or an Authority node. Tor is software for enabling anonymous
+communication. Tor Guards and Authority nodes act as initial gateways into a Tor network. This
+traffic can indicate that this EC2 instance or the container has been potentially compromised
+and is acting as a client on a Tor network. This finding may indicate unauthorized access to
+your AWS resources with the intent of hiding the attacker's true identity.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/BlackholeTraffic
+
+### An Amazon EC2 instance or a container is attempting to communicate with an IP address of a remote host that is a known black hole.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment
+might be compromised because it is trying to communicate with an IP address of a black hole (or
+sink hole). Black holes are places in the network where incoming or outgoing traffic is
+silently discarded without informing the source that the data didn't reach its intended
+recipient. A black hole IP address specifies a host machine that is not running or an address
+to which no host has been assigned.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/DropPoint
+
+### An Amazon EC2 instance or a container is attempting to communicate with an IP address of a remote host that is known to hold credentials and other stolen data captured by malware.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment is
+trying to communicate with an IP address of a remote host that is known to hold credentials and
+other stolen data captured by malware.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## CryptoCurrency:Runtime/BitcoinTool.B!DNS
+
+### An Amazon EC2 instance or a container is querying a domain name that is associated with a cryptocurrency activity.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS
+environment is querying a domain name that is associated with Bitcoin or other
+cryptocurrency-related activity. Threat actors may seek to take control over the compute
+resources in order to maliciously repurpose them for unauthorized cryptocurrency mining.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If you use this EC2 instance or container to mine or manage cryptocurrency, or either of
+these is otherwise involved in blockchain activity, the
+CryptoCurrency:Runtime/BitcoinTool.B!DNS finding could be an expected activity
+for your environment. If this is the case in your AWS environment, we recommend that you set
+up a suppression rule for this finding. The suppression rule should consist of two filter
+criteria. The first criteria should use the Finding type
+attribute with a value of CryptoCurrency:Runtime/BitcoinTool.B!DNS. The second
+filter criteria should be the Instance ID of the instance or the
+Container Image ID of the container involved in cryptocurrency or
+blockchain activity. For more information, see Suppression Rules.
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Backdoor:Runtime/C&CActivity.B!DNS
+
+### An Amazon EC2 instance or a container is querying a domain name that is associated with a known command and control server.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container within your AWS
+environment is querying a domain name associated with a known command and control (C&C)
+server. The listed EC2 instance or the container might be compromised. Command and control
+servers are computers that issue commands to members of a botnet.
+
+A botnet is a collection of internet-connected devices which might include PCs, servers,
+mobile devices, and Internet of Things devices, that are infected and controlled by a common
+type of malware. Botnets are often used to distribute malware and gather misappropriated
+information, such as credit card numbers. Depending on the purpose and structure of the botnet,
+the C&C server might also issue commands to begin a distributed denial of service (DDoS)
+attack.
+
+Note
+
+If the domain name queried is log4j-related, then the fields of the associated finding
+will include the following values:
+
+- service.additionalInfo.threatListName = Amazon
+
+- service.additionalInfo.threatName = Log4j Related
+
+Note
+
+To test how GuardDuty generates this finding type, you can make a DNS request from your
+instance (using dig for Linux or nslookup for Windows) against a
+test domain guarddutyc2activityb.com.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/BlackholeTraffic!DNS
+
+### An Amazon EC2 instance or a container is querying a domain name that is being redirected to a black hole IP address.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container in your AWS
+environment might be compromised because it is querying a domain name that is being redirected
+to a black hole IP address. Black holes are places in the network where incoming or outgoing
+traffic is silently discarded without informing the source that the data didn't reach its
+intended recipient.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/DropPoint!DNS
+
+### An Amazon EC2 instance or a container is querying a domain name of a remote host that is known to hold credentials and other stolen data captured by malware.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment is
+querying a domain name of a remote host that is known to hold credentials and other stolen data
+captured by malware.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/DGADomainRequest.C!DNS
+
+### An Amazon EC2 instance or a container is querying algorithmically generated domains. Such domains are commonly used by malware and could be an indication of a compromised EC2 instance or a container.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container in your AWS
+environment is trying to query domain generation algorithm (DGA) domains. Your resource might
+have been compromised.
+
+DGAs are used to periodically generate a large number of domain names that can be used as
+rendezvous points with their command and control (C&C) servers. Command and control servers
+are computers that issue commands to members of a botnet, which is a collection of
+internet-connected devices that are infected and controlled by a common type of malware. The
+large number of potential rendezvous points makes it difficult to effectively shut down botnets
+because infected computers attempt to contact some of these domain names every day to receive
+updates or commands.
+
+Note
+
+This finding is based on known DGA domains from GuardDuty threat intelligence feeds.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/DriveBySourceTraffic!DNS
+
+### An Amazon EC2 instance or a container is querying a domain name of a remote host that is a known source of Drive-By download attacks.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container in your AWS
+environment might be compromised because it is querying a domain name of a remote host that is
+a known source of drive-by download attacks. These are unintended downloads of computer
+software from the internet that can initiate an automatic installation of a virus, spyware, or
+malware.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Trojan:Runtime/PhishingDomainRequest!DNS
+
+### An Amazon EC2 instance or a container is querying domains involved in phishing attacks.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS
+environment is trying to query a domain involved in phishing attacks. Phishing domains are
+set up by someone posing as a legitimate institution in order to induce individuals to provide
+sensitive data, such as personally identifiable information, banking and credit card details,
+and passwords. Your EC2 instance or the container might be trying to retrieve sensitive data
+stored on a phishing website, or it may be attempting to set up a phishing website. Your EC2
+instance or the container might be compromised.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Impact:Runtime/AbusedDomainRequest.Reputation
+
+### An Amazon EC2 instance or a container is querying a low reputation domain name that is associated with known abused domains.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container within your AWS
+environment is querying a low reputation domain name associated with known abused domains or IP
+addresses. Examples of abused domains are top level domain names (TLDs) and second-level domain
+names (2LDs) providing free subdomain registrations as well as dynamic DNS providers. Threat
+actors tend to use these services to register domains for free or at low costs. Low reputation
+domains in this category may also be expired domains resolving to a registrar's parking IP
+address and therefore may no longer be active. A parking IP is where a registrar directs
+traffic for domains that have not been linked to any service. The listed Amazon EC2 instance or the
+container may be compromised as threat actors commonly use these registrar's or services for
+C&C and malware distribution.
+
+Low reputation domains are based on a reputation score model. This model evaluates and
+ranks the characteristics of a domain to determine its likelihood of being malicious.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Impact:Runtime/BitcoinDomainRequest.Reputation
+
+### An Amazon EC2 instance or a container is querying a low reputation domain name that is associated with cryptocurrency-related activity.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container within your AWS
+environment is querying a low reputation domain name associated with Bitcoin or other
+cryptocurrency-related activity. Threat actors may seek to take control over compute resources
+to maliciously repurpose them for unauthorized cryptocurrency mining.
+
+Low reputation domains are based on a reputation score model. This model evaluates and
+ranks the characteristics of a domain to determine its likelihood of being malicious.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If you use this EC2 instance or the container to mine or manage cryptocurrency, or if
+these resources are otherwise involved in blockchain activity, this finding could represent
+expected activity for your environment. If this is the case in your AWS environment, we
+recommend that you set up a suppression rule for this finding. The suppression rule should
+consist of two filter criteria. The first filter criterion should use the Finding type attribute with a value of
+Impact:Runtime/BitcoinDomainRequest.Reputation. The second filter criterion
+should be the Instance ID of the instance or the Container Image
+ID of the container is involved in cryptocurrency or blockchain–related
+activity. For more information, see Suppression rules.
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Impact:Runtime/MaliciousDomainRequest.Reputation
+
+### An Amazon EC2 instance or a container is querying a low reputation domain that is associated with known malicious domains.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container within your AWS
+environment is querying a low reputation domain name associated with known malicious domains or
+IP addresses. For example, domains may be associated with a known sinkhole IP address.
+Sinkholed domains are domains that were previously controlled by a threat actor, and requests
+made to them can indicate the instance is compromised. These domains may also be correlated
+with known malicious campaigns or domain generation algorithms.
+
+Low reputation domains are based on a reputation score model. This model evaluates and
+ranks the characteristics of a domain to determine its likelihood of being malicious.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Impact:Runtime/SuspiciousDomainRequest.Reputation
+
+### An Amazon EC2 instance or a container is querying a low reputation domain name that is suspicious in nature due to its age, or low popularity.
+
+Default severity: Low
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or the container within your AWS
+environment is querying a low reputation domain name that is suspected of being malicious. The observed
+characteristics of this domain were consistent with previously observed malicious
+domains. However, our reputation model was unable to definitively relate it to a known threat.
+These domains are typically newly observed or receive a low amount of traffic.
+
+Low reputation domains are based on a reputation score model. This model evaluates and
+ranks the characteristics of a domain to determine its likelihood of being malicious.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## UnauthorizedAccess:Runtime/MetadataDNSRebind
+
+### An Amazon EC2 instance or a container is performing DNS lookups that resolve to the instance metadata service.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+Note
+
+Presently, this finding type is only supported for AMD64 architecture.
+
+This finding informs you that a process running on the listed EC2 instance or a container in your AWS environment is
+querying a domain that resolves to the EC2 metadata IP address (169.254.169.254). A DNS query
+of this kind may indicate that the instance is a target of a DNS rebinding technique. This
+technique can be used to obtain metadata from an EC2 instance, including the IAM credentials
+associated with the instance.
+
+DNS rebinding involves tricking an application running on the EC2 instance to load return
+data from a URL, where the domain name in the URL resolves to the EC2 metadata IP address
+(169.254.169.254). This causes the application to access EC2 metadata and
+possibly make it available to the attacker.
+
+It is possible to access EC2 metadata using DNS rebinding only if the EC2 instance is
+running a vulnerable application that allows injection of URLs, or if someone accesses the URL
+in a web browser running on the EC2 instance.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+In response to this finding, you should evaluate if there is a vulnerable application
+running on the EC2 instance or on the container, or if someone used a browser to access the
+domain identified in the finding. If the root cause is a vulnerable application, fix the
+vulnerability. If someone browsed the identified domain, block the domain or prevent users from
+accessing it. If you determine this finding was related to either case above, Revoke the
+session associated with the EC2 instance.
+
+Some AWS customers intentionally map the metadata IP address to a domain name on their
+authoritative DNS servers. If this is the case in your environment, we recommend that you set
+up a suppression rule for this finding. The suppression rule should consist of two filter
+criteria. The first filter criterion should use the Finding type attribute
+with a value of UnauthorizedAccess:Runtime/MetadataDNSRebind. The second filter
+criterion should be DNS request domain or the Container Image
+ID of the container. The DNS request domain value should match
+the domain you have mapped to the metadata IP address (169.254.169.254). For
+information about creating suppression rules, see Suppression rules.
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/NewBinaryExecuted
+
+### A newly created or recently modified binary file in a container has been executed.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a newly created or a recently modified binary file, in a
+container was executed. It is the best practice to keep containers immutable at runtime, and
+binary files, scripts, or libraries should not be created or modified during the lifetime of
+the container. This behavior indicates that a malicious actor that has gained access to the
+container, has downloaded, and executed malware or other software as part of the potential
+compromise. Although this type of activity could be an indication of a compromise, it is also a
+common usage pattern. Therefore, GuardDuty uses mechanisms to identify suspicious instances of this
+activity and generates this finding type only for suspicious instances.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. To identify the modifying process and new binary, view the
+Modifying process details and the Process
+details
+
+The details of the modifying process are included in the
+service.runtimeDetails.context.modifyingProcess field of the finding JSON, or
+under Modifying Process in the finding details panel. For this finding
+type, the modifying process is /usr/bin/dpkg, as identified by the
+service.runtimeDetails.context.modifyingProcess.executablePath field of the
+finding JSON, or as a part of Modifying Process in the finding details
+panel.
+
+The details of the executed new or modified binary are included in the
+service.runtimeDetails.process of the finding JSON, or the
+Process section under Runtime details. For this
+finding type, the new or modified binary is /usr/bin/python3.8, as
+indicated by service.runtimeDetails.process.executablePath (Executable
+path) field.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/DockerSocketAccessed
+
+### A process inside a container is communicating with Docker daemon using Docker socket.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+The Docker socket is a Unix Domain Socket that Docker daemon (dockerd) uses
+to communicate with its clients. A client can perform various actions, such as creating
+containers by communicating with Docker daemon through the Docker socket. It is suspicious for
+a container process to access the Docker socket. A container process can escape the container
+and get a host-level access by communicating with the Docker socket and creating a privileged
+container.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/RuncContainerEscape
+
+### A container escape attempt through runC was detected.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+RunC is the low-level container runtime that high-level container runtimes, such as Docker
+and Containerd use to spawn and run containers. RunC is always executed with root privileges
+because it needs to perform the low-level task of creating a container. A threat actor can gain
+host-level access by either modifying or exploiting a vulnerability in runC binary.
+
+This finding detects modification of runC binary and potential attempts to
+exploit the following runC vulnerabilities:
+
+- CVE-2019-5736 – Exploitation of CVE-2019-5736
+involves overwriting the runC binary from within a container. This finding gets invoked when
+runC binary is modified by a process inside a container.
+
+- CVE-2024-21626 – Exploitation of
+CVE-2024-21626 involves setting the current working directory (CWD) or a
+container to an open file descriptor
+/proc/self/fd/FileDescriptor. This finding gets
+invoked when a container process with a current working directory under
+/proc/self/fd/ is detected, for example, /proc/self/fd/7.
+
+This finding may indicate that a malicious actor has attempted to perform exploitation in
+one of the following types of containers:
+
+- A new container with an attacker-controlled image.
+
+- An existing container that was accessible to the actor with write permissions on the
+host level runC binary.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/CGroupsReleaseAgentModified
+
+### A container escape attempt through CGroups release agent was detected.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that an attempt to modify a control group (cgroup) release agent
+file has been detected. Linux uses control groups (cgroups) to limit, account for, and isolate
+the resource usage of a collection of processes. Each cgroup has a release agent file
+(release_agent), a script that Linux executes when any process inside the cgroup
+terminates. The release agent file is always executed at the host level. A threat actor inside
+a container can escape to the host by writing arbitrary commands to the release agent file that
+belongs to a cgroup. When a process inside that cgroup terminates, the commands written by the
+actor get executed.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/ProcessInjection.Proc
+
+### A process injection using proc filesystem was detected in a container or an Amazon EC2 instance.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+Process injection is a technique that threat actors use to inject code into processes to
+evade defenses and potentially elevate privileges. The proc filesystem (procfs) is a special
+filesystem in Linux that presents the virtual memory of process as a file. The path of that
+file is /proc/PID/mem, where PID is the unique ID of the process. A
+threat actor can write to this file to inject code into the process. This finding identifies
+potential attempts to write to this file.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource type might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/ProcessInjection.Ptrace
+
+### A process injection using ptrace system call was detected in a container or an Amazon EC2 instance.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+Process injection is a technique that threat actors use to inject code into processes to
+evade defenses and potentially elevate privileges. A process can use ptrace system call to
+inject code into another process. This finding identifies a potential attempt to inject code
+into a process using the ptrace system call.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource type might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/ProcessInjection.VirtualMemoryWrite
+
+### A process injection through a direct write to virtual memory was detected in a container or an Amazon EC2 instance.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+Process injection is a technique that threat actors use to inject code into processes to
+evade defenses and potentially elevate privileges. A process can use a system call such as
+process_vm_writev to directly inject code into another process's virtual memory.
+This finding identifies a potential attempt to inject code into a process using a system call
+for writing to the virtual memory of the process.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource type might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/ReverseShell
+
+### A process in a container or an Amazon EC2 instance has created a reverse shell.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+A reverse shell is a shell session created on a connection that is initiated
+from the target host to the actor's host. This is opposite to a normal shell that is initiated
+from the actor's host to the target's host. Threat actors create a reverse shell to execute
+commands on the target after gaining initial access to the target. This finding identifies
+potentially suspicious reverse shell connections.
+
+GuardDuty examines related runtime activity and context, and generates this finding type only
+when the associated activity and context are found to be unusual or suspicious. Additional context,
+including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+The GuardDuty security agent monitors events from multiple sources. To identify
+the impacted resource, view Resource type in the finding details in the GuardDuty
+console. If this activity is unexpected, your resource type might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/FilelessExecution
+
+### A process in a container or an Amazon EC2 instance is executing code from memory.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you when a process is executed using an in-memory executable file on
+disk. This is a common defense evasion technique that avoids writing the malicious executable
+to the disk to evade file system scanning-based detection. Although this technique is used by malware,
+it also has some legitimate use cases. One of the examples is a just-in-time (JIT) compiler
+that writes compiled code to memory and executes it from memory.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Impact:Runtime/CryptoMinerExecuted
+
+### A container or an Amazon EC2 instance is executing a binary file that is associated with a cryptocurrency mining activity.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed EC2 instance or container in your AWS environment is
+executing a binary file that is associated with a cryptocurrency mining activity. Threat actors
+may seek to take control over compute resources to maliciously repurpose them for unauthorized
+cryptocurrency mining.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty console
+and see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/NewLibraryLoaded
+
+### A newly created or recently modified library was loaded by a process inside a container.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a library was created or modified inside a container during
+runtime and loaded by a process running inside the container. The best practice is to keep the
+containers immutable at the runtime, and not to create or modify the binary files, scripts, or
+libraries during the lifetime of the container. Loading of a newly created or modified library
+in a container may indicate suspicious activity. This behavior indicates that a malicious actor
+has potentially gained access to the container, has downloaded, and executed malware or other
+software as a part of the potential compromise. Although this type of activity could be an
+indication of a compromise, it is also a common usage pattern. Therefore, GuardDuty uses mechanisms
+to identify suspicious instances of this activity and generates this finding type only for
+suspicious instances.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/ContainerMountsHostDirectory
+
+### A process inside a container mounted a host filesystem at runtime.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+Multiple container escape techniques involve mounting a host filesystem inside a container
+at runtime. This finding informs you that a process inside a container potentially attempted to
+mount a host filesystem, which may indicate an attempt to escape to the host.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/UserfaultfdUsage
+
+### A process used userfaultfd system calls to handle page faults in user space.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+Typically, page faults are handled by the kernel in kernel space. However,
+userfaultfd system call allows a process to handle page faults on a filesystem in
+user space. This is a useful feature that enables implementation of user-space filesystems. On
+the other hand, it can also be used by a potentially malicious process to interrupt kernel from
+user space. Interrupting kernel by using userfaultfd system call is a common
+exploitation technique to extend race windows during exploitation of kernel race conditions.
+Use of userfaultfd may indicate suspicious activity on the Amazon Elastic Compute Cloud (Amazon EC2)
+instance.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/SuspiciousTool
+
+### A container or an Amazon EC2 instance is running a binary file or script that is frequently used in offensive security scenarios such as pentesting engagement.
+
+Default severity: Variable
+
+The severity of this finding can be either high or low, depending on whether the detected
+suspicious tool is considered to be dual-use or is it exclusively for offensive use.
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a suspicious tool has been executed on an EC2 instance or
+container within your AWS environment. This includes tools used in pentesting engagements,
+also known as backdoor tools, network scanners, and network sniffers. All these tools can be
+used in benign contexts but are also frequently used by threat actors with malicious intent.
+Observing offensive security tools could indicate that the associated EC2 instance or container
+has been compromised.
+
+GuardDuty examines related runtime activity and context so that it generates this finding only
+when the associated activity and context are potentially suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/SuspiciousCommand
+
+### A suspicious command has been executed on an Amazon EC2 instance or a container that is indicative of a compromise.
+
+Default severity: Variable
+
+Depending on the impact of the observed malicious pattern, the severity of this finding
+type could be either low, medium, or high.
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a suspicious command has been executed and it indicates that
+an Amazon EC2 instance or a container in your AWS environment has been compromised. This might
+mean that either a file was downloaded from a suspicious source and then executed, or a running
+process displays a known malicious pattern in its command line. This further indicates that
+malware is running on the system.
+
+GuardDuty examines related runtime activity and context so that it generates this finding only
+when the associated activity and context are potentially suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+Note
+
+Process command line arguments may contain sensitive data. To protect sensitive data,
+GuardDuty runtime monitoring findings do not include full command line arguments. Instead,
+Service.RuntimeDetails.Context.CommandLineExample provides a representative
+example of the command line pattern that generated the finding.
+
+## DefenseEvasion:Runtime/SuspiciousCommand
+
+### A command has been executed on the listed Amazon EC2 instance or a container, it attempts to modify or disable a Linux defense mechanism, such as firewall or essential system services.
+
+Default severity: Variable
+
+Depending on which defense mechanism has been modified or disabled, the severity of this
+finding type can be either high, medium, or low.
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a command that attempts to hide an attack from the local
+system's security services, has been executed. This includes actions such as disabling the Unix
+firewall, modifying local IP tables, removing crontab entries, disabling a local
+service, or taking over the LDPreload function. Any modification is highly
+suspicious and a potential indicator of compromise. Therefore, these mechanisms detect or
+prevent further compromise of the system.
+
+GuardDuty examines related runtime activity and context so that it generates this finding only
+when the associated activity and context are potentially suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the potentially
+compromised resource, view Resource type in the findings details in the
+GuardDuty console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/PtraceAntiDebugging
+
+### A process in a container or an Amazon EC2 instance has executed an anti-debugging measure using the ptrace system call.
+
+Default severity: Low
+
+- Feature: Runtime Monitoring
+
+This finding shows that a process running on the listed Amazon EC2 instance or a container within your
+AWS environment has used the ptrace system call with the PTRACE_TRACEME option.
+This activity would cause an attached debugger to detach from the running process. If no
+debugger is attached, it has no effect. However, the activity in itself raises suspicion. This
+might indicate that malware is running on the system. Malware frequently uses anti-debugging
+techniques to evade analysis, and these techniques can be detected at runtime.
+
+GuardDuty examines related runtime activity and context so that it generates this finding only
+when the associated activity and context are potentially suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/MaliciousFileExecuted
+
+### A known malicious executable file has been executed on an Amazon EC2 instance or a container.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a known malicious executable has been executed on Amazon EC2
+instance or a container within your AWS environment. This is a strong indicator that the
+instance or container has been potentially compromised and that malware has been
+executed.
+
+GuardDuty examines related runtime activity and context so that it generates this finding only
+when the associated activity and context are potentially suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/MaliciousFileExecuted.Custom
+
+### A malicious executable file on a custom threat list has been executed on an Amazon EC2 instance or a container.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding informs you that an executable file that is included in a threat entity list
+that you uploaded and activated has been executed on an Amazon EC2 instance or a container within
+your AWS environment. In GuardDuty, a threat entity list can include known malicious IP addresses,
+domains, and SHA-256 file hashes. GuardDuty generates findings based on the activity associated
+with the uploaded threat entity list.
+You can view the name of the threat entity list in the finding details.
+
+Note: This finding only triggers when an executable file
+whose hash was included in the threat entity list is executed.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Execution:Runtime/SuspiciousShellCreated
+
+### A network service or network-accessible process on an Amazon EC2 instance, or in a container has started an interactive shell process.
+
+Default severity: Low
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a network-accessible service on an Amazon EC2 instance or in a
+container within your AWS environment has launched an interactive shell. Under certain
+circumstances, this scenario may indicate post-exploitation behavior. Interactive shells allow
+attackers to execute arbitrary commands on a compromised instance or container.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty console.
+Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+You can view the network-accessible process information in the parent process details.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/ElevationToRoot
+
+### A process running on the listed Amazon EC2 instance or container has assumed root privileges.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed Amazon EC2 or in the listed
+container within your AWS environment has assumed root privileges through unusual or
+suspicious setuid binary execution. This indicates that a running process has been
+potentially compromised, for the EC2 instance through an exploit, or through
+setuid exploitation. By using the root privileges, the attacker can potentially
+execute commands on the instance or the container.
+
+While GuardDuty is designed to not generate this finding type for activities involving regular
+use of the sudo command, it will generate this finding when it identifies the
+activity as unusual or suspicious.
+
+GuardDuty examines related runtime activity and context, and generates this finding type only
+when the associated activity and context are unusual or suspicious.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Discovery:Runtime/SuspiciousCommand
+
+### A suspicious command has been executed on an Amazon EC2 instance or in a container, which allows an attacker to gain information about the local system, surrounding AWS infrastructure, or container infrastructure.
+
+Default severity: Low
+
+Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed Amazon EC2 instance or container in your AWS
+environment has executed a command that might provide an attacker with crucial information
+to potentially advance the attack. The following information may have been retrieved:
+
+- Local system such as user or network configuration,
+
+- Other available AWS resources and permissions, or
+
+- Kubernetes infrastructure such as services and pods.
+
+The Amazon EC2 instance or the container that is listed in the finding detail might have been compromised.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the potentially compromised
+resource, view Resource type in the findings details in the GuardDuty
+console. You can find the details about the suspicious command in the service.runtimeDetails.context
+field of the finding JSON. Additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Persistence:Runtime/SuspiciousCommand
+
+### A suspicious command has been executed on an Amazon EC2 instance or in a container, which allows an attacker to persist access and control in your AWS environment.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed Amazon EC2 instance or in a container
+within your AWS environment has executed a suspicious command. The command installs a persistence method which allows malware
+to run uninterruptedly, or allows an attacker to continuously access the potentially compromised instance
+or container resource type. This could potentially mean that a system service has been installed
+or modified, the crontab has been modified, or a new user has been added
+to the system configuration.
+
+GuardDuty examines related runtime activity and context, and generates this finding type only
+when the associated activity and context are unusual or suspicious.
+
+The Amazon EC2 instance or the container that is listed in the finding detail might have been compromised.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the potentially compromised
+resource, view Resource type in the findings details in the GuardDuty
+console. You can find the details about the suspicious command in the service.runtimeDetails.context
+field of the finding JSON. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/SuspiciousCommand
+
+### A suspicious command has been executed on an Amazon EC2 instance or in a container, which allows an attacker to escalate privileges.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a process running on the listed Amazon EC2 instance
+or in a container within your AWS environment has executed a suspicious command. The command attempts to perform privilege escalation, which
+allows an adversary to perform high privilege tasks.
+
+GuardDuty examines related runtime activity and context, and generates this finding type only
+when the associated activity and context are unusual or suspicious.
+
+The Amazon EC2 instance or the container that is listed in the finding detail might have been compromised.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/KernelModuleLoaded
+
+### A kernel module was loaded on an Amazon EC2 instance, indicating an attempt to gain kernel-level access.
+
+Default severity: High
+
+- Feature: Runtime Monitoring
+
+This finding indicates that a kernel module was loaded on the listed EC2 instance. Since kernel modules
+have the highest system-level privileges (ring 0), this could indicate that a threat actor has gained kernel-level access.
+This level of access allows complete control over the system.
+
+The GuardDuty runtime agent monitors events from multiple resources. To identify the affected
+resource, view Resource type in the findings details in the GuardDuty
+console. When applicable, additional context, including process and process lineage information, is available
+in the finding for further investigation.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## Persistence:Runtime/SensitiveFileModified
+
+### A security-sensitive system file has been modified on an Amazon EC2 instance or a container, potentially enabling an adversary to gain persistence.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a security-sensitive system file on an Amazon EC2 instance or
+container has been modified, potentially enabling an adversary to maintain persistent execution
+rights on the system. This could include installation of new SSH key files, changes to user
+configuration files, modifications to password or shadow files, creation of scheduled tasks,
+manipulation of system startup scripts, or modification of executable or script files by web
+service processes in suspicious contexts. These modifications are indicators of compromise that
+could enable unauthorized persistence in your environment.
+
+GuardDuty monitors security-sensitive system files frequently targeted by adversaries for
+persistence. Since these files may also be
+modified during legitimate system administration and management, GuardDuty examines related runtime
+activity and context to generate this finding only when modifications are correlated with other
+suspicious activities.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. The service.runtimeDetails.context field contains details
+about the suspicious file modification, including the file path and operation type.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## PrivilegeEscalation:Runtime/SensitiveFileModified
+
+### A security-sensitive system file has been modified on an Amazon EC2 instance or container, potentially enabling an adversary to elevate privileges.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a security-sensitive system file has been modified on an
+Amazon EC2 instance or container, potentially enabling an adversary to elevate their privileges on
+the system. This could involve modifications to security-critical files such as sudoers
+configuration, PAM settings, or system authentication files. These modifications are indicators
+of compromise that could enable unauthorized privilege escalation, potentially resulting in
+unauthorized root access, weakened authentication mechanisms, or compromised security
+controls.
+
+GuardDuty monitors security-sensitive system files frequently targeted by adversaries for
+privilege escalation. Since these files may
+also be modified during legitimate system administration and management, GuardDuty examines related
+runtime activity and context to generate this finding only when modifications are correlated
+with other suspicious activities.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. The service.runtimeDetails.context field contains details
+about the suspicious file modification, including the file path and operation type.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.
+
+## DefenseEvasion:Runtime/SensitiveFileModified
+
+### A security-sensitive system file has been modified on an Amazon EC2 instance or a container, potentially enabling an adversary to evade detection.
+
+Default severity: Medium
+
+- Feature: Runtime Monitoring
+
+This finding informs you that a security-sensitive system file on an Amazon EC2 instance or
+container has been modified, potentially enabling an adversary to evade detection on the system.
+This could involve modifications to system log files, audit configurations, command history
+files, or system logs. These modifications are indicators of compromise that could allow
+concealment of unauthorized activities, disruption of security monitoring, or removal of system
+activity evidence.
+
+GuardDuty monitors security-sensitive system files frequently targeted by adversaries for
+defense evasion. Since these files may also
+be modified during legitimate system administration and management, GuardDuty examines related
+runtime activity and context to generate this finding only when modifications are correlated
+with other suspicious activities.
+
+The GuardDuty runtime agent monitors events from multiple resource types. To identify the
+potentially compromised resource, view Resource type in the findings panel
+in the GuardDuty console. The service.runtimeDetails.context field contains details
+about the suspicious file modification, including the file path and operation type.
+
+Remediation recommendations:
+
+If this activity is unexpected, your resource might have been compromised. For more
+information, see Remediating Runtime Monitoring findings.

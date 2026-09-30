@@ -1,0 +1,70 @@
+URL: https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html
+TITLE: Query Amazon VPC flow logs - Amazon Athena
+
+# Query Amazon VPC flow logs
+
+Amazon Virtual Private Cloud flow logs capture information about the IP traffic going to and from network
+interfaces in a VPC. Use the logs to investigate network traffic patterns and identify
+threats and risks across your VPC network.
+
+To query your Amazon VPC flow logs, you have two options:
+
+- Amazon VPC Console – Use the Athena integration
+feature in the Amazon VPC Console to generate an CloudFormation template that creates an Athena
+database, workgroup, and flow logs table with partitioning for you. The template
+also creates a set of predefined
+flow log queries that you can use to obtain insights about the traffic
+flowing through your VPC.
+
+For information about this approach, see Query flow logs using
+Amazon Athena in the Amazon VPC User Guide.
+
+- Amazon Athena console – Create your tables and
+queries directly in the Athena console. For more information, continue reading this
+page.
+
+Before you begin querying the logs in Athena, enable VPC flow
+logs, and configure them to be saved to your Amazon S3 bucket. After you create the
+logs, let them run for a few minutes to collect some data. The logs are created in a GZIP
+compression format that Athena lets you query directly.
+
+When you create a VPC flow log, you can use a custom format when you want to specify the
+fields to return in the flow log and the order in which the fields appear. For more
+information about flow log records, see Flow log records in the
+Amazon VPC User Guide.
+
+## Considerations and limitations
+
+When you create tables in Athena for Amazon VPC flow logs, remember the following
+points:
+
+- By default, in Athena, Parquet will access columns by name. For more
+information, see Handle schema updates.
+
+- Use the names in the flow log records for the column names in Athena. The names
+of the columns in the Athena schema should exactly match the field names in the
+Amazon VPC flow logs, with the following differences:
+
+- Replace the hyphens in the Amazon VPC log field names with underscores in
+the Athena column names. For information about acceptable characters for
+database names, table names, and column names in Athena, see Name databases, tables, and columns.
+
+- Escape the flow log record names that are reserved
+keywords in Athena by enclosing them with backticks.
+
+- VPC flow logs are AWS account specific. When you publish your log files to
+Amazon S3, the path that Amazon VPC creates in Amazon S3 includes the ID of the AWS account
+that was used to create the flow log. For more information, see Publish
+flow logs to Amazon S3 in the Amazon VPC User Guide.
+
+Topics
+
+- Create a table for Amazon VPC flow logs and query it
+
+- Create tables for flow logs in Apache Parquet format
+
+- Create and query a table for Amazon VPC flow logs using partition projection
+
+- Create tables for flow logs in Apache Parquet format using partition projection
+
+- Additional resources

@@ -1,0 +1,195 @@
+URL: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-actions.html
+TITLE: Alarm actions - Amazon CloudWatch
+
+# Alarm actions
+
+You can specify what actions an alarm takes when it changes state between the OK, ALARM, and INSUFFICIENT_DATA states.
+
+Most actions can be set for the transition into each of the 3 states. Except for Auto Scaling actions, the actions happen only on state transitions, and are not performed again if the condition persists for hours or days.
+
+The following are supported as alarm actions:
+
+- Notify one or more subscribers by using an Amazon Simple Notification Service topic. Subscribers can be applications as well as persons.
+
+- Invoke a Lambda function. This is the easiest way for you to automate custom actions on alarm state changes.
+
+- Alarms based on EC2 metrics can also perform EC2 actions, such as stopping, terminating, rebooting, or recovering an EC2 instance.
+
+- Alarms can perform actions to scale an Auto Scaling group.
+
+- Alarms can create OpsItems in Systems Manager Ops Center or create incidents in AWS Systems Manager Incident Manager. These actions are performed only when the alarm goes into ALARM state.
+
+- An alarm can start an investigation when it goes into ALARM state.
+
+Alarms also emit events to Amazon EventBridge when they change state, and you can set up Amazon EventBridge to trigger other actions for these state changes.
+
+## Alarm actions and notifications
+
+The following table shows the actions executed for alarms along with
+their behavior for multiple time series (or contributors) alarms:
+
+Action Type
+
+Metrics Insights Multiple Time Series Alarm support
+
+PromQL Alarm support
+
+Log Alarm support
+
+More Information
+
+SNS notifications
+
+Contributor Level
+
+Contributor Level
+
+Contributor Level
+
+Amazon SNS event destinations
+
+EC2 actions (stop, terminate, reboot, recover)
+
+Not supported
+
+Not supported
+
+Not supported
+
+Stop, terminate, reboot, or recover an EC2 instance
+
+Auto Scaling actions
+
+Not supported
+
+Alarm Level1
+
+Not supported
+
+Step and simple
+scaling policies for Amazon EC2 Auto Scaling
+
+Systems Manager OpsItem creation
+
+Alarm Level
+
+Not supported
+
+Alarm Level
+
+Configure CloudWatch alarms to create OpsItems
+
+Systems Manager Incident Manager incidents
+
+Alarm Level
+
+Not supported
+
+Not supported
+
+Creating incidents automatically with CloudWatch alarms
+
+Lambda function invocation
+
+Contributor Level
+
+Contributor Level
+
+Contributor Level
+
+Invoke a Lambda function from an alarm
+
+CloudWatch investigations investigation
+
+Alarm Level
+
+Not supported
+
+Not supported
+
+Start a CloudWatch investigations from an alarm
+
+1 PromQL alarms support only Application Auto Scaling actions.
+
+The content of alarm notifications differs depending on the alarm type:
+
+- Single-metric alarms include both a state reason and detailed state reason data,
+showing the specific datapoints that caused the state change.
+
+- Multi-time series Metrics Insights alarms provide a simplified state
+reason for each contributor, without the detailed state reason data block.
+
+- PromQL alarms do not include a state reason or state reason data in their
+notifications.
+
+- Log alarms without contributors (single-value) include both a state reason and
+detailed state reason data, showing the query results evaluated.
+
+- Log alarms with contributors (using a BY clause) provide a simplified
+state reason for each contributor, without the detailed state reason data block.
+
+Example Notification Content Examples
+
+Single-metric alarm notification includes detailed data:
+
+{
+"stateReason": "Threshold Crossed: 3 out of the last 3 datapoints [32.6 (03/07/25 08:29:00), 33.8 (03/07/25 08:24:00), 41.0 (03/07/25 08:19:00)] were greater than the threshold (31.0)...",
+"stateReasonData": {
+"version": "1.0",
+"queryDate": "2025-07-03T08:34:06.300+0000",
+"startDate": "2025-07-03T08:19:00.000+0000",
+"statistic": "Average",
+"period": 300,
+"recentDatapoints": [41, 33.8, 32.6],
+"threshold": 31,
+"evaluatedDatapoints": [
+{
+"timestamp": "2025-07-03T08:29:00.000+0000",
+"sampleCount": 5,
+"value": 32.6
+}
+// Additional datapoints...
+]
+}
+}
+
+Multiple time series Metrics Insights Alarm SNS notification for Contributor example:
+
+{
+"AlarmName": "DynamoDBInsightsAlarm",
+"NewStateValue": "ALARM",
+"NewStateReason": "Threshold Crossed: 1 datapoint was less than the threshold (1.0). The most recent datapoint which crossed the threshold: [0.0 (01/12/25 13:34:00)].",
+"StateChangeTime": "2025-12-01T13:42:04.919+0000",
+"OldStateValue": "OK",
+"AlarmContributorId": "6d442278dba546f6",
+"AlarmContributorAttributes": {
+"TableName": "example-dynamodb-table-name"
+}
+// Additional information...
+}
+
+PromQL Alarm SNS notification for Contributor example:
+
+{
+"AlarmName": "HighCPUUsageAlarm",
+"NewStateValue": "ALARM",
+"StateChangeTime": "2025-12-01T13:42:04.919+0000",
+"OldStateValue": "OK",
+"AlarmContributorId": "1d502278dcd546a1",
+"AlarmContributorAttributes": {
+"team": "example-team-name"
+}
+// Additional information...
+}
+
+## Muting Alarm Actions
+
+Alarm mute rules allow you to automatically mute alarm actions during predefined time windows, such as maintenance periods or operational events. CloudWatch continues monitoring alarm states while preventing unwanted notifications. For more information, see Alarm Mute Rules.
+
+Mute rules versus disabling alarm actions
+
+Alarm mute rules temporarily mute actions during scheduled time windows and automatically unmute when the window ends. In contrast, the DisableAlarmActions API permanently disables alarm actions until you manually call EnableAlarmActions. The EnableAlarmActions API does not unmute alarms that are muted by active mute rules.
+
+Note
+
+Muting an alarm does not stop CloudWatch from sending alarm events for alarm create, update, delete, and state changes to Amazon EventBridge.

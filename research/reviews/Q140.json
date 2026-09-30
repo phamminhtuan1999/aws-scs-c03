@@ -1,0 +1,292 @@
+{
+  "question_id": "Q140",
+  "question_content_hash": "665077dfef00acc6cf5e73da5695e7327eda33f2c65ebc21709b6cccb4b1efab",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:22:58+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phát hiện bất thường (anomaly) trong application logs của ứng dụng trên EKS một cách tự động.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Gần thời gian thực (near real time).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Gửi thông báo về bất thường cho security team.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q140:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Container Insights chủ yếu tạo metric hiệu năng (CPU, memory, network...); alarm mô tả không gắn với nội dung application log nên không phát hiện bất thường trong log; thêm Lambda để báo tin là tự xây thêm code.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref5",
+        "ref8"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q140:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Đưa log container vào CloudWatch Logs (Fluent Bit), metric filter biến log thành metric, alarm dùng threshold type Anomaly detection trên metric đó và action SNS để báo security team: tự động, gần real time.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q140:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Export log sang S3 rồi chạy Athena query và xem dashboard QuickSight là phân tích theo lô/thủ công, không tự động phát hiện bất thường gần real time; cũng không nêu cái gì kích hoạt SNS.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q140:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Detective dùng CloudTrail, VPC Flow Logs, GuardDuty findings (tuỳ chọn EKS audit logs) để điều tra, không phân tích application log và không phải dịch vụ gửi cảnh báo; App Mesh còn bị ngừng hỗ trợ từ 30/09/2026.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q140:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu CloudWatch xác nhận từng mắt xích của B: metric filter -> metric có thể đặt alarm, alarm kiểu anomaly detection, action SNS. Các option khác không phân tích log tự động gần real time hoặc không dùng đúng nguồn dữ liệu.",
+      "open_issues": [
+        "Cụm 'Configure Amazon EKS to send application logs' thực tế cần Fluent Bit/CloudWatch Observability add-on chứ không phải EKS control plane logging.",
+        "CloudWatch Logs còn có tính năng log anomaly detection riêng, nhưng không xuất hiện trong các option."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T20:22:58+00:00"
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Create_Anomaly_Detection_Alarm.html",
+      "title": "Create a CloudWatch alarm based on anomaly detection",
+      "section": "intro",
+      "snapshot_id": "25610b63106a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can create an alarm based on CloudWatch anomaly detection, which analyzes past metric data and creates a model of expected values.",
+      "supports": "Alarm có thể dùng anomaly detection làm ngưỡng (lựa chọn B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html",
+      "title": "Creating metrics from log events using filters",
+      "section": "intro",
+      "snapshot_id": "18614a309935",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudWatch Logs uses these metric filters to turn log data into numerical CloudWatch metrics that you can graph or set an alarm on.",
+      "supports": "Metric filter biến log thành metric để đặt alarm (lựa chọn B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-actions.html",
+      "title": "Alarm actions",
+      "section": "intro",
+      "snapshot_id": "d92b3ae325a5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Notify one or more subscribers by using an Amazon Simple Notification Service topic.",
+      "supports": "Alarm gửi thông báo qua SNS tới security team.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-EKS-logs.html",
+      "title": "Send logs to CloudWatch Logs",
+      "section": "intro",
+      "snapshot_id": "fb180901182e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To send logs from your containers to Amazon CloudWatch Logs, you can use Fluent Bit.",
+      "supports": "Application log của container trên EKS có thể đưa vào CloudWatch Logs.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights.html",
+      "title": "Container Insights",
+      "section": "intro",
+      "snapshot_id": "5c893291b82f",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "CloudWatch automatically collects metrics for many resources, such as CPU, memory, disk, and network.",
+      "supports": "Metric của Container Insights là metric hiệu năng, không phải phân tích nội dung application log (lựa chọn A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/detective/latest/userguide/detective-source-data-about.html",
+      "title": "Source data used in a Detective behavior graph",
+      "section": "Types of core data sources in Detective",
+      "snapshot_id": "2dd9e59fe851",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Detective ingests data from these types of AWS logs:",
+      "supports": "Detective chỉ ingest các nguồn log AWS cụ thể (CloudTrail, VPC Flow Logs, GuardDuty...), không phải application log (lựa chọn D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/app-mesh/latest/userguide/what-is-app-mesh.html",
+      "title": "What Is AWS App Mesh?",
+      "section": "Important",
+      "snapshot_id": "0fb9fd13f202",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "On September 30, 2026, AWS will discontinue support for AWS App Mesh.",
+      "supports": "App Mesh bị ngừng hỗ trợ, thêm lý do loại D.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-actions.html",
+      "title": "Alarm actions",
+      "section": "intro",
+      "snapshot_id": "d92b3ae325a5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Invoke a Lambda function. This is the easiest way for you to automate custom actions on alarm state changes.",
+      "supports": "Alarm có thể gọi Lambda (A khả thi về mặt action) nhưng đây là custom action, SNS là cách thông báo trực tiếp.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Chuỗi chuẩn: log -> CloudWatch Logs -> metric filter -> alarm (Anomaly detection) -> SNS.",
+  "last_reviewed_at": "2026-09-30T20:30:46+00:00",
+  "blind_record_sha256": "0517b501f70ac680b9a81ce976be62aa6f56bce27cc19e4a5a45ccd9b839d434",
+  "source_answer": [
+    "Q140:B"
+  ],
+  "researched_answer": [
+    "Q140:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Doc CloudWatch xác nhận từng mắt xích của B: metric filter biến log thành metric có thể đặt alarm, alarm dùng anomaly detection làm ngưỡng, alarm action gửi SNS. A không phân tích nội dung log, C là phân tích theo lô/thủ công, D dùng dịch vụ không xử lý application log.",
+    "open_issues": [
+      "'Configure Amazon EKS to send application logs' thực tế cần Fluent Bit / CloudWatch Observability add-on, không phải EKS control plane logging.",
+      "CloudWatch Logs có tính năng log anomaly detection riêng nhưng không xuất hiện trong các option."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, trùng blind. Đã xét lại A (đối thủ mạnh nhất vì Container Insights trên EKS cũng thu log qua Fluent Bit): alarm trong A không gắn với metric nào lấy từ nội dung application log; metric của Container Insights là metric hiệu năng (CPU, memory...), nên 'anomaly' ở A là bất thường hiệu năng chứ không phải bất thường trong log, và còn phải tự viết Lambda để báo tin. B có chuỗi đầy đủ được doc xác nhận: log -> metric filter -> alarm threshold type anomaly detection -> SNS. C (S3 + Athena + QuickSight) không tự động, không near real time. D: Detective không phân tích application log, App Mesh ngừng hỗ trợ 30/09/2026. Giữ B, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Log ứng dụng EKS được đưa vào CloudWatch Logs; metric filter biến log thành metric, alarm dùng threshold type Anomaly detection trên metric đó sẽ tự động phát hiện bất thường gần thời gian thực, và alarm action gửi thông báo qua Amazon SNS tới security team.",
+    "others": {
+      "Q140:A": "Container Insights chủ yếu tạo metric hiệu năng; alarm không dựa trên nội dung application log nên không phát hiện bất thường trong log, lại phải tự viết Lambda để báo tin.",
+      "Q140:C": "Export sang S3 rồi chạy Athena và xem QuickSight là phân tích theo lô, thủ công, không tự động phát hiện bất thường gần thời gian thực.",
+      "Q140:D": "Detective điều tra dựa trên CloudTrail, VPC Flow Logs, GuardDuty findings chứ không phân tích application log hay gửi cảnh báo; App Mesh cũng đã ngừng hỗ trợ."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "automatic detection of anomalies in application logs",
+      "meaning_vi": "Tự động phát hiện bất thường trong log -> metric filter + alarm anomaly detection."
+    },
+    {
+      "phrase": "near real time",
+      "meaning_vi": "Loại các phương án phân tích theo lô (S3 + Athena + QuickSight)."
+    },
+    {
+      "phrase": "send notifications",
+      "meaning_vi": "Alarm action gửi SNS tới security team."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần tự động phát hiện bất thường trong log ứng dụng gần real time và báo tin -> nghĩ đến CloudWatch Logs + metric filter + alarm anomaly detection + SNS; kiểm tra Athena/QuickSight là phân tích theo lô, Detective không đọc application log.",
+  "tags": {
+    "domains": [
+      "1 Detection"
+    ],
+    "services": [
+      "Amazon EKS",
+      "Amazon CloudWatch Logs",
+      "Amazon CloudWatch",
+      "Amazon SNS"
+    ],
+    "reason_vi": "Giám sát log, phát hiện bất thường và cảnh báo thuộc Detection."
+  },
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:22:58+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q140:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:30:46+00:00",
+      "change": "Reconciliation: khớp source key B; status verified (high); đáp án không đổi; không thêm tham chiếu mới.",
+      "previous_answer": [
+        "Q140:B"
+      ]
+    }
+  ]
+}

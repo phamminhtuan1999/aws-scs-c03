@@ -1,0 +1,54 @@
+{
+  "question_id": "Q130",
+  "question_content_hash": "d48692e6c96e1b85128637eb1d9841dc4e809a2cce443dd5d16e29cd07eeaeca",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:50+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Developer chỉ được launch EC2 với phần mềm đã được phê duyệt (phải ngăn chặn, không chỉ khuyến nghị).", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Chỉ launch trong software development account.", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q130:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đưa template cho developer không hạn chế quyền: họ vẫn gọi RunInstances trực tiếp với AMI bất kỳ. Ngoài ra chọn AMI theo Region thường dùng Mappings, còn Conditions chỉ quyết định resource có được tạo hay không.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q130:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Chỉ cài thêm phần mềm được duyệt sau khi instance chạy; không ngăn/không gỡ phần mềm chưa được duyệt có sẵn trong AMI, nên không bảo đảm 'chỉ phần mềm được duyệt'.",
+     "requirement_ids": ["R1"], "reference_ids": [], "evidence_kind": "inference"},
+    {"unit_id": "Q130:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Service Catalog portfolio chứa product EC2 với AMI đã duyệt; developer chỉ có quyền dùng portfolio (launch constraint dùng launch role), nên chỉ triển khai được sản phẩm được phê duyệt trong account dev.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q130:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Cho developer quyền trong management account và StackSets triển khai tới mọi account trong organization, trái yêu cầu chỉ trong software development account và vi phạm least privilege.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q130:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Service Catalog là dịch vụ được thiết kế để end user chỉ triển khai IT service đã phê duyệt mà không cần quyền trực tiếp vào service nền; các phương án khác không ngăn chặn hoặc sai phạm vi account.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:21:50+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/introduction.html", "title": "What Is Service Catalog?", "section": "Introduction", "snapshot_id": "1f5b36ff0a64", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "End users can quickly deploy only the approved IT services they need, following the constraints set by your organization.",
+     "supports": "Service Catalog giới hạn developer chỉ triển khai sản phẩm (AMI) đã phê duyệt.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints-launch.html", "title": "AWS Service Catalog Launch Constraints", "section": "Launch constraints", "snapshot_id": "96a1ccb0ea52", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "By using a launch role, you can instead limit the end users' permissions to the minimum they require for that product.",
+     "supports": "Developer chỉ cần quyền Service Catalog, không cần quyền EC2 trực tiếp - ngăn launch AMI chưa duyệt.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html", "title": "Managing stacks across accounts and Regions with StackSets", "section": "Overview", "snapshot_id": "1da0ec354d4d", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "create, update, or delete stacks across multiple accounts and AWS Regions with a single operation.",
+     "supports": "StackSets nhằm triển khai nhiều account - trái với phạm vi chỉ account dev (D).", "kind": "inference"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html", "title": "CloudFormation template Mappings syntax", "section": "Mappings", "snapshot_id": "d61e5fab89cf", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "One common use case for the Mappings section is to set values based on the AWS Region where the stack is deployed.",
+     "supports": "Chọn AMI theo Region dùng Mappings, không phải Conditions (A mô tả cơ chế lệch).", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html", "title": "CloudFormation template Conditions syntax", "section": "Conditions", "snapshot_id": "231c32a27060", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The optional Conditions section contains statements that define the circumstances under which entities are created or configured.",
+     "supports": "Conditions không phải cơ chế kiểm soát quyền launch; template không ngăn developer launch AMI khác (A).", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": ""
+}

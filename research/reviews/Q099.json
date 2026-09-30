@@ -1,0 +1,301 @@
+{
+  "question_id": "Q099",
+  "question_content_hash": "5db2da61761571d2e7f74339cd7c2df78a0429ec16aea05bd3bf4c110487ca19",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:55:42Z",
+  "last_reviewed_at": "2026-09-30T20:14:24Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "5a8236fc6bca27290ff21912db7a91bac5d0e26b95ccd02e914a588a6d30ef7c",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Tự động quản lý vòng đời dữ liệu trong nhiều S3 bucket.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Sau 90 ngày dữ liệu hiếm khi dùng -> chuyển sang lớp lưu trữ rẻ hơn.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Khi cần truy cập, dữ liệu phải sẵn sàng trong vài giờ (a few hours).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Dữ liệu phải bị xóa sau 2 năm (xóa chính object, không chỉ phiên bản cũ).",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q099:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Amazon Data Lifecycle Manager chỉ tự động tạo/giữ/xóa EBS snapshot và EBS-backed AMI; không quản lý S3 object hay chuyển lớp lưu trữ S3.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q099:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Default policy của Data Lifecycle Manager dành cho EBS snapshot/AMI, không áp dụng cho S3; thêm nữa Deep Archive (standard ~12 giờ) và chỉ xóa noncurrent version cũng không khớp yêu cầu.",
+      "requirement_ids": [
+        "R1",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q099:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "S3 Lifecycle chuyển object sang Glacier Flexible Retrieval sau 90 ngày (Standard retrieval 3–5 giờ, đáp ứng 'vài giờ') và Expiration action xóa object sau 2 năm.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref4",
+        "ref7",
+        "ref8"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q099:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Deep Archive standard retrieval thường tới 12 giờ (bulk 48 giờ), khó đáp ứng 'vài giờ'; và chỉ expire noncurrent version nên current object không bao giờ bị xóa sau 2 năm.",
+      "requirement_ids": [
+        "R3",
+        "R4"
+      ],
+      "reference_ids": [
+        "ref3",
+        "ref5",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q099:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "DLM chỉ cho EBS; Glacier Flexible Retrieval có standard retrieval 3–5 giờ; Expiration action xóa current object, NoncurrentVersionExpiration chỉ xóa phiên bản cũ.",
+      "open_issues": [
+        "Nếu bucket bật versioning, Expiration chỉ tạo delete marker cho current version; đề không nói bucket có versioning."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T19:55:42Z"
+  },
+  "source_answer": [
+    "Q099:C"
+  ],
+  "researched_answer": [
+    "Q099:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. DLM chỉ quản lý EBS snapshot/AMI; S3 Lifecycle hỗ trợ transition Standard -> Glacier Flexible Retrieval (standard retrieval 3–5 giờ) và Expiration xóa object; D chỉ expire noncurrent version và Deep Archive cần ~12 giờ.",
+    "open_issues": [
+      "Nếu bucket bật versioning, Expiration chỉ tạo delete marker cho current version; cần thêm NoncurrentVersionExpiration để xóa hẳn. Đề không nêu versioning nên không đổi đáp án."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Đã xét lại D (phương án cạnh tranh mạnh nhất vì cũng dùng S3 Lifecycle): D chỉ expire noncurrent version nên current object không bao giờ bị xóa sau 2 năm – thất bại yêu cầu xóa bất kể thời gian truy xuất; thêm nữa Deep Archive standard retrieval ~12 giờ (ref6). Kiểm tra thêm bảng transition hợp lệ (ref7) và cách Expiration hoạt động với bucket có versioning (ref8) – chỉ là điều kiện phụ. A/B dùng Data Lifecycle Manager vốn chỉ cho EBS snapshot/AMI. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "S3 Lifecycle configuration tự động chuyển object sang S3 Glacier Flexible Retrieval sau 90 ngày (Standard retrieval thường 3–5 giờ, đáp ứng 'vài giờ') và rule Expiration xóa object sau 2 năm.",
+    "others": {
+      "Q099:A": "Amazon Data Lifecycle Manager chỉ quản lý EBS snapshot và EBS-backed AMI, không quản lý object S3.",
+      "Q099:B": "Data Lifecycle Manager không áp dụng cho S3; thêm nữa Deep Archive cần ~12 giờ và chỉ xóa noncurrent version.",
+      "Q099:D": "Đúng công cụ nhưng chỉ expire noncurrent version nên object hiện hành không bị xóa sau 2 năm, và Deep Archive thường cần tới ~12 giờ để truy xuất."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "available within a few hours",
+      "meaning_vi": "Truy xuất vài giờ -> Glacier Flexible Retrieval (3–5 giờ), không phải Deep Archive (~12 giờ)."
+    },
+    {
+      "phrase": "deleted after 2 years",
+      "meaning_vi": "Cần Expiration action cho object hiện hành, không chỉ noncurrent version."
+    },
+    {
+      "phrase": "several Amazon S3 buckets",
+      "meaning_vi": "Vòng đời object S3 -> S3 Lifecycle configuration trên từng bucket (không phải DLM)."
+    }
+  ],
+  "memory_tip_vi": "Nếu dữ liệu S3 cần lưu trữ rẻ nhưng truy xuất trong vài giờ -> nghĩ đến S3 Lifecycle sang Glacier Flexible Retrieval + Expiration; kiểm tra Deep Archive ~12 giờ và NoncurrentVersionExpiration không xóa object hiện hành.",
+  "tags": {
+    "domains": [
+      "5 Data Protection"
+    ],
+    "services": [
+      "Amazon S3",
+      "Amazon S3 Glacier",
+      "Amazon Data Lifecycle Manager"
+    ],
+    "reason_vi": "Quản lý vòng đời và lưu giữ/xóa dữ liệu trong S3."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/snapshot-lifecycle.html",
+      "title": "Automate backups with Amazon Data Lifecycle Manager - Amazon EBS",
+      "section": "Automate backups with Amazon Data Lifecycle Manager",
+      "snapshot_id": "08b11888c579",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use Amazon Data Lifecycle Manager to automate the creation, retention, and deletion of EBS snapshots and EBS-backed AMIs.",
+      "supports": "DLM chỉ quản lý EBS snapshot và AMI, không phải S3 object.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/ebs/latest/userguide/policy-differences.html",
+      "title": "Amazon Data Lifecycle Manager default policies vs custom policies - Amazon EBS",
+      "section": "EBS snapshot policy comparison",
+      "snapshot_id": "ff978e72b29b",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The following table highlights the differences between the default policy for EBS snapshots and custom EBS snapshot policies.",
+      "supports": "Default/custom policy của DLM đều nói về EBS snapshot (và AMI), không có S3.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/restoring-objects-retrieval-options.html",
+      "title": "Understanding archive retrieval options - Amazon Simple Storage Service",
+      "section": "Standard retrieval",
+      "snapshot_id": "da2fee77e2fa",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Standard retrievals typically finish within 3–5 hours for the S3 Glacier Flexible Retrieval storage class",
+      "supports": "Glacier Flexible Retrieval khôi phục trong vài giờ; cùng đoạn nêu Deep Archive standard khoảng 12 giờ.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html",
+      "title": "Lifecycle configuration elements - Amazon Simple Storage Service",
+      "section": "Expiration action element",
+      "snapshot_id": "98017b531141",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Expiration action results in Amazon S3 permanently removing the object.",
+      "supports": "Expiration action xóa object (bucket không versioning).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html",
+      "title": "Lifecycle configuration elements - Amazon Simple Storage Service",
+      "section": "NoncurrentVersionExpiration action element",
+      "snapshot_id": "98017b531141",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use this action to direct Amazon S3 to permanently delete noncurrent versions of objects.",
+      "supports": "NoncurrentVersionExpiration chỉ xóa phiên bản noncurrent, không xóa current object.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/restoring-objects-retrieval-options.html",
+      "title": "Understanding archive retrieval options - Amazon Simple Storage Service",
+      "section": "Standard retrieval",
+      "snapshot_id": "da2fee77e2fa",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Standard retrievals typically finish within 12 hours for the S3 Glacier Deep Archive storage class",
+      "supports": "Deep Archive (phương án B, D) cần tới ~12 giờ với Standard retrieval, dài hơn 'vài giờ'.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html",
+      "title": "Transitioning objects using Amazon S3 Lifecycle - Amazon Simple Storage Service",
+      "section": "Supported lifecycle transitions",
+      "snapshot_id": "f079a32c5149",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The S3 Standard storage class to the S3 Standard-IA, S3 Intelligent-Tiering, S3 One Zone-IA, S3 Glacier Instant Retrieval, S3 Glacier Flexible Retrieval, or S3 Glacier Deep Archive storage classes.",
+      "supports": "S3 Lifecycle hỗ trợ chuyển từ S3 Standard sang Glacier Flexible Retrieval (hành động transition của C là hợp lệ).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html",
+      "title": "Lifecycle configuration elements - Amazon Simple Storage Service",
+      "section": "Expiration action element – Versioned bucket",
+      "snapshot_id": "98017b531141",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The Expiration action applies only to the current version (it has no impact on noncurrent object versions).",
+      "supports": "Nếu bucket có versioning, Expiration chỉ tác động current version (tạo delete marker) – điều kiện phụ, đề không nêu versioning.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "notes_vi": "Deep Archive standard retrieval ~12 giờ, bulk ~48 giờ; Flexible Retrieval standard 3–5 giờ, bulk 5–12 giờ.",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:55:42Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q099:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:14:24Z",
+      "change": "Reconciliation: khớp source key C; status verified (high); đáp án không đổi. Thêm tham chiếu mới: ref6, ref7, ref8; cập nhật reference_ids của một số option_reviews.",
+      "previous_answer": [
+        "Q099:C"
+      ]
+    }
+  ]
+}

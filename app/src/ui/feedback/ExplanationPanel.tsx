@@ -20,7 +20,8 @@ export function ExplanationPanel({ data, qid }: { data: AppData; qid: string }) 
     );
   }
   const others = Object.entries(ex?.others ?? {});
-  const refs = rv.references.filter((r) => r.url);
+  // One link per page: several references often quote different passages of the same URL.
+  const refs = rv.references.filter((r, i, all) => r.url && all.findIndex((x) => x.url === r.url) === i);
   return (
     <section className="explanation" aria-label="Explanation" lang="vi">
       <h3>Giải thích</h3>

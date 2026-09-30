@@ -1,0 +1,281 @@
+{
+  "question_id": "Q130",
+  "question_content_hash": "d48692e6c96e1b85128637eb1d9841dc4e809a2cce443dd5d16e29cd07eeaeca",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:21:50+00:00",
+  "last_reviewed_at": "2026-09-30T20:32:31+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "cb444799efe96638d53d896fd05bc89c87ccb2181bf11433365c7d80e3804c81",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Developer chỉ được launch EC2 với phần mềm đã được phê duyệt (phải ngăn chặn, không chỉ khuyến nghị).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Chỉ launch trong software development account.",
+      "kind": "scope"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q130:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Đưa template cho developer không hạn chế quyền: họ vẫn gọi RunInstances trực tiếp với AMI bất kỳ. Ngoài ra chọn AMI theo Region thường dùng Mappings, còn Conditions chỉ quyết định resource có được tạo hay không.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q130:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "EventBridge rule chỉ phản ứng sau khi RunInstances đã xảy ra; Run Command cài thêm phần mềm được duyệt nhưng không gỡ hay chặn phần mềm chưa duyệt có sẵn trong AMI, nên không bảo đảm 'chỉ phần mềm được duyệt'.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q130:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Service Catalog portfolio chứa product EC2 với AMI đã duyệt; developer chỉ có quyền dùng portfolio (product dùng launch constraint/launch role nên developer không cần quyền EC2 trực tiếp), nên chỉ triển khai được sản phẩm được phê duyệt trong account dev.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q130:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cho developer quyền trong management account và StackSets triển khai tới mọi account trong organization, trái yêu cầu chỉ trong software development account và vi phạm least privilege.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref3"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q130:C"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Service Catalog là dịch vụ được thiết kế để end user chỉ triển khai IT service đã phê duyệt mà không cần quyền trực tiếp vào service nền; các phương án khác không ngăn chặn hoặc sai phạm vi account.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:21:50+00:00"
+  },
+  "source_answer": [
+    "Q130:C"
+  ],
+  "researched_answer": [
+    "Q130:C"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Blind và source key cùng chọn C. Tài liệu Service Catalog nói trực tiếp end user chỉ triển khai được IT service đã phê duyệt và launch role cho phép giới hạn quyền của họ; A và B không ngăn chặn (chỉ là hướng dẫn/cài thêm sau), D sai phạm vi account.",
+    "open_issues": [
+      "Phương án C không nêu launch constraint; theo tài liệu, thiếu launch constraint thì end user cần quyền EC2/CloudFormation riêng - C chỉ chặt khi 'chỉ được truy cập portfolio' được hiểu là dùng launch role.",
+      "EC2 Allowed AMIs là tính năng mới hơn cũng giới hạn AMI trong account nhưng không có trong các lựa chọn."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, trùng blind. Xét lại B (blind chỉ suy luận): trang EventBridge xác nhận event 'AWS API Call via CloudTrail' là bản ghi của lệnh gọi API đã thực hiện, nên rule chỉ phản ứng sau khi instance đã launch; hành động của B chỉ cài thêm phần mềm được duyệt, bản thân câu chữ của B không gỡ/chặn phần mềm chưa duyệt có sẵn trong AMI - nên B vẫn không đáp ứng (evidence vẫn là suy luận từ chính nội dung phương án, nhưng không có cách đọc nào khiến B đạt 'only approved software'). Bổ sung trang launch constraints: không có launch constraint thì user phải có quyền riêng, nên C cần hiểu là dùng launch role - ghi vào open_issues. Ghi nhận Allowed AMIs là giải pháp mới ngoài lựa chọn. Giữ C, verified, high.",
+  "explanation_vi": {
+    "why_correct": "Service Catalog cho admin đóng gói product EC2 dùng AMI đã duyệt; developer chỉ có quyền launch product trong portfolio ở account dev (Service Catalog dùng launch role để tạo tài nguyên), nên không thể tự chọn AMI chứa phần mềm chưa duyệt.",
+    "others": {
+      "Q130:A": "Đưa template cho developer chỉ là hướng dẫn, họ vẫn có thể gọi RunInstances trực tiếp với AMI bất kỳ; chọn AMI theo Region cũng dùng Mappings chứ không phải Conditions.",
+      "Q130:B": "Chỉ cài thêm phần mềm được duyệt sau khi instance đã chạy, không chặn launch và không gỡ phần mềm chưa duyệt trong AMI.",
+      "Q130:D": "Cho developer quyền trong management account và StackSets triển khai ra các account khác, trái yêu cầu chỉ trong software development account."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "only approved software applications",
+      "meaning_vi": "Phải chặn, chỉ cho launch cấu hình/AMI đã phê duyệt."
+    },
+    {
+      "phrase": "only in the software development AWS account",
+      "meaning_vi": "Giới hạn phạm vi account; không dùng management account/StackSets toàn tổ chức."
+    },
+    {
+      "phrase": "preconfigured with software that the company has not approved",
+      "meaning_vi": "Vấn đề nằm ở AMI; cài thêm sau khi launch không giải quyết."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần người dùng chỉ triển khai được cấu hình/AMI đã phê duyệt -> nghĩ đến Service Catalog portfolio + launch constraint (người dùng không cần quyền EC2 trực tiếp); kiểm tra: đưa template hay cài thêm phần mềm sau khi launch không phải là chặn.",
+  "tags": {
+    "domains": [
+      "6 Security Foundations and Governance",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS Service Catalog",
+      "Amazon EC2",
+      "AWS Organizations"
+    ],
+    "reason_vi": "Quản trị triển khai tài nguyên đã phê duyệt và giới hạn quyền launch của developer."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/introduction.html",
+      "title": "What Is Service Catalog?",
+      "section": "Introduction",
+      "snapshot_id": "1f5b36ff0a64",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "End users can quickly deploy only the approved IT services they need, following the constraints set by your organization.",
+      "supports": "Service Catalog giới hạn developer chỉ triển khai sản phẩm (AMI) đã phê duyệt.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints-launch.html",
+      "title": "AWS Service Catalog Launch Constraints",
+      "section": "Launch constraints",
+      "snapshot_id": "96a1ccb0ea52",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "By using a launch role, you can instead limit the end users' permissions to the minimum they require for that product.",
+      "supports": "Developer chỉ cần quyền Service Catalog, không cần quyền EC2 trực tiếp - ngăn launch AMI chưa duyệt.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html",
+      "title": "Managing stacks across accounts and Regions with StackSets",
+      "section": "Overview",
+      "snapshot_id": "1da0ec354d4d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "create, update, or delete stacks across multiple accounts and AWS Regions with a single operation.",
+      "supports": "StackSets nhằm triển khai nhiều account - trái với phạm vi chỉ account dev (D).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html",
+      "title": "CloudFormation template Mappings syntax",
+      "section": "Mappings",
+      "snapshot_id": "d61e5fab89cf",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "One common use case for the Mappings section is to set values based on the AWS Region where the stack is deployed.",
+      "supports": "Chọn AMI theo Region dùng Mappings, không phải Conditions (A mô tả cơ chế lệch).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html",
+      "title": "CloudFormation template Conditions syntax",
+      "section": "Conditions",
+      "snapshot_id": "231c32a27060",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The optional Conditions section contains statements that define the circumstances under which entities are created or configured.",
+      "supports": "Conditions không phải cơ chế kiểm soát quyền launch; template không ngăn developer launch AMI khác (A).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/servicecatalog/latest/adminguide/constraints-launch.html",
+      "title": "AWS Service Catalog Launch Constraints",
+      "section": "Launch constraints",
+      "snapshot_id": "96a1ccb0ea52",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Without a launch constraint, end users must launch and manage products using their own IAM credentials.",
+      "supports": "C chặt chẽ khi developer chỉ có quyền Service Catalog và product dùng launch role; nếu không, họ cần quyền EC2 riêng và có thể bỏ qua portfolio.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-service-event-cloudtrail.html",
+      "title": "AWS service events delivered via AWS CloudTrail",
+      "section": "AWS API Call via CloudTrail",
+      "snapshot_id": "fe6ea80aa61e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Events that represent a request to a public AWS service API.",
+      "supports": "Rule EventBridge cho RunInstances phản ứng với lệnh gọi API đã xảy ra - không ngăn việc launch AMI chưa duyệt (B).",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-allowed-amis.html",
+      "title": "Control the discovery and use of AMIs in Amazon EC2 with Allowed AMIs",
+      "section": "Overview",
+      "snapshot_id": "848063e73905",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "When the criteria are enabled, users launching instances will only see and have access to AMIs that comply with the specified criteria.",
+      "supports": "Allowed AMIs là cơ chế mới hơn cũng giới hạn AMI, nhưng không có trong các lựa chọn; không làm thay đổi đáp án.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:50+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q130:C\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:32:31+00:00",
+      "change": "Reconciliation: khớp source key C; thêm ref6 (thiếu launch constraint thì user cần quyền riêng), ref7 (EventBridge phản ứng sau lệnh gọi API), ref8 (Allowed AMIs ngoài lựa chọn); status verified (high).",
+      "previous_answer": [
+        "Q130:C"
+      ]
+    }
+  ],
+  "notes_vi": ""
+}

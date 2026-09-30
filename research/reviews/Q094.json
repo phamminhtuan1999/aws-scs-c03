@@ -1,0 +1,300 @@
+{
+  "question_id": "Q094",
+  "question_content_hash": "d1925497bef531d1dc0388eecef696376b44b72fd9089dde049f0b92f3e7f32f",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:58:31Z",
+  "last_reviewed_at": "2026-09-30T20:21:46+00:00",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "f81c522a3f78c63e1872d3879d5efa38abb8e28fd45c20891957c2575065b9ca",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "AWS Support cảnh báo access key bị lộ trên một account standalone; AWS đã gắn AWSCompromisedKeyQuarantineV3 cho IAM user liên quan.",
+      "kind": "condition"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Phải xác định phạm vi (scope) sự cố: xem hoạt động API trái phép (CloudTrail).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phải triage và remediate: xoay vòng/thay access key bị lộ, xóa tài nguyên trái phép, khôi phục trạng thái an toàn.",
+      "kind": "constraint"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q094:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Xóa IAM user là một kỹ thuật containment AWS có nêu, nhưng A làm trước khi xác định phạm vi, dùng CloudWatch thay vì CloudTrail (nguồn ghi API call) và không xóa tài nguyên trái phép, nên không đạt yêu cầu scope + remediate.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7",
+        "ref4"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q094:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Khớp quy trình AWS: xem CloudTrail để xác định phạm vi, xóa tài nguyên trái phép (eradication), rotate access key của user bị lộ; gỡ quarantine policy chỉ ở bước cuối sau khi đã khắc phục. Việc được gỡ policy sau khi khắc phục không có tài liệu docs nói rõ (trang policy bảo làm theo support case).",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref4",
+        "ref5",
+        "ref2",
+        "ref1"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q094:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Gỡ AWSCompromisedKeyQuarantineV3 ngay bước đầu trong khi key bị lộ vẫn còn hiệu lực và C không hề rotate key, nên mở lại quyền cho kẻ tấn công; trang policy ghi 'Do NOT remove this policy'.",
+      "requirement_ids": [
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q094:D",
+      "unit_type": "choice",
+      "verdict": "meets_but_suboptimal",
+      "reason_vi": "Rotate key và xóa tài nguyên trái phép là đúng, nhưng scoping dựa vào CloudWatch logs – chỉ có hoạt động API nếu trail đã được cấu hình gửi sang CloudWatch Logs, điều đề không nêu; CloudTrail (Event history) mới là nguồn ghi API call của access key, nên D kém hơn B.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref8",
+        "ref5",
+        "ref2"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q094:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Hướng dẫn chính thức của AWS (Knowledge Center) liệt kê đúng các bước ở B: update access key, xem CloudTrail Event history, xóa tài nguyên trái phép. Điểm chưa chắc: trang managed policy ghi 'Do NOT remove this policy' và bảo làm theo support case, không có tài liệu công khai nói rõ khi nào được gỡ.",
+      "open_issues": [
+        "Không tìm được tài liệu công khai nói rõ được gỡ AWSCompromisedKeyQuarantineV3 sau khi khắc phục; trang policy chỉ bảo làm theo hướng dẫn trong support case."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3"
+    ],
+    "recorded_at": "2026-09-30T19:58:31Z"
+  },
+  "source_answer": [
+    "Q094:B"
+  ],
+  "researched_answer": [
+    "Q094:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Blind và source key cùng chọn B. Tài liệu docs.aws.amazon.com (AWS Security Incident Response Guide) xác nhận trực tiếp các bước của B: CloudTrail là nguồn log chính, eradication = xóa tài nguyên trái phép, rotate/xóa key. C bị bác trực tiếp bởi 'Do NOT remove this policy' và không rotate key. Giữ medium vì D chỉ khác B ở nguồn log (CloudWatch vs CloudTrail) và không có docs nói rõ thời điểm được gỡ quarantine policy.",
+    "open_issues": [
+      "Không có tài liệu docs.aws.amazon.com nói rõ được gỡ AWSCompromisedKeyQuarantineV3 sau khi khắc phục; trang policy chỉ bảo làm theo support case. Knowledge Center (re:Post) chỉ liệt kê bước kiểm tra policy, update key, xem CloudTrail Event history.",
+      "D vẫn khả thi một phần nếu CloudTrail đã được gửi sang CloudWatch Logs; B được chọn vì dùng đúng nguồn ghi API call mà đề không cần giả định thêm."
+    ]
+  },
+  "reconciliation_vi": "Source key = B, trùng blind. Blind chủ yếu dựa vào re:Post Knowledge Center nên đã tìm thêm bằng chứng docs.aws.amazon.com: AWS Security Incident Response Guide (PDF) nêu CloudTrail là nguồn log quan trọng ghi management API call, giai đoạn eradication là xóa tài nguyên trái phép và 'Rotate or delete keys', và xóa/tạo lại IAM user chỉ là kỹ thuật containment. Kiểm tra cả hai phía: (1) C gỡ policy trước khi rotate key – bị bác trực tiếp bởi trang AWSCompromisedKeyQuarantineV3 ('Do NOT remove this policy'). (2) Đối thủ mạnh nhất D: IR Guide có nhắc CloudWatch Logs như một nguồn log khả dụng, nên D không phải 'không hoạt động' mà là meets_but_suboptimal – nó dựa vào CloudWatch (chỉ có API activity nếu đã cấu hình trail → CloudWatch Logs) thay vì CloudTrail. (3) Thứ tự gỡ policy ở B: không có docs nói rõ, nhưng B gỡ ở bước CUỐI sau khi đã rotate key và xóa tài nguyên, nên không mâu thuẫn với mục đích quarantine. Giữ B, verified, medium.",
+  "explanation_vi": {
+    "why_correct": "B đi đúng quy trình ứng phó sự cố của AWS: xem CloudTrail để xác định phạm vi hành động của key bị lộ, xóa tài nguyên trái phép, rotate mọi access key của user bị gắn AWSCompromisedKeyQuarantineV3, và chỉ gỡ quarantine policy ở bước cuối khi key cũ đã vô hiệu. (Mức tin cậy medium: không có docs nói rõ thời điểm được gỡ policy.)",
+    "others": {
+      "Q094:A": "Xóa user chỉ là containment; A không xác định phạm vi bằng CloudTrail và không xóa tài nguyên trái phép.",
+      "Q094:C": "Gỡ quarantine policy trước khi rotate key (và không rotate key) mở lại quyền cho kẻ tấn công; AWS ghi 'Do NOT remove this policy'.",
+      "Q094:D": "Rotate key và xóa tài nguyên là đúng, nhưng dùng CloudWatch logs để xác định phạm vi thay cho CloudTrail – nguồn ghi API call của access key."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "compromised access key",
+      "meaning_vi": "Access key bị lộ: xem CloudTrail, rotate key, xóa tài nguyên trái phép."
+    },
+    {
+      "phrase": "determine the scope of the issue",
+      "meaning_vi": "Xác định phạm vi = xem CloudTrail (API call do key thực hiện)."
+    },
+    {
+      "phrase": "triage and remediate",
+      "meaning_vi": "Eradication: xóa tài nguyên trái phép, rotate key, sau cùng mới khôi phục trạng thái user."
+    }
+  ],
+  "memory_tip_vi": "Nếu AWS Support báo access key bị lộ và user bị gắn AWSCompromisedKeyQuarantine -> nghĩ đến CloudTrail để xác định phạm vi, xóa tài nguyên trái phép, rotate key; kiểm tra: không gỡ quarantine policy trước khi key cũ đã bị vô hiệu.",
+  "tags": {
+    "domains": [
+      "2 Incident Response",
+      "4 Identity and Access Management"
+    ],
+    "services": [
+      "AWS IAM",
+      "AWS CloudTrail",
+      "AWS Support"
+    ],
+    "reason_vi": "Ứng phó sự cố credential bị lộ: xác định phạm vi, eradication, khôi phục."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AWSCompromisedKeyQuarantineV3.html",
+      "title": "AWSCompromisedKeyQuarantineV3 - AWS Managed Policy",
+      "section": "Description",
+      "snapshot_id": "d8d2d40cfb68",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Do NOT remove this policy. Instead, please follow the instructions specified in the support case created for you regarding this event.",
+      "supports": "Không được gỡ quarantine policy trước khi thực hiện các bước khắc phục trong support case (bác C; B gỡ ở cuối).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://repost.aws/knowledge-center/potential-account-compromise",
+      "title": "What can I do if I notice unauthorized activity in my AWS account? (AWS Knowledge Center)",
+      "section": "Remediate unauthorized activity in your account",
+      "snapshot_id": "e936cc90051d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Review for unsanctioned activity, such as the creation of access keys, policies, roles, or temporary security credentials.",
+      "supports": "Quy trình AWS: update access keys bị lộ, xem CloudTrail Event history, xóa tài nguyên trái phép (khớp B).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html",
+      "title": "What Is AWS CloudTrail?",
+      "section": "intro",
+      "snapshot_id": "64383f1a6ba1",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Actions taken by a user, role, or an AWS service are recorded as events in CloudTrail.",
+      "supports": "CloudTrail là nguồn xác định phạm vi hành động của key bị lộ (A, D dùng CloudWatch).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide - AWS Technical Guide (PDF)",
+      "section": "Operations phases - Table 3",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Eradication Remove unauthorized resources or artifacts related to the security event.",
+      "supports": "Quy trình IR của AWS: sau phân tích phạm vi là eradication – xóa tài nguyên trái phép (có trong B, C, D; A thiếu).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide - AWS Technical Guide (PDF)",
+      "section": "Eradication",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Rotate or delete keys - this step removes the ability of the actor to continue performing activities within the account.",
+      "supports": "Rotate/xóa key bị lộ là bước khắc phục bắt buộc; C không rotate key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide - AWS Technical Guide (PDF)",
+      "section": "Difference #3 / log sources",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "an important log source for responding to security events is AWS CloudTrail, which tracks the management API calls made in your AWS accounts",
+      "supports": "Xác định phạm vi hành động của access key bị lộ dựa vào CloudTrail (B, C) chứ không phải CloudWatch (A, D).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide - AWS Technical Guide (PDF)",
+      "section": "Technique and access containment",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Delete and recreate the IAM user with the compromised access keys.",
+      "supports": "Xóa IAM user là một kỹ thuật containment hợp lệ, nhưng chỉ là containment – A thiếu phân tích CloudTrail và eradication.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/pdfs/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.pdf",
+      "title": "AWS Security Incident Response Guide - AWS Technical Guide (PDF)",
+      "section": "Eradication",
+      "snapshot_id": "199d3825e018",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "through available logs or automated tooling such as CloudWatch Logs and Amazon GuardDuty.",
+      "supports": "CloudWatch Logs có thể là nguồn log bổ trợ nếu đã được cấu hình, nên D không hoàn toàn vô hiệu mà chỉ kém hơn B.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q094:D",
+      "detail_vi": "\"IAM abbess keys\" là lỗi chính tả của \"IAM access keys\"."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T19:58:31Z",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q094:B\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:21:46+00:00",
+      "change": "Reconciliation: khớp source key B. Bổ sung bằng chứng docs.aws.amazon.com (AWS Security Incident Response Guide: CloudTrail là nguồn log, eradication, rotate keys, xóa user là containment) thay cho việc chỉ dựa vào Knowledge Center. Giữ D ở meets_but_suboptimal với lý do rõ hơn (IR Guide có nhắc CloudWatch Logs như nguồn log khả dụng). Giữ verified (medium).",
+      "previous_answer": [
+        "Q094:B"
+      ]
+    }
+  ]
+}

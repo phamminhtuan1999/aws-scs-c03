@@ -1,0 +1,64 @@
+{
+  "question_id": "Q125",
+  "question_content_hash": "19532dcd32c9c479b8090aec45a70ad860ecdaebfa9e2b8f35f1e7d1f5bc4300",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:24:24+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Partner bên ngoài (không dùng AWS) cần credential để truy cập EC2 Amazon Linux.", "kind": "scope"},
+    {"id": "R2", "text_vi": "EC2 chỉ truy cập được qua Systems Manager Session Manager - giải pháp phải giữ mô hình này.", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Không được tạo thêm rủi ro bảo mật mới (không mở port, không credential dài hạn, không trust quá rộng).", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q125:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Hoạt động về chức năng nhưng tạo access key dài hạn và chia sẻ cho bên thứ ba - AWS khuyến nghị dùng credential tạm thời thay cho access key dài hạn; đây là rủi ro mới, vi phạm R3.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q125:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "IAM Roles Anywhere cho workload ngoài AWS đổi X.509 certificate (do CA đăng ký làm trust anchor) lấy credential tạm thời của role; role trust rolesanywhere.amazonaws.com, profile chỉ định role, policy cho phép Session Manager - không cần credential dài hạn, không mở port.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q125:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Mở inbound port 22 và phân phát SSH key pair là tạo rủi ro mới, đi ngược mô hình chỉ dùng Session Manager (vốn không cần mở inbound port hay quản lý SSH key).",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q125:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Trust policy cho phép mọi principal assume role (chỉ lọc theo IP) là trust quá rộng; partner không có AWS identity nên cũng không thể gọi AssumeRole; EC2 Instance Connect còn cần mở inbound SSH port 22 - thêm rủi ro và bỏ mô hình Session Manager.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref6", "ref7"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q125:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu Roles Anywhere và IAM best practices chỉ rõ đây là cách cấp credential tạm thời cho workload ngoài AWS; A, C, D đều thêm rủi ro được tài liệu mô tả (access key dài hạn, mở port 22, trust '*').", "open_issues": ["Câu chữ B 'Create an IAM Roles Anywhere trust anchor in the role's trust policy' không chính xác: trust anchor là resource riêng; trust policy của role tin cậy service principal rolesanywhere.amazonaws.com (có thể thêm condition giới hạn)."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5", "ref6", "ref7"],
+    "recorded_at": "2026-09-30T20:24:24+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html", "title": "What is AWS Identity and Access Management Roles Anywhere?", "section": "intro", "snapshot_id": "8a4f014895bd", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Using IAM Roles Anywhere means you don't need to manage long-term AWS credentials for workloads running outside of AWS",
+     "supports": "Roles Anywhere cấp credential tạm thời cho bên ngoài AWS, tránh credential dài hạn.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/introduction.html", "title": "What is AWS Identity and Access Management Roles Anywhere?", "section": "Trust anchors", "snapshot_id": "8a4f014895bd", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Your workloads outside of AWS authenticate with the trust anchor using certificates issued by the trusted CA in exchange for temporary AWS credentials",
+     "supports": "Partner dùng certificate do CA của trust anchor cấp để lấy credential tạm thời.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html", "title": "The IAM Roles Anywhere trust model", "section": "Trust policy", "snapshot_id": "3fca9c1aeb64", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "must have an Assume Role Policy Document to trust the IAM Roles Anywhere service principal",
+     "supports": "Trust policy của role tin cậy service principal Roles Anywhere (không phải chứa trust anchor trực tiếp) - làm rõ câu chữ của B.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html", "title": "Security best practices in IAM", "section": "Update access keys when needed for use cases that require long-term credentials", "snapshot_id": "081fe26e1732", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Where possible, we recommend relying on temporary credentials instead of creating long-term credentials such as access keys",
+     "supports": "Chia sẻ access key IAM user (A) là credential dài hạn - không phải best practice.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html", "title": "AWS Systems Manager Session Manager", "section": "intro", "snapshot_id": "ef5123406f80", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "provides secure node management without the need to open inbound ports, maintain bastion hosts, or manage SSH keys",
+     "supports": "Session Manager không cần mở port/SSH key; C và D phá vỡ lợi ích này.", "kind": "direct"},
+    {"id": "ref6", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-prerequisites.html", "title": "Prerequisites for EC2 Instance Connect", "section": "Allow inbound SSH traffic", "snapshot_id": "016728a18651", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Ensure that the security group associated with your instance allows inbound SSH traffic on port 22",
+     "supports": "EC2 Instance Connect (D) yêu cầu mở inbound SSH port 22.", "kind": "direct"},
+    {"id": "ref7", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html", "title": "AWS JSON policy elements: Principal", "section": "intro note", "snapshot_id": "879eb6158f92", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "you can change the account to \"*\" to allow everyone to assume the role",
+     "supports": "Principal '*' trong trust policy cho phép bất kỳ ai assume role - trust quá rộng (D).", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "ambiguous", "location": "Q125:B", "detail_vi": "'Create an IAM Roles Anywhere trust anchor in the role's trust policy' không đúng cơ chế: trust anchor tạo riêng trong Roles Anywhere; trust policy của role tin cậy rolesanywhere.amazonaws.com. Không làm đổi đáp án."},
+    {"type": "typo", "location": "Q125:D", "detail_vi": "'EC2 instance Connect' viết thường chữ 'instance' (tên đúng: EC2 Instance Connect)."}
+  ],
+  "notes_vi": "Partner cần cài credential helper của Roles Anywhere và Session Manager plugin để dùng credential tạm thời với Session Manager."
+}

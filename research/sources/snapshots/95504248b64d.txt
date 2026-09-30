@@ -1,0 +1,643 @@
+URL: https://aws.amazon.com/guardduty/faqs/
+TITLE: Intelligent Threat Detection – Amazon GuardDuty FAQs – Amazon Web Services
+
+Amazon GuardDuty
+
+- Overview
+
+- Features
+
+- Pricing
+
+- Getting started
+
+- Resources
+
+- Security Hub
+
+- Partners
+
+- Customers
+
+# Amazon GuardDuty FAQs
+
+- Service overview
+
+10
+
+- Enabling GuardDuty
+
+8
+
+- Activating GuardDuty
+
+10
+
+- GuardDuty S3 Protection
+
+6
+
+- GuardDuty EKS Protection
+
+15
+
+- GuardDuty Runtime Monitoring
+
+14
+
+- GuardDuty Malware Protection
+
+25
+
+- GuardDuty RDS Protection
+
+7
+
+- GuardDuty Lambda Protection
+
+5
+
+- GuardDuty Extended Threat Detection
+
+12
+
+- GuardDuty AI Protection
+
+2
+
+### Service overview
+Open all
+
+#### What is Amazon GuardDuty?
+
+GuardDuty is an intelligent threat detection service that continuously monitors your AWS accounts, workloads, runtime activity, and data for malicious activity. If potential malicious activity, such as anomalous behavior, credential exfiltration, or command and control infrastructure (C2) communication is detected, GuardDuty generates detailed security findings that can be used for security visibility and assisting in remediation.
+
+#### What are the key benefits of GuardDuty?
+
+GuardDuty makes it easier to continuously monitor your AWS accounts, workloads, and runtime activity. GuardDuty is designed to operate completely independently from your resources and have no performance or availability impact to your workloads. The service is fully managed with integrated threat intelligence, machine learning (ML) anomaly detection, and malware scanning. GuardDuty delivers detailed and actionable alerts that are designed to be integrated with existing event management and workflow systems. There are no upfront costs and you pay only for the events analyzed, with no additional software to deploy or threat intelligence feed subscriptions required.
+
+#### How much does GuardDuty cost?
+
+GuardDuty is a pay-as-you-go service, and you only pay for the usage you incur. GuardDuty prices are based on the volume of analyzed service logs, virtual CPUs (vCPUs) or Aurora Serverless v2 instance Aurora capacity units (ACUs) for Amazon RDS event analysis, the number and size of Amazon Elastic Kubernetes Service (Amazon EKS) or Amazon Elastic Container Service (Amazon ECS) workloads being monitored at runtime, and the volume of data scanned for malware.
+
+Analyzed service logs are filtered for cost optimization and directly integrated with GuardDuty, which means you don’t have to activate or pay for them separately. If EKS Runtime Monitoring is enabled for your account, you will not be charged for analysis of VPC Flow Logs from instances where the GuardDuty agent is deployed and active. The runtime security agent provides us with similar (and more contextual) network telemetry data. Hence, to avoid double charging customers, we will not charge for VPC Flow Logs from Amazon Elastic Compute Cloud (Amazon EC2) instances where the agent is installed.
+
+See Amazon GuardDuty pricing for additional details and pricing examples.
+
+#### Does the estimated cost in the GuardDuty payer account show the total aggregated costs for linked accounts, or just that individual payer account?
+
+The estimated cost represents the cost for the individual payer account, and you will see the billed usage and average daily cost for each member account in the GuardDuty administrator account. You must go to the individual account if you want to see the detailed usage info.
+
+#### Is there a free trial of GuardDuty?
+
+Yes, any new account to GuardDuty can try the service for 30 days at no cost. You have access to the full feature set and detections during the free trial. During the trial period, you can view the post-trial costs estimate on the GuardDuty console usage page. If you are a GuardDuty administrator, you will see the estimated costs for your member accounts. After 30 days, you can view actual costs of this feature in the AWS Billing console.
+
+New and existing GuardDuty account holders who have not yet enabled a GuardDuty feature can try it 30 days at no cost on the AWS Free Tier (for the Malware Protection feature, the free trial is available for GuardDuty-initiated malware scans only for Amazon EBS data volumes. There is not a free trial for Malware Protection for Amazon S3). During the free trial period and thereafter, you can always monitor your estimated monthly spend on the GuardDuty console usage page, broken down by data source.
+
+#### What are the differences between GuardDuty and Amazon Macie?
+
+GuardDuty provides broad security monitoring of your AWS accounts, workloads, and data to help identify threats, such as attacker reconnaissance; instance, account, bucket, or Amazon EKS cluster compromises; and malware. Macie is a fully managed sensitive data discovery service that uses ML and pattern matching to discover your sensitive data in Amazon Simple Storage Service (Amazon S3).
+
+#### Is GuardDuty a Regional or global service?
+
+GuardDuty is a Regional service. Even when multiple accounts are enabled and multiple AWS Regions are used, the GuardDuty security findings remain in the same Regions where the underlying data was generated. This ensures all data analyzed is regionally based and doesn’t cross AWS regional boundaries. However, you can choose to aggregate security findings produced by GuardDuty across Regions using Amazon EventBridge or pushing findings to your data store (like Amazon S3) and then aggregating findings as you see fit. You can also send GuardDuty findings to AWS Security Hub and use its cross-Region aggregation capability.
+
+#### Which Regions does GuardDuty support?
+
+GuardDuty regional availability is listed in the AWS Regional Services List. For a full list of Regions where GuardDuty features are available, visit Region-specific feature availability.
+
+#### Which partners work with GuardDuty?
+
+Many technology partners have integrated and built on GuardDuty. There are also consulting, system integrator, and managed security service providers with expertise about GuardDuty. For details, see the Amazon GuardDuty Partners page.
+
+#### Does GuardDuty help address Payment Card Industry Security Standard (PCI DSS) requirements?
+
+Foregenix published a white paper providing a detailed assessment of GuardDuty effectiveness for assisting in meeting requirements, like PCI DSS requirement 11.4, which requires intrusion detection techniques at critical points in the network.
+
+### Enabling GuardDuty
+Open all
+
+#### How do I enable GuardDuty?
+
+You can set up and deploy GuardDuty in a few steps in the AWS Management Console. Once enabled, GuardDuty immediately starts analyzing continuous streams of account and network activity in near real time and at scale. There are no additional security software, sensors, or network appliances to deploy or manage. Threat intelligence is pre-integrated into the service and is continuously updated and maintained.
+
+#### Can I manage multiple accounts with GuardDuty?
+
+Yes, GuardDuty has a multiple account management feature, allowing you to associate and manage multiple AWS accounts from a single administrator account. When used, all security findings are aggregated to the administrator account for review and remediation. EventBridge events are also aggregated to the GuardDuty administrator account when using this configuration. Additionally, GuardDuty is integrated with AWS Organizations, allowing you to delegate an administrator account for GuardDuty for your organization. This delegated administrator (DA) account is a centralized account that consolidates all findings and can configure all member accounts.
+
+#### Which data sources does GuardDuty analyze?
+
+The foundational data sources that GuardDuty analyzes include: AWS CloudTrail management event logs, CloudTrail management events, and Amazon EC2 VPC Flow Logs and DNS query logs. GuardDuty protection plans monitor other resource types, including CloudTrail S3 data events (S3 Protection), Amazon EKS audit logs and runtime activity for Amazon EKS (EKS Protection), Amazon ECS runtime activity (ECS Runtime Monitoring), Amazon EC2 runtime activity (EC2 Runtime Monitoring), Amazon EBS volume data (Malware Protection for EC2), S3 object upload data (Malware Protection for S3), and AWS Backup data (Malware Protection for AWS Backup), Amazon Aurora login events (RDS Protection), and network activity logs (Lambda Protection), and Amazon Bedrock and Amazon SageMaker CloudTrail data events (AI Protection). The service is optimized to consume large data volumes for near real-time processing of security detections. GuardDuty provides access to built-in detection techniques developed and optimized for the cloud, which are maintained and continuously improved upon by GuardDuty engineering.
+
+#### How quickly does GuardDuty start working?
+
+Once enabled, GuardDuty starts analyzing for malicious or unauthorized activity. The timeframe to begin receiving findings depends on the activity level in your account. GuardDuty does not look at historical data, only activity that starts after it is enabled. If GuardDuty identifies any potential threats, you will receive a finding in the GuardDuty console.
+
+#### Do I have to enable CloudTrail, VPC Flow Logs, DNS query logs, or Amazon EKS audit logs for GuardDuty to work?
+
+No, GuardDuty pulls independent data streams directly from CloudTrail, VPC Flow Logs, DNS query logs, and Amazon EKS. You don’t have to manage Amazon S3 bucket policies or modify the way you collect and store logs. GuardDuty permissions are managed as service-linked roles. You can disable GuardDuty at any time, which will remove all GuardDuty permissions. This makes it easier for you to enable the service, as it avoids complex configuration. The service-linked roles also remove the chance that an AWS Identity and Access Management (IAM) permission misconfiguration or Amazon S3 bucket policy change will affect service operation. Lastly, the service-linked roles make GuardDuty extremely efficient at consuming high volumes of data in near real time with minimal to no impact on the performance and availability of your account or workloads.
+
+#### Is there any performance or availability impact to enabling GuardDuty on my account?
+
+When you enable GuardDuty for the first time, it operates completely independent of your AWS resources. If you configure GuardDuty Runtime Monitoring to automatically deploy the GuardDuty security agent, this could result in additional resource utilization, and will also create VPC endpoints in VPCs used to run the monitored workloads.
+
+#### Does GuardDuty manage or keep my logs?
+
+No, GuardDuty does not manage or retain your logs. All data that GuardDuty consumes is analyzed in near real time and discarded thereafter. This allows GuardDuty to be highly efficient and cost effective, and to reduce the risk of data remanence. For log delivery and retention, you should use AWS logging and monitoring services directly, which provide full-featured delivery and retention options.
+
+#### How can I prevent GuardDuty from looking at my logs and data sources?
+
+You can prevent GuardDuty from analyzing your data sources at any time in the general settings by choosing to suspend the service. This will immediately stop the service from analyzing data, but it will not delete your existing findings or configurations. You can also choose to disable the service in the general settings. This will delete all remaining data, including your existing findings and configurations, before relinquishing the service permissions and resetting the service. You can also selectively disable capabilities like GuardDuty S3 Protection or GuardDuty EKS Protection through the Management Console or via the AWS CLI.
+
+### Activating GuardDuty
+Open all
+
+#### What can GuardDuty detect?
+
+GuardDuty gives you access to built-in detection techniques developed and optimized for the cloud. The detection algorithms are maintained and continually improved upon by GuardDuty engineers. The primary detection categories include the following:
+
+- Reconnaissance: Activity suggesting reconnaissance by an attacker, such as unusual API activity, intra-VPC port scanning, unusual patterns of failed login requests, or unblocked port probing from a known bad IP.
+
+- Instance compromise: Activity indicating an instance compromise, such as cryptocurrency mining, malware using domain generation algorithms (DGAs), outbound denial of service activity, an unusually high volume of network traffic, unusual network protocols, outbound instance communication with a known malicious IP, temporary Amazon EC2 credentials used by an external IP address, and data exfiltration using DNS.
+
+- Account compromise: Common patterns indicative of account compromise, including API calls from an unusual geolocation or anonymizing proxy, attempts to deactivate CloudTrail logging, unusual instance or infrastructure launches, infrastructure deployments in an unusual region, the exfiltration of credentials, suspicious database login activity, and API calls from known malicious IP addresses.
+
+- Bucket compromise: Activity indicating a bucket compromise, such as suspicious data access patterns indicating credential misuse, unusual Amazon S3 API activity from a remote host, unauthorized Amazon S3 access from known malicious IP addresses, and API calls to retrieve data in Amazon S3 buckets from a user that had no prior history of accessing the bucket or invoked from an unusual location. GuardDuty continuously monitors and analyzes CloudTrail S3 data events (like GetObject, ListObjects, and DeleteObject) to detect suspicious activity across all of your Amazon S3 buckets.
+
+- Malware: GuardDuty can detect the presence of malware—such as trojans, worms, crypto miners, rootkits, or bots—that may be used to compromise your Amazon EC2 instance or container workloads, or that is uploaded to your Amazon S3 buckets or that exists in your AWS Backup data.
+
+- Container compromise: Activity identifying possible malicious or suspicious behavior in container workloads is detected by continuously monitoring and profiling Amazon EKS clusters by analyzing its Amazon EKS audit logs and container runtime activity in Amazon EKS or Amazon ECS.
+
+- AI workload compromise: Activity indicating threats to AI workloads, such as anomalous model invocations on Amazon Bedrock or Amazon SageMaker, cost harvesting attacks using stolen credentials to run inference, and prompt injection attempts detected through integration with Amazon Bedrock Guardrails.
+
+Here is a full list of GuardDuty finding types.
+
+#### What is GuardDuty threat intelligence?
+
+GuardDuty threat intelligence is made up of IP addresses and domains known to be used by attackers. GuardDuty threat intelligence is provided by AWS and third-party providers, such as Proofpoint and CrowdStrike. These threat intelligence feeds are pre-integrated and continuously updated in GuardDuty at no additional cost.
+
+#### Can I supply my own threat intelligence?
+
+Yes, GuardDuty allows you to upload your own threat intelligence or trusted IP address list. When this feature is used, these lists are only applied to your account and not shared with other customers.
+
+#### How are security findings delivered?
+
+When a potential threat is detected, GuardDuty delivers a detailed security finding to the GuardDuty console and EventBridge. This makes alerts more actionable and more easily integrated into existing event management or workflow systems. The findings include the category, resource affected, and metadata associated with the resource, such as a severity level.
+
+#### What is the format of GuardDuty findings?
+
+GuardDuty findings come in a common JSON format, which is also used by Amazon Macie and Amazon Inspector. This makes it easier for customers and partners to consume security findings from all three services and incorporate them into broader event management, workflow, or security solutions.
+
+#### How long are security findings made available in GuardDuty?
+
+Security findings are retained and made available through the GuardDuty console and APIs for 90 days. After 90 days, the findings are discarded. To retain findings for longer than 90 days, you can enable EventBridge to automatically push findings to an Amazon S3 bucket in your account or another data store for long-term retention.
+
+#### Can I aggregate GuardDuty findings?
+
+Yes, you can choose to aggregate security findings produced by GuardDuty across regions using EventBridge or by pushing findings to your data store (like Amazon S3) and then aggregating findings as you see fit. You can also send GuardDuty findings to Security Hub and use its cross-Region aggregation capability.
+
+#### Can I take automated preventative actions using GuardDuty?
+
+With GuardDuty, EventBridge, and AWS Lambda, you have the flexibility to set up automated remediation actions based on a security finding. For example, you can create a Lambda function to modify your AWS security group rules based on security findings. If you receive a GuardDuty finding indicating one of your Amazon EC2 instances is being probed by a known malicious IP, you can address it through an EventBridge rule, initiating a Lambda function to automatically modify your security group rules and restrict access on that port.
+
+#### How are GuardDuty detections developed and managed?
+
+GuardDuty has a team focused on detection engineering, management, and iteration. This produces a steady cadence of new detections in the service, as well as continual iteration on existing detections. Several feedback mechanisms are built into the service, such as the thumbs-up and thumbs-down in each security finding found in the GuardDuty user interface (UI). This allows you to provide feedback that might be incorporated into future iterations of GuardDuty detections.
+
+#### Can I write custom detections in Amazon GuardDuty?
+
+No, GuardDuty removes the heavy lifting and complexity of developing and maintaining your own custom rule sets. New detections are continually added based on customer feedback, along with research from AWS security engineers and the GuardDuty engineering team. However, customer-configured customizations include adding your own threat lists and trusted IP address list.
+
+### GuardDuty S3 Protection
+Open all
+
+#### How can I get started with S3 Protection if I am currently using GuardDuty?
+
+For current GuardDuty accounts, S3 Protection can be activated in the console on the S3 Protection page, or through the API. This will start a 30-day no-cost trial of the GuardDuty S3 Protection feature.
+
+#### Is there a free trial of GuardDuty S3 Protection?
+
+Yes, there is a 30-day free trial. Each account in each Region gets a 30-day no-cost trial of the GuardDuty that includes the S3 Protection feature. Accounts that already have GuardDuty enabled will also get a 30-day free trial of the S3 Protection feature when they first activate it.
+
+#### If I am a new user to GuardDuty, is S3 Protection enabled by default for my accounts?
+
+Yes. Any new accounts that enable GuardDuty through the console or API will also have S3 Protection turned on by default. New GuardDuty accounts created using the AWS Organizations auto-enable feature will not have S3 Protection turned on unless the auto-enable for S3 option is turned on.
+
+#### Can I use GuardDuty S3 Protection without enabling the full GuardDuty service (including the analysis of VPC Flow Logs, DNS query logs, and CloudTrail management events)?
+
+No, the GuardDuty service must be enabled in order to use S3 Protection. Current GuardDuty accounts have the option to enable S3 Protection, and new GuardDuty accounts will have the feature by default once the GuardDuty service is enabled.
+
+#### Does GuardDuty monitor all buckets in my account to help protect my Amazon S3 deployment?
+
+Yes, S3 Protection monitors all Amazon S3 buckets in your environment by default.
+
+#### Do I need to turn on CloudTrail S3 data event logging for S3 Protection?
+
+No, GuardDuty has direct access to CloudTrail S3 data event logs. You are not required to enable S3 data event logging in CloudTrail, and therefore will not incur the associated costs. Note that GuardDuty does not store the logs and only uses them for its analysis.
+
+### GuardDuty EKS Protection
+Open all
+
+#### How does GuardDuty EKS Protection work?
+
+GuardDuty EKS Protection is a GuardDuty feature that monitors Amazon EKS cluster control plane activity by analyzing Amazon EKS audit logs. GuardDuty is integrated with Amazon EKS, giving it direct access to Amazon EKS audit logs without requiring you to turn on or store these logs. These audit logs are security-relevant chronological records documenting the sequence of actions performed on the Amazon EKS control plane. These Amazon EKS audit logs give GuardDuty the visibility needed to conduct continuous monitoring of Amazon EKS API activity and apply proven threat intelligence and anomaly detection to identify malicious activity or configuration changes that might expose your Amazon EKS cluster to unauthorized access. When threats are identified, GuardDuty generates security findings that include the threat type, a severity level, and container-level detail (such as pod ID, container image ID, and associated tags).
+
+#### What types of threats can GuardDuty EKS Protection detect on my Amazon EKS workloads?
+
+GuardDuty EKS Protection can detect threats related to user and application activity captured in Amazon EKS audit logs. Amazon EKS threat detections include Amazon EKS clusters that are accessed by known malicious actors or from Tor nodes, API operations performed by anonymous users that might indicate a misconfiguration, and misconfigurations that can result in unauthorized access to Amazon EKS clusters. Also, using ML models, GuardDuty can identify patterns consistent with privilege-escalation techniques, such as a suspicious launch of a container with root-level access to the underlying Amazon EC2 host. See Amazon GuardDuty Finding types for a complete list of all new detections.
+
+#### Do I need to turn on Amazon EKS audit logs?
+
+No, GuardDuty has direct access to Amazon EKS audit logs. Note that GuardDuty only uses these logs for analysis; it doesn’t store them, nor do you need to enable or pay for these Amazon EKS audit logs to be shared with GuardDuty. To optimize for costs, GuardDuty applies intelligent filters to only consume a subset of the audit logs that are relevant for security threat detection.
+
+#### Is there a free trial of GuardDuty EKS Protection?
+
+Yes, there is a 30-day free trial. Each new GuardDuty account in each Region receives a 30-day free trial of GuardDuty, including the GuardDuty EKS Protection feature. Existing GuardDuty accounts receive a 30-day trial of GuardDuty EKS Protection at no additional charge. During the trial period, you can view the post-trial costs estimate on the GuardDuty console usage page. If you are a GuardDuty administrator, you will see the estimated costs for your member accounts. After 30 days, you can view actual costs of this feature in the AWS Billing console.
+
+#### How can I get started with GuardDuty EKS Protection if I am currently using GuardDuty?
+
+GuardDuty EKS Protection must be turned on for each individual account. You can activate the feature for your accounts with a single action in the GuardDuty console from the GuardDuty EKS Protection console page. If you are operating in a GuardDuty multi-account configuration, you can activate GuardDuty EKS Protection across your entire organization from the GuardDuty administrator account GuardDuty EKS Protection page. This will activate continuous monitoring for Amazon EKS in all individual member accounts. For GuardDuty accounts created using the AWS Organizations auto-activate feature, you must explicitly turn on Auto-activate for Amazon EKS. Once activated for an account, all existing and future Amazon EKS clusters in the account will be monitored for threats without any configuration on your Amazon EKS clusters.
+
+#### Is GuardDuty EKS Protection enabled by default for my accounts if I am a new GuardDuty user?
+
+Yes, any new account that turns on GuardDuty through the console or API will also have GuardDuty EKS Protection turned on by default. For new GuardDuty accounts created using the AWS Organizations auto-enable feature, you need to explicitly enable the auto-enable for EKS Protection option.
+
+#### How do I disable GuardDuty EKS Protection?
+
+You can disable the feature in the console or by using the API. In the GuardDuty console, you can disable GuardDuty EKS Protection for your accounts on the GuardDuty EKS Protection console page. If you have a GuardDuty administrator account, you can also disable this feature for your member accounts.
+
+#### If I disable GuardDuty EKS Protection, how do I enable it again?
+
+If you previously disabled GuardDuty EKS Protection, you can re-enable the feature in the console or by using the API. In the GuardDuty console, you can enable GuardDuty EKS Protection for your accounts on the GuardDuty EKS Protection console page.
+
+#### Do I have to enable GuardDuty EKS Protection on each AWS account and Amazon EKS cluster individually?
+
+GuardDuty EKS Protection must be enabled for each individual account. If you are operating in a GuardDuty multi-account configuration, you can enable threat detection for Amazon EKS across your entire organization with a single click on the GuardDuty administrator account GuardDuty EKS Protection console page. This will enable threat detection for Amazon EKS in all individual member accounts. Once enabled for an account, all existing and future Amazon EKS clusters in the account will be monitored for threats, and no manual configuration is required on your Amazon EKS clusters.
+
+#### Will I be charged if I don’t use Amazon EKS and I enable GuardDuty EKS Protection in GuardDuty?
+
+You will not incur any GuardDuty EKS Protection charges if you aren’t using Amazon EKS and you have GuardDuty EKS Protection enabled. However, when you start using Amazon EKS, GuardDuty will automatically monitor your clusters and generate findings for identified issues, and you will be charged for this monitoring.
+
+#### Can I enable GuardDuty EKS Protection without enabling the full GuardDuty service (including the analysis of VPC Flow Logs, DNS query logs, and CloudTrail management events)?
+
+No, the GuardDuty service must be enabled for GuardDuty EKS Protection to be available.
+
+#### Does GuardDuty EKS Protection monitor Amazon EKS audit logs for Amazon EKS deployments on AWS Fargate?
+
+Yes, GuardDuty EKS Protection monitors Amazon EKS audit logs from both Amazon EKS clusters deployed on Amazon EC2 instances and Amazon EKS clusters deployed on Fargate.
+
+#### Does GuardDuty monitor non-managed Amazon EKS on Amazon EC2 or Amazon EKS Anywhere?
+
+Currently, this capability only supports Amazon EKS deployments running on Amazon EC2 instances in your account or on Fargate.
+
+#### Will using GuardDuty EKS Protection impact the performance or cost of running containers on Amazon EKS?
+
+No, GuardDuty EKS Protection is designed to not have any performance, availability, or cost implications to Amazon EKS workload deployments.
+
+#### Do I have to enable GuardDuty EKS Protection in each AWS Region individually?
+
+Yes, GuardDuty is a regional service, and thus GuardDuty EKS Protection must be enabled in each AWS Region separately.
+
+### GuardDuty Runtime Monitoring
+Open all
+
+#### How does GuardDuty Runtime Monitoring work?
+
+GuardDuty Runtime Monitoring uses a lightweight, fully managed security agent that adds visibility into runtime activity such as ﬁle access, process execution, and network connections at the pod or instance level for your covered resources. The security agent is automatically deployed as a Daemon set that collects runtime events and delivers them to GuardDuty for security analytics processing. This allows GuardDuty to identify specific instances or containers within your AWS environment that are potentially compromised and detect attempts to escalate privileges to the broader AWS environment. When GuardDuty detects a potential threat, a security finding is generated that includes metadata context that includes instance, container, pod, and process details.
+
+#### How can I get started with Runtime Monitoring if I am currently using GuardDuty?
+
+For current GuardDuty accounts, the feature can be activated from the GuardDuty console on the Runtime Monitoring page, or through the API. Learn more about GuardDuty Runtime Monitoring.
+
+#### Which AWS services does GuardDuty Runtime Monitoring support?
+
+Runtime Monitoring is available for Amazon EKS resources running on Amazon EC2, Amazon ECS clusters running on Amazon EC2 or AWS Fargate, and Amazon EC2 instances.
+
+#### Which operating models and workloads does GuardDuty Runtime Monitoring support?
+
+Architectural requirements for GuardDuty Runtime Monitoring are available in the GuardDuty User Guide.
+
+#### If I am a new user to GuardDuty, is Runtime Monitoring turned on by default for my accounts?
+
+No. GuardDuty Runtime Monitoring is the only protection plan that is not enabled by default when you turn on GuardDuty for the first time. The feature can be activated from the GuardDuty console on the Runtime Monitoring page or through the API. New GuardDuty accounts created using the AWS Organizations auto-enable feature will not have Runtime Monitoring turned on unless the Auto-enable for Runtime Monitoring option is turned on.
+
+#### How does GuardDuty update new agent versions?
+
+AWS publishes GuardDuty agent updates on a regular basis. For Amazon ECS on Amazon EC2, you can update to the latest agent version by updating to the latest ECS optimized AMI or ECS agent. For Amazon ECS on Fargate, the Fargate agent pulls the latest GuardDuty agent version automatically.
+
+If you choose to manually deploy the agent per cluster, then you will be responsible to also update the agent when GuardDuty publicizes the release of a new version. New agent versions are carefully tested and monitored before, during, and after release. GuardDuty maintains a subset of previous agent versions so that you can roll back an update in the case where your application has a unique conflict with the agent; you can find detailed agent release history in the GuardDuty User Guide. For CVE patches and other urgent updates, follow AWS update guidelines included in your PHD notices.
+
+#### Can I use GuardDuty Runtime Monitoring without activating the full GuardDuty service?
+
+No, the GuardDuty service must be enabled in order to use GuardDuty Runtime Monitoring.
+
+#### What are my deployment options for the GuardDuty security agent?
+
+When you enable Amazon ECS Runtime Monitoring, GuardDuty becomes ready to consume the runtime events from a task. These tasks run within the Amazon ECS clusters, which in turn run on AWS Fargate instances. For GuardDuty to receive these runtime events, you must use the Automated agent configuration.
+
+When you enable Runtime Monitoring for Amazon EC2 or Amazon EKS, you have the option to either deploy the GuardDuty security agent manually, or allow GuardDuty to manage it on your behalf with Automated agent configuration.
+
+Visit Key concepts - Approaches to manage GuardDuty security agent in the GuardDuty User Guide for more details.
+
+#### Is GuardDuty Runtime Monitoring available in all Regions where GuardDuty is currently available?
+
+For a full list of Regions where Runtime Monitoring is available, visit Region-specific feature availability.
+
+#### Do I have to activate GuardDuty Runtime Monitoring on each AWS account individually?
+
+GuardDuty Runtime Monitoring must be enabled for each individual account. If you are operating in a GuardDuty multi-account configuration, you can turn it on across your entire organization in a single step on the GuardDuty administrator account GuardDuty Runtime Monitoring console page. This will activate runtime monitoring for desired workloads in all individual member accounts. Once activated for an account, all existing and future selected workloads in the account will be monitored for runtime threats, and no manual configuration will be required.
+
+#### Can I modify how I monitor specific clusters in Amazon EKS or Amazon ECS?
+
+GuardDuty Runtime Monitoring allows you to selectively configure which Amazon EKS clusters or Amazon ECS clusters are to be monitored for threat detection. With cluster-level configurability, you can selectively monitor specific clusters for threat detection or continue using account-level configurability to monitor all EKS or ECS clusters, respectively, in a given account and Region.
+
+#### Will I incur GuardDuty Runtime Monitoring charges if I don’t use Amazon EKS, Amazon ECS, or Amazon EC2 and I turn on GuardDuty Runtime Monitoring for one of those workloads?
+
+You will not incur any GuardDuty Runtime Monitoring charges if you have GuardDuty Runtime Monitoring enabled for a workload that you are not running. However, when you start using Amazon EKS, Amazon ECS, or Amazon EC2 and GuardDuty Runtime Monitoring is enabled for that workload, you will be charged when GuardDuty automatically monitors your clusters, tasks, and instances and generate findings for identified issues.
+
+#### Will using GuardDuty Runtime Monitoring impact the performance or cost of running AWS workloads?
+
+Like all security, observability, and other use cases requiring an on-host agent, the GuardDuty security agent introduces resource utilization overhead. The GuardDuty security agent is designed to be lightweight, and it is carefully monitored by GuardDuty to minimize utilization and cost impact to covered workloads. The exact resource utilization metrics will be made available for application and security teams to monitor in Amazon CloudWatch.
+
+If you configure GuardDuty Runtime Monitoring to automatically deploy the GuardDuty security agent, this could result in additional resource utilization, and will also create VPC endpoints in VPCs used to run AWS workloads.
+
+#### How do I disable GuardDuty Runtime Monitoring?
+
+GuardDuty Runtime Monitoring can be disabled for an AWS account or organization on the GuardDuty console Runtime Monitoring page. If the security agent was deployed automatically by GuardDuty, then GuardDuty will also remove the security agent when the feature is disabled.
+
+If you opted to deploy the GuardDuty agent manually (applicable only to EKS Runtime Monitoring and EC2 Runtime Monitoring), then you will need to manually remove it, and any VPC endpoints that were created must be manually deleted. Steps for manual removal for EKS Runtime Monitoring and EC2 Runtime Monitoring are detailed in the GuardDuty User Guide.
+
+### GuardDuty Malware Protection
+Open all
+
+#### How does Amazon GuardDuty Malware Protection work?
+
+Amazon EBS data volumes: If you have this data source enabled for Malware Protection, GuardDuty begins a malware detection scan when it identifies suspicious behavior indicative of malicious software in Amazon EC2 instance, or container workloads. It scans a replica Amazon EBS volume that GuardDuty generates based on the snapshot of your Amazon EBS volume for trojans, worms, crypto miners, rootkits, bots, and more. GuardDuty Malware Protection generates contextualized findings that can help validate the source of the suspicious behavior. These findings can also be routed to the proper administrators and can initiate automated remediation.
+
+S3 object scanning: Once a bucket is configured for malware protection, GuardDuty automatically scans newly uploaded files and, if malware is detected, generates an Amazon EventBridge notification with details about the malware, allowing for integration with existing security event management or workflow systems. You can configure to automatically quarantine malware by moving the object to an isolated bucket in your account, or use object tags to add the disposition of the scan result, allowing to better identify and categorize the scanned objects based on tags.
+
+#### Which GuardDuty finding types for Amazon EC2 will initiate a malware scan?
+
+GuardDuty findings for Amazon EC2 that will initiate a malware scan can be found in the GuardDuty User Guide.
+
+#### Which resources and file types can GuardDuty Malware Protection scan?
+
+Malware Protection supports detection of malicious files by scanning Amazon EBS attached to Amazon EC2 instances. Supported file system types can be found in the GuardDuty User Guide.
+
+Malware Protection for S3 can scan files belonging to most synchronous S3 storage classes, such as S3 Standard, S3 Intelligent-Tiering, S3 Standard-IA, S3 One Zone-IA, and Amazon S3 Glacier Instant Retrieval, with GuardDuty’s malware scanning engine. It will scan the file formats known to be used to spread or contain malware including executables, .pdf files, archives, binaries, packed files, scripts, installers, e-mail databases, plain emails, images, and encoded objects.
+
+Malware Protection for AWS Backup can scan Amazon EC2, Amazon EBS, and Amazon S3 backup data stored through AWS Backup. The feature uses incremental scanning to analyze only net-new data between subsequent backups, making it cost-effective for continuous backup protection.
+
+#### Which types of threats can GuardDuty Malware Protection detect?
+
+Malware Protection scans for threats such as trojans, worms, crypto miners, rootkits, and bots, that might be used to compromise workloads, repurpose resources for malicious use, and gain unauthorized access to data.
+
+Consult the GuardDuty User Guide for a comprehensive list of finding types.
+
+#### Do I need to turn on logging for GuardDuty Malware Protection to work?
+
+Service logging does not need to be enabled for GuardDuty or the Malware Protection feature to work. The Malware Protection feature is part of GuardDuty, which is an AWS service that uses intelligence from integrated internal and external sources.
+
+#### How does GuardDuty Malware Protection accomplish scanning without agents?
+
+Instead of using security agents, GuardDuty Malware Protection will create and scan a replica based on the snapshot of Amazon EBS volumes attached to the potentially infected Amazon EC2 instance or container workload in your account. The permissions you granted to GuardDuty through a service-linked role allows the service to create an encrypted volume replica in the GuardDuty service account from that snapshot that remains in your account. GuardDuty Malware Protection will then scan the volume replica for malware.
+
+For objects in Amazon S3, GuardDuty begins reading, decrypting, and scanning objects uploaded to buckets that you have configured for GuardDuty Malware Protection. You can limit the scope of objects to scan in a bucket by defining that only objects certain prefixes are scanned. GuardDuty will scan uploaded objects that match on these defined prefixes, and generate a security finding and an Amazon EventBridge notification with a detailed scan result: Infected, Clean, Skipped, or Failed. The notification will also include scan metrics related to number of objects and bytes scanned. You can also define post-scan actions that GuardDuty will execute on the object based on the scan result, such as automated quarantine or object tagging.
+
+#### Is there a free trial of GuardDuty Malware Protection?
+
+Free trial availability varies by GuardDuty Malware Protection service:
+
+EBS Volume Scanning: New GuardDuty accounts receive a 30-day free trial in each Region, including Malware Protection for GuardDuty-initiated scanning of EBS data volumes. Existing GuardDuty accounts receive a 30-day trial at no additional charge when first enabled. On-demand Malware Protection scanning does not include a free trial.
+
+Amazon S3: Malware Protection for Amazon S3 includes a 12-month Free Tier with 1,000 free requests and 1GB free each month.
+
+AWS Backup: Malware Protection for AWS Backup does not include a free trial.
+
+You can view estimated post-trial costs on the GuardDuty console usage page during trial periods. GuardDuty administrators can view estimated costs for member accounts. After trial periods end, view actual costs in the AWS Billing console.
+
+#### If I am currently using GuardDuty, how can I get started with GuardDuty Malware Protection?
+
+You can enable Malware Protection in the GuardDuty console by going to the Malware Protection page or using the API. If you are operating in a GuardDuty multi-account configuration, you can enable the feature across your entire organization in the GuardDuty administrator account’s Malware Protection console page. This will enable monitoring for malware in all individual member accounts. For GuardDuty accounts created using the AWS Organizations auto-enable feature, you need to explicitly enable the auto-enable for the Malware Protection option.
+
+For Malware Protection for S3, you can integrate malware scanning in your applications following two steps. First, as an application owner, you need to set up the bucket protection configuration on the buckets that you want to monitor. You can set this up in the GuardDuty console programmatically for an existing bucket, or when creating a new bucket. GuardDuty will send scan metrics to your EventBridge events for each protected S3 bucket, allowing you to set up alarms and define post-scan actions, such as tagging the object or copying the malicious object to a quarantine bucket that GuardDuty will execute based on the scan result. If GuardDuty is enabled for your account, then a security finding is also generated in GuardDuty.
+
+#### If I am a new user to GuardDuty, is Malware Protection for EC2 enabled by default for my accounts?
+
+Yes, any new account that enables GuardDuty using the console or API will also have GuardDuty Malware Protection enabled by default (for EBS volumes scanning). For new GuardDuty accounts created using the AWS Organizations auto-enable feature, you need to explicitly enable the auto-enable for Malware Protection option.
+
+#### How do I disable GuardDuty Malware Protection?
+
+You can disable the feature in the console or using the API. You will see an option to disable Malware Protection for your accounts in the GuardDuty console, on the Malware Protection console page. If you have a GuardDuty administrator account, you can also disable Malware Protection for your member accounts.
+
+#### If I disable GuardDuty Malware Protection, how do I enable it again?
+
+If Malware Protection was disabled, you can enable the feature in the console or using the API. You can enable Malware Protection for your accounts in the GuardDuty console, on to the Malware Protection console page.
+
+#### If no GuardDuty malware scans are performed during a billing period, will there be any charges?
+
+No, there will be no charges for Malware Protection if there are no scans for malware during a billing period. You can view costs of this feature in the AWS Billing console.
+
+#### Does GuardDuty Malware Protection support multi-account management?
+
+Yes, GuardDuty has a multiple account management feature, allowing you to associate and manage multiple AWS accounts from a single administrator account. GuardDuty has multi-account management through AWS Organizations integration. This integration helps security and compliance teams ensure full coverage of GuardDuty, including Malware Protection, across all accounts in an organization.
+
+#### Do I need to make any configuration changes, deploy any software, or modify my AWS deployments to start using Malware Protection for EC2 ?
+
+No. Once the feature is enabled, GuardDuty Malware Protection will initiate a malware scan in response to relevant Amazon EC2 findings. You don’t have to deploy any agents, there are no log sources to enable, and there are no other configuration changes to make.
+
+#### Will using GuardDuty Malware Protection impact the performance of running my workloads?
+
+GuardDuty Malware Protection is designed to not affect the performance of your workloads. For example, Amazon EBS volume snapshots created for malware analysis can only be generated once in a 24-hour period, and GuardDuty Malware Protection retains the encrypted replicas and snapshots for a few minutes after it completes a scan. Further, GuardDuty Malware Protection uses GuardDuty compute resources for malware scanning instead of customer compute resources.
+
+#### Do I have to enable GuardDuty Malware Protection in each AWS Region individually?
+
+Yes, GuardDuty is a regional service, and Malware Protection has to be enabled in each AWS Region separately.
+
+#### How does GuardDuty Malware Protection use encryption?
+
+GuardDuty Malware Protection scans a replica based on the snapshot of Amazon EBS volumes attached to the potentially infected Amazon EC2 instance or container workload in your account. If your Amazon EBS volumes are encrypted with a customer managed key, you have the option to share your AWS Key Management Service (KMS) key with GuardDuty and the service uses the same key to encrypt the replica Amazon EBS volume. For unencrypted Amazon EBS volumes, GuardDuty uses its own key to encrypt the replica Amazon EBS volume.
+
+#### Will the Amazon EBS volume replica be analyzed in same Region as the original volume?
+
+Yes, all replica Amazon EBS volume data (and the snapshot the replica volume is based on) stays in the same Region as the original Amazon EBS volume.
+
+#### How can I estimate and control spend on GuardDuty Malware Protection?
+
+Each new GuardDuty account, in each Region, receives a 30-day free trial of GuardDuty, including the Malware Protection feature (only for EBS data volume scans that are initiated by GuardDuty; there is not a free trial for Malware Protection for Amazon S3). Existing GuardDuty accounts receive a 30-day trial of Malware Protection at no additional charge the first time it is enabled in an account. During the trial period, you can estimate the post-trial costs estimate on the GuardDuty console usage page. If you are a GuardDuty administrator, you will see the estimated costs for your member accounts. After 30 days, you can view actual costs of this feature in the AWS Billing console.
+
+Pricing for malware scanning of EBS volumes is based on the GB of data scanned in a volume. You can apply customizations using scan options from the console to mark some Amazon EC2 instances, using tags, to be included or excluded from scanning, thus controlling the cost. In addition, GuardDuty will only scan an Amazon EC2 instance once every 24 hours. If GuardDuty generates multiple Amazon EC2 findings for an Amazon EC2 instance within 24 hours, a scan will only occur for the first relevant Amazon EC2 finding. If Amazon EC2 findings continue, for an instance, 24 hours after the last malware scan, a new malware scan will be initiated for that instance.
+
+Pricing for malware scanning of storage objects in S3 buckets is based on the GB of data scanned, as well as the number of files scanned in a designated S3 bucket that is configured for malware scanning. GuardDuty will only scan for newly-uploaded files into configured buckets, and will not scan existing files or files in buckets not designated for malware scanning.
+
+#### Can I keep the Amazon EBS snapshots taken by GuardDuty Malware Protection?
+
+Yes, there is a setting where you can enable snapshot retention when Malware Protection scan detects malware. You can enable this setting from the GuardDuty console, on the Settings page. By default, snapshots are deleted a few minutes after it completes a scan and after 24 hours if the scan did not complete.
+
+#### By default, what is the maximum length of time a replica Amazon EBS volume will be retained?
+
+GuardDuty Malware Protection will retain each replica Amazon EBS volume it generates and scans for up to 24 hours. By default, replica Amazon EBS volumes are deleted a few minutes after GuardDuty Malware Protection completes a scan. In some instances, however, GuardDuty Malware Protection may need to retain a replica Amazon EBS volume for longer than 24 hours if a service outage or connection problem interferes with its malware scan. When this occurs, GuardDuty Malware Protection will retain the replica Amazon EBS volume for up to seven days to give the service time to triage and address the outage or connection problem. GuardDuty Malware Protection will delete the replica Amazon EBS volume after the outage or failure is addressed or once the extended retention period lapses.
+
+#### Will multiple GuardDuty findings for a single Amazon EC2 instance or container workload that indicate possible malware initiate multiple malware scans?
+
+No, GuardDuty only scans a replica based on the snapshot of Amazon EBS volumes attached to the potentially infected Amazon EC2 instance or container workload once every 24 hours. Even if GuardDuty generates multiple findings that qualify to initiate a malware scan, it will not initiate additional scans if it has been less than 24 hours since a prior scan. If GuardDuty generates a qualified finding after 24 hours from the last malware scan, GuardDuty Malware Protection will initiate a new malware scan for that workload.
+
+#### If I disable GuardDuty, do I also have to disable the Malware Protection feature?
+
+No, disabling the GuardDuty service also disables the Malware Protection feature.
+
+#### Do I need to enable GuardDuty to use GuardDuty Malware Protection for Amazon S3?
+
+No, GuardDuty S3 Malware Protection gives you flexibility, allowing applications owners to set up Malware Protection for their S3 buckets even when base GuardDuty is not enabled for the account. Base GuardDuty includes default monitoring of foundational sources, such as AWS CloudTrail management events, VPC Flow Logs and DNS query logs.
+
+#### How does GuardDuty Malware Protection for AWS Backup work?
+
+GuardDuty Malware Protection for AWS Backup enables you to detect malware in Amazon EC2, Amazon EBS, and Amazon S3 backups without deploying additional security software or agents. This fully managed capability allows you to automatically scan backups after creation, run on-demand scans of past backups, and verify backup integrity before restoration. The feature employs cost-effective incremental scanning that analyzes only net-new data between subsequent backups, providing you with flexible, continuous protection while reducing scanning costs compared to full backup rescans.
+
+### GuardDuty RDS Protection
+Open all
+
+#### How does GuardDuty RDS Protection work?
+
+GuardDuty RDS Protection can be turned on with a single action in the GuardDuty console, with no agents to manually deploy, no data sources to activate, and no permissions to configure. Using tailored ML models, GuardDuty RDS Protection begins by analyzing and profiling login attempts to existing and new Amazon Aurora databases. When suspicious behaviors or attempts by known malicious actors are identified, GuardDuty issues actionable security findings to the GuardDuty and Amazon Relational Database Service (RDS) consoles, Security Hub, and Amazon EventBridge, allowing for integration with existing security event management or workflow systems. Learn more about how GuardDuty RDS Protection uses RDS login activity monitoring.
+
+#### How can I get started with threat detection for Aurora databases if I am currently using GuardDuty?
+
+For current GuardDuty accounts, the feature can be activated from the GuardDuty console on the RDS Protection page, or through the API. Learn more about GuardDuty RDS Protection.
+
+#### If I am a new user to GuardDuty, is threat detection for Aurora databases enabled by default for my accounts?
+
+Yes. Any new accounts that activate GuardDuty through the console or API will also have RDS Protection turned on by default. New GuardDuty accounts created using the AWS Organizations auto-enable feature will not have RDS Protection turned on unless the auto-enable for RDS option is turned on.
+
+#### Can I use GuardDuty RDS Protection without activating the full GuardDuty service (including the analysis of Amazon Virtual Private Cloud (Amazon VPC) Flow Logs, DNS query logs, and AWS CloudTrail management events)?
+
+No, the GuardDuty service must be enabled in order to use GuardDuty RDS Protection.
+
+#### Is GuardDuty RDS Protection available in all Regions where GuardDuty is currently available?
+
+For a full list of Regions where RDS Protection is available, visit Region-specific feature availability.
+
+#### What Amazon Aurora version(s) does GuardDuty RDS Protection support?
+
+Please see the list of supported Amazon Aurora database versions.
+
+#### Will using GuardDuty RDS Protection impact the performance or cost of running Aurora databases?
+
+No, GuardDuty threat detection for Aurora databases is designed to not have performance, availability, or cost implications to your Amazon Aurora databases.
+
+### GuardDuty Lambda Protection
+Open all
+
+#### How does Amazon GuardDuty Lambda Protection work?
+
+GuardDuty Lambda Protection continuously monitors network activity, starting with VPC Flow Logs, from your serverless workloads to detect threats such as Lambda functions maliciously repurposed for unauthorized cryptocurrency mining, or compromised Lambda functions that are communicating with known threat actor servers. GuardDuty Lambda Protection can be enabled with a few steps in the GuardDuty console, and using AWS Organizations, can be centrally enabled for all existing and new accounts in an organization. Once enabled, it automatically starts monitoring network activity data from all existing and new Lambda functions in an account.
+
+#### How can I get started with GuardDuty Lambda Protection if I am currently using GuardDuty?
+
+For current GuardDuty accounts, the feature can be activated from the GuardDuty console on the Lambda Protection page, or through the API. Learn more about GuardDuty Lambda Protection.
+
+#### If I am a new user to GuardDuty, is GuardDuty Lambda Protection enabled by default for my accounts?
+
+Yes. Any new accounts that activate GuardDuty through the console or API will also have Lambda Protection turned on by default. New GuardDuty accounts created using the AWS Organizations auto-enable feature will not have Lambda Protection turned on unless the auto-enable for Lambda option is turned on.
+
+#### Is GuardDuty Lambda Protection available in all Regions where GuardDuty is currently available?
+
+For a full list of Regions where Lambda Protection is available, visit Region-specific feature availability.
+
+#### Will using GuardDuty Lambda Protection impact the performance or cost of running Lambda workloads?
+
+No, GuardDuty Lambda Protection is designed to not have performance, availability, or cost implications to your Lambda workloads.
+
+### GuardDuty Extended Threat Detection
+Open all
+
+#### What are the new Extended Threat Detection capabilities in Amazon GuardDuty?
+
+Amazon GuardDuty has introduced artificial intelligence (AI) and machine learning (ML) powered Extended Threat Detection capabilities to rapidly identify complex, multi-stage attack sequences targeting your AWS accounts, workloads, and data. This allows GuardDuty to detect and prioritize active attack sequences, providing you with a comprehensive view of threats and prescriptive remediation recommendations to help you more quickly respond and minimize business impact.
+
+#### How do the Extended Threat Detection capabilities work?
+
+GuardDuty uses AI and ML techniques trained at AWS scale to automatically piece together security signals and findings from various AWS services. This allows it to identify comprehensive attack sequences, like credential compromise followed by data exfiltration, and represent them as a single, high-priority finding. The finding includes a natural language summary of the threat, details on the affected resources, and step-by-step remediation recommendations.
+
+#### What are the key benefits of the Extended Threat Detection capabilities?
+
+The key benefits include:
+
+- Faster threat detection and response with the help of automatically correlated disparate threat signals and fewer security alerts you need to manually analyze
+
+- Improved visibility into attack sequences that span multiple resources and accounts
+
+- Streamline response with prescriptive remediation recommendations based on AWS best practices and MITRE ATT&CK® tactic and technique mappings
+
+#### How do I get started with the Extended Threat Detection capabilities?
+
+Extended Threat Detection is automatically enabled for all new and existing GuardDuty customers at no additional cost. You can view and take action on the new attack sequence findings directly from the GuardDuty console, or via GuardDuty integrations with AWS Security Hub, Amazon EventBridge, and other security tools you may already use.
+
+#### Do I need to enable all GuardDuty protection plans to benefit from Extended Threat Detection?
+
+No, you do not need to enable all GuardDuty protection plans to benefit from Extended Threat Detection. However, enabling more GuardDuty protection plans will increase the breadth of security signals available, allowing it to provide even more comprehensive threat detection and analysis. You are required to enable GuardDuty S3 Protection if you want GuardDuty Extended Threat Detection to identify data compromises that can be a part of a ransomware event.
+
+For example, if you only have GuardDuty foundational threat detection enabled, GuardDuty would be able to identify a potential attack sequence that starts with IAM privilege discovery activity, such as S3 APIs, and progresses to Amazon S3 control plane alteration, such as changing an Amazon S3 bucket resource policy to be more permissive.
+
+However, if you also enable GuardDuty S3 Protection, GuardDuty will enhance this detection. GuardDuty will now be able to add an indication of potential data exfiltration activity to the same attack sequence finding. This could happen after the S3 bucket access is made more permissive. By combining these capabilities, GuardDuty can now create a more comprehensive attack sequence detection. This provides you with a more complete view of the potential threat and the different stages of the attack.
+
+GuardDuty Extended Threat Detection is automatically enabled for GuardDuty customers at no additional cost. Detection coverage depends on your enabled GuardDuty protection plans. Enable Runtime Monitoring for EC2 instances to improve attack sequence coverage, and for ECS clusters enable Runtime Monitoring based on your infrastructure type (Fargate or EC2).
+
+#### What is the pricing for the Extended Threat Detection capabilities?
+
+The Extended Threat Detection capabilities are included at no additional cost for all GuardDuty customers. GuardDuty pricing, including the new Extended Threat Detection capabilities, remains the same - you only pay for what you use, with no upfront fees or additional charges.
+
+#### How does S3 Protection enhance GuardDuty Extended Threat Detection capabilities?
+
+Enabling S3 Protection allows GuardDuty to correlate more diverse signals across multiple data sources, expanding its ability to detect complex attack sequences involving your S3 buckets. With S3 Protection enabled, GuardDuty can identify potential data exfiltration activities that may occur after S3 bucket access becomes more permissive, in addition to detecting IAM privilege discovery and S3 control plane alterations. This provides a more comprehensive view of potential threats targeting your S3 resources.
+
+#### What types of attack sequences can GuardDuty detect with S3 Protection enabled?
+
+With S3 Protection, GuardDuty can detect multi-stage attack sequences involving your Amazon S3 resources. These may include scenarios such as IAM privilege discovery activities on S3 APIs followed by S3 bucket policy changes to increase permissions, or suspicious API calls to list or modify S3 buckets followed by anomalous data access or transfer activities. GuardDuty can also identify attempts to exploit misconfigurations in S3 bucket policies to gain unauthorized access, as well as sequences involving initial reconnaissance of S3 resources followed by attempts to exfiltrate data. This capability allows for early detection of complex threats that might otherwise go unnoticed until significant damage has occurred.
+
+#### What are the benefits of enabling EKS Protection for GuardDuty Extended Threat Detection?
+
+Enabling EKS Protection for Extended Threat Detection offers several key benefits for securing your Amazon Elastic Kubernetes Service (Amazon EKS) clusters. It allows GuardDuty to correlate security signals across Amazon EKS audit logs, runtime behaviors, and AWS API activity, enabling the detection of sophisticated attack sequences that might otherwise go unnoticed. This includes multi-stage attacks such as initial container exploitation followed by privilege escalation. GuardDuty can automatically identify potential compromises to EKS clusters, pods, and associated AWS resources, providing improved visibility into complex threats spanning container workloads and AWS services. This approach enhances your ability to detect and respond to advanced threats targeting your Kubernetes environments.
+
+#### How does GuardDuty leverage EKS Protection and Runtime Monitoring to detect EKS-related attack sequences?
+
+GuardDuty leverages both EKS Protection and Runtime Monitoring to create a holistic view of your Amazon EKS clusters, allowing it to detect complex attack patterns. EKS Protection monitors control plane activities, while Runtime Monitoring observes behaviors within containers. This combination allows GuardDuty to detect sophisticated attack sequences such as compromise of containers running vulnerable web applications, unauthorized access through misconfigured credentials, attempts to escalate privileges within the cluster, suspicious API requests to the Kubernetes API server, and attempts to access sensitive data or AWS resources through compromised pods. By correlating these diverse signals, GuardDuty can identify specific attack sequences that individual detections might miss, providing a more comprehensive security posture for your EKS environments.
+
+#### What are the benefits of enabling Runtime Monitoring for GuardDuty Extended Threat Detection on Amazon EC2?
+
+The combination of foundational GuardDuty, which monitors CloudTrail and network activity, and Runtime Monitoring, which observes process behaviors and system calls within instances, provides more comprehensive threat detection. This integrated monitoring allows GuardDuty to detect sophisticated attack sequences such as unauthorized access through misconfigured credentials, privilege escalation attempts, and unauthorized access to sensitive data. By correlating these diverse signals, GuardDuty can identify complex attack patterns that might be missed by individual detections and map the complete attack vector.
+
+#### What are the benefits of enabling Runtime Monitoring for GuardDuty Extended Threat Detection on Amazon ECS?
+
+Runtime Monitoring is essential for more comprehensive threat detection in Amazon ECS environments, helping you detect more sophisticated container-specific threats such as suspicious processes, persistence attempts, and unauthorized activities.
+
+For Amazon ECS on Fargate: Runtime Monitoring is required for threat detection, as other GuardDuty data sources do not have visibility into Fargate containers. Without Runtime Monitoring enabled, no security findings will be generated for Fargate workloads.
+
+For ECS on EC2: Runtime Monitoring provides container-aware threat detection with precise attribution to specific ECS clusters. You'll receive specialized security findings (such as AttackSequence:ECS/CompromisedCluster). Without Runtime Monitoring, GuardDuty can only attribute detected threats to the underlying EC2 instance, resulting in EC2-specific findings rather than ECS cluster-level insights.
+
+By correlating diverse signals across network activity, process runtime behavior, and AWS API activity, GuardDuty can identify complex attack patterns that might be missed by individual detections and map the complete attack vector.
+
+### GuardDuty AI Protection
+Open all
+
+#### How does GuardDuty AI Protection work?
+
+GuardDuty AI Protection analyzes CloudTrail management and data events associated with Amazon Bedrock and Amazon SageMaker to detect threats targeting your AI workloads. It identifies anomalous model invocations, cost harvesting attacks where adversaries abuse stolen credentials to run inference, and prompt injection attempts through its integration with Amazon Bedrock Guardrails. GuardDuty uses ML models trained at AWS scale to understand normal model invocation patterns and identify deviations that signal compromise or abuse.
+
+#### Is there a free trial of GuardDuty AI Protection?
+
+Yes, GuardDuty AI Protection includes a 30-day free trial. Available to all existing and new GuardDuty customers.
+
+## Next steps
+
+None
+
+### Learn about the benefits of working with AWS Partners, their deep level of expertise, and the partners available for services, products, and solutions.
+
+Learn more
+
+None
+
+### Learn about the benefits of working with AWS Partners, their deep level of expertise, and the partners available for services, products, and solutions.
+
+Learn more

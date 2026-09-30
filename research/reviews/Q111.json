@@ -1,0 +1,383 @@
+{
+  "question_id": "Q111",
+  "question_content_hash": "c9b73a46568e4d5d321c527f268bb18267e3a15af22fe388b4fc71d1b8d3204d",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:17:00+00:00",
+  "last_reviewed_at": "2026-09-30T20:25:15Z",
+  "performed_by": {
+    "agent": "scs-reconciler",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "99c50731be52d1e26c97b0e01fae2fcb5417cba768f86205a3efd5dc8887df3b",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Key và EC2 cùng account (member account trong Organizations), cùng Region.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Key tạo với default key policy (cho phép account dùng IAM policy); EC2 truy cập qua instance profile IAM policy (đã được xác minh đúng).",
+      "kind": "condition"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Chọn HAI nguyên nhân khiến EC2 không còn truy cập key.",
+      "kind": "optimization"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q111:A",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Organizations không áp 'IAM policy' lên account: IAM identity-based policy gắn vào user/group/role, còn policy của Organizations là SCP/RCP. Theo đúng chữ, cơ chế trong A không tồn tại; chỉ khi hiểu ngầm thành SCP/RCP (đã được C diễn đạt đúng) mới gây deny.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref8",
+        "ref9",
+        "ref11",
+        "ref12",
+        "ref13"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q111:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Automatic rotation chỉ đổi key material; key ID/ARN/policy giữ nguyên và KMS tự chọn đúng material khi giải mã, nên không làm mất quyền truy cập.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q111:C",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "SCP gắn ở OU của member account deny các KMS API giới hạn quyền tối đa của role instance profile, nên IAM policy cho phép vẫn không có tác dụng.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref4",
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q111:D",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Nếu key policy bỏ câu lệnh cho phép account (root) dùng IAM policy, IAM policy của instance profile trở nên vô hiệu và EC2 không dùng được key.",
+      "requirement_ids": [
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q111:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Cho key administrator thêm quyền kms:RevokeGrant không gỡ quyền của account/IAM policy; EC2 dùng key qua IAM policy chứ không qua grant.",
+      "requirement_ids": [
+        "R2"
+      ],
+      "reference_ids": [
+        "ref10",
+        "ref1"
+      ],
+      "evidence_kind": "inference"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q111:C",
+      "Q111:D"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu KMS nêu trực tiếp IAM policy vô hiệu khi key policy không cho phép account; tài liệu SCP nêu trực tiếp deny của SCP chặn role dù IAM cho phép.",
+      "open_issues": [
+        "Phương án A viết mơ hồ ('Organizations applied an IAM policy'); nếu người ra đề ngầm hiểu là RCP thì A cũng có thể gây lỗi, nhưng theo đúng chữ thì cơ chế không tồn tại."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref3",
+      "ref4",
+      "ref5"
+    ],
+    "recorded_at": "2026-09-30T20:17:00+00:00"
+  },
+  "source_answer": [
+    "Q111:C",
+    "Q111:D"
+  ],
+  "researched_answer": [
+    "Q111:C",
+    "Q111:D"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "C và D được tài liệu hỗ trợ trực tiếp (key policy thiếu quyền account → IAM policy vô hiệu; SCP deny ghi đè IAM allow). B và E chắc chắn sai. Hạ xuống medium vì A viết mơ hồ: nếu người đọc hiểu 'IAM policy do Organizations áp' là SCP/RCP deny theo ARN key thì A cũng gây lỗi.",
+    "open_issues": [
+      "A: 'Organizations has applied an IAM policy to the AWS account' không phải loại policy có thật; RCP (từ 11/2024) hỗ trợ KMS và có thể deny theo ARN key, nhưng RCP không phải IAM policy. Theo đúng chữ, chỉ C và D hợp lệ → đúng Choose two."
+    ]
+  },
+  "reconciliation_vi": "Source key = C, D, trùng blind. Đã tìm cách đọc để A đúng: IAM docs liệt kê SCP và RCP của Organizations là các loại policy riêng (ref12), còn IAM identity-based policy chỉ gắn vào user/group/role (ref11) – Organizations không 'áp IAM policy lên account'. RCP có hỗ trợ KMS (ref13) nên một RCP deny ARN key sẽ chặn được, nhưng A gọi sai tên cơ chế và C đã mô tả đúng cơ chế SCP; với Choose two, C và D là hai lựa chọn duy nhất đúng theo chữ. B: rotation giữ nguyên key ID/ARN/policy (ref6, ref7). E: thêm kms:RevokeGrant cho key admin không gỡ quyền IAM của account (ref10). Giữ C, D, verified; hạ confidence xuống medium vì wording của A.",
+  "explanation_vi": {
+    "why_correct": "C: SCP gắn vào OU của member account đặt giới hạn quyền tối đa; deny các KMS API ghi đè Allow trong IAM policy của instance profile. D: default key policy có câu lệnh cho phép account dùng IAM policy; nếu câu lệnh này bị bỏ, IAM policy cho phép dùng key trở nên vô hiệu.",
+    "others": {
+      "Q111:A": "Organizations không áp 'IAM policy' lên account (policy của Organizations là SCP/RCP), nên nguyên nhân như mô tả không tồn tại.",
+      "Q111:B": "Automatic rotation chỉ tạo key material mới, key ID/ARN và key policy giữ nguyên nên ứng dụng vẫn dùng key bình thường.",
+      "Q111:E": "Cho key administrator quyền kms:RevokeGrant không làm mất quyền của account; EC2 dùng key qua IAM policy chứ không qua grant."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "default key policy",
+      "meaning_vi": "Key policy mặc định cho phép account (root) ủy quyền qua IAM policy."
+    },
+    {
+      "phrase": "configured automatic rotation",
+      "meaning_vi": "Rotation không đổi key ID/ARN – không phải nguyên nhân mất quyền."
+    },
+    {
+      "phrase": "proper IAM policy attached",
+      "meaning_vi": "IAM policy đúng → tìm nguyên nhân ở key policy hoặc SCP."
+    }
+  ],
+  "memory_tip_vi": "Nếu IAM policy đúng mà vẫn không dùng được KMS key -> nghĩ đến key policy đã bỏ quyền account (root) hoặc SCP/RCP deny; kiểm tra rotation không đổi key ID/ARN nên không gây lỗi truy cập.",
+  "tags": {
+    "domains": [
+      "4 Identity and Access Management",
+      "5 Data Protection",
+      "6 Security Foundations and Governance"
+    ],
+    "services": [
+      "AWS KMS",
+      "AWS Organizations",
+      "AWS IAM",
+      "Amazon EC2"
+    ],
+    "reason_vi": "Troubleshoot quyền KMS: key policy, IAM policy và SCP cùng quyết định."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS KMS",
+      "section": "Allows access to the AWS account and enables IAM policies",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Without this permission, IAM policies that allow access to the key are ineffective, although IAM policies that deny access to the key are still effective.",
+      "supports": "Nếu key policy bị sửa bỏ câu lệnh cho phép account, IAM policy của instance profile mất hiệu lực.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS KMS",
+      "section": "Default key policy",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This default key policy has one policy statement that gives the AWS account that owns the KMS key permission to use IAM policies to allow access to all AWS KMS operations on the KMS key.",
+      "supports": "Default key policy là thứ cho phép IAM policy cấp quyền dùng key.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/control-access.html",
+      "title": "KMS key access and permissions",
+      "section": "IAM policies",
+      "snapshot_id": "e72755aa5dcb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "To use an IAM policy to allow access to a KMS key, the key policy must explicitly allow it.",
+      "supports": "IAM policy chỉ có tác dụng khi key policy cho phép.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs) - AWS Organizations",
+      "section": "Effects on permissions",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If a user or role has an IAM permission policy that grants access to an action that is either not allowed or explicitly denied by the applicable SCPs, the user or role can't perform that action.",
+      "supports": "SCP ở OU deny KMS API chặn role của instance profile dù IAM policy cho phép.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs) - AWS Organizations",
+      "section": "Effects on permissions",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs affect only member accounts in the organization.",
+      "supports": "Account trong đề là member account nên SCP có hiệu lực.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html",
+      "title": "Rotate AWS KMS keys",
+      "section": "Overview",
+      "snapshot_id": "f9ca112e7f4e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "The KMS key is the same logical resource, regardless of whether or how many times its key material changes.",
+      "supports": "Rotation không đổi key ID/ARN/policy nên không làm mất quyền truy cập.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html",
+      "title": "Rotate AWS KMS keys",
+      "section": "Overview",
+      "snapshot_id": "f9ca112e7f4e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "you can safely use a rotated KMS key in applications and AWS services without code changes.",
+      "supports": "Ứng dụng tiếp tục dùng key sau rotation mà không cần thay đổi.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref8",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html",
+      "title": "Managing organization policies with AWS Organizations",
+      "section": "Authorization policies",
+      "snapshot_id": "9aa49a160f87",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "control policies (SCPs) offer central control over the maximum available permissions for IAM users and IAM roles in an organization.",
+      "supports": "Organizations dùng SCP/RCP (authorization policies), không 'áp IAM policy vào account'.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html",
+      "title": "Managing organization policies with AWS Organizations",
+      "section": "Authorization policies",
+      "snapshot_id": "9aa49a160f87",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "control policies (RCPs) offer central control over the maximum available permissions for resources in an organization.",
+      "supports": "Cơ chế gần nhất với A là RCP, nhưng A mô tả là 'IAM policy' - không phải loại policy Organizations có.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html",
+      "title": "Default key policy - AWS KMS",
+      "section": "Allows key administrators to administer the KMS key",
+      "snapshot_id": "812837a272d8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "allows key administrators to delete a grant even if they are not a retiring principal in the grant.",
+      "supports": "kms:RevokeGrant chỉ liên quan tới grant; ứng dụng dùng IAM policy, không dùng grant.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html",
+      "title": "Policies and permissions in AWS Identity and Access Management - AWS Identity and Access Management",
+      "section": "Policy types – Identity-based policies",
+      "snapshot_id": "7bc720d1b825",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Attach managed and inline policies to IAM identities (users, groups to which users belong, or roles).",
+      "supports": "IAM identity-based policy gắn vào user/group/role, không gắn vào 'AWS account'; Organizations không áp IAM policy lên account.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref12",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html",
+      "title": "Policies and permissions in AWS Identity and Access Management - AWS Identity and Access Management",
+      "section": "Policy types – AWS Organizations SCPs",
+      "snapshot_id": "7bc720d1b825",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Use an AWS Organizations service control policy (SCP) to define the maximum permissions for IAM users and IAM roles within accounts in your organization",
+      "supports": "Loại policy Organizations áp cho account/OU là SCP (và RCP) – được IAM docs liệt kê như loại policy riêng, tách khỏi IAM identity-based policy.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref13",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html",
+      "title": "Resource control policies (RCPs) - AWS Organizations",
+      "section": "List of AWS services that support RCPs",
+      "snapshot_id": "312b73779b41",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Key Management Service (prefix:kms)",
+      "supports": "RCP hỗ trợ KMS: nếu diễn giải A là một RCP deny theo ARN key thì cũng chặn được – đây là lý do mở cho A, nhưng A gọi nó là 'IAM policy'.",
+      "kind": "inference"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "ambiguous",
+      "location": "Q111:A",
+      "detail_vi": "'Organizations has applied an IAM policy to the AWS account' không phải loại policy thật của Organizations (SCP/RCP); wording lai giữa các khái niệm."
+    }
+  ],
+  "notes_vi": "Rotation và RevokeGrant là distractor; hai nguyên nhân hợp lệ là SCP deny và key policy bỏ quyền IAM của account. A mô tả sai tên cơ chế (IAM policy thay vì SCP/RCP).",
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:17:00+00:00",
+      "change": "Blind verdict (scs-researcher): answer=[\"Q111:C\", \"Q111:D\"], proposed_status=verified",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30T20:25:15Z",
+      "change": "Reconciliation: khớp source key CD; status verified; hạ confidence high→medium vì wording của A (RCP có hỗ trợ KMS). Thêm tham chiếu ref11, ref12, ref13; cập nhật reason/reference_ids của Q111:A (verdict không đổi).",
+      "previous_answer": [
+        "Q111:C",
+        "Q111:D"
+      ]
+    }
+  ]
+}

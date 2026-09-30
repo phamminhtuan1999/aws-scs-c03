@@ -1,0 +1,60 @@
+{
+  "question_id": "Q124",
+  "question_content_hash": "d123fa9bac55cb1db467eac41be2ec2edaa0caff85a85c5deb4408a5a1bade19",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T20:23:12+00:00",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "IAM user (trong account thuộc organization của công ty) phải assume một role để truy cập resource nằm trong account của MỘT ORGANIZATION KHÁC (cross-account, cross-org).", "kind": "scope"},
+    {"id": "R2", "text_vi": "Chọn các bước BẮT BUỘC (must) - Choose TWO.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Cơ chế: role ở account chứa resource với trust policy tin cậy principal, và identity policy của principal cho phép sts:AssumeRole.", "kind": "constraint"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q124:A", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Phía trusted account phải gắn identity-based policy cho IAM user cho phép sts:AssumeRole trên role ở account chứa resource; thiếu bước này user không gọi được AssumeRole. (Câu chữ 'in the AWS account that contains the resources' được hiểu là quyền AssumeRole nhắm tới role trong account đó.)",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q124:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "SCP chỉ ảnh hưởng user/role do account trong organization đó quản lý, không ảnh hưởng user từ account ngoài organization; nên SCP của organization sở hữu resource không kiểm soát lệnh AssumeRole của IAM user bên ngoài - đây không phải bước bắt buộc (SCP mặc định FullAWSAccess, và kiểm soát principal bên ngoài là việc của RCP).",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q124:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Phải tạo role trong account chứa resource, với role trust policy (resource-based policy) chỉ định IAM user làm Principal được phép assume; đây là nửa còn lại bắt buộc của cross-account access.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q124:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Không có khái niệm 'trust relationship giữa IAM user và account'; quan hệ tin cậy được định nghĩa trong trust policy của role (đã nằm trong C). Bước này mơ hồ, không phải cấu hình IAM cụ thể.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q124:E", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Tạo role trong account của IAM user và gắn policy AssumeRole cho role đó không cấp quyền cho IAM user; role trung gian này không cần thiết và không thay thế việc cấp quyền trực tiếp cho user cùng role ở account chứa resource.",
+     "requirement_ids": ["R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q124:A", "Q124:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "medium", "reason_vi": "Tài liệu IAM mô tả rõ hai nửa bắt buộc của cross-account role: trust policy của role ở trusting account và identity policy cho phép AssumeRole ở trusted account; SCP không áp dụng cho principal ngoài organization. Giảm xuống medium vì câu chữ của A dễ hiểu nhầm là policy được tạo trong account chứa resource.", "open_issues": ["Câu chữ lựa chọn A: identity policy phải nằm trong account của IAM user; 'in the AWS account that contains the resources' chỉ hợp lý nếu hiểu là đích của sts:AssumeRole."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T20:23:12+00:00"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic-cross-account.html", "title": "Cross-account policy evaluation logic", "section": "intro", "snapshot_id": "a6ef60cac267", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You must also attach an identity-based policy to the identity that acts as the principal in the request",
+     "supports": "Cross-account cần cả identity-based policy cho principal (A) lẫn resource-based policy/trust policy ở phía resource (C).", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_aws-accounts.html", "title": "Access for an IAM user in another AWS account that you own", "section": "Example scenario", "snapshot_id": "a02cab23dcba", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "This is done by granting the Developers group permission to call the AWS Security Token Service (AWS STS) AssumeRole API for the UpdateApp role",
+     "supports": "Phía account của user phải cấp quyền sts:AssumeRole cho role ở account kia (A); role được tạo ở account chứa resource với trust policy (C).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic-cross-account.html", "title": "Cross-account policy evaluation logic", "section": "intro", "snapshot_id": "a6ef60cac267", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You can specify the entire account or its IAM users",
+     "supports": "Trust policy của role có thể chỉ định trực tiếp IAM user của account khác làm Principal (C).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html", "title": "Service control policies (SCPs)", "section": "SCP effects on permissions", "snapshot_id": "0ace6350695a", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "They also don't affect users or roles from accounts outside the organization",
+     "supports": "SCP của organization sở hữu resource không tác động tới IAM user từ organization khác (B không bắt buộc).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html", "title": "Resource control policies (RCPs)", "section": "intro", "snapshot_id": "312b73779b41", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "restrict IAM principals that are external to your organization accounts making requests to access resources within your organization",
+     "supports": "Kiểm soát principal bên ngoài truy cập resource của organization là vai trò của RCP, không phải SCP.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "ambiguous", "location": "Q124:A", "detail_vi": "Cụm 'in the AWS account that contains the resources' có thể bị hiểu là tạo identity policy trong account chứa resource (không thể gắn cho IAM user ở account khác); ý đúng là policy cho phép sts:AssumeRole vào role trong account đó."}
+  ],
+  "notes_vi": "SCP của organization chứa IAM user cũng phải không deny sts:AssumeRole, nhưng B nói về organization sở hữu resource."
+}
