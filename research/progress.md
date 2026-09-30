@@ -24,12 +24,12 @@ Blindness is enforced by instructions and directory layout, not by a hard sandbo
 | 6 | Q031–Q036 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 7 | Q037–Q042 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 8 | Q043–Q048 | done 6/6 valid | done 6/6 valid (6 verified) |
-| 9 | Q049–Q054 | done 6/6 valid | running |
+| 9 | Q049–Q054 | done 6/6 valid | done 6/6 valid (6 verified) |
 | 10 | Q055–Q060 | done 6/6 valid | running |
 | 11 | Q061–Q066 | done 6/6 valid | running |
 | 12 | Q067–Q072 | done 6/6 valid | running |
 | 13 | Q073–Q078 | done 6/6 valid | running |
-| 14 | Q079–Q084 | done 6/6 valid | queued |
+| 14 | Q079–Q084 | done 6/6 valid | running |
 | 15 | Q085–Q090 | running (2026-09-30) | queued |
 | 16 | Q091–Q096 | running (2026-09-30) | queued |
 | 17 | Q097–Q102 | running (2026-09-30) | queued |
@@ -61,3 +61,4 @@ Rule: any question whose final status/answer moved TOWARD the source key after t
 - Q049 — medium; FIS report option D is a real contender. Q051 — medium; SCP Allow-with-condition caveats.
 - **Timestamp integrity incident (2026-09-30):** several agents wrote estimated/future timestamps (round minutes). Detected by comparing with file mtimes; no ordering violation (every blind file was written before its final file). Fixed with `tools/fix_timestamps.py` (timestamp fields only, audit trail in `research/corrections_log.md` and `timestamp_correction` fields); validator now rejects timestamps later than file write time; `tools/snapshot_mtimes.py` appends write-time snapshots to `research/mtime_snapshots.jsonl`.
 - Q055/Q056 cite AWS Security IR guide PDF via WebFetch (no snapshot) → fetch_doc now supports PDFs; reconciler should convert to snapshots. Q070 — medium (runbook creates trail; periodic rule). Q076 — time-dependent (Shield L7 auto mitigation legacy since 2026-03-26). Q077 — "prevent" wording vs detect-and-remove options. Q079 — Audit Manager maintenance mode from 2026-04-30. Q081 P5 inference. Q082 — "design principles" vs best practices. Q084 — option A contains an impossible filter step.
+- fetch_doc.py had a syntax error for ~minutes after the PDF patch (fixed; main agent). A stale garbage snapshot 199d3825e018 (raw PDF parsed as HTML) was refreshed to real PDF text; broken caches are now auto-refetched.

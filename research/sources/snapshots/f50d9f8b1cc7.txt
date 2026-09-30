@@ -1,0 +1,273 @@
+URL: https://docs.aws.amazon.com/IAM/latest/UserGuide/securing_access-keys.html
+TITLE: Secure access keys - AWS Identity and Access Management
+
+# Secure access keys
+
+Anyone who has your access keys has the same level of access to your AWS resources
+that you do. Consequently, AWS goes to significant lengths to protect your access keys,
+and, in keeping with our shared-responsibility
+model, you should as well.
+
+Expand the following sections for guidance to help you protect your access keys.
+
+Note
+
+Your organization might have different security requirements and policies than those
+described in this topic. The suggestions provided here are intended as general
+guidelines.
+
+One of the best ways to protect your account is to not have
+access keys for your AWS account root user. Unless you must have root user access
+keys (which is rare), it is best not to generate them. Instead, create an
+administrative user in AWS IAM Identity Center for daily administrative tasks.For information about
+how to create an administrative user in IAM Identity Center, see Getting
+started in the IAM Identity Center User Guide.
+
+If you already have root user access keys for your account, we recommend the
+following: Find places in your applications where you are currently using access keys
+(if any), and replace the root user access keys with IAM user access keys. Then
+disable and remove the root user access keys. For more information about how to update
+access keys, see Update access keys
+
+In many scenarios, you don't need long-term access keys that never expire (as you
+have with an IAM user). Instead, you can create IAM roles and generate
+temporary security credentials. Temporary security credentials consist of an access
+key ID and a secret access key, but they also include a security token that indicates
+when the credentials expire.
+
+Long-term access keys, such as those associated with IAM users and the root user,
+remain valid until you manually revoke them. However, temporary security credentials
+obtained through IAM roles and other features of the AWS Security Token Service expire after a
+short period of time. Use temporary security credentials to help reduce your risk in
+case credentials are accidentally exposed.
+
+Use an IAM role and temporary security credentials in these scenarios:
+
+- You have an application or AWS CLI scripts running on an
+Amazon EC2 instance. Don't use access keys directly in your
+application. Don't pass access keys to the application, embed them in the
+application, or let the application read access keys from any source. Instead,
+define an IAM role that has appropriate permissions for your application and
+launch the Amazon Elastic Compute Cloud (Amazon EC2) instance with roles for EC2.
+Doing this associates an IAM role with the Amazon EC2 instance. This practice also
+enables the application to get temporary security credentials that it can in
+turn use to make programmatic calls to AWS. The AWS SDKs and the AWS Command Line Interface
+(AWS CLI) can get temporary credentials from the role automatically.
+
+- You need to grant cross-account access. Use
+an IAM role to establish trust between accounts, and then grant users in one
+account limited permissions to access the trusted account. For more
+information, see IAM tutorial: Delegate access across AWS accounts using IAM roles.
+
+- You have a mobile app. Don't embed access
+keys with the app, even in encrypted storage. Instead, use Amazon Cognito to manage user identities in
+your app. This service lets you authenticate users using Login with Amazon,
+Facebook, Google, or any OpenID Connect (OIDC)–compatible identity
+provider. You can then use the Amazon Cognito credentials provider to manage credentials
+that your app uses to make requests to AWS.
+
+- You want to federate into AWS and your organization
+supports SAML 2.0. If you work for an organization that has an
+identity provider that supports SAML 2.0, configure the provider to use SAML.
+You can use SAML to exchange authentication information with AWS and get back
+a set of temporary security credentials. For more information, see SAML 2.0 federation.
+
+- You want to federate into AWS and your organization
+has an on-premises identity store. If users can authenticate
+inside your organization, you can write an application that can issue them
+temporary security credentials for access to AWS resources. For more
+information, see Enable custom identity broker access to the AWS console.
+
+- Use conditions in IAM policies to only allow access
+from expected networks. You can limit where and how your access
+keys are used by implementing IAM policies
+with conditions that specify and allow only expected networks, such
+as your public IP addresses or Virtual Private Clouds (VPCs). This way you know
+access keys can only be used from expected and acceptable networks.
+
+Note
+
+Are you using an Amazon EC2 instance with an application that requires programmatic
+access to AWS resources? If so, use IAM roles for
+EC2.
+
+If you must create access keys for programmatic access to AWS, create them for
+IAM users, granting the users only the permissions they require.
+
+Observe these precautions to help protect IAM user access keys:
+
+- Don't embed access keys directly into code.
+The AWS SDKs and the AWS Command Line Tools enable you
+to put access keys in known locations so that you don't have to keep them in
+code.
+
+Put access keys in one of the following locations:
+
+- The AWS credentials file. The AWS
+SDKs and AWS CLI automatically use the credentials that you store in the
+AWS credentials file.
+
+For information about using the AWS credentials file, see the
+documentation for your SDK. Examples include Set AWS Credentials and
+Region in the AWS SDK for Java Developer Guide and Configuration and
+credential files in the
+AWS Command Line Interface User Guide.
+
+To store credentials for the AWS SDK for .NET and the AWS Tools for Windows PowerShell, we recommend
+that you use the SDK Store. For more information, see Using the SDK Store in the
+AWS SDK for .NET Developer Guide.
+
+- Environment variables. On a
+multi-tenant system, choose user environment variables, not system
+environment variables.
+
+For more information about using environment variables to store
+credentials, see Environment Variables in the
+AWS Command Line Interface User Guide.
+
+- Use different access keys for different
+applications. Do this so that you can isolate the permissions and
+revoke the access keys for individual applications if they are exposed. Having
+separate access keys for different applications also generates distinct entries
+in AWS CloudTrail log files. This
+configuration makes it easier for you to determine which application performed
+specific actions.
+
+- Update access keys when needed. If there is
+a risk that the access key could be compromised, update the access key and
+delete the previous access key. For details, see Update access keys
+
+- Remove unused access keys. If a user leaves
+your organization, remove the corresponding IAM user so that the user can no
+longer access your resources. To find out when an access key was last used, use
+the GetAccessKeyLastUsed API (AWS CLI command: aws iam
+get-access-key-last-used).
+
+- Use temporary credentials and configure multi-factor
+authentication for your most sensitive API operations. With IAM
+policies, you can specify which API operations a user is allowed to call. In
+some cases, you might want the additional security of requiring users to be
+authenticated with AWS MFA before you allow them to perform particularly
+sensitive actions. For example, you might have a policy that allows a user to
+perform the Amazon EC2 RunInstances, DescribeInstances,
+and StopInstances actions. But you might want to restrict a
+destructive action like TerminateInstances and make sure that users
+can perform that action only if they authenticate with an AWS MFA device. For
+more information, see Secure API access with MFA.
+
+You can access a limited set of AWS services and features using the AWS mobile
+app. The mobile app helps you support incident response while on the go. For more
+information and to download the app, see AWS Console Mobile Application.
+
+You can sign in to the mobile app using your console password or your access keys.
+As a best practice, do not use root user access keys. Instead, we strongly recommend
+that in addition to using a password or biometric lock on your mobile device, you
+create an IAM user specifically for managing AWS resources using the mobile app.
+If you lose your mobile device, you can remove the IAM user's access.
+
+To sign in using access keys (mobile app)
+
+- Open the app on your mobile device.
+
+- If this is the first time that you're adding an identity to the device,
+choose Add an identity and then choose Access
+keys.
+
+If you have already signed in using another identity, choose the menu icon
+and choose Switch identity. Then choose Sign in
+as a different identity and then Access
+keys.
+
+- On the Access keys page, enter your information:
+
+- Access key ID – Enter your access key
+ID.
+
+- Secret access key – Enter your secret
+access key.
+
+- Identity name – Enter the name of the
+identity that will appear in the mobile app. This does not need to match
+your IAM user name.
+
+- Identity PIN – Create a personal
+identification number (PIN) that you will use for future sign-ins.
+
+Note
+
+If you enable biometrics for the AWS mobile app, you will be
+prompted to use your fingerprint or facial recognition for
+verification instead of the PIN. If the biometrics fail, you might be
+prompted for the PIN instead.
+
+- Choose Verify and add keys.
+
+You can now access a select set of your resources using the mobile
+app.
+
+The following topics provide guidance for setting up the AWS SDKs and the AWS CLI
+to use access keys:
+
+- Set AWS credentials and
+Region in the AWS SDK for Java Developer Guide
+
+- Using the SDK Store in the
+AWS SDK for .NET Developer Guide
+
+- Providing Credentials to the SDK in the
+AWS SDK for PHP Developer Guide
+
+- Configuration in the Boto 3 (AWS SDK for Python)
+documentation
+
+- Using AWS
+Credentials in the AWS Tools for Windows PowerShell User Guide
+
+- Configuration and
+credential files in the AWS Command Line Interface User Guide
+
+- Granting access using an IAM
+role in the AWS SDK for .NET Developer Guide
+
+- Configure IAM roles for
+Amazon EC2 in the AWS SDK for Java 2.x
+
+## Using access keys and secret key credentials for console access
+
+It is possible to use access key and secret key credentials for direct AWS Management Console
+access, not just the AWS CLI. This can be achieved using the AWS STS GetFederationToken API call. By constructing a console URL
+using the temporary credentials and token provided by GetFederationToken,
+IAM principals can access the console. For more information, see Enable custom identity broker access to the AWS console.
+
+It is worth clarifying that when signing into the console directly using IAM or
+root user credentials with MFA enabled, MFA will be required. However, if the method
+described above (using temporary credentials with GetFederationToken) is
+used, MFA will NOT be required.
+
+## Auditing access keys
+
+You can review the AWS access keys in your code to determine whether the keys are
+from an account that you own. You can pass an access key ID using the aws sts
+get-access-key-info AWS CLI command or the GetAccessKeyInfo
+AWS API operation.
+
+The AWS CLI and AWS API operations return the ID of the AWS account to which the
+access key belongs. Access key IDs beginning with AKIA are long-term
+credentials for an IAM user or an AWS account root user. Access key IDs beginning with
+ASIA are temporary credentials that are created using AWS STS operations.
+If the account in the response belongs to you, you can sign in as the root user and review
+your root user access keys. Then, you can pull a credentials report to learn which
+IAM user owns the keys. To learn who requested the temporary credentials for an
+ASIA access key, view the AWS STS events in your CloudTrail logs.
+
+For security purposes, you can review AWS CloudTrail logs to
+learn who performed an action in AWS. You can use the sts:SourceIdentity
+condition key in the role trust policy to require users to specify an identity when they
+assume a role. For example, you can require that IAM users specify their own user name
+as their source identity. This can help you determine which user performed a specific
+action in AWS. For more information, see sts:SourceIdentity.
+
+This operation does not indicate the state of the access key. The key might be
+active, inactive, or deleted. Active keys might not have permissions to perform an
+operation. Providing a deleted access key might return an error that the key doesn't
+exist.

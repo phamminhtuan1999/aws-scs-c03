@@ -72,7 +72,9 @@ def fetch(url, refresh=False):
     idx = load_index()
     for sid, meta in idx.items():
         if url in (meta['url'], meta['final_url']) and not refresh and (SNAP / f'{sid}.txt').exists():
-            return sid, meta, (SNAP / f'{sid}.txt').read_text(encoding='utf-8')
+            cached = (SNAP / f'{sid}.txt').read_text(encoding='utf-8')
+            if '%PDF-' not in cached[:600] and meta.get('chars', 1) > 0:  # skip broken caches (raw PDF / empty)
+                return sid, meta, cached
     req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept-Language': 'en-US,en'})
     with urllib.request.urlopen(req, timeout=60) as r:
         raw = r.read()
@@ -109,18 +111,11 @@ def save_pdf(url, final, raw):
     from pypdf import PdfReader
     reader = PdfReader(BytesIO(raw))
     pages = [(pg.extract_text() or '') for pg in reader.pages]
-    text = '
-
-'.join(f'[page {i}]
-{t}' for i, t in enumerate(pages, 1))
+    text = '\n\n'.join(f'[page {i}]\n{t}' for i, t in enumerate(pages, 1))
     title = (reader.metadata.title if reader.metadata and reader.metadata.title else final.rsplit('/', 1)[-1])
     sid = hashlib.sha256(final.encode()).hexdigest()[:12]
     SNAP.mkdir(parents=True, exist_ok=True)
-    (SNAP / f'{sid}.txt').write_text(f'URL: {final}
-TITLE: {title}
-
-{text}
-', encoding='utf-8')
+    (SNAP / f'{sid}.txt').write_text(f'URL: {final}\nTITLE: {title}\n\n{text}\n', encoding='utf-8')
     meta = {'url': url, 'final_url': final, 'title': title, 'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
             'page_last_updated': None, 'sha256': hashlib.sha256(text.encode()).hexdigest(), 'chars': len(text),
             'read_via': 'tools/fetch_doc.py (pdf)', 'pages': len(pages)}

@@ -1,0 +1,59 @@
+{
+  "question_id": "Q086",
+  "question_content_hash": "c4b0472c260c5b0fe468a986c833b44bbfaef765c67271bb75217dbacb9a7436",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:55:27Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Diễn giải đúng ý nghĩa của statement key policy trong hình: Principal là account principal arn:aws:iam::111122223333:root, Action kms:*, Resource *.", "kind": "condition"},
+    {"id": "R2", "text_vi": "Xác định ai thực sự được dùng KMS key nhờ statement này (phạm vi account, vai trò của IAM policy).", "kind": "scope"}
+  ],
+  "image_transcriptions": [
+    {"image": "images/Q086_image_01.png",
+     "text": "{\n    \"Sid\": \"Enable IAM User Permissions\",\n    \"Effect\": \"Allow\",\n    \"Principal\": {\n        \"AWS\": \"arn:aws:iam::111122223333:root”\n    },\n    \"Action\": \"kms:*\",\n    \"Resource\": \"*\"\n}",
+     "notes_vi": "Dấu nháy đóng sau 'root' trong ảnh trông như nháy cong (”) [?] - có thể chỉ là font/ảnh chụp; không đổi ý nghĩa. Effect=Allow, Principal=account principal 111122223333 (root), Action=kms:*, Resource=*, không có Condition."}
+  ],
+  "option_reviews": [
+    {"unit_id": "Q086:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Principal chỉ là account 111122223333 (không phải \"*\" hay mọi account), nên statement không mở quyền cho principal của các AWS account khác.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3"], "evidence_kind": "inference"},
+    {"unit_id": "Q086:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "ARN ':root' là account principal, đại diện cho cả AWS account và administrators; nó cho phép account dùng IAM policy để ủy quyền cho IAM principals, không giới hạn chỉ root user.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q086:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Statement không có Condition (ví dụ kms:ViaService) nên không giới hạn việc dùng key chỉ qua Amazon S3; Action là kms:* trên chính key.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q086:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Khi Principal là account principal, statement không trực tiếp cấp quyền cho IAM principal nào mà cho phép account dùng IAM policies để ủy quyền; vì vậy chỉ principal trong 111122223333 có IAM policy cho phép key mới dùng được key.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2", "ref4"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q086:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Đây chính là statement mặc định 'Enable IAM User Permissions' được tài liệu KMS giải thích trực tiếp: account principal cho phép dùng IAM policies để ủy quyền, không tự cấp quyền cho IAM principal.", "open_issues": ["Sắc thái: root user của account vẫn có quyền qua statement này mà không cần IAM policy; D mô tả đúng ý chính đối với IAM principals."]},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:55:27Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html", "title": "Default key policy - AWS Key Management Service", "section": "Allows access to the AWS account and enables IAM policies",
+     "snapshot_id": "812837a272d8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "When the principal in a key policy statement is the account principal, the policy statement doesn't give any IAM principal permission to use the KMS key.",
+     "supports": "Statement với account principal không trực tiếp cấp quyền dùng key cho IAM principal.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html", "title": "Default key policy - AWS Key Management Service", "section": "Allows access to the AWS account and enables IAM policies",
+     "snapshot_id": "812837a272d8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "it allows the account to use IAM policies to delegate the permissions specified in the policy statement.",
+     "supports": "Statement cho phép account ủy quyền kms:* qua IAM policies.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html", "title": "Default key policy - AWS Key Management Service", "section": "Allows access to the AWS account and enables IAM policies",
+     "snapshot_id": "812837a272d8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The account principal represents the AWS account and its administrators, including the account root user.",
+     "supports": "':root' là account principal (cả account), không chỉ root user; và chỉ thuộc account 111122223333.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-default.html", "title": "Default key policy - AWS Key Management Service", "section": "Allows access to the AWS account and enables IAM policies",
+     "snapshot_id": "812837a272d8", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Without this permission, IAM policies that allow access to the key are ineffective",
+     "supports": "Statement này là điều kiện để IAM policy cấp quyền dùng key có hiệu lực.", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Nháy đóng cong có thể thấy trong ảnh (sau ':root') chưa chắc chắn nên không ghi thành source_issue."
+}

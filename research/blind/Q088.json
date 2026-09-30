@@ -1,0 +1,75 @@
+{
+  "question_id": "Q088",
+  "question_content_hash": "e171d8d03cc780375d433860a2855484bf04517ec5974b8502e8ef3b55164ec4",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:56:43Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Mã hóa dữ liệu S3 khi truyền (in transit), tức bắt buộc HTTPS/TLS.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Bucket policy phải Deny mọi S3 operation nếu request không được mã hóa (không dùng TLS).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Không được chặn các request hợp lệ qua HTTPS.", "kind": "condition"}
+  ],
+  "image_transcriptions": [
+    {"image": "images/Q088_image_01.png",
+     "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [{\n        \"Sid\": \"AllowSSLRequestsOnly\",\n        \"Action\": \"s3:*\",\n        \"Effect\": \"Deny\",\n        \"Resource\": [\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\",\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*\"\n        ],\n        \"Condition\": {\n            \"Bool\": {\n                \"aws:SecureTransport\": \"true\"\n            }\n        },\n        \"Principal\": \"*\"\n    }]\n}",
+     "notes_vi": "Choice A: Deny s3:* khi aws:SecureTransport = \"true\" (tức chặn request HTTPS)."},
+    {"image": "images/Q088_image_02.png",
+     "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [{\n        \"Sid\": \"AllowSSLRequestsOnly\",\n        \"Action\": \"s3:*\",\n        \"Effect\": \"Deny\",\n        \"Resource\": [\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\",\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*\"\n        ],\n        \"Condition\": {\n            \"Bool\": {\n                \"aws:SecureTransport\": \"false\"\n            }\n        },\n        \"Principal\": \"*\"\n    }]\n}",
+     "notes_vi": "Choice B: Deny s3:* khi aws:SecureTransport = \"false\". Ảnh có con trỏ chuột, không che nội dung."},
+    {"image": "images/Q088_image_03.png",
+     "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [{\n        \"Sid\": \"AllowSSLRequestsOnly\",\n        \"Action\": \"s3:*\",\n        \"Effect\": \"Deny\",\n        \"Resource\": [\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\",\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*\"\n        ],\n        \"Condition\": {\n            \"StringNotEquals\": {\n                \"s3:x-amz-server-side-encryption\": \"AES256\"\n            }\n        },\n        \"Principal\": \"*\"\n    }]\n}",
+     "notes_vi": "Choice C: Deny s3:* khi header x-amz-server-side-encryption khác \"AES256\" (mã hóa lúc lưu trữ - SSE-S3)."},
+    {"image": "images/Q088_image_04.png",
+     "text": "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [{\n        \"Sid\": \"AllowSSLRequestsOnly\",\n        \"Action\": \"s3:*\",\n        \"Effect\": \"Deny\",\n        \"Resource\": [\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET\",\n            \"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*\"\n        ],\n        \"Condition\": {\n            \"StringNotEquals\": {\n                \"s3:x-amz-server-side-encryption\": true\n            }\n        },\n        \"Principal\": \"*\"\n    }]\n}",
+     "notes_vi": "Choice D: giá trị true không có dấu nháy, dùng với StringNotEquals trên s3:x-amz-server-side-encryption."}
+  ],
+  "option_reviews": [
+    {"unit_id": "Q088:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "aws:SecureTransport = true nghĩa là request đi qua HTTPS; Deny khi true sẽ chặn chính các request đã mã hóa và cho phép (không chặn) HTTP - ngược yêu cầu.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q088:B", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Deny s3:* trên bucket và object khi aws:SecureTransport = false, tức chặn mọi request HTTP không mã hóa; trùng với ví dụ bucket policy chính thức của S3 để chỉ cho phép HTTPS.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q088:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "s3:x-amz-server-side-encryption liên quan server-side encryption (mã hóa at rest), không kiểm tra TLS; áp dụng cho s3:* còn chặn cả các request đọc/list không mang header này, kể cả khi dùng HTTPS.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "direct"},
+    {"unit_id": "Q088:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Cũng dựa trên header SSE (at rest) chứ không phải in transit; giá trị true cho header SSE không phải giá trị hợp lệ (AES256/aws:kms...) nên điều kiện gần như luôn đúng và chặn mọi thao tác.",
+     "requirement_ids": ["R1", "R3"], "reference_ids": ["ref4", "ref5"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q088:B"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu S3 đưa ra đúng bucket policy Deny s3:* với Bool aws:SecureTransport false để chặn HTTP; các lựa chọn còn lại hoặc đảo logic hoặc dùng khóa SSE (at rest).", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:56:43Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html", "title": "Examples of Amazon S3 bucket policies", "section": "Restrict access to only HTTPS requests",
+     "snapshot_id": "5a8f51e47d75", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If a request returns true, then the request was sent through HTTPS. If the request returns false, then the request was sent through HTTP.",
+     "supports": "Ý nghĩa giá trị true/false của aws:SecureTransport.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html", "title": "Examples of Amazon S3 bucket policies", "section": "Restrict access to only HTTPS requests",
+     "snapshot_id": "5a8f51e47d75", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "In the following example, the bucket policy explicitly denies HTTP requests.",
+     "supports": "Ví dụ chính thức (Deny s3:*, Bool aws:SecureTransport false) giống hệt phương án B.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html", "title": "AWS global condition context keys", "section": "aws:SecureTransport",
+     "snapshot_id": "ee337fc62552", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Use this key to check whether the request was sent using TLS.",
+     "supports": "aws:SecureTransport là khóa kiểm tra mã hóa in transit (TLS).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingServerSideEncryption.html", "title": "Using server-side encryption with Amazon S3 managed keys (SSE-S3)", "section": "Using server-side encryption with Amazon S3 managed keys (SSE-S3)",
+     "snapshot_id": "eea2e60d0127", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Server-side encryption protects data at rest.",
+     "supports": "Khóa s3:x-amz-server-side-encryption thuộc về mã hóa at rest, không phải in transit.", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingServerSideEncryption.html", "title": "Using server-side encryption with Amazon S3 managed keys (SSE-S3)", "section": "Using server-side encryption with Amazon S3 managed keys (SSE-S3)",
+     "snapshot_id": "eea2e60d0127", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "denies permissions to upload an object unless the request includes the x-amz-server-side-encryption",
+     "supports": "Điều kiện header SSE dùng để ép SSE khi upload object (với giá trị AES256), không liên quan TLS.", "kind": "direct"}
+  ],
+  "source_issues": [
+    {"type": "typo", "location": "Q088:C", "detail_vi": "Sid 'AllowSSLRequestsOnly' được dùng cho cả policy C và D dù nội dung là điều kiện SSE (không liên quan SSL); không ảnh hưởng tính hợp lệ nhưng gây nhầm."}
+  ],
+  "notes_vi": "Sid giống nhau ở cả 4 ảnh; chỉ khác phần Condition."
+}

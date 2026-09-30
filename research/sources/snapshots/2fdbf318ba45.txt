@@ -1,0 +1,300 @@
+URL: https://docs.aws.amazon.com/whitepapers/latest/tagging-best-practices/implementing-and-enforcing-tagging.html
+TITLE: Implementing and enforcing tagging - Best Practices for Tagging AWS Resources
+
+# Implementing and enforcing tagging
+
+In this section, we’ll introduce you to the tools available for
+the following resource management strategies: manual,
+infrastructure as code (IaC), and continuous
+integration/continuous delivery (CI/CD). The key dimension for
+these approaches is an increasingly frequent rate of deployment.
+
+## Manually managed resources
+
+These are typically workloads that fall into the foundation or migration stages of adoption. Often, these are simple largely
+static workloads that have been built using traditional written procedures or those migrated
+as is using tools such as AWS Transform MGN from an on-premises
+environment. Migration tools, such as Migration Hub and MGN, can apply tags as part
+of the migration process. However, if tags were not applied during the original migration or
+the tagging schema has changed since then, the Tag Editor (a feature of the AWS Management Console)
+allows you to search for resources using a variety of search criteria and add, modify, or
+delete tags in bulk. Search criteria can include resources with or without the presence of a
+particular tag or value. The AWS Resource Tagging API allows you to perform these
+functions programmatically.
+
+As these workloads are modernized, resource types such as Auto Scaling groups are
+introduced. These resource types allow for greater elasticity and improved resilience. The
+auto scaling group manages Amazon EC2 instances on your behalf, however, you might still want the
+EC2 instances to be tagged consistently with the manually created resources. An Amazon EC2 launch template provides the means to specify
+the tags that the Auto Scaling should apply to instances that it creates.
+
+When the resources of a workload are being managed manually, it can be helpful to
+automate the tagging of resources. There are various solutions available. One approach is to
+use AWS Config Rules, which can check for required_tags and then start a Lambda
+function to apply them. AWS Config Rules is described in more detail later in this whitepaper.
+
+## Infrastructure as code (IaC) managed resources
+
+AWS CloudFormation provides a common language for provisioning all the infrastructure resources
+in your AWS environment. CloudFormation templates are JSON or YAML files that create AWS
+resources in an automated manner. When you create AWS resources using CloudFormation
+templates, you can use the CloudFormation Resource Tags property to apply tags to supported
+resource types upon creation. Managing the tags as well as the resources with IaC helps
+ensure consistency.
+
+When resources are created by AWS CloudFormation, the service automatically applies a set of
+AWS defined tags to the resources created by the AWS CloudFormation template. These are:
+
+aws:cloudformation:stack-name
+aws:cloudformation:stack-id
+aws:cloudformation:logical-id
+
+You can easily define a resource group based on the AWS CloudFormation stack. These AWS
+defined tags are inherited by the resources created by the stack. However, for Amazon EC2
+instances within an Auto Scaling group, the AWS::AutoScaling::AutoScalingGroup TagProperty needs to be set in
+the definition of the Auto Scaling group in your AWS CloudFormation template. Alternatively, if you
+are using an EC2 Launch
+Template with the Auto Scaling group then you can define the tags in its
+definition. Using EC2 Launch
+Templates with Auto Scaling groups or with an AWS container service is
+recommended. These services can help ensure consistent tagging of your Amazon EC2 instances and
+also support Auto
+Scaling Across Multiple Instance Types & Purchase Options, which can improve
+resilience and optimize your compute costs.
+
+AWS CloudFormation Hooks provide developers with a means of keeping key aspects of their
+application consistent with their organization’s standards. Hooks can be configured to
+provide a warning or prevent deployment. This
+feature is best suited to checking key configuration elements in your templates, such as
+whether an Auto Scaling group is configured to apply customer defined tags to all the Amazon EC2
+instances it launches, or to ensure that all Amazon S3 buckets are created with the required
+encryption settings. In both cases, evaluation of this compliance is being pushed to the
+earlier in the deployment process with AWS CloudFormation hooks before deployment.
+
+AWS CloudFormation provides the capability to detect when a resource (see Resources that support drift detection) provisioned from a template has been
+modified and resources no longer match their expected template configurations. This is known
+as drift. If you use automation to apply tags to resources managed via
+IaC, then you are modifying them, introducing drift. When using IaC, it's currently
+recommended to manage any tagging requirements as part of the IaC templates, implement
+AWS CloudFormation hooks, and publish AWS CloudFormation Guard rule sets that can be used by automation.
+
+## CI/CD pipeline managed resources
+
+As the maturity of a workload increases, it’s likely that techniques such as continuous
+integration and continuous deployment (CI/CD) are adopted. These techniques help to reduce
+deployment risk by making it easier to deploy small changes more frequently with increased
+automation of testing. An observability strategy that detects unexpected behavior introduced
+by a deployment can automatically roll back the deployment with minimal user impact. As you
+get to the stage of deploying tens of times a day, applying tags retroactively is simply no
+longer practical. Everything needs to be expressed as code or configuration, version
+controlled, and, wherever possible, tested and evaluated before deployment into production.
+In the combined develop and operations
+(DevOps) model, many of the practices address operational considerations as code
+and validate them early in the deployment lifecycle.
+
+Ideally, you want to push these checks as early in the process as you can (as shown
+with AWS CloudFormation hooks), so that you can be confident that your AWS CloudFormation template meets your
+policies before they leave the developer's machine.
+
+AWS CloudFormation Guard
+2.0 provides the means to write preventative compliance rules for anything you can
+define with CloudFormation. The template is validated against the rules in the development
+environment. Clearly, this feature has a range of applications, but in this whitepaper, we
+will just look at some examples that would ensure the AWS::AutoScaling::AutoScalingGroup TagProperty is always being
+used.
+
+The following is an example of a CloudFormation Guard rule:
+
+let all_asgs = Resources.*[ Type == 'AWS::AutoScaling::AutoScalingGroup' ]
+
+rule tags_asg_automation_EnvironmentId when %all_asgs !empty {
+let required_tags = %all_asgs.Properties.Tags.*[
+Key == 'example-inc:automation:EnvironmentId' ]
+%required_tags[*] {
+PropagateAtLaunch == 'true'
+Value IN ['Prod', 'Dev', 'Test', 'Sandbox']
+<<Tag must have a permitted value
+Tag must have PropagateAtLaunch set to 'true'>>
+}
+}
+
+rule tags_asg_costAllocation_CostCenter when %all_asgs !empty {
+let required_tags = %all_asgs.Properties.Tags.*[
+Key == 'example-inc:cost-allocation:CostCenter' ]
+%required_tags[*] {
+PropagateAtLaunch == 'true'
+Value == /^123-/
+<<Tag must have a permitted value
+Tag must have PropagateAtLaunch set to 'true'>>
+}
+}
+
+In the code example, we filter the template for all resources that are of the type
+AutoScalingGroup, and then have two rules:
+
+- tags_asg_automation_EnvironmentId - Checks
+that a tag with this key exists, has a value within the allowed list of values, and that
+PropagateAtLaunch is set to true
+
+- tags_asg_costAllocation_CostCenter -
+Checks that a tag exists with this key, has a value that begins with the defined prefix
+value, and that PropagateAtLaunch is set to true
+
+## Enforcement
+
+As described previously, Resource Groups & Tag
+Editor provides the means to identify where your resources fail to meet the
+tagging requirements defined in the tag policies applied to the OUs of the organization.
+Accessing the Resource Groups & Tag Editor console tool
+from within an Organization member account shows you the policies that apply to that account
+and the resource within the account that fail to meet the tag policy’s requirements. If
+accessed from the management account (and if Tag policies
+has Access enabled in services under AWS Organizations), then it is possible to
+view the tag
+policy compliance for all the linked accounts in the organization.
+
+Within the Tag Policy itself, you can enable enforcement for specific resource types.
+In the following policy example, we’ve added enforcement such that all resources of types
+ec2:instance and ec2:volume are required to be compliant with
+the policy. There are some known limitations, such as there must be a tag on a resource for
+it to be evaluated by the tag policy. See Resources that support enforcement with tag policies for a list.
+
+### ExampleInc-Cost-Allocation.json
+
+The following is an example of a tag policy that reports and/or enforces Cost
+Allocation tags:
+
+{
+"tags": {
+"example-inc:cost-allocation:ApplicationId": {
+"tag_key": {
+"@@assign": "example-inc:cost-allocation:ApplicationId"
+},
+"tag_value": {
+"@@assign": [
+"DataLakeX",
+"RetailSiteX"
+]
+},
+"enforced_for": {
+"@@assign": [
+"ec2:instance",
+"ec2:volume"
+]
+}
+},
+"example-inc:cost-allocation:BusinessUnitId": {
+"tag_key": {
+"@@assign": "example-inc:cost-allocation:BusinessUnitId"
+},
+"tag_value": {
+"@@assign": [
+"Architecture",
+"DevOps",
+"FinanceDataLakeX"
+]
+},
+"enforced_for": {
+"@@assign": [
+"ec2:instance",
+"ec2:volume"
+]
+}
+},
+"example-inc:cost-allocation:CostCenter": {
+"tag_key": {
+"@@assign": "example-inc:cost-allocation:CostCenter"
+},
+"tag_value": {
+"@@assign": [
+"123-*"
+]
+},
+"enforced_for": {
+"@@assign": [
+"ec2:instance",
+"ec2:volume"
+]
+}
+}
+}
+}
+
+AWS Config (required_tag)
+
+AWS Config is a service that allows you to assess, audit, and evaluate the
+configurations of your AWS resources (see Resource types
+supported by AWS Config). In the case of tagging, we can use it to identify
+resources that are lacking tags with specific keys, using the required_tags rule (refer to Resource types supported by required_tags).
+From the earlier example, we might test for the existence of the key on all Amazon EC2 instances.
+In cases where the key doesn’t exist, the instance will be registered as non-compliant.
+This AWS CloudFormation template describes an AWS Config Rule to test for the presence of the
+mandatory keys describe in the table, on Amazon S3 buckets, Amazon EC2 instances, and Amazon EBS volumes.
+
+Resources:
+MandatoryTags:
+Type: AWS::Config::ConfigRule
+Properties:
+ConfigRuleName: ExampleIncMandatoryTags
+Description: These tags should be in place
+InputParameters:
+tag1Key: example-inc:cost-allocation:ApplicationId
+tag2Key: example-inc:cost-allocation:BusinessUnitId
+tag3Key: example-inc:cost-allocation:CostCenter
+tag4Key: example-inc:automation:EnvironmentId
+Scope:
+ComplianceResourceTypes:
+- "AWS::S3::Bucket"
+- "AWS::EC2::Instance"
+- "AWS::EC2::Volume"
+Source:
+Owner: AWS
+SourceIdentifier: REQUIRED_TAGS
+
+For environments where resources are managed manually, an AWS Config rule can be
+enhanced to automatically add the missing tag key to the resources using an automated
+remediation via an AWS Lambda function. While this works well for static workloads, it's
+progressively less effective as you start managing your resources via IaC and deployment
+pipelines.
+
+AWS Organizations – Service control policies (SCPs) are a type of
+organization policy that you can use to manage permissions in your organization. SCPs
+offer central control over the maximum available permissions for all accounts in your
+organization or organizational unit (OU). SCPs only affect users and roles that are
+managed by accounts that are part of the organization. Although they do not affect
+resources directly, they restrict the permissions of users and roles which includes the
+permissions for tagging actions. With regards to tagging, SCPs can provide additional
+granularity for tag enforcement in addition to what tag policies can provide.
+
+In the following example, the policy will deny ec2:RunInstances requests
+where the example-inc:cost-allocation:CostCenter tag is not present.
+
+The following is a deny SCP:
+
+JSON
+
+{
+"Version":"2012-10-17",
+"Statement": [
+{
+"Sid": "DenyRunInstanceWithNoCostCenterTag",
+"Effect": "Deny",
+"Action": "ec2:RunInstances",
+"Resource": [
+"arn:aws:ec2:*:*:instance/*"
+],
+"Condition": {
+"Null": {
+"aws:RequestTag/example-inc:cost-allocation:CostCenter": "true"
+}
+}
+}
+]
+}
+
+It is not possible to retrieve the effective service control policy that applies to a
+linked account by design. Where you enforce tagging with SCPs, documentation needs to be
+available to developers so they can ensure their resources meet the policies that have
+been applied to their accounts. Providing read only access to CloudTrail events within their
+account can support developers in the task of debugging when their resources fail to
+comply.

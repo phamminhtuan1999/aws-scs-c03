@@ -1,0 +1,291 @@
+{
+  "question_id": "Q050",
+  "question_content_hash": "b89b7c5f943b97e40e19805cba01bd6967ebd54841af712faebc17fa6a66a6f2",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:24Z",
+  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema (RESEARCH_FORMAT.md, SOURCE_FACTS.md), research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "de6c02f3204964d6838afafba6d5f674e9f79a8c47a9671abc4d6bb5470458cd",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Kết nối hybrid: application server trên AWS, database ở on-premises.",
+      "kind": "scope"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Database nhạy cảm với độ trễ mạng -> cần đường truyền độ trễ thấp, ổn định.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Dữ liệu giữa on-premises và AWS phải được mã hóa IPsec.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn 2 đáp án (combination).",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q050:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Site-to-Site VPN cung cấp đường hầm IPsec; chạy trên AWS Direct Connect (public VIF) để có kết nối IPsec end-to-end, đáp ứng yêu cầu mã hóa IPsec.",
+      "requirement_ids": [
+        "R3",
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref3"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q050:B",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "Direct Connect là kết nối mạng riêng, độ trễ thấp và ổn định hơn VPN qua internet, đáp ứng yêu cầu latency; nhưng DX không mã hóa mặc định (MACsec là lớp 2, không phải IPsec) nên phải kết hợp với Site-to-Site VPN.",
+      "requirement_ids": [
+        "R2",
+        "R1"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref2",
+        "ref4"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q050:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "VPN CloudHub là mô hình hub-and-spoke để nhiều site on-premises giao tiếp với nhau qua các kết nối Site-to-Site VPN (thường qua internet); không giải quyết yêu cầu độ trễ thấp cho một data center duy nhất.",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref5"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q050:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "VPC peering chỉ kết nối hai VPC với nhau, không kết nối data center on-premises và không cung cấp IPsec.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref6"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q050:E",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "NAT gateway cho phép instance trong private subnet đi ra dịch vụ bên ngoài; không phải kết nối riêng tới on-premises và không mã hóa IPsec.",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref7"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q050:A",
+      "Q050:B"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "high",
+      "reason_vi": "Tài liệu AWS mô tả trực tiếp mẫu Direct Connect + Site-to-Site VPN kết hợp IPsec end-to-end với độ trễ thấp của Direct Connect; ba lựa chọn còn lại không đáp ứng.",
+      "open_issues": []
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4"
+    ],
+    "recorded_at": "2026-09-30T19:46:24Z"
+  },
+  "source_answer": [
+    "Q050:A",
+    "Q050:B"
+  ],
+  "researched_answer": [
+    "Q050:A",
+    "Q050:B"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "high",
+    "reason_vi": "Whitepaper VPC connectivity và trang Encryption in Direct Connect mô tả trực tiếp mẫu Direct Connect + Site-to-Site VPN: IPsec end-to-end cùng độ trễ thấp, ổn định của Direct Connect. Ba lựa chọn còn lại không kết nối on-premises với IPsec độ trễ thấp.",
+    "open_issues": []
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn A+B. Đã kiểm tra các đối thủ: Direct Connect đơn lẻ không mã hóa mặc định (MACsec là lớp 2, không phải IPsec) nên cần Site-to-Site VPN; VPN đơn lẻ qua internet không đáp ứng yêu cầu độ trễ ổn định; CloudHub là hub-and-spoke cho nhiều site, VPC peering chỉ nối VPC-VPC, NAT gateway chỉ cho kết nối ra ngoài. Giữ A+B, verified, confidence high.",
+  "explanation_vi": {
+    "why_correct": "AWS Direct Connect cho đường truyền riêng, độ trễ thấp và ổn định tới data center (đáp ứng database nhạy latency) nhưng không mã hóa mặc định; chạy AWS Site-to-Site VPN trên Direct Connect bổ sung đường hầm IPsec end-to-end, đáp ứng yêu cầu mã hóa IPsec.",
+    "others": {
+      "Q050:C": "VPN CloudHub là mô hình hub-and-spoke cho nhiều site on-premises giao tiếp với nhau qua VPN, không giải quyết yêu cầu độ trễ thấp cho một data center.",
+      "Q050:D": "VPC peering chỉ nối hai VPC, không kết nối tới on-premises và không cung cấp IPsec.",
+      "Q050:E": "NAT gateway chỉ cho instance private đi ra ngoài, không phải kết nối hybrid có mã hóa IPsec."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "sensitive to network latency",
+      "meaning_vi": "Cần đường truyền riêng, độ trễ thấp/ổn định -> AWS Direct Connect."
+    },
+    {
+      "phrase": "must have IPsec encryption",
+      "meaning_vi": "IPsec -> AWS Site-to-Site VPN (Direct Connect không tự mã hóa IPsec)."
+    },
+    {
+      "phrase": "database must remain in the on-premises data center",
+      "meaning_vi": "Kiến trúc hybrid: app trên AWS gọi database on-premises."
+    }
+  ],
+  "memory_tip_vi": "Nếu đề đòi vừa độ trễ thấp/ổn định vừa mã hóa IPsec giữa on-premises và AWS -> nghĩ đến Site-to-Site VPN chạy trên Direct Connect; kiểm tra nếu chỉ cần mã hóa lớp 2 trên link dedicated thì MACsec, còn IPsec thì phải có VPN.",
+  "tags": {
+    "domains": [
+      "3 Infrastructure Security",
+      "5 Data Protection"
+    ],
+    "services": [
+      "AWS Direct Connect",
+      "AWS Site-to-Site VPN"
+    ],
+    "reason_vi": "Thiết kế kết nối mạng hybrid an toàn và mã hóa dữ liệu khi truyền (IPsec)."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/whitepapers/latest/aws-vpc-connectivity-options/aws-direct-connect-site-to-site-vpn.html",
+      "title": "AWS Direct Connect + AWS Site-to-Site VPN",
+      "section": "AWS Direct Connect + AWS Site-to-Site VPN",
+      "snapshot_id": "d523762b3dd8",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This solution combines the benefits of the end-to-end secure IPsec connection with low latency and increased bandwidth of the AWS Direct Connect",
+      "supports": "DX + Site-to-Site VPN cho IPsec end-to-end và độ trễ thấp.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/directconnect/latest/UserGuide/encryption-in-transit.html",
+      "title": "Encryption in AWS Direct Connect",
+      "section": "Encryption in AWS Direct Connect",
+      "snapshot_id": "094e696bd6eb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "AWS Direct Connect does not encrypt your traffic that is in transit by default.",
+      "supports": "DX riêng lẻ không mã hóa, cần thêm VPN IPsec.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html",
+      "title": "What is AWS Site-to-Site VPN?",
+      "section": "Introduction",
+      "snapshot_id": "659f28eee44d",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Site-to-Site VPN supports Internet Protocol security (IPsec) VPN connections.",
+      "supports": "Site-to-Site VPN dùng IPsec.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/directconnect/latest/UserGuide/encryption-in-transit.html",
+      "title": "Encryption in AWS Direct Connect",
+      "section": "Encryption in AWS Direct Connect",
+      "snapshot_id": "094e696bd6eb",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "This combination provides an IPsec-encrypted private connection that also reduces network costs, increases bandwidth throughput, and provides a more consistent network experience than internet-based VPN connections.",
+      "supports": "Kết hợp DX + VPN cho kết nối riêng mã hóa IPsec, ổn định hơn VPN qua internet.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/vpn/latest/s2svpn/VPN_CloudHub.html",
+      "title": "Secure communication between AWS Site-to-Site VPN connections using VPN CloudHub",
+      "section": "Introduction",
+      "snapshot_id": "d4047e2be507",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you have multiple AWS Site-to-Site VPN connections, you can provide secure communication between sites using the AWS VPN CloudHub.",
+      "supports": "CloudHub dành cho giao tiếp giữa nhiều site qua nhiều kết nối VPN.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html",
+      "title": "What is VPC peering?",
+      "section": "What is VPC peering?",
+      "snapshot_id": "d265edf5f808",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "A VPC peering connection is a networking connection between two VPCs that enables you to route traffic between them using private IPv4 addresses or IPv6 addresses.",
+      "supports": "VPC peering chỉ nối hai VPC.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html",
+      "title": "NAT gateways",
+      "section": "NAT gateways",
+      "snapshot_id": "7db3449008d6",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "You can use a NAT gateway so that instances in a private subnet can connect to services outside your VPC but external services can't initiate a connection with those instances.",
+      "supports": "NAT gateway chỉ cho kết nối ra ngoài, không phải kết nối hybrid IPsec.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q050:A\", \"Q050:B\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key AB khớp blind; giữ AB, status verified (confidence high)",
+      "previous_answer": null
+    }
+  ]
+}

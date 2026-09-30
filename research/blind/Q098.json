@@ -1,0 +1,60 @@
+{
+  "question_id": "Q098",
+  "question_content_hash": "4eaf290c9dac82125036c33a72f9db1f5108b647750cc070ca7e5c9b1516f6d0",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:55:14Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "Ngay sau khi grant được tạo, user phải dùng được KMS key để Encrypt payload 512 byte.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Loại bỏ (eliminate) lỗi AccessDeniedException thỉnh thoảng xảy ra ở lần dùng đầu tiên – không chỉ giảm thiểu.", "kind": "optimization"},
+    {"id": "R3", "text_vi": "Grant là grant của customer managed key do ứng dụng tạo cho user (CreateGrant).", "kind": "scope"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q098:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Retry chỉ chờ grant đạt eventual consistency (thường vài giây, có khi vài phút); lần gọi đầu vẫn có thể bị access denied nên không 'eliminate' lỗi và không đáp ứng 'immediately'.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q098:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Grant token do KMS sinh ra và trả về trong response CreateGrant; tham số GrantTokens của CreateGrant chỉ dùng cho quyền của chính người gọi, không để 'đặt' token ngẫu nhiên. Token ngẫu nhiên không hợp lệ sẽ bị InvalidGrantTokenException.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref2", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q098:C", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Name của grant chỉ là friendly name để tránh tạo grant trùng khi retry, không phải grant token; truyền name làm grant token sẽ không hợp lệ.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q098:D", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "CreateGrant trả về GrantToken; user truyền token này vào GrantTokens của Encrypt để dùng quyền của grant ngay lập tức, tránh lỗi do eventual consistency.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref2", "ref5"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q098:D"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "KMS Developer Guide và CreateGrant API Reference nêu trực tiếp: dùng GrantToken do CreateGrant trả về để dùng quyền grant ngay lập tức.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4", "ref5"],
+    "recorded_at": "2026-09-30T19:55:14Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/kms/latest/developerguide/grants.html", "title": "Grants in AWS KMS - AWS Key Management Service", "section": "Grant token",
+     "snapshot_id": "73b4978245c5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If you try to use a grant before it fully propagates through the system, you might get an access denied error. A grant token lets you refer to the grant and use the grant permissions immediately.",
+     "supports": "Nguyên nhân lỗi là eventual consistency; grant token cho phép dùng quyền ngay.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateGrant.html", "title": "CreateGrant - AWS Key Management Service", "section": "Description",
+     "snapshot_id": "00ba69a15f9b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "However, to use the permissions in the grant immediately, use the GrantToken that CreateGrant returns.",
+     "supports": "Grant token là giá trị do CreateGrant trả về, dùng để có quyền ngay.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateGrant.html", "title": "CreateGrant - AWS Key Management Service", "section": "Request Parameters – Name",
+     "snapshot_id": "00ba69a15f9b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "A friendly name for the grant. Use this value to prevent the unintended creation of duplicate grants when retrying this request.",
+     "supports": "Name không phải grant token; chỉ dùng để idempotent khi retry.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateGrant.html", "title": "CreateGrant - AWS Key Management Service", "section": "Errors – InvalidGrantTokenException",
+     "snapshot_id": "00ba69a15f9b", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "The request was rejected because the specified grant token is not valid.",
+     "supports": "Token tự đặt/không do KMS sinh ra bị từ chối.", "kind": "inference"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html", "title": "Encrypt - AWS Key Management Service", "section": "Request Parameters – GrantTokens",
+     "snapshot_id": "2765020bd5d7", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Use a grant token when your permission to call this operation comes from a new grant that has not yet achieved eventual consistency.",
+     "supports": "Encrypt nhận GrantTokens để dùng quyền của grant mới tạo; payload 512 byte nằm trong giới hạn 4,096 byte của Encrypt (khóa đối xứng).", "kind": "direct"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Encrypt hỗ trợ plaintext tới 4,096 byte với khóa đối xứng, nên 512 byte không phải vấn đề."
+}

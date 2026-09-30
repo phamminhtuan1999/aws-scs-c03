@@ -1,0 +1,59 @@
+{
+  "question_id": "Q093",
+  "question_content_hash": "1cea47eeeafc31f44e34fda1e17f56b6aad1edd49dbe60c5497b0f18a476cb72",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:56:06Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "requirements": [
+    {"id": "R1", "text_vi": "IAM Identity Center dùng on-premises AD qua AD Connector (cấu hình đúng); mọi nhân viên thuộc AD group Cloud.", "kind": "condition"},
+    {"id": "R2", "text_vi": "Nhân viên truy cập được gần như mọi account với đúng quyền (nên group/directory hoạt động bình thường), chỉ không thấy/không vào được Account A dù Account A nằm trong organization.", "kind": "condition"},
+    {"id": "R3", "text_vi": "Chọn nguyên nhân có khả năng nhất (likely reason).", "kind": "optimization"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q093:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Account không bắt buộc nằm trong OU; account có thể nằm trực tiếp dưới root. Quyền truy cập IAM Identity Center được gán theo từng account, không phụ thuộc việc account có ở trong OU hay không.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref4", "ref2"], "evidence_kind": "inference"},
+    {"unit_id": "Q093:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Group Cloud đã hoạt động vì nhân viên truy cập được các account khác bằng chính group này; AD Connector cấu hình đúng. Vấn đề đồng bộ group sẽ ảnh hưởng mọi account chứ không riêng Account A.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref5"], "evidence_kind": "inference"},
+    {"unit_id": "Q093:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Truy cập account qua IAM Identity Center chỉ có khi user/group được assign vào account đó cùng permission set; thiếu assignment cho Account A thì account không xuất hiện trong access portal, đúng triệu chứng.",
+     "requirement_ids": ["R2", "R3"], "reference_ids": ["ref1", "ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q093:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Permissions boundary chỉ áp dụng cho IAM entity (user hoặc role), không gắn được cho cả một AWS account; phương án mô tả một cơ chế không tồn tại.",
+     "requirement_ids": ["R2"], "reference_ids": ["ref3"], "evidence_kind": "direct"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q093:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu IAM Identity Center nêu access tới account được cấp bằng assignment user/group + permission set trên từng account; các phương án khác mâu thuẫn với tài liệu hoặc với triệu chứng.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:56:06Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/permissionsetsconcept.html", "title": "Manage AWS accounts with permission sets", "section": "intro",
+     "snapshot_id": "26993d479ca5", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "IAM Identity Center assigns access to a user or group in one or more AWS accounts with permission sets.",
+     "supports": "Truy cập account yêu cầu assignment group + permission set cho account đó.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/assignusers.html", "title": "Assign user or group access to AWS accounts", "section": "procedure",
+     "snapshot_id": "0fe5f0ce06e0", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Select the checkbox next to the AWS account to which you want to assign access.",
+     "supports": "Assignment được thực hiện theo từng AWS account (chọn account, group, permission set).", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html", "title": "Permissions boundaries for IAM entities", "section": "intro",
+     "snapshot_id": "d61ead723154", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "AWS supports permissions boundaries for IAM entities (users or roles).",
+     "supports": "Permissions boundary không áp dụng cho cấp account (bác D).", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/organizations/latest/userguide/move_account_to_ou.html", "title": "Moving accounts to an OU or between the root and OUs", "section": "intro",
+     "snapshot_id": "1e561d6c88e4", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "If an account isn't in an OU, it's subject to only the policies that are attached directly to the root",
+     "supports": "Account có thể không nằm trong OU mà vẫn là thành viên organization bình thường (bác A).", "kind": "direct"},
+    {"id": "ref5", "url": "https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-ad.html", "title": "Microsoft AD directory", "section": "intro",
+     "snapshot_id": "b182008da683", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "After connecting your corporate directory to IAM Identity Center, you can then grant your AD users or groups access to AWS accounts, applications, or both.",
+     "supports": "Sau khi kết nối directory, vẫn phải cấp quyền (assign) AD group cho từng account.", "kind": "direct"}
+  ],
+  "source_issues": []
+}

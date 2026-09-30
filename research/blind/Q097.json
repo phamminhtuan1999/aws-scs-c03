@@ -1,0 +1,56 @@
+{
+  "question_id": "Q097",
+  "question_content_hash": "1fafb9e535957d1686ebdf249947c9ac6c1a155ee3e0083efc390098487712f1",
+  "stage": "blind",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:54:36Z",
+  "performed_by": {"agent": "scs-researcher (blind)", "model": "claude-opus-5-5"},
+  "blind_attestation": "Only research/blind_set, research/schema, research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed. (A directory listing of research/blind showed only file names of other questions; none was opened.)",
+  "requirements": [
+    {"id": "R1", "text_vi": "Virtual security appliance được triển khai inline phải có thể route (chuyển tiếp) traffic không phải của chính nó.", "kind": "constraint"},
+    {"id": "R2", "text_vi": "Nhóm phát triển vẫn muốn dùng security group và network ACL cho các yêu cầu bảo mật khác (không được bỏ chúng).", "kind": "constraint"},
+    {"id": "R3", "text_vi": "Chọn cấu hình CẦN THIẾT để appliance route traffic (một đáp án).", "kind": "condition"}
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {"unit_id": "Q097:A", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Network ACL không thể 'tắt' – mỗi subnet bắt buộc gắn với một network ACL; hơn nữa đề yêu cầu vẫn dùng NACL. Việc bỏ NACL cũng không giải quyết cơ chế source/destination check chặn traffic chuyển tiếp.",
+     "requirement_ids": ["R1", "R2"], "reference_ids": ["ref3"], "evidence_kind": "direct"},
+    {"unit_id": "Q097:B", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Trong VPC, promiscuous mode không làm lộ traffic nào ngoài traffic đến/đi từ chính OS của instance, nên không phải cơ chế cho phép appliance route traffic.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref2"], "evidence_kind": "direct"},
+    {"unit_id": "Q097:C", "unit_type": "choice", "verdict": "meets",
+     "reason_vi": "Source/destination check bật mặc định và phải tắt trên ENI khi instance chạy dịch vụ routing/firewall/NAT; đây là cấu hình cần thiết để appliance inline chuyển tiếp traffic.",
+     "requirement_ids": ["R1", "R2", "R3"], "reference_ids": ["ref1", "ref4"], "evidence_kind": "direct"},
+    {"unit_id": "Q097:D", "unit_type": "choice", "verdict": "does_not_meet",
+     "reason_vi": "Đặt appliance vào public subnet không thay đổi việc source/destination check vẫn loại bỏ traffic không có nguồn/đích là chính instance; vị trí subnet không phải điều kiện để route traffic.",
+     "requirement_ids": ["R1"], "reference_ids": ["ref1"], "evidence_kind": "inference"}
+  ],
+  "independent_verdict": {
+    "answer": ["Q097:C"],
+    "proposed_status": "verified",
+    "confidence": {"level": "high", "reason_vi": "Tài liệu EC2 ENI nêu trực tiếp phải tắt source/destination check khi instance làm routing/firewall; các lựa chọn khác không phải cơ chế liên quan.", "open_issues": []},
+    "reference_ids": ["ref1", "ref2", "ref3", "ref4"],
+    "recorded_at": "2026-09-30T19:54:36Z"
+  },
+  "references": [
+    {"id": "ref1", "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html", "title": "Elastic network interfaces - Amazon Elastic Compute Cloud", "section": "Source/destination checking",
+     "snapshot_id": "500e58879858", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "You must disable source/destination checks if the instance runs services such as network address translation, routing, or firewalls.",
+     "supports": "Phải tắt source/destination check trên ENI để appliance routing/firewall chuyển tiếp traffic.", "kind": "direct"},
+    {"id": "ref2", "url": "https://docs.aws.amazon.com/whitepapers/latest/logical-separation/vpc-and-accompanying-features.html", "title": "VPC and Accompanying Features - Logical Separation on AWS", "section": "VPC and Accompanying Features",
+     "snapshot_id": "c00be86c2b0e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "promiscuous mode does not reveal any traffic other than traffic bound to and from the customer operating system.",
+     "supports": "Promiscuous mode không có tác dụng nhận/route traffic của người khác trong VPC.", "kind": "direct"},
+    {"id": "ref3", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html", "title": "Control subnet traffic with network access control lists - Amazon Virtual Private Cloud", "section": "Network ACL basics",
+     "snapshot_id": "38359da063d9", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "Each subnet in your VPC must be associated with a network ACL.",
+     "supports": "Không thể tắt hẳn network ACL cho subnet.", "kind": "direct"},
+    {"id": "ref4", "url": "https://docs.aws.amazon.com/vpc/latest/userguide/gateway-route-tables.html", "title": "Gateway route tables - Amazon Virtual Private Cloud", "section": "Gateway route tables",
+     "snapshot_id": "d523bf3fa59e", "read_via": "tools/fetch_doc.py", "accessed_at": "2026-09-30", "page_last_updated": null,
+     "quote": "redirecting that traffic to a middlebox appliance (such as a security appliance) in your VPC.",
+     "supports": "Mô hình security appliance inline trong VPC dựa vào route tới ENI của appliance (appliance phải chuyển tiếp traffic không phải của nó).", "kind": "inference"}
+  ],
+  "source_issues": [],
+  "notes_vi": "Ngoài tắt source/destination check, cần route table trỏ tới ENI của appliance, nhưng không có lựa chọn nào về route; C là cấu hình bắt buộc duy nhất trong các lựa chọn."
+}

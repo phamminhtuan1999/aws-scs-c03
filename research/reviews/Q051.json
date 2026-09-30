@@ -1,0 +1,357 @@
+{
+  "question_id": "Q051",
+  "question_content_hash": "fdd84e820d497fedd0540be830031a5e2f16e009803073137ca7880a24828e03",
+  "stage": "final",
+  "research_version": "r1",
+  "researched_at": "2026-09-30T19:46:24Z",
+  "last_reviewed_at": "2026-09-30T19:56:11Z",
+  "performed_by": {
+    "agent": "scs-reconciler (final; blind stage by scs-researcher (blind))",
+    "model": "claude-opus-5-5"
+  },
+  "blind_attestation": "Only research/blind_set, research/schema (RESEARCH_FORMAT.md, SOURCE_FACTS.md), research/sources and AWS web pages were used; no answer key, vote, dump site or other research record was accessed.",
+  "blind_record_sha256": "a3b9166d8378f23d7fe22b1931b32ca73859f1646ff947f484951a62fe724c1b",
+  "requirements": [
+    {
+      "id": "R1",
+      "text_vi": "Phát hiện các S3 bucket không được mã hóa bằng AWS KMS (AWS Config đã bật cho toàn organization).",
+      "kind": "constraint"
+    },
+    {
+      "id": "R2",
+      "text_vi": "Ngăn upload object không được mã hóa bằng AWS KMS.",
+      "kind": "constraint"
+    },
+    {
+      "id": "R3",
+      "text_vi": "Phạm vi: hàng trăm bucket trên nhiều account trong AWS Organizations.",
+      "kind": "scope"
+    },
+    {
+      "id": "R4",
+      "text_vi": "Chọn 1 đáp án.",
+      "kind": "condition"
+    }
+  ],
+  "image_transcriptions": [],
+  "option_reviews": [
+    {
+      "unit_id": "Q051:A",
+      "unit_type": "choice",
+      "verdict": "meets",
+      "reason_vi": "s3-default-encryption-kms báo NON_COMPLIANT khi bucket không mã hóa bằng KMS key; từ 09/2025 SCP hỗ trợ Condition trong Allow, và SCP theo mô hình deny-by-default nên allow-list ở root chỉ cho s3:PutObject khi có mã hóa KMS sẽ chặn upload khác trên mọi member account (phải thay FullAWSAccess cho PutObject).",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref3",
+        "ref4",
+        "ref5",
+        "ref8",
+        "ref9",
+        "ref10"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q051:B",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Rule Config đúng, nhưng bucket policy chỉ deny khi header là SSE-S3; request không có header vẫn được mã hóa mặc định SSE-S3 (và SSE-C không bị chặn), nên không ngăn được mọi object không dùng KMS; thêm việc viết policy cho hàng trăm bucket.",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "reference_ids": [
+        "ref1",
+        "ref6",
+        "ref7"
+      ],
+      "evidence_kind": "inference"
+    },
+    {
+      "unit_id": "Q051:C",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "s3-bucket-ssl-requests-only chỉ kiểm tra bucket policy có bắt buộc SSL/TLS (mã hóa khi truyền), không phát hiện bucket không mã hóa bằng KMS.",
+      "requirement_ids": [
+        "R1"
+      ],
+      "reference_ids": [
+        "ref2"
+      ],
+      "evidence_kind": "direct"
+    },
+    {
+      "unit_id": "Q051:D",
+      "unit_type": "choice",
+      "verdict": "does_not_meet",
+      "reason_vi": "Dùng sai Config rule (s3-bucket-ssl-requests-only kiểm tra SSL/TLS, không kiểm tra KMS) nên không phát hiện bucket không dùng KMS; thêm nữa bucket policy chỉ Allow có điều kiện không chặn được principal cùng account đã có IAM Allow cho PutObject (cần Deny).",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "reference_ids": [
+        "ref2",
+        "ref6",
+        "ref11"
+      ],
+      "evidence_kind": "direct"
+    }
+  ],
+  "independent_verdict": {
+    "answer": [
+      "Q051:A"
+    ],
+    "proposed_status": "verified",
+    "confidence": {
+      "level": "medium",
+      "reason_vi": "Chỉ A và B dùng đúng rule s3-default-encryption-kms; điều kiện deny chỉ SSE-S3 của B để lọt upload không có header (mã hóa mặc định SSE-S3). A khả thi vì SCP hỗ trợ Condition trong Allow.",
+      "open_issues": [
+        "SCP không áp dụng cho principal trong management account và principal ngoài organization; Allow có điều kiện chỉ hiệu lực khi FullAWSAccess không còn cho phép s3:PutObject (thường dùng Deny SCP thay thế).",
+        "Việc hỗ trợ Condition trong SCP Allow là theo tài liệu hiện tại (2026); trước đây SCP Allow không hỗ trợ Condition."
+      ]
+    },
+    "reference_ids": [
+      "ref1",
+      "ref2",
+      "ref3",
+      "ref4",
+      "ref6",
+      "ref7"
+    ],
+    "recorded_at": "2026-09-30T19:46:24Z"
+  },
+  "source_answer": [
+    "Q051:A"
+  ],
+  "researched_answer": [
+    "Q051:A"
+  ],
+  "comparison": "match",
+  "status": "verified",
+  "differs_from_source": false,
+  "confidence": {
+    "level": "medium",
+    "reason_vi": "Chỉ A và B dùng đúng rule s3-default-encryption-kms; B chỉ deny header SSE-S3 nên lọt upload không header (mã hóa mặc định SSE-S3) và SSE-C. A khả thi theo tài liệu hiện tại vì SCP Allow hỗ trợ Condition từ 19/09/2025 và allow-list ở root áp dụng cho toàn organization. Confidence medium vì A có các caveat triển khai.",
+    "open_issues": [
+      "A chỉ hiệu lực khi FullAWSAccess (hoặc Allow rộng khác) không còn cho phép s3:PutObject; cách phổ biến hơn là SCP Deny có điều kiện.",
+      "SCP không áp dụng cho user/role trong management account và principal ngoài organization.",
+      "Trước 19/09/2025 SCP Allow không hỗ trợ Condition, khi đó A không thực hiện được và không lựa chọn nào đáp ứng trọn vẹn; kết luận A phụ thuộc hành vi hiện tại.",
+      "Allow có điều kiện theo header s3:x-amz-server-side-encryption sẽ chặn cả upload không header dựa vào default encryption SSE-KMS của bucket (chặt hơn yêu cầu nhưng vẫn không để lọt object không KMS)."
+    ]
+  },
+  "reconciliation_vi": "Blind và source key cùng chọn A. Kiểm tra lại hai phía: (1) Phía A — trang SCP syntax cho phép Condition trong Allow, What's New 19/09/2025 xác nhận đây là thay đổi mới, và trang SCP evaluation cho thấy allow-list thay FullAWSAccess ở root áp dụng cho mọi OU/account; caveat là FullAWSAccess phải được thay và management account không bị SCP ảnh hưởng. (2) Phía đối thủ — B deny chỉ khi header SSE-S3 nên upload không header vẫn thành SSE-S3 theo default encryption; D dùng sai Config rule và bucket policy chỉ Allow không chặn principal cùng account có IAM Allow (sửa lại nhận định blind rằng phần bucket policy của D 'tự nó có thể chặn'). Giữ A, verified, confidence medium, ghi rõ điều kiện thời gian.",
+  "explanation_vi": {
+    "why_correct": "Managed rule s3-default-encryption-kms phát hiện bucket không mã hóa bằng AWS KMS; SCP (từ 09/2025 hỗ trợ Condition trong Allow) theo mô hình deny-by-default nên chỉ Allow s3:PutObject khi request dùng SSE-KMS sẽ chặn upload không dùng KMS trên mọi member account — với điều kiện thay FullAWSAccess cho PutObject.",
+    "others": {
+      "Q051:B": "Rule Config đúng, nhưng chỉ deny khi header là SSE-S3 thì upload không có header (mặc định thành SSE-S3) hoặc SSE-C vẫn lọt, và phải viết policy cho hàng trăm bucket.",
+      "Q051:C": "s3-bucket-ssl-requests-only chỉ kiểm tra bucket policy bắt buộc SSL/TLS (mã hóa khi truyền), không phát hiện bucket không mã hóa bằng KMS.",
+      "Q051:D": "Sai Config rule (kiểm tra SSL/TLS), và bucket policy chỉ Allow không chặn principal cùng account có IAM Allow; muốn bắt buộc SSE-KMS phải Deny."
+    }
+  },
+  "keywords": [
+    {
+      "phrase": "not encrypted with AWS Key Management Service (AWS KMS)",
+      "meaning_vi": "Phát hiện bucket không dùng KMS -> Config rule s3-default-encryption-kms."
+    },
+    {
+      "phrase": "prevent objects that are not encrypted with AWS KMS from being uploaded",
+      "meaning_vi": "Chặn PutObject không SSE-KMS (guardrail SCP hoặc bucket policy Deny)."
+    },
+    {
+      "phrase": "hundreds of Amazon S3 buckets across the organization",
+      "meaning_vi": "Phạm vi nhiều account -> ưu tiên guardrail cấp organization (SCP) hơn sửa từng bucket."
+    }
+  ],
+  "memory_tip_vi": "Nếu cần phát hiện bucket không dùng KMS -> nghĩ đến Config rule s3-default-encryption-kms (không phải s3-bucket-ssl-requests-only); nếu cần chặn upload không KMS trên cả organization -> nghĩ đến SCP có điều kiện s3:x-amz-server-side-encryption; kiểm tra Allow thì phải thay FullAWSAccess, bucket policy thì phải là Deny.",
+  "tags": {
+    "domains": [
+      "5 Data Protection",
+      "6 Security Foundations and Governance",
+      "1 Detection"
+    ],
+    "services": [
+      "AWS Config",
+      "AWS Organizations",
+      "Amazon S3",
+      "AWS KMS"
+    ],
+    "reason_vi": "Phát hiện cấu hình mã hóa S3 bằng Config và áp guardrail mã hóa KMS toàn organization bằng SCP."
+  },
+  "references": [
+    {
+      "id": "ref1",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/s3-default-encryption-kms.html",
+      "title": "s3-default-encryption-kms - AWS Config",
+      "section": "s3-default-encryption-kms",
+      "snapshot_id": "251ae49566ed",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Checks if the S3 buckets are encrypted with AWS Key Management Service (AWS KMS). The rule is NON_COMPLIANT if the S3 bucket is not encrypted with an AWS KMS key.",
+      "supports": "Rule này phát hiện bucket không mã hóa bằng KMS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref2",
+      "url": "https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-ssl-requests-only.html",
+      "title": "s3-bucket-ssl-requests-only - AWS Config",
+      "section": "s3-bucket-ssl-requests-only",
+      "snapshot_id": "381781b504d5",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Checks if S3 buckets have policies that require requests to use SSL/TLS.",
+      "supports": "Rule này chỉ kiểm tra SSL/TLS, không kiểm tra KMS.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref3",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_syntax.html",
+      "title": "SCP syntax - AWS Organizations",
+      "section": "Condition element",
+      "snapshot_id": "a9634a5fd66a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Specifies conditions for when the statement is in effect. Allow,Deny",
+      "supports": "Condition dùng được trong cả statement Allow và Deny của SCP.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref4",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html",
+      "title": "SCP evaluation - AWS Organizations",
+      "section": "SCP evaluation",
+      "snapshot_id": "d6b8114e42df",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCP evaluation follows a deny-by-default model, meaning that any permissions not explicitly allowed in the SCPs are denied.",
+      "supports": "SCP chỉ allow PutObject có điều kiện KMS sẽ chặn các upload khác (khi không có allow rộng hơn).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref5",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html",
+      "title": "Service control policies (SCPs) - AWS Organizations",
+      "section": "SCP effects on permissions",
+      "snapshot_id": "0ace6350695a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs don't affect users or roles in the management account.",
+      "supports": "Giới hạn phạm vi của SCP (management account không bị ảnh hưởng).",
+      "kind": "direct"
+    },
+    {
+      "id": "ref6",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+      "title": "Using server-side encryption with AWS KMS keys (SSE-KMS)",
+      "section": "Requiring server-side encryption",
+      "snapshot_id": "e1e1c91f80b4",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "the following bucket policy denies the upload object (s3:PutObject) permission to everyone if the request does not include an x-amz-server-side-encryption-aws-kms-key-id header",
+      "supports": "Cách đúng để bắt buộc SSE-KMS bằng bucket policy là deny khi thiếu header KMS, không phải chỉ deny SSE-S3.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref7",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-bucket-encryption.html",
+      "title": "Configuring default encryption",
+      "section": "Important",
+      "snapshot_id": "611c6926784e",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Starting January 5, 2023, all new object uploads to Amazon S3 are automatically encrypted at no additional cost and with no impact on performance.",
+      "supports": "Upload không có header vẫn được mã hóa mặc định (SSE-S3 nếu bucket không cấu hình KMS), nên deny chỉ header SSE-S3 để lọt.",
+      "kind": "inference"
+    },
+    {
+      "id": "ref8",
+      "url": "https://aws.amazon.com/about-aws/whats-new/2025/09/aws-organizations-iam-language-service-control-policies/",
+      "title": "AWS Organizations supports full IAM policy language for service control policies (SCPs) - What's New (posted Sep 19, 2025)",
+      "section": "Announcement",
+      "snapshot_id": "4c5892a5bd6a",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "SCPs now support use of conditions, individual resource ARNs, and the NotAction element with Allow statements.",
+      "supports": "Từ 19/09/2025 SCP Allow mới hỗ trợ Condition; trước đó phương án A (Allow có điều kiện) không viết được bằng SCP.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref9",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html",
+      "title": "SCP evaluation - AWS Organizations",
+      "section": "Allow list strategy",
+      "snapshot_id": "d6b8114e42df",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If you attach a service-specific allowlist SCP at the root, it automatically applies to all OUs and accounts beneath it",
+      "supports": "Một SCP allow-list thay FullAWSAccess ở root áp dụng cho mọi OU/account bên dưới, nên Allow PutObject có điều kiện KMS có hiệu lực trên toàn organization.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref10",
+      "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_evaluation.html",
+      "title": "SCP evaluation - AWS Organizations",
+      "section": "Allow list strategy (Note)",
+      "snapshot_id": "d6b8114e42df",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "Relying solely on allow statements and the implicit deny-by-default model can lead to unintended access",
+      "supports": "Caveat của A: nếu còn Allow rộng hơn (FullAWSAccess) cho s3:PutObject thì Allow có điều kiện không còn tác dụng hạn chế.",
+      "kind": "direct"
+    },
+    {
+      "id": "ref11",
+      "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic_policy-eval-basics.html",
+      "title": "Policy evaluation for requests within a single account - IAM",
+      "section": "Example identity-based and resource-based policy evaluation",
+      "snapshot_id": "74ba1d54da29",
+      "read_via": "tools/fetch_doc.py",
+      "accessed_at": "2026-09-30",
+      "page_last_updated": null,
+      "quote": "If either the identity-based policy or the resource-based policy within the same account allows the request and the other doesn't, the request is still allowed.",
+      "supports": "Bucket policy chỉ Allow (D) không ngăn được principal cùng account có IAM policy cho phép PutObject; phải dùng Deny.",
+      "kind": "direct"
+    }
+  ],
+  "source_issues": [
+    {
+      "type": "typo",
+      "location": "Q051:A",
+      "detail_vi": "'s3-default-encryplion-kms' (đúng: s3-default-encryption-kms), 'identity' (đúng: identify), 'AWS. Config' thừa dấu chấm."
+    },
+    {
+      "type": "typo",
+      "location": "Q051:B",
+      "detail_vi": "'server-since encryption' (đúng: server-side encryption), 'AWS. Config' thừa dấu chấm."
+    }
+  ],
+  "history": [
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "blind verdict [\"Q051:A\"]",
+      "previous_answer": null
+    },
+    {
+      "version": "r1",
+      "date": "2026-09-30",
+      "change": "reconciliation: source key A khớp blind; thêm What's New 09/2025 và SCP evaluation (allow-list ở root); sửa reason của D (bucket policy chỉ Allow không chặn principal cùng account); giữ A, status verified (confidence medium)",
+      "previous_answer": null
+    }
+  ]
+}

@@ -1,0 +1,250 @@
+URL: https://docs.aws.amazon.com/vpc/latest/userguide/subnet-route-tables.html
+TITLE: Subnet route tables - Amazon Virtual Private Cloud
+
+# Subnet route tables
+
+Your VPC has an implicit router, and you use route tables to control where network
+traffic is directed. Each subnet in your VPC must be associated with a route table,
+which controls the routing for the subnet (subnet route table). You can explicitly
+associate a subnet with a particular route table. Otherwise, the subnet is implicitly
+associated with the main route table. A subnet can only be associated with one route
+table at a time, but you can associate multiple subnets with the same subnet route
+table.
+
+Contents
+
+- Routes
+
+- Main route table
+
+- Custom route tables
+
+- Subnet route table association
+
+## Routes
+
+Each route in a table specifies a destination and a target. For example, to enable
+your subnet to access the internet through an internet gateway, add the following
+route to your subnet route table. The destination for the route is 0.0.0.0/0,
+which represents all IPv4 addresses. The target is the internet gateway that's attached
+to your VPC.
+
+Destination
+
+Target
+
+0.0.0.0/0
+
+igw-id
+
+CIDR blocks for IPv4 and IPv6 are treated separately. For example, a route with a
+destination CIDR of 0.0.0.0/0 does not automatically include all IPv6
+addresses. You must create a route with a destination CIDR of ::/0 for
+all IPv6 addresses.
+
+If you frequently reference the same set of CIDR blocks across your AWS resources,
+you can create a customer-managed prefix
+list to group them together. You can then specify the prefix list as the
+destination in your route table entry.
+
+Every route table contains a local route for communication within the VPC. This
+route is added by default to all route tables. If your VPC has more than one IPv4
+CIDR block, your route tables contain a local route for each IPv4 CIDR block. If
+you've associated an IPv6 CIDR block with your VPC, your route tables contain a
+local route for the IPv6 CIDR block. You can replace or restore the target of each local route as needed.
+
+Rules and considerations
+
+- You can add a route to your route tables that is more specific than the local route.
+The destination must match the entire IPv4 or IPv6 CIDR block of a subnet in your VPC.
+The target must be a NAT gateway, network interface, or Gateway Load Balancer endpoint.
+
+- If your route table has multiple routes, we use the most specific route that
+matches the traffic (longest prefix match) to determine how to route the
+traffic.
+
+- You can't add routes to IPv4 addresses that are an exact match or a subset of the
+following range: 169.254.168.0/22. This range is within the link-local address space
+and is reserved for use by AWS services. For example, Amazon EC2 uses addresses in this
+range for services that are accessible only from EC2 instances, such as the Instance
+Metadata Service (IMDS) and the Amazon DNS server. You can use a CIDR block that is
+larger than but overlaps 169.254.168.0/22, but packets destined for addresses in
+169.254.168.0/22 will not be forwarded.
+
+- You can't add routes to IPv6 addresses that are an exact match or a subset of the
+following range: fd00:ec2::/32. This range is within the unique local address (ULA)
+space and is reserved for use by AWS services. For example, Amazon EC2 uses addresses
+in this range for services that are accessible only from EC2 instances, such as the
+Instance Metadata Service (IMDS) and the Amazon DNS server. You can use a CIDR block
+that is larger than but overlaps fd00:ec2::/32, but packets destined for addresses in
+fd00:ec2::/32 will not be forwarded.
+
+- You can add middlebox appliances to the routing paths for your VPC. For more
+information, see Routing for a middlebox appliance.
+
+Example
+
+In the following example, suppose that the VPC has both an IPv4 CIDR block and an
+IPv6 CIDR block. IPv4 and IPv6 traffic are treated separately, as shown in the
+following route table.
+
+Destination
+
+Target
+
+10.0.0.0/16
+
+Local
+
+2001:db8:1234:1a00::/56
+
+Local
+
+172.31.0.0/16
+
+pcx-11223344556677889
+
+0.0.0.0/0
+
+igw-12345678901234567
+
+::/0
+
+eigw-aabbccddee1122334
+
+- IPv4 traffic to be routed within the VPC (10.0.0.0/16)
+is covered by the Local route.
+
+- IPv6 traffic to be routed within the VPC (2001:db8:1234:1a00::/56)
+is covered by the Local route.
+
+- The route for 172.31.0.0/16 sends traffic to a peering connection.
+
+- The route for all IPv4 traffic (0.0.0.0/0) sends traffic to an
+internet gateway. Therefore, all IPv4 traffic, except for traffic
+within the VPC and to the peering connection, is routed to the
+internet gateway.
+
+- The route for all IPv6 traffic (::/0) sends traffic to an
+egress-only internet gateway. Therefore, all IPv6 traffic, except
+for traffic within the VPC, is routed to the egress-only internet
+gateway.
+
+## Main route table
+
+When you create a VPC, it automatically has a main route table. When a subnet does not have an explicit routing table associated with it, the main routing table is used by default.
+On the Route tables page in the Amazon VPC
+console, you can view the main route table for a VPC by looking for
+Yes in the Main column.
+
+By default, when you create a nondefault VPC, the main route table contains only a
+local route. If you Create a VPC and choose
+a NAT gateway, Amazon VPC automatically adds routes to the main route table for the gateways.
+
+The following rules apply to the main route table:
+
+- You can add, remove, and modify routes in the main route table.
+
+- You can't delete the main route table.
+
+- You can't set a gateway route table as the main route table.
+
+- You can replace the main route table by associating a custom route
+table with a subnet.
+
+- You can explicitly associate a subnet with the main route table, even if
+it's already implicitly associated.
+
+You might want to do that if you change which table is the main route
+table. When you change which table is the main route table, it also changes
+the default for additional new subnets, or for any subnets that are not
+explicitly associated with any other route table. For more information, see
+Replace the main route table.
+
+## Custom route tables
+
+By default, a route table contains a local route for communication within the
+VPC. If you Create a VPC and choose a
+public subnet, Amazon VPC creates a custom route table and adds a route that points to
+the internet gateway. One way to protect your VPC is to leave the main route table
+in its original default state. Then, explicitly associate each new subnet that you
+create with one of the custom route tables you've created. This ensures that you
+explicitly control how each subnet routes traffic.
+
+You can add, remove, and modify routes in a custom route table. You can delete a
+custom route table only if it has no associations.
+
+## Subnet route table association
+
+Each subnet in your VPC must be associated with a route table. A subnet can be
+explicitly associated with custom route table, or implicitly or explicitly
+associated with the main route table. For more information about viewing your subnet
+and route table associations, see Determine the explicit associations.
+
+Subnets that are in VPCs associated with Outposts can have an additional target
+type of a local gateway. This is the only routing difference from non-Outposts
+subnets.
+
+Example 1: Implicit and explicit subnet association
+
+The following diagram shows the routing for a VPC with an internet gateway, a
+virtual private gateway, a public subnet, and a VPN-only subnet.
+
+Route table A is a custom route table that is explicitly associated with the
+public subnet. It has a route that sends all traffic to the internet gateway, which
+is what makes the subnet a public subnet.
+
+Destination
+
+Target
+
+VPC CIDR
+
+Local
+
+0.0.0.0/0
+
+igw-id
+
+Route table B is the main route table. It is implicitly associated with the
+private subnet. It has a route that sends all traffic to the virtual private
+gateway, but no route to the internet gateway, which is what makes the subnet a
+VPN-only subnet. If you create another subnet in this VPC and don't associate a
+custom route table, the subnet will also be implicitly associated with this route
+table because it is the main route table.
+
+Destination
+
+Target
+
+VPC CIDR
+
+Local
+
+0.0.0.0/0
+
+vgw-id
+
+Example 2: Replacing the main route table
+
+You might want to make changes to the main route table. To avoid any disruption to
+your traffic, we recommend that you first test the route changes using a custom
+route table. After you're satisfied with the testing, you can replace the main route
+table with the new custom table.
+
+The following diagram shows two subnets and two route tables. Subnet A is
+implicitly associated with route table A, the main route table. Subnet B is
+implicitly associated with route table A. Route table B, a custom route table, isn't
+associated with either subnet.
+
+To replace the main route table, start by creating an explicit association between
+subnet B and route table B. Test route table B.
+
+After you've tested route table B, make it the main route table. Subnet B still
+has an explicit association with route table B. However, subnet A now has an
+implicit association with route table B, because route table B is the new main route
+table. Route table A is no longer associated with either subnet.
+
+(Optional) If you disassociate subnet B from route table B, there is still an
+implicit association between subnet B and route table B. If you no longer need route
+table A, you can delete it.
