@@ -1,0 +1,18 @@
+# Research & build progress (checkpoints)
+
+research_version: r1
+
+## Checkpoint 0 — 2026-09-30 (main agent)
+- Baseline hashes: `baseline/hashes_before.json` (55 files: 2 HTML, 2 root PDFs, all of `output/**`).
+- Data layer built by `tools/build_data.py`: 143 questions, 572 choices, 628 research units, 0 blocks changed by whitespace rule, 35 images hash-verified (7 answer images), 142 gradable source keys (Q008 ungradable by decision).
+- Hotspot mappings (Q002, Q005, Q073, Q008, Q079, Q081, Q082): all 14 stem/answer images viewed at original resolution; keys asserted equal to exported transcription.
+- Blind set `research/blind_set/`: 143 questions, 28 stem/choice images, automated leak check PASS (no forbidden fields; no answer-image hashes; 0 green-marker pixels vs 3,759–14,486 in answer images) + visual check PASS.
+- Evidence tooling: `tools/fetch_doc.py` (snapshots + quote check), `tools/validate_research.py`, `tools/build_research.py`.
+
+### Known limitation (recorded before any research)
+While inspecting the schema, the MAIN agent saw the source keys of about 40 questions (Q001–Q008, Q073, Q079, Q081, Q082, Q086, Q088, Q136, Q143 and the 24 multiple-response questions). The main agent therefore does NOT perform the blind pass; blind research is done by fresh subagents (`scs-blind-researcher`) that do not inherit this context and are instructed to read only `research/blind_set/` + AWS docs.
+Blindness is enforced by instructions and directory layout, not by a hard sandbox. The model may also have seen public discussions of these questions during training. Therefore no claim of "unbiased" is made.
+
+## Batches
+| Batch | IDs | Blind | Reconcile |
+|---|---|---|---|
