@@ -7,7 +7,7 @@
 | unresolved | 0 | 4 | 3 |
 | verified but differs from source key | 2 (Q056, Q107) | 1 (Q024) | 0 |
 
-Community = latest "Selected Answer" per user in the ExamTopics thread (opinion only; "n/a" = thread not reached / no selections).
+Community = latest "Selected Answer" per user in the ExamTopics thread (opinion only; "n/a" = no selections, or no discussion exists: the 55 questions Q086–Q089, Q092–Q094 and Q096–Q143 have 0 comments; see `reports/examtopics_coverage.json`).
 
 | Q | source key | r1 | r2 | r3 | community | r3 note |
 |---|---|---|---|---|---|---|

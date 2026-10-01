@@ -99,3 +99,7 @@ Selection: `research/audit_selection.json` (48 risk questions by rule: non-verif
 - r3 = r2 + 7 adjudications (`tools/apply_r3.py`, history + `r3_adjudication` per record): restore verified Q001, Q007, Q013, Q045, Q121 (typo / defect shared by all options → annotated, not disqualifying; audited r1 option verdicts reused, all references unchanged); Q112 → verified B; Q024 C verified(high) → ambiguous.
 - Result: 119 verified / 21 ambiguous / 3 unresolved; 0 verified answers differ from the source key. validate_research final 0 errors; app synced (research_version r3); tests 125/125 unit, 21/21 e2e (one e2e test made data-driven instead of hard-coding Q001's r2 status).
 - ExamTopics cross-check: 88/143 threads read directly and mapping-verified (see reports/r1_vs_r2_community.md); 55 not reachable (Pro paywall / HTTP 429 / not indexed).
+- 2026-10-01 follow-up: those 55 have 0 comments.
+  - The source export shows no comment badge for them, and the badge matches the fetched comment count on all 88 crawled threads.
+  - A re-crawl of list pages 1–35 found no new SCS-C03 thread.
+  - Coverage is final at 88/143 (reports/examtopics_coverage.json).

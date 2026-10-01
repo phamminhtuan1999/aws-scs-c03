@@ -38,4 +38,16 @@ Results (80 threads with selections):
 - r2 verified vs community top: 61/63 agree (Q024 — community A 3 users, one of whom first chose C citing the WAF minimum of 10 and later switched; Q076 tie).
 - Contested threads (top < 70%): Q017 (A5/B2/D1), Q040 (D5/A2/B1), Q049 (B2/A1), Q056 (C4/A2/B2/D1), Q062 (BE4/AB3), Q076 (B1/D1).
 
+### 4b. Follow-up 2026-10-01: the 55 unreached questions have no discussion content
+Data: `reports/examtopics_coverage.json`.
+- **Source export badges.** The decoded source HTML shows each question's Discussion button with its comment-count badge.
+  - On the 88 crawled threads, the badge equals the number of comments actually fetched, with 0 differences (Q079 = 0 on both sides).
+  - All 55 unreached questions (Q086–Q089, Q092–Q094, Q096–Q143) show **no badge, i.e. 0 comments**.
+- **Threads are created by users.** A thread is not pre-created for each question. The list page names a creator, e.g. Q090/Q091 "by seoyeon_01, September 11, 2026", and IDs are non-contiguous across batches.
+- **Fresh re-crawl.** Public list pages 1–35 were crawled again: 5 s pacing, no HTTP 429, last activity back to about 2026-06-01, which is before the exam update of 2026-08-07.
+  - Any thread created or commented on since then would appear in these pages.
+  - Result: 39 SCS-C03 threads seen, **0 new** compared with the 2026-09-30 map.
+- **No other route.** The `/comments/<hash><question_id>/` endpoint validates a per-question hash that only the Pro view pages expose (a wrong hash returns 404), and a slug-less `/view/<id>/` returns 404.
+- **Conclusion.** For these 55 questions there is no community discussion to read. The coverage is final at 88/143 until users comment on them; it is not a gap caused by access limits.
+
 Interpretation: agreement with the source key mostly reflects that the source key *is* the community answer set; small samples (median 2) make it weak evidence. It does not validate or refute technical conclusions.
