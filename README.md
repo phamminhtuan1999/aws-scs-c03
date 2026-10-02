@@ -27,6 +27,10 @@ Comparison r1/r2/r3 and ExamTopics cross-check: `reports/r1_vs_r2_community.md`,
 Details: `research/discrepancies.md`, `research/progress.md` (method, limitations, incidents), `research/coverage.csv`.
 Verified ≠ "100 % certain": see confidence and open issues per question; no claim of being bias-free is made.
 
+## GitHub Pages
+
+Hướng dẫn xuất bản: [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md). Workflow đã có ở `.github/workflows/pages.yml`; lấy thư mục `scs-c03-trainer` làm repo root, bật **Settings → Pages → Source: GitHub Actions**, rồi push lên `main`.
+
 ## Requirements (Windows)
 
 Node 24 + npm 11 (Microsoft Edge is used for the browser tests; no browser download is needed).
@@ -132,3 +136,4 @@ route changes), and UI flows. Tests that need `verified/disputed/...` behaviour 
 `app/src/data` loaders + zod schemas, `app/src/grading` pure grading, `app/src/session` seeded draw + exam state machine,
 `app/src/storage` versioned store + export/import, `app/src/time` clock abstraction, `app/src/ui` screens, `app/scripts` sync-data and static server,
 `app/tests` Vitest, `app/e2e` Playwright.
+# aws-scs-c03
