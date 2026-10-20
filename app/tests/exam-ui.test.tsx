@@ -2,7 +2,8 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FakeClock, setClock } from '../src/time/clock';
-import { listSessions, loadSession, getActiveSessionId } from '../src/storage/slots';
+import { listSessions, loadSession, getActiveSessionId, studySlot } from '../src/storage/slots';
+import { readSlot } from '../src/storage/store';
 import { submitActive } from '../src/ui/exam/active';
 import { EXAM_NAME } from '../src/version';
 import { loadRealData, allPendingReviews } from './helpers/data';
@@ -159,6 +160,7 @@ describe('exam flow: answer, flag, review, end, results, per-question review', (
     const s = loadSession('test-exam')!;
     expect(s.status).toBe('submitted');
     expect(s.result?.per_question).toEqual({ Q001: 'correct', Q013: 'correct', Q002: 'correct', Q079: 'correct', Q004: 'incorrect' });
+    expect(screen.getByRole('button', { name: 'Retry incorrect, unanswered & not scored (1) in Study' })).toBeInTheDocument();
 
     // per-question review shows explanations only now
     await user.click(screen.getByRole('link', { name: 'Review question by question' }));
@@ -192,6 +194,13 @@ describe('exam flow: answer, flag, review, end, results, per-question review', (
     expect(body()).toMatch(/not counted as wrong/);
     expect(body()).toMatch(/unanswered 1/);
     expect(body()).toMatch(/not scored 1/);
+
+    // retry: Q008 (not scored) and Q004 (unanswered) in exam order; Q001 (correct) stays out
+    await user.click(screen.getByRole('button', { name: 'Retry incorrect, unanswered & not scored (2) in Study' }));
+    expect(await screen.findByText('Question 1 of 2')).toBeInTheDocument();
+    expect(body()).toMatch(/Retry: not correct in the exam of/);
+    expect(readSlot(studySlot).current).toMatchObject({ ids: ['Q008', 'Q004'], index: 0, order: 'original' });
+    expect(screen.queryByText(/Raw score/)).toBeNull();
   });
 
   it('the End-exam dialog also reports incomplete ordering answers and closes with Escape', async () => {

@@ -1,7 +1,8 @@
 import { fmtDate, fmtPercent, TYPE_LABEL } from '../../data/derive';
 import type { Response } from '../../grading/engine';
 import type { ExamSession } from '../../session/types';
-import { listSessions } from '../../storage/slots';
+import { listSessions, studySlot } from '../../storage/slots';
+import { readSlot, writeSlot } from '../../storage/store';
 import { formatDuration } from '../../time/clock';
 import { EXAM_NAME } from '../../version';
 import { Feedback } from '../feedback/Feedback';
@@ -64,6 +65,15 @@ export function Results({ id }: { id: string }) {
   const unanswered = s.question_ids.filter((q) => per[q] === 'unanswered_incorrect');
   const ungradable = s.question_ids.filter((q) => per[q] === 'ungradable');
   const pct = fmtPercent(r.percent);
+  // Everything that did not come out correct, in exam order (incorrect, unanswered and not scored).
+  const retryIds = s.question_ids.filter((q) => per[q] !== 'correct');
+  const retry = () => {
+    writeSlot(studySlot, {
+      ...readSlot(studySlot),
+      current: { ids: retryIds, index: 0, label: `Retry: not correct in the exam of ${fmtDate(s.started_at)}`, seed: null, order: 'original' },
+    });
+    navigate('/study/run');
+  };
 
   return (
     <div className="page results">
@@ -100,6 +110,14 @@ export function Results({ id }: { id: string }) {
           correct {r.correct} &middot; incorrect {wrong.length} &middot; unanswered {unanswered.length} &middot; flagged {flagged.length} &middot; not scored {ungradable.length}
         </dd>
       </dl>
+
+      {retryIds.length > 0 && (
+        <div className="action-row">
+          <button type="button" className="primary" onClick={retry}>
+            Retry incorrect, unanswered &amp; not scored ({retryIds.length}) in Study
+          </button>
+        </div>
+      )}
 
       {ungradable.length > 0 && (
         <section className="info-box">

@@ -62,7 +62,7 @@ a contract is violated (a single malformed research entry is instead treated as 
 | Mode | What it does |
 |---|---|
 | **Practice in order (Q001 -> Q143)** | Walks all 143 questions in original order, remembers the position (Resume / Jump to Q...), progress bar "n / 143 checked". Same check flow as Study. |
-| **Exam simulation (65 questions / 170 minutes)** | Timed, nothing checked until the end. Seeded draw of 65 different questions (seed shown and editable). No pause. |
+| **Exam simulation (65 questions / 170 minutes)** | Timed, nothing checked until the end. Seeded draw of 65 different questions (seed shown and editable). No pause. The results page has *Retry incorrect, unanswered & not scored (n) in Study*, which starts a Study set of every question that was not correct, in exam order. |
 | **Study (custom set)** | All / ID list or range / domain / service (from research tags; untagged = "Not yet classified") / wrong last time / flagged-bookmarked / not attempted; original or seeded-shuffled order. Buttons: Check answer, Next, Bookmark, Flag, Save tip. |
 | **Custom exam** | Your own number of questions and duration, optional pause, optional "include not-scorable questions (shown, not scored)". Always labelled *Practice configuration*. |
 
