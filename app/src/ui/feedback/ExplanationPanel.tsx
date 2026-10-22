@@ -9,7 +9,7 @@ export function ExplanationPanel({ data, qid }: { data: AppData; qid: string }) 
   const hasAny = !!(ex?.why_correct || (ex?.others && Object.keys(ex.others).length) || rv.keywords.length || rv.memory_tip_vi);
   if (!hasAny) {
     return (
-      <section className="explanation" aria-label="Explanation">
+      <section className="explanation" aria-label="Explanation" lang="vi">
         <h3>Giải thích</h3>
         <p className="muted">
           {rv.status === 'pending'

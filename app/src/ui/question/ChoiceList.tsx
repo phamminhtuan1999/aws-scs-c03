@@ -59,7 +59,8 @@ export function ChoiceList({ question, value, onChange, disabled, annotations }:
             />
             <div className="choice-main">
               <span className="choice-letter" aria-hidden="true">
-                {c.letter}.
+                {c.letter}
+                <span className="choice-dot">.</span>
               </span>
               <div id={`${inputId}-body`} className="choice-body">
                 <Blocks blocks={c.blocks} />

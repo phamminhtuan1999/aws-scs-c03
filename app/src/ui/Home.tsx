@@ -2,17 +2,45 @@ import { useData, useSlot } from './hooks';
 import { practiceSlot, studySlot } from '../storage/slots';
 import { STANDARD_MINUTES, STANDARD_QUESTIONS } from '../version';
 
+const SHEET_ROW = 10;
+
 export function Home() {
   const data = useData();
   const practice = useSlot(practiceSlot);
   const study = useSlot(studySlot);
-  const checked = data.allIds.filter((id) => (study.attempts[id] ?? []).some((a) => a.source === 'practice')).length;
+  const checkedIds = new Set(data.allIds.filter((id) => (study.attempts[id] ?? []).some((a) => a.source === 'practice')));
+  const checked = checkedIds.size;
   const total = data.allIds.length;
+  const rows: string[][] = [];
+  for (let i = 0; i < total; i += SHEET_ROW) rows.push(data.allIds.slice(i, i + SHEET_ROW));
 
   return (
     <div className="page home">
-      <h1>SCS-C03 practice trainer</h1>
-      <p className="identity">Independent practice tool &mdash; not affiliated with, endorsed by, or a copy of AWS or Pearson VUE.</p>
+      <section className="home-hero">
+        <div className="home-intro">
+          <h1>SCS-C03 practice trainer</h1>
+          <p className="identity">Independent practice tool &mdash; not affiliated with, endorsed by, or a copy of AWS or Pearson VUE.</p>
+        </div>
+        <figure className="sheet">
+          <div className="sheet-grid" role="img" aria-label={`Answer sheet: ${checked} of ${total} questions checked in Practice in order`}>
+            {rows.map((row, r) => (
+              <div className="sheet-row" key={r}>
+                <span className="sheet-num">{r * SHEET_ROW + 1}</span>
+                {row.map((id) => (
+                  <span
+                    key={id}
+                    className={`bubble${checkedIds.has(id) ? ' is-filled' : ''}${practice.position === id ? ' is-current' : ''}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <figcaption className="sheet-caption">
+            One bubble per question. Filled bubbles are checked in Practice in order
+            {practice.position ? <>; the ring marks where you stopped ({practice.position}).</> : '.'}
+          </figcaption>
+        </figure>
+      </section>
 
       <ul className="entry-cards">
         <li>

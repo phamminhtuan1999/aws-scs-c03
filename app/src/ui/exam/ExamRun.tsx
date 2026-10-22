@@ -135,7 +135,7 @@ export function ExamRun() {
           <span aria-hidden="true">{flagged ? '⚑' : '⚐'}</span> Flag for review
         </button>
         <label className="scheme-label">
-          Color scheme{' '}
+          <span className="scheme-text">Color scheme</span>{' '}
           <select value={settings.color_scheme} onChange={(e) => setScheme(e.target.value as (typeof COLOR_SCHEMES)[number])}>
             {COLOR_SCHEMES.map((c) => (
               <option key={c} value={c}>

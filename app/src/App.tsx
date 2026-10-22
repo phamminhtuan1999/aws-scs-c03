@@ -143,12 +143,21 @@ const NAV: [string, string][] = [
 ];
 
 function TopNav({ route }: { route: Route }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => setOpen(false), [route.path]);
   return (
     <header className="topnav">
+      <button type="button" className="skip-link" onClick={() => document.getElementById('main')?.focus()}>
+        Skip to content
+      </button>
       <a className="brand" href="#/">
+        <span className="brand-mark" aria-hidden="true" />
         SCS-C03 Practice
       </a>
-      <nav aria-label="Main">
+      <button type="button" className="menu-toggle" aria-expanded={open} aria-controls="main-nav" onClick={() => setOpen((o) => !o)}>
+        Menu
+      </button>
+      <nav id="main-nav" aria-label="Main" className={open ? 'is-open' : undefined}>
         <ul>
           {NAV.map(([p, label]) => {
             const on = p === '/' ? route.path === '/' : route.path === p || route.path.startsWith(p + '/');
@@ -197,7 +206,9 @@ function Routes() {
   return (
     <>
       <TopNav route={route} />
-      <div className="content">{page}</div>
+      <main id="main" className="content" tabIndex={-1}>
+        {page}
+      </main>
     </>
   );
 }
